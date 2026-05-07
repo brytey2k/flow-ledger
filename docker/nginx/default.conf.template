@@ -1,0 +1,46 @@
+# Redirect plain HTTP → HTTPS, preserving the non-standard SSL port.
+# ${APP_SSL_PORT} is substituted at container start via envsubst.
+# All other dollar-sign tokens are nginx variables and must NOT be substituted
+# (the nginx image entrypoint is told to only substitute APP_SSL_PORT via
+# the NGINX_ENVSUBST_FILTER env var set in compose.yaml).
+server {
+    listen 80;
+    server_name flow-ledger.test *.flow-ledger.test;
+    return 301 https://$host:${APP_SSL_PORT}$request_uri;
+}
+
+# HTTPS reverse proxy → Laravel artisan serve
+server {
+    listen 443 ssl;
+    server_name flow-ledger.test *.flow-ledger.test;
+
+    ssl_certificate     /etc/nginx/certs/flow-ledger.test+1.pem;
+    ssl_certificate_key /etc/nginx/certs/flow-ledger.test+1-key.pem;
+
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    # Forward real IP and protocol so Laravel generates correct URLs
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Port  ${APP_SSL_PORT};
+
+    # Increase timeouts for long-running requests
+    proxy_connect_timeout 300;
+    proxy_send_timeout    300;
+    proxy_read_timeout    300;
+
+    # Larger body size for file uploads
+    client_max_body_size 100M;
+
+    # Use Docker's internal resolver so upstream is resolved per-request,
+    # not at startup — prevents nginx from dying if laravel.test isn't ready yet.
+    resolver 127.0.0.11 valid=10s;
+    set $backend http://laravel.test:80;
+
+    location / {
+        proxy_pass $backend;
+    }
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -65,6 +67,8 @@ return [
     |
     */
 
+    'central_url' => env('CENTRAL_APP_URL', 'flow-ledger.test'),
+
     'timezone' => 'UTC',
 
     /*
@@ -101,7 +105,7 @@ return [
 
     'previous_keys' => [
         ...array_filter(
-            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
+            explode(',', (string) env('APP_PREVIOUS_KEYS', '')),
         ),
     ],
 
