@@ -37,6 +37,69 @@
                     </a>
                 </div>
 
+                {{-- Requests --}}
+                @can(PermissionKey::AccessPaymentRequests->value)
+                    <div class="kt-menu-item pt-2.25 pb-px">
+                        <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
+                            Requests
+                        </span>
+                    </div>
+
+                    <div class="kt-menu-item {{ request()->routeIs('payment-requests.*') ? 'active' : '' }}">
+                        <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                           href="{{ route('payment-requests.index') }}">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <i class="ki-filled ki-wallet text-lg"></i>
+                            </span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Payment Requests</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can(PermissionKey::AccessRetirementRequests->value)
+                    <div class="kt-menu-item {{ request()->routeIs('retirement-requests.*') ? 'active' : '' }}">
+                        <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                           href="{{ route('retirement-requests.index') }}">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <i class="ki-filled ki-file-up text-lg"></i>
+                            </span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Retirements</span>
+                        </a>
+                    </div>
+                @endcan
+
+                {{-- Finance --}}
+                @can(PermissionKey::DisburseRequests->value)
+                    <div class="kt-menu-item pt-2.25 pb-px">
+                        <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
+                            Finance
+                        </span>
+                    </div>
+
+                    <div class="kt-menu-item {{ request()->routeIs('disbursements.*') ? 'active' : '' }}">
+                        <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                           href="{{ route('disbursements.index') }}">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <i class="ki-filled ki-dollar text-lg"></i>
+                            </span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Disbursements</span>
+                        </a>
+                    </div>
+                @endcan
+
+                {{-- Approvals --}}
+                @can(PermissionKey::ApproveRequests->value)
+                    <div class="kt-menu-item {{ request()->routeIs('approvals.*') ? 'active' : '' }}">
+                        <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                           href="{{ route('approvals.index') }}">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <i class="ki-filled ki-shield-tick text-lg"></i>
+                            </span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Approvals</span>
+                        </a>
+                    </div>
+                @endcan
+
                 {{-- Organisation --}}
                 @canany([PermissionKey::AccessLevels->value, PermissionKey::AccessBranches->value, PermissionKey::AccessDepartments->value, PermissionKey::AccessAccountCodes->value, PermissionKey::AccessPositions->value, PermissionKey::AccessStaff->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
@@ -119,7 +182,7 @@
                 @endcanany
 
                 {{-- Settings --}}
-                @canany([PermissionKey::AccessUsers->value, PermissionKey::AccessRoles->value, PermissionKey::AccessCurrencies->value])
+                @canany([PermissionKey::AccessUsers->value, PermissionKey::AccessRoles->value, PermissionKey::AccessCurrencies->value, PermissionKey::AccessWorkflowTemplates->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
                             Settings
@@ -158,6 +221,18 @@
                                     <i class="ki-filled ki-dollar text-lg"></i>
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Currencies</span>
+                            </a>
+                        </div>
+                    @endcan
+
+                    @can(PermissionKey::AccessWorkflowTemplates->value)
+                        <div class="kt-menu-item {{ request()->routeIs('workflow-templates.*') ? 'active' : '' }}">
+                            <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                               href="{{ route('workflow-templates.index') }}">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                    <i class="ki-filled ki-arrow-right-left text-lg"></i>
+                                </span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Workflows</span>
                             </a>
                         </div>
                     @endcan

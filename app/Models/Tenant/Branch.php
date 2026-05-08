@@ -27,12 +27,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Branch extends Entity
 {
+    /** @use HasFactory<\Database\Factories\Tenant\BranchFactory> */
     use HasFactory;
     use SoftDeletes;
 
     protected $fillable = ['id', 'name', 'code', 'level_id', 'currency_id', 'parent_id', 'position'];
 
-    protected string $closureTable = BranchClosure::class;
+    protected $closure = BranchClosure::class;
 
     /** @return BelongsTo<Level, $this> */
     public function level(): BelongsTo

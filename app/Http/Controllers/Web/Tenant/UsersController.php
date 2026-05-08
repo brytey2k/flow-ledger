@@ -48,8 +48,9 @@ class UsersController extends Controller
             'password' => $validated['password'],
         ]);
 
-        if (isset($validated['roles']) && is_array($validated['roles'])) {
-            $user->syncRoles(array_map('intval', $validated['roles']));
+        $roles = $validated['roles'] ?? null;
+        if (is_array($roles)) {
+            $user->syncRoles(array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $roles));
         }
 
         return redirect()
@@ -84,8 +85,9 @@ class UsersController extends Controller
 
         $user->update($data);
 
-        if (isset($validated['roles']) && is_array($validated['roles'])) {
-            $user->syncRoles(array_map('intval', $validated['roles']));
+        $roles = $validated['roles'] ?? null;
+        if (is_array($roles)) {
+            $user->syncRoles(array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $roles));
         } else {
             $user->syncRoles([]);
         }
@@ -118,7 +120,9 @@ class UsersController extends Controller
     public function updatePermissions(PermissionsSyncRequest $request, User $user): RedirectResponse
     {
         if ($request->has('permissions')) {
-            $user->syncPermissions($request->validated()['permissions']);
+            /** @var array<string>|string $permissions */
+            $permissions = $request->validated()['permissions'];
+            $user->syncPermissions($permissions);
         } else {
             $user->syncPermissions([]);
         }

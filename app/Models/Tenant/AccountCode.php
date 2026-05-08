@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class AccountCode extends Model
 {
+    /** @use HasFactory<\Database\Factories\Tenant\AccountCodeFactory> */
     use HasFactory;
     use SoftDeletes;
 

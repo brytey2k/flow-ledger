@@ -24,7 +24,7 @@ class BootstrapTenant implements ShouldQueue
     public function handle(NewTenantSetupService $service): void
     {
         tenancy()->initialize($this->tenant);
-        $service->handle($this->tenant);
+        $service->handleReset($this->tenant);
         tenancy()->end();
     }
 }

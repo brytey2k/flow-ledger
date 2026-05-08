@@ -4,17 +4,31 @@ declare(strict_types=1);
 
 use App\Enums\Tenant\PermissionKey;
 use App\Http\Controllers\Web\Tenant\AccountCodesController;
+use App\Http\Controllers\Web\Tenant\AttachmentsController;
 use App\Http\Controllers\Web\Tenant\Auth\LoginController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
+use App\Http\Controllers\Web\Tenant\CommentsController;
 use App\Http\Controllers\Web\Tenant\CurrenciesController;
 use App\Http\Controllers\Web\Tenant\DashboardController;
 use App\Http\Controllers\Web\Tenant\DepartmentsController;
+use App\Http\Controllers\Web\Tenant\DisbursementsController;
 use App\Http\Controllers\Web\Tenant\DocumentationController;
 use App\Http\Controllers\Web\Tenant\LevelController;
+use App\Http\Controllers\Web\Tenant\PaymentRequestResubmitController;
+use App\Http\Controllers\Web\Tenant\PaymentRequestsController;
+use App\Http\Controllers\Web\Tenant\PaymentRequestSubmitController;
 use App\Http\Controllers\Web\Tenant\PositionsController;
+use App\Http\Controllers\Web\Tenant\RetirementRequestResubmitController;
+use App\Http\Controllers\Web\Tenant\RetirementRequestsController;
+use App\Http\Controllers\Web\Tenant\RetirementRequestSubmitController;
+use App\Http\Controllers\Web\Tenant\RetirementSettlementController;
 use App\Http\Controllers\Web\Tenant\RolesController;
 use App\Http\Controllers\Web\Tenant\StaffController;
 use App\Http\Controllers\Web\Tenant\UsersController;
+use App\Http\Controllers\Web\Tenant\WorkflowApprovalsController;
+use App\Http\Controllers\Web\Tenant\WorkflowParallelGroupsController;
+use App\Http\Controllers\Web\Tenant\WorkflowStagesController;
+use App\Http\Controllers\Web\Tenant\WorkflowTemplatesController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -204,6 +218,131 @@ Route::middleware([
         Route::put('/roles/{role}/permissions', [RolesController::class, 'updatePermissions'])
             ->can(PermissionKey::AccessRoles->value)
             ->name('roles.permissions.update');
+
+        // Workflow Templates
+        Route::get('/workflow-templates', [WorkflowTemplatesController::class, 'index'])
+            ->can(PermissionKey::AccessWorkflowTemplates->value)
+            ->name('workflow-templates.index');
+        Route::get('/workflow-templates/create', [WorkflowTemplatesController::class, 'create'])
+            ->can(PermissionKey::CreateWorkflowTemplate->value)
+            ->name('workflow-templates.create');
+        Route::post('/workflow-templates', [WorkflowTemplatesController::class, 'store'])
+            ->can(PermissionKey::CreateWorkflowTemplate->value)
+            ->name('workflow-templates.store');
+        Route::get('/workflow-templates/{workflowTemplate}', [WorkflowTemplatesController::class, 'show'])
+            ->can(PermissionKey::AccessWorkflowTemplates->value)
+            ->name('workflow-templates.show');
+        Route::get('/workflow-templates/{workflowTemplate}/edit', [WorkflowTemplatesController::class, 'edit'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.edit');
+        Route::put('/workflow-templates/{workflowTemplate}', [WorkflowTemplatesController::class, 'update'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.update');
+        Route::delete('/workflow-templates/{workflowTemplate}', [WorkflowTemplatesController::class, 'destroy'])
+            ->can(PermissionKey::DeleteWorkflowTemplate->value)
+            ->name('workflow-templates.destroy');
+
+        // Workflow Stages (nested under templates)
+        Route::get('/workflow-templates/{workflowTemplate}/stages/create', [WorkflowStagesController::class, 'create'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.stages.create');
+        Route::post('/workflow-templates/{workflowTemplate}/stages', [WorkflowStagesController::class, 'store'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.stages.store');
+        Route::get('/workflow-templates/{workflowTemplate}/stages/{workflowStage}/edit', [WorkflowStagesController::class, 'edit'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.stages.edit');
+        Route::put('/workflow-templates/{workflowTemplate}/stages/{workflowStage}', [WorkflowStagesController::class, 'update'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.stages.update');
+        Route::delete('/workflow-templates/{workflowTemplate}/stages/{workflowStage}', [WorkflowStagesController::class, 'destroy'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.stages.destroy');
+
+        // Workflow Parallel Groups (nested under templates)
+        Route::post('/workflow-templates/{workflowTemplate}/parallel-groups', [WorkflowParallelGroupsController::class, 'store'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.parallel-groups.store');
+        Route::delete('/workflow-templates/{workflowTemplate}/parallel-groups/{workflowParallelGroup}', [WorkflowParallelGroupsController::class, 'destroy'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.parallel-groups.destroy');
+
+        // Payment Requests
+        Route::get('/requests', [PaymentRequestsController::class, 'index'])
+            ->can(PermissionKey::AccessPaymentRequests->value)
+            ->name('payment-requests.index');
+        Route::get('/requests/create', [PaymentRequestsController::class, 'create'])
+            ->can(PermissionKey::CreatePaymentRequest->value)
+            ->name('payment-requests.create');
+        Route::post('/requests', [PaymentRequestsController::class, 'store'])
+            ->can(PermissionKey::CreatePaymentRequest->value)
+            ->name('payment-requests.store');
+        Route::get('/requests/{paymentRequest}', [PaymentRequestsController::class, 'show'])
+            ->can(PermissionKey::AccessPaymentRequests->value)
+            ->name('payment-requests.show');
+        Route::delete('/requests/{paymentRequest}', [PaymentRequestsController::class, 'destroy'])
+            ->can(PermissionKey::DeletePaymentRequest->value)
+            ->name('payment-requests.destroy');
+        Route::post('/requests/{paymentRequest}/submit', [PaymentRequestSubmitController::class, 'store'])
+            ->can(PermissionKey::CreatePaymentRequest->value)
+            ->name('payment-requests.submit');
+        Route::post('/requests/{paymentRequest}/resubmit', [PaymentRequestResubmitController::class, 'store'])
+            ->can(PermissionKey::CreatePaymentRequest->value)
+            ->name('payment-requests.resubmit');
+        Route::post('/requests/{paymentRequest}/comments', [CommentsController::class, 'store'])
+            ->can(PermissionKey::AccessPaymentRequests->value)
+            ->name('payment-requests.comments.store');
+        Route::delete('/requests/{paymentRequest}/comments/{comment}', [CommentsController::class, 'destroy'])
+            ->can(PermissionKey::AccessPaymentRequests->value)
+            ->name('payment-requests.comments.destroy');
+
+        // Retirement Requests
+        Route::get('/retirements', [RetirementRequestsController::class, 'index'])
+            ->can(PermissionKey::AccessRetirementRequests->value)
+            ->name('retirement-requests.index');
+        Route::get('/requests/{paymentRequest}/retirement/create', [RetirementRequestsController::class, 'create'])
+            ->can(PermissionKey::CreateRetirementRequest->value)
+            ->name('retirement-requests.create');
+        Route::post('/requests/{paymentRequest}/retirement', [RetirementRequestsController::class, 'store'])
+            ->can(PermissionKey::CreateRetirementRequest->value)
+            ->name('retirement-requests.store');
+        Route::get('/retirements/{retirementRequest}', [RetirementRequestsController::class, 'show'])
+            ->can(PermissionKey::AccessRetirementRequests->value)
+            ->name('retirement-requests.show');
+        Route::post('/retirements/{retirementRequest}/submit', [RetirementRequestSubmitController::class, 'store'])
+            ->can(PermissionKey::CreateRetirementRequest->value)
+            ->name('retirement-requests.submit');
+        Route::post('/retirements/{retirementRequest}/resubmit', [RetirementRequestResubmitController::class, 'store'])
+            ->can(PermissionKey::CreateRetirementRequest->value)
+            ->name('retirement-requests.resubmit');
+        Route::post('/retirements/{retirementRequest}/settle', [RetirementSettlementController::class, 'store'])
+            ->can(PermissionKey::SettleRetirements->value)
+            ->name('retirement-requests.settle');
+        Route::post('/retirements/{retirementRequest}/attachments', [AttachmentsController::class, 'store'])
+            ->can(PermissionKey::CreateRetirementRequest->value)
+            ->name('retirement-requests.attachments.store');
+        Route::delete('/attachments/{attachment}', [AttachmentsController::class, 'destroy'])
+            ->can(PermissionKey::DeleteAttachment->value)
+            ->name('attachments.destroy');
+
+        // Disbursements
+        Route::get('/disbursements', [DisbursementsController::class, 'index'])
+            ->can(PermissionKey::DisburseRequests->value)
+            ->name('disbursements.index');
+        Route::post('/requests/{paymentRequest}/disburse', [DisbursementsController::class, 'store'])
+            ->can(PermissionKey::DisburseRequests->value)
+            ->name('disbursements.store');
+
+        // Approvals
+        Route::get('/approvals', [WorkflowApprovalsController::class, 'index'])
+            ->can(PermissionKey::ApproveRequests->value)
+            ->name('approvals.index');
+        Route::get('/approvals/{instanceStage}', [WorkflowApprovalsController::class, 'show'])
+            ->can(PermissionKey::ApproveRequests->value)
+            ->name('approvals.show');
+        Route::post('/approvals/{instanceStage}', [WorkflowApprovalsController::class, 'store'])
+            ->can(PermissionKey::ApproveRequests->value)
+            ->name('approvals.store');
 
         // Currencies
         Route::get('/currencies', [CurrenciesController::class, 'index'])

@@ -16,10 +16,18 @@ class StaffUpdateRequest extends FormRequest
     /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
+        $model = $this->route('staff');
+        $ignoreId = $model instanceof \Illuminate\Database\Eloquent\Model
+            ? (static function (\Illuminate\Database\Eloquent\Model $m): string {
+                $k = $m->getKey();
+                return is_scalar($k) ? (string) $k : 'NULL';
+            })($model)
+            : 'NULL';
+
         return [
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['nullable', 'email', 'max:150', 'unique:staff,email,' . $this->route('staff')?->id],
+            'email' => ['nullable', 'email', 'max:150', 'unique:staff,email,' . $ignoreId],
             'phone' => ['nullable', 'string', 'max:30'],
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'position_id' => ['required', 'integer', 'exists:positions,id'],

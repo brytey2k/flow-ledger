@@ -39,8 +39,9 @@ class BranchesController extends Controller
         $branch = new Branch($data);
 
         if ($parentId !== null) {
+            /** @var Branch $parent */
             $parent = Branch::findOrFail($parentId);
-            $parent->appendNode($branch);
+            $parent->appendChild($branch);
         } else {
             $branch->save();
         }
@@ -61,16 +62,18 @@ class BranchesController extends Controller
     public function update(BranchUpdateRequest $request, Branch $branch): RedirectResponse
     {
         $data = $request->validated();
-        $newParentId = $data['parent_id'] ?? null;
+        $rawParentId = $data['parent_id'] ?? null;
+        $newParentId = is_numeric($rawParentId) ? (int) $rawParentId : null;
 
         $branch->fill($data);
 
-        if ((int) $newParentId !== (int) $branch->parent_id) {
+        if ($newParentId !== (int) $branch->parent_id) {
             if ($newParentId !== null) {
+                /** @var Branch $parent */
                 $parent = Branch::findOrFail($newParentId);
-                $branch->moveTo($parent);
+                $branch->moveTo(0, $parent);
             } else {
-                $branch->makeRoot();
+                $branch->makeRoot(0);
             }
         } else {
             $branch->save();

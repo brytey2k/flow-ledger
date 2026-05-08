@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Factories\Tenant;
+
+use App\Models\Tenant\Currency;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Currency>
+ */
+class CurrencyFactory extends Factory
+{
+    protected $model = Currency::class;
+
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->unique()->word() . ' Dollar',
+            'short_name' => strtoupper(fake()->unique()->lexify('???')),
+            'symbol' => fake()->unique()->randomElement(['$', '€', '£', '¥', '₵', '₦', 'Fr']),
+        ];
+    }
+}

@@ -13,6 +13,7 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
 class User extends Authenticatable
 {
     use CentralConnection;
+    /** @use HasFactory<\Database\Factories\Landlord\UserFactory> */
     use HasFactory;
     use Notifiable;
     use SoftDeletes;

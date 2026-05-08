@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Currency extends Model
 {
+    /** @use HasFactory<\Database\Factories\Tenant\CurrencyFactory> */
     use HasFactory;
     use SoftDeletes;
 

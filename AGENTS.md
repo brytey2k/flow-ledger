@@ -1,3 +1,88 @@
+# AGENTS.md - Coding Agent Guidelines
+
+## Project Overview
+- **Stack:** Laravel 13 (PHP 8.5), Blade + Tailwind CSS v4, PostgreSQL.
+- **Architecture:** Multi-tenant SaaS (Stancl/Tenancy). Payment advances, expense reimbursements, approval workflows.
+- **Environment:** Docker via Laravel Sail. **ALL commands must use `./vendor/bin/sail`**.
+- **Testing:** PHPUnit (not Pest).
+
+## 🚨 Critical: Laravel Sail Usage
+**NEVER** run `php`, `composer`, or `artisan` directly on the host machine.
+You must prefix all commands with `./vendor/bin/sail`.
+
+```bash
+# ✅ Correct
+./vendor/bin/sail artisan migrate
+./vendor/bin/sail composer run pint
+
+# ❌ Wrong
+php artisan migrate
+composer run pint
+```
+
+## 🛠 Build, Lint & Test Commands
+
+### Development
+```bash
+./vendor/bin/sail up -d                          # Start application
+npm run build                                    # Build frontend assets
+./vendor/bin/sail artisan migrate                # Run landlord migrations
+./vendor/bin/sail artisan tenants:migrate        # Run tenant migrations on all tenants
+./vendor/bin/sail composer run dev               # Run all dev services (server, queue, logs, vite)
+```
+
+### Testing (PHPUnit - CRITICAL)
+**CRITICAL: Every code change MUST be tested. Run affected tests before finalizing.**
+
+Tests must be run via the composer scripts — do NOT call `artisan test` directly.
+The scripts set up a fresh test tenant, run tests, then clean up automatically.
+
+```bash
+# Run all tests
+./vendor/bin/sail composer test
+
+# Run all tests in parallel
+./vendor/bin/sail composer test-parallel
+
+# Run a single test file (args passed through to artisan test)
+./vendor/bin/sail composer test tests/Feature/ExampleTest.php
+
+# Run a specific test method
+./vendor/bin/sail composer test --filter=test_method_name
+```
+
+### Code Quality
+```bash
+# Format code (ALWAYS run before finalizing changes!)
+./vendor/bin/sail composer run pint
+
+# Format only changed files
+./vendor/bin/sail composer run pint-dirty
+
+# Static analysis
+./vendor/bin/sail composer run phpstan
+```
+
+## 🏗 Architecture & Patterns
+
+### Multi-Tenancy (Stancl/Tenancy)
+- **Models:** Tenant-specific models in `App\Models\Tenant\`. Landlord models in `App\Models\`.
+- **Routes:** Tenant routes in `routes/web.tenant.php`. Landlord routes in `routes/web.php`.
+- **Migrations:** Landlord migrations in `database/migrations/`. Tenant migrations in `database/migrations/tenant/`.
+- **Database (AI tools):** Use the `pgsql_tenant_connection_for_ai` connection when querying tenant data with `database-query` or `database-schema` Boost MCP tools. The main tenant database is `tenant_main_2026_05_06`.
+
+### Design Patterns
+- **Repository:** Encapsulate all direct database queries.
+- **Service:** Encapsulate complex application/business logic.
+- **Form Requests:** Use for **ALL** validation — never validate inside Controllers.
+
+## 🤖 Laravel Boost Tools (MCP)
+- `search-docs`: Search version-specific Laravel documentation — use before making code changes.
+- `database-query`: Run read-only queries. Use `pgsql_tenant_connection_for_ai` for tenant data.
+- `database-schema`: Inspect table structure. Use `pgsql_tenant_connection_for_ai` for tenant tables.
+- `get-absolute-url`: Resolve the correct URL/domain for the app before sharing links.
+- `browser-logs`: Read browser errors and exceptions (recent entries only).
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -108,6 +193,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Deployment
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
 
 === laravel/core rules ===
 

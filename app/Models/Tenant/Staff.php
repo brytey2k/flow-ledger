@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Staff extends Model
 {
+    /** @use HasFactory<\Database\Factories\Tenant\StaffFactory> */
     use HasFactory;
     use SoftDeletes;
 

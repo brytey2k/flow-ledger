@@ -14,6 +14,7 @@
         "laravel/framework": "^13.7",
         "laravel/pennant": "^1.18",
         "laravel/tinker": "^3.0",
+        "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^6.23",
         "stancl/tenancy": "^3.9"
     },
@@ -55,10 +56,8 @@
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
-        "test": [
-            "@php artisan config:clear --ansi @no_additional_args",
-            "@php artisan test"
-        ],
+        "test": "tests/run-tests.sh",
+        "test-parallel": "tests/run-tests-parallel.sh",
         "pint": [
             "vendor/bin/pint --parallel"
         ],

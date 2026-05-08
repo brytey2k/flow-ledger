@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -63,6 +65,13 @@ return [
 
         'resend' => [
             'transport' => 'resend',
+        ],
+
+        'mailgun' => [
+            'transport' => 'mailgun',
+            'client' => [
+                'timeout' => 5,
+            ],
         ],
 
         'sendmail' => [

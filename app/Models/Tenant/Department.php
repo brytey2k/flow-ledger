@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Department extends Model
 {
+    /** @use HasFactory<\Database\Factories\Tenant\DepartmentFactory> */
     use HasFactory;
     use SoftDeletes;
 

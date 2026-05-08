@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Position extends Model
 {
+    /** @use HasFactory<\Database\Factories\Tenant\PositionFactory> */
     use HasFactory;
     use SoftDeletes;
 

@@ -45,4 +45,33 @@ enum PermissionKey: string
     case DeleteAccountCode = 'delete account code';
     case DeletePosition = 'delete position';
     case DeleteStaff = 'delete staff';
+
+    // Payment Requests
+    case AccessPaymentRequests = 'access payment requests';
+    case CreatePaymentRequest = 'create payment request';
+    case EditPaymentRequest = 'edit payment request';
+    case DeletePaymentRequest = 'delete payment request';
+
+    // Retirement Requests
+    case AccessRetirementRequests = 'access retirement requests';
+    case CreateRetirementRequest = 'create retirement request';
+    case EditRetirementRequest = 'edit retirement request';
+
+    // Approvals
+    case ApproveRequests = 'approve requests';
+
+    // Disbursement
+    case DisburseRequests = 'disburse requests';
+
+    // Settlement
+    case SettleRetirements = 'settle retirements';
+
+    // Attachments
+    case DeleteAttachment = 'delete attachment';
+
+    // Workflow Templates
+    case AccessWorkflowTemplates = 'access workflow templates';
+    case CreateWorkflowTemplate = 'create workflow template';
+    case EditWorkflowTemplate = 'edit workflow template';
+    case DeleteWorkflowTemplate = 'delete workflow template';
 }

@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Level extends Model
 {
+    /** @use HasFactory<\Database\Factories\Tenant\LevelFactory> */
     use HasFactory;
     use SoftDeletes;
 

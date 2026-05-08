@@ -1,0 +1,111 @@
+@extends('tenant.layouts.base')
+
+@section('content')
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Add Stage</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                {{ $workflowTemplate->name }}
+            </div>
+        </div>
+        <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.show', $workflowTemplate) }}">
+            <i class="ki-filled ki-arrow-left"></i>
+            Back
+        </a>
+    </div>
+</div>
+
+<div class="kt-container-fixed">
+    <div class="grid gap-5 lg:gap-7.5">
+        <div class="kt-card">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Stage Details</h3>
+            </div>
+            <div class="kt-card-content">
+                <form method="POST" action="{{ route('workflow-templates.stages.store', $workflowTemplate) }}" class="grid gap-7">
+                    @csrf
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div>
+                            <label class="kt-form-label block mb-2" for="name">
+                                Stage Name <span class="text-destructive">*</span>
+                            </label>
+                            <input id="name" name="name" type="text" value="{{ old('name') }}"
+                                   class="kt-input w-full" placeholder="e.g. Line Manager Approval"
+                                   aria-invalid="@error('name') true @else false @enderror" />
+                            @error('name') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="kt-form-label block mb-2" for="display_order">
+                                Display Order <span class="text-destructive">*</span>
+                            </label>
+                            <input id="display_order" name="display_order" type="number" min="1" value="{{ old('display_order', 1) }}"
+                                   class="kt-input w-full"
+                                   aria-invalid="@error('display_order') true @else false @enderror" />
+                            <div class="mt-1 text-xs text-muted-foreground">Lower numbers run first. Same number = parallel.</div>
+                            @error('display_order') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="kt-form-label block mb-2" for="skip_below_amount">
+                                Skip Below Amount
+                            </label>
+                            <input id="skip_below_amount" name="skip_below_amount" type="number" step="0.01" min="0"
+                                   value="{{ old('skip_below_amount') }}"
+                                   class="kt-input w-full" placeholder="e.g. 500.00"
+                                   aria-invalid="@error('skip_below_amount') true @else false @enderror" />
+                            <div class="mt-1 text-xs text-muted-foreground">Auto-skip this stage when request total is below this amount. Leave empty to never skip.</div>
+                            @error('skip_below_amount') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+                        </div>
+
+                        @if($parallelGroups->isNotEmpty())
+                            <div>
+                                <label class="kt-form-label block mb-2" for="parallel_group_id">
+                                    Parallel Group
+                                </label>
+                                <select id="parallel_group_id" name="parallel_group_id" class="kt-select w-full">
+                                    <option value="">None (sequential)</option>
+                                    @foreach($parallelGroups as $group)
+                                        <option value="{{ $group->id }}" {{ old('parallel_group_id') == $group->id ? 'selected' : '' }}>
+                                            {{ $group->name }} ({{ $group->require_all ? 'ALL must approve' : 'ANY one approves' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('parallel_group_id') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label class="kt-form-label block mb-2">
+                            Roles that can approve this stage <span class="text-destructive">*</span>
+                        </label>
+                        <div class="mt-1 text-xs text-muted-foreground mb-3">Any user with one of these roles will see this stage in their approvals inbox.</div>
+                        @error('role_ids') <p class="mb-2 text-sm text-destructive">{{ $message }}</p> @enderror
+                        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            @foreach($roles as $role)
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="role_ids[]" value="{{ $role->id }}"
+                                           {{ in_array($role->id, old('role_ids', [])) ? 'checked' : '' }}
+                                           class="kt-checkbox" />
+                                    <span class="text-sm text-foreground">{{ $role->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
+                        <button type="submit" class="kt-btn kt-btn-primary">
+                            <i class="ki-filled ki-plus"></i>
+                            Add Stage
+                        </button>
+                        <a class="kt-btn kt-btn-light" href="{{ route('workflow-templates.show', $workflowTemplate) }}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

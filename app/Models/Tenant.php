@@ -21,6 +21,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'is_suspended',
     ];
 
+    /** @return HasMany<Domain, $this> */
     public function domains(): HasMany
     {
         return $this->hasMany(Domain::class);

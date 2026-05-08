@@ -48,7 +48,7 @@ class NewTenantSetupService
         User::create([
             'first_name' => 'Admin',
             'last_name' => 'User',
-            'email' => 'admin@' . $tenant->getTenantKey() . '.' . $centralDomain,
+            'email' => 'admin@' . (is_scalar($tenant->getTenantKey()) ? (string) $tenant->getTenantKey() : '') . '.' . $centralDomain,
             'password' => Hash::make('password'),
         ])->assignRole($adminRole);
 

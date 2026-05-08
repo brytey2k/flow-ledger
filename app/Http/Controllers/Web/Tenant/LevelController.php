@@ -22,7 +22,8 @@ class LevelController extends Controller
 
     public function create(): View
     {
-        $nextPosition = (Level::max('position') ?? 0) + 1;
+        $maxPosition = Level::max('position');
+        $nextPosition = (is_numeric($maxPosition) ? (int) $maxPosition : 0) + 1;
 
         return view('tenant.levels.create', compact('nextPosition'));
     }

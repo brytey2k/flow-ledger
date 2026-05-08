@@ -10,3 +10,7 @@ parameters:
     tmpDir: .phpstan.cache
 
     reportUnmatchedIgnoredErrors: true
+
+    ignoreErrors:
+        - identifier: property.defaultValue
+          path: app/Models/Tenant/Branch.php

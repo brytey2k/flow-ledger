@@ -31,11 +31,14 @@ class TenantsController extends Controller
 
     public function store(TenantCreateRequest $request, NewTenantSetupService $service): RedirectResponse
     {
+        /** @var array{id: string, name: string, admin_email: string, admin_password: string} $data */
+        $data = $request->validated();
+
         $service->createTenant(
-            $request->validated('id'),
-            $request->validated('name'),
-            $request->validated('admin_email'),
-            $request->validated('admin_password'),
+            $data['id'],
+            $data['name'],
+            $data['admin_email'],
+            $data['admin_password'],
         );
 
         return redirect()
@@ -115,6 +118,10 @@ class TenantsController extends Controller
 
     private function resolveTenantName(Tenant $tenant): string
     {
-        return (string) ($tenant->name ?? $tenant->id);
+        $name = $tenant->getAttribute('name');
+        $key = $tenant->getTenantKey();
+        $id = is_scalar($key) ? (string) $key : '';
+
+        return is_string($name) && $name !== '' ? $name : $id;
     }
 }

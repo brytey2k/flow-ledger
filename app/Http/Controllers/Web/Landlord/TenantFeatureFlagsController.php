@@ -35,10 +35,12 @@ class TenantFeatureFlagsController extends Controller
 
     public function update(TenantFeatureFlagUpdateRequest $request, Tenant $tenant): RedirectResponse
     {
-        $enabledFlags = $request->validated('flags', []);
+        $rawFlags = $request->validated('flags', []);
+        /** @var array<int, string> $enabledFlags */
+        $enabledFlags = is_array($rawFlags) ? $rawFlags : [];
 
         foreach (FeatureFlag::cases() as $flag) {
-            if (in_array($flag->value, $enabledFlags ?? [], true)) {
+            if (in_array($flag->value, $enabledFlags, true)) {
                 $this->featureFlagService->activate($flag, $tenant);
             } else {
                 $this->featureFlagService->deactivate($flag, $tenant);
@@ -50,7 +52,8 @@ class TenantFeatureFlagsController extends Controller
 
     public function bulkUpdate(BulkFeatureFlagUpdateRequest $request): RedirectResponse
     {
-        $flag = FeatureFlag::from($request->validated('flag'));
+        $rawFlag = $request->validated('flag');
+        $flag = FeatureFlag::from(is_string($rawFlag) ? $rawFlag : '');
 
         if ($request->validated('action') === 'enable') {
             $this->featureFlagService->activateForAll($flag);

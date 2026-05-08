@@ -19,6 +19,7 @@ class LoginController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        /** @var array{email: string, password: string} $credentials */
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],

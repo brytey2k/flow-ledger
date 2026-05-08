@@ -18,6 +18,7 @@ class TenancyServiceProvider extends ServiceProvider
 {
     public static string $controllerNamespace = '';
 
+    /** @return array<class-string, array<mixed>> */
     public function events(): array
     {
         return [
@@ -68,7 +69,10 @@ class TenancyServiceProvider extends ServiceProvider
             Events\TenancyBootstrapped::class => [
                 static function (Events\TenancyBootstrapped $event): void {
                     $permissionRegistrar = app(PermissionRegistrar::class);
-                    $permissionRegistrar->cacheKey = 'spatie.permission.cache.tenant.' . $event->tenancy->tenant->getTenantKey();
+                    /** @var \Stancl\Tenancy\Contracts\Tenant $tenant */
+                    $tenant = $event->tenancy->tenant;
+                    $key = $tenant->getTenantKey();
+                    $permissionRegistrar->cacheKey = 'spatie.permission.cache.tenant.' . (is_scalar($key) ? (string) $key : '');
                 },
             ],
             Events\RevertingToCentralContext::class => [],
@@ -99,6 +103,7 @@ class TenancyServiceProvider extends ServiceProvider
                     $listener = $listener->toListener();
                 }
 
+                /* @var array<mixed>|(callable(): mixed)|string $listener */
                 Event::listen($event, $listener);
             }
         }
@@ -125,8 +130,11 @@ class TenancyServiceProvider extends ServiceProvider
             Middleware\InitializeTenancyByRequestData::class,
         ];
 
+        /** @var \Illuminate\Foundation\Http\Kernel $kernel */
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+
         foreach (array_reverse($tenancyMiddleware) as $middleware) {
-            $this->app[\Illuminate\Contracts\Http\Kernel::class]->prependToMiddlewarePriority($middleware);
+            $kernel->prependToMiddlewarePriority($middleware);
         }
     }
 }

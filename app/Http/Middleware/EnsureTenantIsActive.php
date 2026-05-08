@@ -12,10 +12,14 @@ class EnsureTenantIsActive
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ((bool) (tenant()?->getAttribute('is_suspended') ?? false)) {
+        $currentTenant = tenant();
+        if ($currentTenant instanceof \App\Models\Tenant && (bool) $currentTenant->getAttribute('is_suspended')) {
             abort(Response::HTTP_FORBIDDEN, 'Tenant is suspended.');
         }
 
-        return $next($request);
+        /** @var Response $response */
+        $response = $next($request);
+
+        return $response;
     }
 }

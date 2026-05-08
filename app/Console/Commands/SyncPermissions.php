@@ -21,7 +21,8 @@ class SyncPermissions extends Command
 
     public function handle(PermissionRegistrar $permissionRegistrar): int
     {
-        $this->getTenants()->each(function (Tenant $tenant) use ($permissionRegistrar): void {
+        $this->getTenants()->each(function (mixed $tenant) use ($permissionRegistrar): void {
+            assert($tenant instanceof Tenant);
             tenancy()->initialize($tenant);
 
             $this->newLine();

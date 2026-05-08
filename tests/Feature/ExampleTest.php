@@ -1,19 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Tests\TenantAppTestCase;
 
-class ExampleTest extends TestCase
+class ExampleTest extends TenantAppTestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_tenant_dashboard_requires_authentication(): void
     {
-        $response = $this->get('/');
+        $response = $this->get(route('dashboard'));
 
-        $response->assertStatus(200);
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_user_can_access_dashboard(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('dashboard'));
+
+        $response->assertOk();
     }
 }
