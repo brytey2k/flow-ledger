@@ -170,7 +170,7 @@ class NotificationTest extends TenantAppTestCase
 
         Notification::fake();
 
-        app(PaymentRequestService::class)->disburse($paymentRequest, 'bank_transfer', 'REF-001', $this->user);
+        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: 'bank_transfer', reference: 'REF-001'), $this->user);
 
         Notification::assertSentTo($this->user, RequestDisbursedNotification::class);
     }
@@ -187,7 +187,7 @@ class NotificationTest extends TenantAppTestCase
 
         Notification::fake();
 
-        app(PaymentRequestService::class)->disburse($paymentRequest, 'cash', null, $this->user);
+        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: 'cash', reference: null), $this->user);
 
         Notification::assertSentTo($this->user, RetirementRequiredNotification::class);
     }
@@ -204,7 +204,7 @@ class NotificationTest extends TenantAppTestCase
 
         Notification::fake();
 
-        app(PaymentRequestService::class)->disburse($paymentRequest, 'bank_transfer', null, $this->user);
+        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: 'bank_transfer', reference: null), $this->user);
 
         Notification::assertSentTo($this->user, RequestDisbursedNotification::class);
         Notification::assertNotSentTo($this->user, RetirementRequiredNotification::class);

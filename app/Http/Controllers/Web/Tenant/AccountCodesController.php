@@ -30,7 +30,12 @@ class AccountCodesController extends Controller
 
     public function store(AccountCodeStoreRequest $request): RedirectResponse
     {
-        AccountCode::create($request->validated());
+        $dto = $request->toDto();
+        AccountCode::create([
+            'code' => $dto->code,
+            'name' => $dto->name,
+            'department_id' => $dto->departmentId,
+        ]);
 
         return redirect()->route('account-codes.index')->with('success', 'Account code created successfully.');
     }
@@ -44,7 +49,12 @@ class AccountCodesController extends Controller
 
     public function update(AccountCodeUpdateRequest $request, AccountCode $accountCode): RedirectResponse
     {
-        $accountCode->update($request->validated());
+        $dto = $request->toDto();
+        $accountCode->update([
+            'code' => $dto->code,
+            'name' => $dto->name,
+            'department_id' => $dto->departmentId,
+        ]);
 
         return redirect()->route('account-codes.index')->with('success', 'Account code updated successfully.');
     }

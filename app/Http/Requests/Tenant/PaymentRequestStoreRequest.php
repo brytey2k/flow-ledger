@@ -35,4 +35,28 @@ class PaymentRequestStoreRequest extends FormRequest
             'items.*.receipt_number' => ['nullable', 'string', 'max:100'],
         ];
     }
+
+    public function toDto(int $staffId, int $branchId): \App\DTOs\Tenant\CreatePaymentRequestDto
+    {
+        /** @var list<array{description: string, amount: string|float, account_code_id?: string|int|null, receipt_number?: string|null}> $rawItems */
+        $rawItems = $this->input('items', []) ?? [];
+        $items = array_map(
+            fn(array $item): \App\DTOs\Tenant\PaymentRequestItemDto => new \App\DTOs\Tenant\PaymentRequestItemDto(
+                description: (string) $item['description'],
+                amount: (float) $item['amount'],
+                accountCodeId: isset($item['account_code_id']) ? (int) $item['account_code_id'] : null,
+                receiptNumber: isset($item['receipt_number']) ? (string) $item['receipt_number'] : null,
+            ),
+            $rawItems,
+        );
+
+        return new \App\DTOs\Tenant\CreatePaymentRequestDto(
+            staffId: $staffId,
+            branchId: $branchId,
+            currencyId: $this->integer('currency_id'),
+            type: $this->string('type')->toString(),
+            notes: $this->filled('notes') ? $this->string('notes')->toString() : null,
+            items: $items,
+        );
+    }
 }

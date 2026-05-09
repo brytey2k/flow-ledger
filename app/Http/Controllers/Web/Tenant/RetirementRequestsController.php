@@ -45,9 +45,7 @@ class RetirementRequestsController extends Controller
 
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
-        /** @var array{notes: string|null, items: array<int, array{description: string, amount: float|string, account_code_id: int, receipt_number: string|null}>} $data */
-        $data = $request->validated();
-        $retirement = $this->service->createDraft($paymentRequest, $data, $user);
+        $retirement = $this->service->createDraft($paymentRequest, $request->toDto(), $user);
 
         return redirect()->route('retirement-requests.show', $retirement)
             ->with('success', 'Retirement saved as draft.');

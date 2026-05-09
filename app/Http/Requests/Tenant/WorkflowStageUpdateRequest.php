@@ -25,4 +25,18 @@ class WorkflowStageUpdateRequest extends FormRequest
             'role_ids.*' => ['integer', 'exists:roles,id'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\WorkflowStageDto
+    {
+        /** @var list<int|string> $rawRoleIds */
+        $rawRoleIds = (array) ($this->input('role_ids', []) ?? []);
+
+        return new \App\DTOs\Tenant\WorkflowStageDto(
+            name: $this->string('name')->toString(),
+            displayOrder: $this->integer('display_order'),
+            skipBelowAmount: $this->filled('skip_below_amount') ? (float) $this->string('skip_below_amount')->toString() : null,
+            parallelGroupId: $this->filled('parallel_group_id') ? $this->integer('parallel_group_id') : null,
+            roleIds: array_map(fn(int|string $v): int => (int) $v, $rawRoleIds),
+        );
+    }
 }

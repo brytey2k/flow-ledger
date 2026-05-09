@@ -54,16 +54,10 @@ class PaymentRequestsController extends Controller
         /** @var Staff $staffProfile */
         $staffProfile = $user->staffProfile;
 
-        /** @var array{currency_id: int, type: string, notes: string|null, items: array<int, array{description: string, amount: float|string}>} $validated */
-        $validated = $request->validated();
-
-        $data = array_merge($validated, [
-            'staff_id' => $staffProfile->id,
-            'branch_id' => $staffProfile->branch_id,
-        ]);
-
-        /** @var array{staff_id: int, branch_id: int, currency_id: int, type: string, notes: string|null, items: array<int, array{description: string, amount: float|string}>} $data */
-        $paymentRequest = $this->service->createDraft($data, $user);
+        $paymentRequest = $this->service->createDraft(
+            $request->toDto($staffProfile->id, (int) $staffProfile->branch_id),
+            $user,
+        );
 
         return redirect()->route('payment-requests.show', $paymentRequest)
             ->with('success', 'Request saved as draft.');

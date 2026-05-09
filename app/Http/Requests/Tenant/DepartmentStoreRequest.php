@@ -20,4 +20,11 @@ class DepartmentStoreRequest extends FormRequest
             'name' => ['required', 'string', 'max:100', 'unique:departments,name'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\DepartmentDto
+    {
+        return new \App\DTOs\Tenant\DepartmentDto(
+            name: $this->string('name')->toString(),
+        );
+    }
 }

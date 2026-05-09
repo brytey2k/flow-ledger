@@ -27,7 +27,8 @@ class DepartmentsController extends Controller
 
     public function store(DepartmentStoreRequest $request): RedirectResponse
     {
-        Department::create($request->validated());
+        $dto = $request->toDto();
+        Department::create(['name' => $dto->name]);
 
         return redirect()->route('departments.index')->with('success', 'Department created successfully.');
     }
@@ -39,7 +40,8 @@ class DepartmentsController extends Controller
 
     public function update(DepartmentUpdateRequest $request, Department $department): RedirectResponse
     {
-        $department->update($request->validated());
+        $dto = $request->toDto();
+        $department->update(['name' => $dto->name]);
 
         return redirect()->route('departments.index')->with('success', 'Department updated successfully.');
     }

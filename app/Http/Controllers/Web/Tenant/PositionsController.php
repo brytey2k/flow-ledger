@@ -27,7 +27,8 @@ class PositionsController extends Controller
 
     public function store(PositionStoreRequest $request): RedirectResponse
     {
-        Position::create($request->validated());
+        $dto = $request->toDto();
+        Position::create(['name' => $dto->name]);
 
         return redirect()->route('positions.index')->with('success', 'Position created successfully.');
     }
@@ -39,7 +40,8 @@ class PositionsController extends Controller
 
     public function update(PositionUpdateRequest $request, Position $position): RedirectResponse
     {
-        $position->update($request->validated());
+        $dto = $request->toDto();
+        $position->update(['name' => $dto->name]);
 
         return redirect()->route('positions.index')->with('success', 'Position updated successfully.');
     }

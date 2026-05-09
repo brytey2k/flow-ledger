@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\Tenant\CreateUserDto;
+use App\DTOs\Tenant\UpdateUserDto;
 use App\Models\Tenant\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class UserService
 {
-    /** @param array<string, mixed> $data */
-    public function create(array $data, Model|null $actor = null): User
+    public function create(CreateUserDto $dto, Model|null $actor = null): User
     {
-        return DB::transaction(function () use ($data, $actor): User {
+        return DB::transaction(function () use ($dto, $actor): User {
             $user = User::create([
-                'first_name' => $data['first_name'],
-                'last_name' => $data['last_name'],
-                'email' => $data['email'],
-                'password' => $data['password'],
+                'first_name' => $dto->firstName,
+                'last_name' => $dto->lastName,
+                'email' => $dto->email,
+                'password' => $dto->password,
             ]);
 
-            $roles = $data['roles'] ?? [];
-            if (is_array($roles) && ! empty($roles)) {
-                $user->syncRoles($roles);
+            if (! empty($dto->roles)) {
+                $user->syncRoles($dto->roles);
             }
 
             activity()
@@ -37,25 +37,21 @@ class UserService
         });
     }
 
-    /** @param array<string, mixed> $data */
-    public function update(User $user, array $data, Model|null $actor = null): void
+    public function update(User $user, UpdateUserDto $dto, Model|null $actor = null): void
     {
-        DB::transaction(function () use ($user, $data, $actor): void {
+        DB::transaction(function () use ($user, $dto, $actor): void {
             $attributes = [
-                'first_name' => $data['first_name'],
-                'last_name' => $data['last_name'],
-                'email' => $data['email'],
+                'first_name' => $dto->firstName,
+                'last_name' => $dto->lastName,
+                'email' => $dto->email,
             ];
 
-            $password = $data['password'] ?? null;
-            if (! empty($password)) {
-                $attributes['password'] = $password;
+            if ($dto->password !== null) {
+                $attributes['password'] = $dto->password;
             }
 
             $user->update($attributes);
-
-            $roles = $data['roles'] ?? [];
-            $user->syncRoles(is_array($roles) ? $roles : []);
+            $user->syncRoles($dto->roles);
 
             activity()
                 ->performedOn($user)

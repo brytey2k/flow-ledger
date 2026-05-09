@@ -28,4 +28,11 @@ class DepartmentUpdateRequest extends FormRequest
             'name' => ['required', 'string', 'max:100', 'unique:departments,name,' . $ignoreId],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\DepartmentDto
+    {
+        return new \App\DTOs\Tenant\DepartmentDto(
+            name: $this->string('name')->toString(),
+        );
+    }
 }

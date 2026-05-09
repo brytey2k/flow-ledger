@@ -25,4 +25,24 @@ class RetirementRequestStoreRequest extends FormRequest
             'items.*.receipt_number' => ['nullable', 'string', 'max:100'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\CreateRetirementRequestDto
+    {
+        /** @var list<array{description: string, amount: string|float, account_code_id: string|int, receipt_number?: string|null}> $rawItems */
+        $rawItems = $this->input('items', []) ?? [];
+        $items = array_map(
+            fn(array $item): \App\DTOs\Tenant\RetirementRequestItemDto => new \App\DTOs\Tenant\RetirementRequestItemDto(
+                description: (string) $item['description'],
+                amount: (float) $item['amount'],
+                accountCodeId: (int) $item['account_code_id'],
+                receiptNumber: isset($item['receipt_number']) ? (string) $item['receipt_number'] : null,
+            ),
+            $rawItems,
+        );
+
+        return new \App\DTOs\Tenant\CreateRetirementRequestDto(
+            notes: $this->filled('notes') ? $this->string('notes')->toString() : null,
+            items: $items,
+        );
+    }
 }

@@ -22,4 +22,12 @@ class WorkflowTemplateUpdateRequest extends FormRequest
             'type' => ['required', Rule::in(['advance', 'expense', 'retirement'])],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\WorkflowTemplateDto
+    {
+        return new \App\DTOs\Tenant\WorkflowTemplateDto(
+            name: $this->string('name')->toString(),
+            type: $this->string('type')->toString(),
+        );
+    }
 }

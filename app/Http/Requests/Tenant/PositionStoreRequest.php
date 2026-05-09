@@ -20,4 +20,11 @@ class PositionStoreRequest extends FormRequest
             'name' => ['required', 'string', 'max:100', 'unique:positions,name'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\PositionDto
+    {
+        return new \App\DTOs\Tenant\PositionDto(
+            name: $this->string('name')->toString(),
+        );
+    }
 }

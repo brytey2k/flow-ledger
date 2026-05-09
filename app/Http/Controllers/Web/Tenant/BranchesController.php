@@ -33,14 +33,19 @@ class BranchesController extends Controller
 
     public function store(BranchStoreRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        $parentId = $data['parent_id'] ?? null;
+        $dto = $request->toDto();
 
-        $branch = new Branch($data);
+        $branch = new Branch([
+            'name' => $dto->name,
+            'code' => $dto->code,
+            'level_id' => $dto->levelId,
+            'currency_id' => $dto->currencyId,
+            'position' => $dto->position,
+        ]);
 
-        if ($parentId !== null) {
+        if ($dto->parentId !== null) {
             /** @var Branch $parent */
-            $parent = Branch::findOrFail($parentId);
+            $parent = Branch::findOrFail($dto->parentId);
             $parent->appendChild($branch);
         } else {
             $branch->save();
@@ -61,16 +66,20 @@ class BranchesController extends Controller
 
     public function update(BranchUpdateRequest $request, Branch $branch): RedirectResponse
     {
-        $data = $request->validated();
-        $rawParentId = $data['parent_id'] ?? null;
-        $newParentId = is_numeric($rawParentId) ? (int) $rawParentId : null;
+        $dto = $request->toDto();
 
-        $branch->fill($data);
+        $branch->fill([
+            'name' => $dto->name,
+            'code' => $dto->code,
+            'level_id' => $dto->levelId,
+            'currency_id' => $dto->currencyId,
+            'position' => $dto->position,
+        ]);
 
-        if ($newParentId !== (int) $branch->parent_id) {
-            if ($newParentId !== null) {
+        if ($dto->parentId !== (int) $branch->parent_id) {
+            if ($dto->parentId !== null) {
                 /** @var Branch $parent */
-                $parent = Branch::findOrFail($newParentId);
+                $parent = Branch::findOrFail($dto->parentId);
                 $branch->moveTo(0, $parent);
             } else {
                 $branch->makeRoot(0);

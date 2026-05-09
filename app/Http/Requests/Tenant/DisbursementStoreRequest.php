@@ -21,4 +21,12 @@ class DisbursementStoreRequest extends FormRequest
             'disbursement_reference' => ['nullable', 'string', 'max:255'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\DisbursePaymentRequestDto
+    {
+        return new \App\DTOs\Tenant\DisbursePaymentRequestDto(
+            method: $this->string('disbursement_method')->toString(),
+            reference: $this->filled('disbursement_reference') ? $this->string('disbursement_reference')->toString() : null,
+        );
+    }
 }

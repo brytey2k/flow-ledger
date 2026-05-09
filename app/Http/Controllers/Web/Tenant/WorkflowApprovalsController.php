@@ -57,15 +57,12 @@ class WorkflowApprovalsController extends Controller
         abort_unless($this->engine->canUserActOnStage($instanceStage, $user), 403);
         abort_unless($instanceStage->isActive(), 403);
 
-        $rawAction = $request->validated('action');
-        $action = is_string($rawAction) ? $rawAction : '';
-        $rawComment = $request->validated('comment');
-        $comment = is_string($rawComment) ? $rawComment : null;
+        $dto = $request->toDto();
 
-        match ($action) {
-            'approve' => $this->engine->approve($instanceStage, $user, $comment),
-            'reject' => $this->engine->reject($instanceStage, $user, (string) $comment),
-            'send_back' => $this->engine->sendBack($instanceStage, $user, (string) $comment),
+        match ($dto->action) {
+            'approve' => $this->engine->approve($instanceStage, $user, $dto->comment),
+            'reject' => $this->engine->reject($instanceStage, $user, (string) $dto->comment),
+            'send_back' => $this->engine->sendBack($instanceStage, $user, (string) $dto->comment),
             default => null,
         };
 

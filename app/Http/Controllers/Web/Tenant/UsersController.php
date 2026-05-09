@@ -14,6 +14,7 @@ use App\Models\Tenant\User;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class UsersController extends Controller
@@ -43,7 +44,7 @@ class UsersController extends Controller
 
     public function store(UserStoreRequest $request): RedirectResponse
     {
-        $this->service->create($request->validated(), $request->user());
+        $this->service->create($request->toDto(), $request->user());
 
         return redirect()
             ->route('users.index')
@@ -63,7 +64,7 @@ class UsersController extends Controller
 
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
-        $this->service->update($user, $request->validated(), $request->user());
+        $this->service->update($user, $request->toDto(), $request->user());
 
         return redirect()
             ->route('users.index')
@@ -92,13 +93,16 @@ class UsersController extends Controller
 
     public function updatePermissions(PermissionsSyncRequest $request, User $user): RedirectResponse
     {
-        if ($request->has('permissions')) {
-            /** @var array<string>|string $permissions */
-            $permissions = $request->validated()['permissions'];
-            $user->syncPermissions($permissions);
-        } else {
-            $user->syncPermissions([]);
-        }
+        $dto = $request->toDto();
+
+        DB::transaction(function () use ($user, $dto): void {
+            if (! empty($dto->permissionIds)) {
+                $permissions = Permission::whereIn('id', $dto->permissionIds)->get();
+                $user->syncPermissions($permissions);
+            } else {
+                $user->syncPermissions([]);
+            }
+        });
 
         return redirect()
             ->route('users.edit', $user)

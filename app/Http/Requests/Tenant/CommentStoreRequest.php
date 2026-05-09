@@ -20,4 +20,11 @@ class CommentStoreRequest extends FormRequest
             'body' => ['required', 'string', 'max:2000'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\CommentDto
+    {
+        return new \App\DTOs\Tenant\CommentDto(
+            body: $this->string('body')->toString(),
+        );
+    }
 }

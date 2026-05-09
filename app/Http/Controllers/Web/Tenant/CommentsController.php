@@ -17,9 +17,11 @@ class CommentsController extends Controller
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
 
+        $dto = $request->toDto();
+
         $paymentRequest->comments()->create([
             'user_id' => $user->id,
-            'body' => $request->validated('body'),
+            'body' => $dto->body,
         ]);
 
         return redirect()->route('payment-requests.show', $paymentRequest)

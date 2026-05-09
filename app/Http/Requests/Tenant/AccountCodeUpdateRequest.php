@@ -30,4 +30,13 @@ class AccountCodeUpdateRequest extends FormRequest
             'department_id' => ['required', 'integer', 'exists:departments,id'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\AccountCodeDto
+    {
+        return new \App\DTOs\Tenant\AccountCodeDto(
+            code: $this->string('code')->toString(),
+            name: $this->string('name')->toString(),
+            departmentId: $this->integer('department_id'),
+        );
+    }
 }

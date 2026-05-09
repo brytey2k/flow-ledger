@@ -38,4 +38,18 @@ class UserStoreRequest extends FormRequest
             'roles.*' => 'role',
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\CreateUserDto
+    {
+        /** @var list<int|string> $rawRoles */
+        $rawRoles = (array) ($this->input('roles', []) ?? []);
+
+        return new \App\DTOs\Tenant\CreateUserDto(
+            firstName: $this->string('first_name')->toString(),
+            lastName: $this->string('last_name')->toString(),
+            email: $this->string('email')->toString(),
+            password: $this->string('password')->toString(),
+            roles: array_map(fn(int|string $v): int => (int) $v, $rawRoles),
+        );
+    }
 }

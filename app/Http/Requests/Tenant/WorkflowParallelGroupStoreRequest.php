@@ -21,4 +21,12 @@ class WorkflowParallelGroupStoreRequest extends FormRequest
             'require_all' => ['required', 'boolean'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\WorkflowParallelGroupDto
+    {
+        return new \App\DTOs\Tenant\WorkflowParallelGroupDto(
+            name: $this->string('name')->toString(),
+            requireAll: $this->boolean('require_all'),
+        );
+    }
 }

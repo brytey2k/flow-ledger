@@ -30,7 +30,8 @@ class LevelController extends Controller
 
     public function store(LevelStoreRequest $request): RedirectResponse
     {
-        Level::create($request->validated());
+        $dto = $request->toDto();
+        Level::create(['name' => $dto->name, 'position' => $dto->position]);
 
         return redirect()->route('levels.index')->with('success', 'Level created successfully.');
     }
@@ -42,7 +43,8 @@ class LevelController extends Controller
 
     public function update(LevelUpdateRequest $request, Level $level): RedirectResponse
     {
-        $level->update($request->validated());
+        $dto = $request->toDto();
+        $level->update(['name' => $dto->name, 'position' => $dto->position]);
 
         return redirect()->route('levels.index')->with('success', 'Level updated successfully.');
     }

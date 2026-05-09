@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\Tenant\CreateRetirementRequestDto;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
@@ -16,17 +17,10 @@ class RetirementService
         private readonly WorkflowEngineService $engine,
     ) {}
 
-    /**
-     * @param array{notes: string|null, items: array<int, array{description: string, amount: float|string, account_code_id: int, receipt_number: string|null}>} $data
-     * @param PaymentRequest $paymentRequest
-     * @param User|null|null $user
-     */
-    public function createDraft(PaymentRequest $paymentRequest, array $data, User|null $user = null): RetirementRequest
+    public function createDraft(PaymentRequest $paymentRequest, CreateRetirementRequestDto $dto, User|null $user = null): RetirementRequest
     {
-        return DB::transaction(function () use ($paymentRequest, $data, $user): RetirementRequest {
-            $items = $data['items'];
-            $sumResult = collect($items)->sum('amount');
-            $totalExpended = is_numeric($sumResult) ? (float) $sumResult : 0.0;
+        return DB::transaction(function () use ($paymentRequest, $dto, $user): RetirementRequest {
+            $totalExpended = array_sum(array_map(fn($item) => $item->amount, $dto->items));
             $rawAmount = $paymentRequest->getAttribute('total_amount');
             $advanceAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
             $diff = round($totalExpended - $advanceAmount, 2);
@@ -43,11 +37,16 @@ class RetirementService
                 'total_amount_expended' => $totalExpended,
                 'difference_amount' => abs($diff),
                 'difference_type' => $differenceType,
-                'notes' => $data['notes'] ?? null,
+                'notes' => $dto->notes,
             ]);
 
-            foreach ($items as $item) {
-                $retirement->items()->create($item);
+            foreach ($dto->items as $item) {
+                $retirement->items()->create([
+                    'description' => $item->description,
+                    'amount' => $item->amount,
+                    'account_code_id' => $item->accountCodeId,
+                    'receipt_number' => $item->receiptNumber,
+                ]);
             }
 
             activity()

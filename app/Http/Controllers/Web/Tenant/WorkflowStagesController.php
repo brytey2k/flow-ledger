@@ -30,13 +30,7 @@ class WorkflowStagesController extends Controller
 
     public function store(WorkflowStageStoreRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
-        $data = $request->validated();
-        $rawRoleIds = $data['role_ids'] ?? [];
-        /** @var array<int, int> $roleIds */
-        $roleIds = is_array($rawRoleIds) ? array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $rawRoleIds) : [];
-        unset($data['role_ids']);
-
-        $this->service->create($workflowTemplate, $data, $roleIds);
+        $this->service->create($workflowTemplate, $request->toDto());
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
             ->with('success', 'Stage added.');
@@ -53,13 +47,7 @@ class WorkflowStagesController extends Controller
 
     public function update(WorkflowStageUpdateRequest $request, WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): RedirectResponse
     {
-        $data = $request->validated();
-        $rawRoleIds = $data['role_ids'] ?? [];
-        /** @var array<int, int> $roleIds */
-        $roleIds = is_array($rawRoleIds) ? array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $rawRoleIds) : [];
-        unset($data['role_ids']);
-
-        $this->service->update($workflowStage, $data, $roleIds);
+        $this->service->update($workflowStage, $request->toDto());
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
             ->with('success', 'Stage updated.');

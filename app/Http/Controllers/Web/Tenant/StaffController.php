@@ -42,7 +42,7 @@ class StaffController extends Controller
 
     public function store(StaffStoreRequest $request): RedirectResponse
     {
-        $this->service->create($request->validated(), $request->user());
+        $this->service->create($request->toDto(), $request->user());
 
         return redirect()->route('staff.index')->with('success', 'Staff member created successfully.');
     }
@@ -59,7 +59,7 @@ class StaffController extends Controller
 
     public function update(StaffUpdateRequest $request, Staff $staff): RedirectResponse
     {
-        $this->service->update($staff, $request->validated(), $request->user());
+        $this->service->update($staff, $request->toDto(), $request->user());
 
         return redirect()->route('staff.index')->with('success', 'Staff member updated successfully.');
     }

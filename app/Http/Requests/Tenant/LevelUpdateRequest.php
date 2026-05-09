@@ -21,4 +21,12 @@ class LevelUpdateRequest extends FormRequest
             'position' => ['required', 'integer', 'min:1'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\LevelDto
+    {
+        return new \App\DTOs\Tenant\LevelDto(
+            name: $this->string('name')->toString(),
+            position: $this->integer('position'),
+        );
+    }
 }

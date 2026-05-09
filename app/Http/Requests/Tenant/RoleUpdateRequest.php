@@ -23,4 +23,11 @@ class RoleUpdateRequest extends FormRequest
             'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($this->role)],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\UpdateRoleDto
+    {
+        return new \App\DTOs\Tenant\UpdateRoleDto(
+            name: $this->string('name')->toString(),
+        );
+    }
 }

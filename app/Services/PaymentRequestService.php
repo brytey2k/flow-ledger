@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\Tenant\CreatePaymentRequestDto;
+use App\DTOs\Tenant\DisbursePaymentRequestDto;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
@@ -16,23 +18,31 @@ class PaymentRequestService
         private readonly NotificationService $notifications,
     ) {}
 
-    /**
-     * @param array{staff_id: int, branch_id: int, currency_id: int, type: string, notes: string|null, items: array<int, array{description: string, amount: float|string}>} $data
-     * @param User|null|null $user
-     */
-    public function createDraft(array $data, User|null $user = null): PaymentRequest
+    public function createDraft(CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
     {
-        return DB::transaction(function () use ($data, $user): PaymentRequest {
-            $items = $data['items'];
-            unset($data['items']);
+        return DB::transaction(function () use ($dto, $user): PaymentRequest {
+            $totalAmount = array_sum(array_column(
+                array_map(fn($item) => ['amount' => $item->amount], $dto->items),
+                'amount',
+            ));
 
-            $data['total_amount'] = collect($items)->sum('amount');
-            $data['status'] = 'draft';
+            $request = PaymentRequest::create([
+                'staff_id' => $dto->staffId,
+                'branch_id' => $dto->branchId,
+                'currency_id' => $dto->currencyId,
+                'type' => $dto->type,
+                'notes' => $dto->notes,
+                'total_amount' => $totalAmount,
+                'status' => 'draft',
+            ]);
 
-            $request = PaymentRequest::create($data);
-
-            foreach ($items as $item) {
-                $request->items()->create($item);
+            foreach ($dto->items as $item) {
+                $request->items()->create([
+                    'description' => $item->description,
+                    'amount' => $item->amount,
+                    'account_code_id' => $item->accountCodeId,
+                    'receipt_number' => $item->receiptNumber,
+                ]);
             }
 
             activity()
@@ -67,22 +77,22 @@ class PaymentRequestService
         });
     }
 
-    public function disburse(PaymentRequest $request, string $method, string|null $reference, User|null $user = null): void
+    public function disburse(PaymentRequest $request, DisbursePaymentRequestDto $dto, User|null $user = null): void
     {
-        DB::transaction(function () use ($request, $method, $reference, $user): void {
+        DB::transaction(function () use ($request, $dto, $user): void {
             $request->update([
                 'status' => 'disbursed',
                 'disbursed_at' => now(),
                 'disbursed_by_user_id' => $user?->id,
-                'disbursement_method' => $method,
-                'disbursement_reference' => $reference,
+                'disbursement_method' => $dto->method,
+                'disbursement_reference' => $dto->reference,
             ]);
 
             activity()
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.disbursed')
-                ->withProperties(['old_status' => 'approved', 'new_status' => 'disbursed', 'method' => $method])
+                ->withProperties(['old_status' => 'approved', 'new_status' => 'disbursed', 'method' => $dto->method])
                 ->log('Disbursed');
         });
 

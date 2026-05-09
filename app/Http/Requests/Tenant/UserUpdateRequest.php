@@ -39,4 +39,18 @@ class UserUpdateRequest extends FormRequest
             'roles.*' => 'role',
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\UpdateUserDto
+    {
+        /** @var list<int|string> $rawRoles */
+        $rawRoles = (array) ($this->input('roles', []) ?? []);
+
+        return new \App\DTOs\Tenant\UpdateUserDto(
+            firstName: $this->string('first_name')->toString(),
+            lastName: $this->string('last_name')->toString(),
+            email: $this->string('email')->toString(),
+            password: $this->filled('password') ? $this->string('password')->toString() : null,
+            roles: array_map(fn(int|string $v): int => (int) $v, $rawRoles),
+        );
+    }
 }

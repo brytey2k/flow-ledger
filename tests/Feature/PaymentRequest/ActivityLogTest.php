@@ -18,14 +18,17 @@ class ActivityLogTest extends TenantAppTestCase
 {
     public function test_creating_draft_logs_request_created_event(): void
     {
-        $paymentRequest = app(PaymentRequestService::class)->createDraft([
-            'staff_id' => Staff::factory()->create()->id,
-            'branch_id' => $this->branch->id,
-            'currency_id' => Currency::factory()->create()->id,
-            'type' => 'advance',
-            'notes' => null,
-            'items' => [['description' => 'Test', 'amount' => '100']],
-        ], $this->user);
+        $staff = Staff::factory()->create();
+        $currency = Currency::factory()->create();
+        $dto = new \App\DTOs\Tenant\CreatePaymentRequestDto(
+            staffId: $staff->id,
+            branchId: $this->branch->id,
+            currencyId: $currency->id,
+            type: 'advance',
+            notes: null,
+            items: [new \App\DTOs\Tenant\PaymentRequestItemDto(description: 'Test', amount: 100.0, accountCodeId: null, receiptNumber: null)],
+        );
+        $paymentRequest = app(PaymentRequestService::class)->createDraft($dto, $this->user);
 
         $this->assertDatabaseHas('activity_log', [
             'subject_type' => PaymentRequest::class,

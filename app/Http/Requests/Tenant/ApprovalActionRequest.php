@@ -28,4 +28,12 @@ class ApprovalActionRequest extends FormRequest
             ],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\ApprovalActionDto
+    {
+        return new \App\DTOs\Tenant\ApprovalActionDto(
+            action: $this->string('action')->toString(),
+            comment: $this->filled('comment') ? $this->string('comment')->toString() : null,
+        );
+    }
 }

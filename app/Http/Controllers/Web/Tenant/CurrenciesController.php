@@ -29,12 +29,12 @@ class CurrenciesController extends Controller
 
     public function store(CurrencyStoreRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
+        $dto = $request->toDto();
 
         Currency::create([
-            'name' => $validated['name'],
-            'short_name' => $validated['short_name'],
-            'symbol' => $validated['symbol'],
+            'name' => $dto->name,
+            'short_name' => $dto->shortName,
+            'symbol' => $dto->symbol,
         ]);
 
         return redirect()
@@ -51,12 +51,12 @@ class CurrenciesController extends Controller
 
     public function update(CurrencyUpdateRequest $request, Currency $currency): RedirectResponse
     {
-        $validated = $request->validated();
+        $dto = $request->toDto();
 
         $currency->update([
-            'name' => $validated['name'],
-            'short_name' => $validated['short_name'],
-            'symbol' => $validated['symbol'],
+            'name' => $dto->name,
+            'short_name' => $dto->shortName,
+            'symbol' => $dto->symbol,
         ]);
 
         return redirect()

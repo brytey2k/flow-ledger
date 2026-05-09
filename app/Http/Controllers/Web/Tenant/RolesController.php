@@ -34,9 +34,10 @@ class RolesController extends Controller
 
     public function store(RoleStoreRequest $request): RedirectResponse
     {
+        $dto = $request->toDto();
         Role::create([
-            'name' => $request->validated()['name'],
-            'guard_name' => $request->validated()['guard_name'],
+            'name' => $dto->name,
+            'guard_name' => $dto->guardName,
         ]);
 
         return redirect()
@@ -53,8 +54,9 @@ class RolesController extends Controller
 
     public function update(RoleUpdateRequest $request, Role $role): RedirectResponse
     {
+        $dto = $request->toDto();
         $role->update([
-            'name' => $request->validated()['name'],
+            'name' => $dto->name,
         ]);
 
         return redirect()
@@ -90,10 +92,11 @@ class RolesController extends Controller
 
     public function updatePermissions(PermissionsSyncRequest $request, Role $role): RedirectResponse
     {
-        DB::transaction(function () use ($request, $role): void {
-            if ($request->has('permissions')) {
-                $permissionIds = $request->validated()['permissions'];
-                $permissions = Permission::whereIn('id', $permissionIds)->get();
+        $dto = $request->toDto();
+
+        DB::transaction(function () use ($dto, $role): void {
+            if (! empty($dto->permissionIds)) {
+                $permissions = Permission::whereIn('id', $dto->permissionIds)->get();
                 $role->syncPermissions($permissions);
             } else {
                 $role->syncPermissions([]);

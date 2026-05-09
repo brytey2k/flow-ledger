@@ -41,4 +41,13 @@ class CurrencyStoreRequest extends FormRequest
             'symbol.max' => 'The currency symbol may not exceed 10 characters.',
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\CurrencyDto
+    {
+        return new \App\DTOs\Tenant\CurrencyDto(
+            name: $this->string('name')->toString(),
+            shortName: $this->string('short_name')->toString(),
+            symbol: $this->string('symbol')->toString(),
+        );
+    }
 }

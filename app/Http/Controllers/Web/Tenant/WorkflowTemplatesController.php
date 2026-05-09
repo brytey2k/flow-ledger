@@ -27,7 +27,11 @@ class WorkflowTemplatesController extends Controller
 
     public function store(WorkflowTemplateStoreRequest $request): RedirectResponse
     {
-        $template = WorkflowTemplate::create($request->validated());
+        $dto = $request->toDto();
+        $template = WorkflowTemplate::create([
+            'name' => $dto->name,
+            'type' => $dto->type,
+        ]);
 
         return redirect()->route('workflow-templates.show', $template)
             ->with('success', 'Workflow template created. Now add stages.');
@@ -47,7 +51,11 @@ class WorkflowTemplatesController extends Controller
 
     public function update(WorkflowTemplateUpdateRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
-        $workflowTemplate->update($request->validated());
+        $dto = $request->toDto();
+        $workflowTemplate->update([
+            'name' => $dto->name,
+            'type' => $dto->type,
+        ]);
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
             ->with('success', 'Workflow template updated.');

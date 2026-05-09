@@ -28,4 +28,18 @@ class StaffStoreRequest extends FormRequest
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\StaffDto
+    {
+        return new \App\DTOs\Tenant\StaffDto(
+            firstName: $this->string('first_name')->toString(),
+            lastName: $this->string('last_name')->toString(),
+            email: $this->filled('email') ? $this->string('email')->toString() : null,
+            phone: $this->filled('phone') ? $this->string('phone')->toString() : null,
+            departmentId: $this->integer('department_id'),
+            positionId: $this->integer('position_id'),
+            userId: $this->filled('user_id') ? $this->integer('user_id') : null,
+            branchId: $this->filled('branch_id') ? $this->integer('branch_id') : null,
+        );
+    }
 }

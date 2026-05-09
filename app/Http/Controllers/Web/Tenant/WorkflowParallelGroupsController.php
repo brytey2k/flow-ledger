@@ -14,7 +14,11 @@ class WorkflowParallelGroupsController extends Controller
 {
     public function store(WorkflowParallelGroupStoreRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
-        $workflowTemplate->parallelGroups()->create($request->validated());
+        $dto = $request->toDto();
+        $workflowTemplate->parallelGroups()->create([
+            'name' => $dto->name,
+            'require_all' => $dto->requireAll,
+        ]);
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
             ->with('success', 'Parallel group created.');

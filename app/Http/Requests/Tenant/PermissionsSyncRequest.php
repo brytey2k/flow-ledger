@@ -33,4 +33,14 @@ class PermissionsSyncRequest extends FormRequest
             'permissions.*' => 'permission',
         ];
     }
+
+    public function toDto(): \App\DTOs\Tenant\SyncPermissionsDto
+    {
+        /** @var list<int|string> $rawIds */
+        $rawIds = (array) ($this->input('permissions', []) ?? []);
+
+        return new \App\DTOs\Tenant\SyncPermissionsDto(
+            permissionIds: array_map(fn(int|string $v): int => (int) $v, $rawIds),
+        );
+    }
 }

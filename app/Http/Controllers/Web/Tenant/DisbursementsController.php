@@ -35,17 +35,8 @@ class DisbursementsController extends Controller
 
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
-        $validated = $request->validated();
 
-        $method = $validated['disbursement_method'];
-        $reference = $validated['disbursement_reference'] ?? null;
-
-        $this->service->disburse(
-            $paymentRequest,
-            is_string($method) ? $method : '',
-            is_string($reference) ? $reference : null,
-            $user,
-        );
+        $this->service->disburse($paymentRequest, $request->toDto(), $user);
 
         return redirect()->route('payment-requests.show', $paymentRequest)
             ->with('success', 'Request marked as disbursed.');
