@@ -52,45 +52,17 @@
                             @enderror
                         </div>
 
-                        {{-- Staff Member --}}
-                        <div>
-                            <label class="kt-form-label block mb-2" for="staff_id">
-                                Staff Member <span class="text-destructive">*</span>
-                            </label>
-                            <select id="staff_id" name="staff_id" class="kt-select w-full"
-                                    aria-invalid="@error('staff_id') true @else false @enderror">
-                                <option value="">Select staff member…</option>
-                                @foreach($staff as $member)
-                                    <option value="{{ $member->id }}" {{ old('staff_id') == $member->id ? 'selected' : '' }}>
-                                        {{ $member->full_name }}
-                                        @if($member->department)
-                                            — {{ $member->department->name }}
-                                        @endif
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('staff_id')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Branch --}}
-                        <div>
-                            <label class="kt-form-label block mb-2" for="branch_id">
-                                Branch <span class="text-destructive">*</span>
-                            </label>
-                            <select id="branch_id" name="branch_id" class="kt-select w-full"
-                                    aria-invalid="@error('branch_id') true @else false @enderror">
-                                <option value="">Select branch…</option>
-                                @foreach($branches as $branch)
-                                    <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
-                                        {{ $branch->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('branch_id')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
+                        {{-- Submitting As (read-only) --}}
+                        <div class="lg:col-span-2">
+                            <label class="kt-form-label block mb-2">Submitting As</label>
+                            <div class="kt-input w-full bg-muted/40 flex items-center gap-3 px-4 py-3 rounded-md">
+                                <i class="ki-filled ki-user text-secondary-foreground"></i>
+                                <div>
+                                    <span class="font-medium text-mono">{{ $staffProfile->full_name }}</span>
+                                    <span class="text-secondary-foreground"> &middot; {{ $staffProfile->department?->name }}</span>
+                                    <span class="text-secondary-foreground"> &middot; {{ $staffProfile->branch?->name }}</span>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Currency --}}

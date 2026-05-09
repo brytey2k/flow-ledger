@@ -84,8 +84,8 @@ class BranchesController extends Controller
 
     public function destroy(Branch $branch): RedirectResponse
     {
-        if ($branch->users()->exists()) {
-            return back()->with('error', 'Cannot delete a branch that has users assigned to it.');
+        if ($branch->staff()->exists()) {
+            return back()->with('error', 'Cannot delete a branch that has staff assigned to it.');
         }
 
         if ($branch->descendants()->exists()) {

@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Level $level
  * @property-read Currency $currency
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $users
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Staff> $staff
  */
 class Branch extends Entity
 {
@@ -47,9 +47,9 @@ class Branch extends Entity
         return $this->belongsTo(Currency::class);
     }
 
-    /** @return HasMany<User, $this> */
-    public function users(): HasMany
+    /** @return HasMany<Staff, $this> */
+    public function staff(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(Staff::class);
     }
 }

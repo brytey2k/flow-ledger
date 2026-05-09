@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature\PaymentRequest;
 
 use App\Models\Tenant\AccountCode;
+use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\PaymentRequestService;
@@ -13,14 +15,17 @@ use Tests\TenantAppTestCase;
 
 class ExpenseRequestTest extends TenantAppTestCase
 {
+    private function linkUserToStaff(): Staff
+    {
+        return Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+    }
+
     private function validExpensePayload(array $override = []): array
     {
         $accountCode = AccountCode::factory()->create();
 
         return array_merge([
-            'staff_id' => \App\Models\Tenant\Staff::factory()->create()->id,
-            'branch_id' => $this->branch->id,
-            'currency_id' => \App\Models\Tenant\Currency::factory()->create()->id,
+            'currency_id' => Currency::factory()->create()->id,
             'type' => 'expense',
             'notes' => null,
             'items' => [
@@ -38,6 +43,7 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     public function test_create_form_provides_account_codes(): void
     {
+        $this->linkUserToStaff();
         AccountCode::factory()->count(3)->create();
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.create'));
@@ -50,6 +56,7 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     public function test_expense_request_is_created_as_draft(): void
     {
+        $this->linkUserToStaff();
         $payload = $this->validExpensePayload();
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.store'), $payload);
@@ -63,6 +70,7 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     public function test_expense_items_store_account_code_and_receipt(): void
     {
+        $this->linkUserToStaff();
         $accountCode = AccountCode::factory()->create();
         $payload = $this->validExpensePayload([
             'items' => [[
@@ -84,6 +92,7 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     public function test_expense_requires_account_code_on_items(): void
     {
+        $this->linkUserToStaff();
         $payload = $this->validExpensePayload([
             'items' => [[
                 'description' => 'Taxi',
@@ -100,10 +109,9 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     public function test_advance_does_not_require_account_code(): void
     {
+        $this->linkUserToStaff();
         $payload = [
-            'staff_id' => \App\Models\Tenant\Staff::factory()->create()->id,
-            'branch_id' => $this->branch->id,
-            'currency_id' => \App\Models\Tenant\Currency::factory()->create()->id,
+            'currency_id' => Currency::factory()->create()->id,
             'type' => 'advance',
             'notes' => null,
             'items' => [

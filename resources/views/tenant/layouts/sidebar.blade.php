@@ -182,7 +182,7 @@
                 @endcanany
 
                 {{-- Settings --}}
-                @canany([PermissionKey::AccessUsers->value, PermissionKey::AccessRoles->value, PermissionKey::AccessCurrencies->value, PermissionKey::AccessWorkflowTemplates->value])
+                @canany([PermissionKey::AccessUsers->value, PermissionKey::AccessRoles->value, PermissionKey::AccessCurrencies->value, PermissionKey::AccessWorkflowTemplates->value, PermissionKey::AccessActivityLog->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
                             Settings
@@ -233,6 +233,18 @@
                                     <i class="ki-filled ki-arrow-right-left text-lg"></i>
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Workflows</span>
+                            </a>
+                        </div>
+                    @endcan
+
+                    @can(PermissionKey::AccessActivityLog->value)
+                        <div class="kt-menu-item {{ request()->routeIs('activity-log.*') ? 'active' : '' }}">
+                            <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                               href="{{ route('activity-log.index') }}">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                    <i class="ki-filled ki-time text-lg"></i>
+                                </span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Activity Log</span>
                             </a>
                         </div>
                     @endcan

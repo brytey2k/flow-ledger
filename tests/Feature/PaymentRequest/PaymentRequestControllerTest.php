@@ -96,25 +96,42 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_create_form_renders(): void
     {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+
         $response = $this->actingAs($this->user)->get(route('payment-requests.create'));
 
         $response->assertOk();
         $response->assertViewIs('tenant.payment-requests.create');
-        $response->assertViewHas(['staff', 'branches', 'currencies']);
+        $response->assertViewHas(['staffProfile', 'currencies']);
+    }
+
+    public function test_create_form_redirects_if_no_staff_profile(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('payment-requests.create'));
+
+        $response->assertRedirect(route('payment-requests.index'));
+        $response->assertSessionHas('error');
+    }
+
+    public function test_create_form_redirects_if_staff_has_no_branch(): void
+    {
+        Staff::factory()->withUser($this->user)->create(); // no branch
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.create'));
+
+        $response->assertRedirect(route('payment-requests.index'));
+        $response->assertSessionHas('error');
     }
 
     // ── Store ─────────────────────────────────────────────────────────────────
 
     public function test_store_creates_draft_and_redirects_to_show(): void
     {
-        $staff = Staff::factory()->create();
-        $branch = Branch::factory()->create();
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
         $currency = Currency::factory()->create();
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
             'type' => 'advance',
-            'staff_id' => $staff->id,
-            'branch_id' => $branch->id,
             'currency_id' => $currency->id,
             'notes' => 'Test notes',
             'items' => [
@@ -137,20 +154,34 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $this->assertDatabaseHas('payment_request_items', ['description' => 'Accommodation', 'amount' => '300.00']);
     }
 
+    public function test_store_is_forbidden_when_user_has_no_staff_profile(): void
+    {
+        $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
+            'type' => 'advance',
+            'currency_id' => 1,
+            'items' => [['description' => 'Test', 'amount' => '100']],
+        ]);
+
+        $response->assertForbidden();
+    }
+
     public function test_store_fails_validation_without_required_fields(): void
     {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+
         $response = $this->actingAs($this->user)->post(route('payment-requests.store'), []);
 
-        $response->assertSessionHasErrors(['type', 'staff_id', 'branch_id', 'currency_id', 'items']);
+        $response->assertSessionHasErrors(['type', 'currency_id', 'items']);
     }
 
     public function test_store_fails_validation_with_invalid_type(): void
     {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+
         $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
             'type' => 'invalid_type',
-            'staff_id' => 1,
-            'branch_id' => 1,
-            'currency_id' => 1,
+            'currency_id' => $currency->id,
             'items' => [['description' => 'Test', 'amount' => '100']],
         ]);
 
@@ -159,14 +190,11 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_store_fails_validation_with_empty_items_array(): void
     {
-        $staff = Staff::factory()->create();
-        $branch = Branch::factory()->create();
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
         $currency = Currency::factory()->create();
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
             'type' => 'advance',
-            'staff_id' => $staff->id,
-            'branch_id' => $branch->id,
             'currency_id' => $currency->id,
             'items' => [],
         ]);
@@ -176,14 +204,11 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_store_fails_validation_when_item_amount_is_zero(): void
     {
-        $staff = Staff::factory()->create();
-        $branch = Branch::factory()->create();
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
         $currency = Currency::factory()->create();
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
             'type' => 'advance',
-            'staff_id' => $staff->id,
-            'branch_id' => $branch->id,
             'currency_id' => $currency->id,
             'items' => [['description' => 'Test', 'amount' => '0']],
         ]);

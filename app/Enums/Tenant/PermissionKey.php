@@ -17,6 +17,7 @@ enum PermissionKey: string
     case AccessStaff = 'access staff';
     case AccessSettings = 'access settings';
     case AccessReports = 'access reports';
+    case AccessActivityLog = 'access activity log';
 
     case ViewAccounts = 'view accounts';
     case CreateAccounts = 'create accounts';

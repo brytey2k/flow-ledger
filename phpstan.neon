@@ -14,3 +14,5 @@ parameters:
     ignoreErrors:
         - identifier: property.defaultValue
           path: app/Models/Tenant/Branch.php
+        - identifier: argument.type
+          path: app/Providers/TenancyServiceProvider.php

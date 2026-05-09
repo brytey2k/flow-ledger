@@ -113,6 +113,42 @@
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
                         </div>
+
+                        <div class="col-span-1">
+                            <label class="kt-form-label block mb-2" for="branch_id">
+                                Branch
+                            </label>
+                            <select id="branch_id" name="branch_id" class="kt-select w-full"
+                                    aria-invalid="@error('branch_id') true @else false @enderror">
+                                <option value="">Select a branch</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" {{ old('branch_id', $staff->branch_id) == $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('branch_id')
+                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="col-span-1">
+                            <label class="kt-form-label block mb-2" for="user_id">
+                                User Account
+                            </label>
+                            <select id="user_id" name="user_id" class="kt-select w-full"
+                                    aria-invalid="@error('user_id') true @else false @enderror">
+                                <option value="">No linked account</option>
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}" {{ old('user_id', $staff->user_id) == $u->id ? 'selected' : '' }}>
+                                        {{ $u->name }} — {{ $u->email }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('user_id')
+                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-between items-center">

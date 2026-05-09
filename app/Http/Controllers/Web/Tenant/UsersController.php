@@ -53,6 +53,13 @@ class UsersController extends Controller
             $user->syncRoles(array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $roles));
         }
 
+        activity()
+            ->performedOn($user)
+            ->causedBy($request->user())
+            ->event('user.created')
+            ->withProperties(['email' => $user->email])
+            ->log('User account created');
+
         return redirect()
             ->route('users.index')
             ->with('success', 'User created successfully.');
@@ -92,6 +99,13 @@ class UsersController extends Controller
             $user->syncRoles([]);
         }
 
+        activity()
+            ->performedOn($user)
+            ->causedBy($request->user())
+            ->event('user.updated')
+            ->withProperties(['email' => $user->email])
+            ->log('User account updated');
+
         return redirect()
             ->route('users.index')
             ->with('success', 'User updated successfully.');
@@ -99,6 +113,13 @@ class UsersController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        activity()
+            ->performedOn($user)
+            ->causedBy(auth()->user())
+            ->event('user.deleted')
+            ->withProperties(['email' => $user->email, 'name' => $user->name])
+            ->log('User account deleted');
+
         $user->delete();
 
         return redirect()

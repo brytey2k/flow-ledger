@@ -63,7 +63,7 @@
                     <label class="kt-form-label font-normal text-mono" for="password">
                         Password
                     </label>
-                    <a class="text-sm kt-link shrink-0" href="#">
+                    <a class="text-sm kt-link shrink-0" href="{{ route('password.request') }}">
                         Forgot Password?
                     </a>
                 </div>

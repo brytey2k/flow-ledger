@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -67,5 +68,16 @@ class User extends Authenticatable
     public function getNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /** @return HasOne<Staff, $this> */
+    public function staffProfile(): HasOne
+    {
+        return $this->hasOne(Staff::class);
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->staffProfile()->exists();
     }
 }

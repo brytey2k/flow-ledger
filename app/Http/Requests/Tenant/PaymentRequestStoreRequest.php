@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Tenant;
 
+use App\Models\Tenant\Staff;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,11 @@ class PaymentRequestStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        /** @var \App\Models\Tenant\User $user */
+        $user = $this->user();
+        $profile = $user->staffProfile;
+
+        return $profile instanceof Staff && $profile->branch_id !== null;
     }
 
     /** @return array<string, array<int, mixed>> */
@@ -20,8 +25,6 @@ class PaymentRequestStoreRequest extends FormRequest
         $isExpense = $this->input('type') === 'expense';
 
         return [
-            'staff_id' => ['required', 'integer', 'exists:staff,id'],
-            'branch_id' => ['required', 'integer', 'exists:branches,id'],
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
             'type' => ['required', Rule::in(['advance', 'expense'])],
             'notes' => ['nullable', 'string', 'max:2000'],

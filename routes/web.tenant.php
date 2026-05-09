@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 use App\Enums\Tenant\PermissionKey;
 use App\Http\Controllers\Web\Tenant\AccountCodesController;
+use App\Http\Controllers\Web\Tenant\ActivityLogController;
 use App\Http\Controllers\Web\Tenant\AttachmentsController;
+use App\Http\Controllers\Web\Tenant\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\LoginController;
+use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
 use App\Http\Controllers\Web\Tenant\CommentsController;
 use App\Http\Controllers\Web\Tenant\CurrenciesController;
@@ -41,6 +44,10 @@ Route::middleware([
 ])->group(function (): void {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('do-login');
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
     Route::middleware(['auth'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -186,6 +193,11 @@ Route::middleware([
         Route::delete('/users/{user}', [UsersController::class, 'destroy'])
             ->can(PermissionKey::DeleteUser->value)
             ->name('users.destroy');
+        // Activity Log
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])
+            ->can(PermissionKey::AccessActivityLog->value)
+            ->name('activity-log.index');
+
         Route::get('/users/{user}/permissions', [UsersController::class, 'editPermissions'])
             ->can(PermissionKey::AccessUsers->value)
             ->name('users.permissions.edit');

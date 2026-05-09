@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StaffStoreRequest extends FormRequest
 {
@@ -23,6 +24,8 @@ class StaffStoreRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:30'],
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'position_id' => ['required', 'integer', 'exists:positions,id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id', Rule::unique('staff', 'user_id')],
+            'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
         ];
     }
 }

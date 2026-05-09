@@ -17,11 +17,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $phone
  * @property int $department_id
  * @property int $position_id
+ * @property int|null $user_id
+ * @property int|null $branch_id
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Department $department
  * @property-read Position $position
+ * @property-read User|null $user
+ * @property-read Branch|null $branch
  */
 class Staff extends Model
 {
@@ -30,7 +34,7 @@ class Staff extends Model
     use SoftDeletes;
 
     /** @var list<string> */
-    protected $fillable = ['first_name', 'last_name', 'email', 'phone', 'department_id', 'position_id'];
+    protected $fillable = ['first_name', 'last_name', 'email', 'phone', 'department_id', 'position_id', 'user_id', 'branch_id'];
 
     /** @return BelongsTo<Department, $this> */
     public function department(): BelongsTo
@@ -42,6 +46,18 @@ class Staff extends Model
     public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<Branch, $this> */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function getFullNameAttribute(): string
