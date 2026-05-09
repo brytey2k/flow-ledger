@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\ApprovalActionRequest;
 use App\Models\Tenant\WorkflowInstanceStage;
+use App\Repositories\WorkflowInstanceRepository;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,25 +17,14 @@ class WorkflowApprovalsController extends Controller
 {
     public function __construct(
         private readonly WorkflowEngineService $engine,
+        private readonly WorkflowInstanceRepository $repository,
     ) {}
 
     public function index(Request $request): View
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
-        $roleIds = $user->roles()->pluck('id');
-
-        $instanceStages = WorkflowInstanceStage::query()
-            ->where('status', 'active')
-            ->whereHas('stage.roles', fn($q) => $q->whereIn('roles.id', $roleIds))
-            ->with([
-                'stage',
-                'instance.workflowable.staff',
-                'instance.workflowable.branch',
-                'instance.workflowable.currency',
-            ])
-            ->latest()
-            ->paginate(20);
+        $instanceStages = $this->repository->activeStagesForUser($user);
 
         return view('tenant.approvals.index', compact('instanceStages'));
     }

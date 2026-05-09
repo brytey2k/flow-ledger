@@ -10,11 +10,16 @@ use App\Http\Requests\Tenant\WorkflowStageUpdateRequest;
 use App\Models\Role;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
+use App\Services\WorkflowStageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class WorkflowStagesController extends Controller
 {
+    public function __construct(
+        private readonly WorkflowStageService $service,
+    ) {}
+
     public function create(WorkflowTemplate $workflowTemplate): View
     {
         $roles = Role::orderBy('name')->get();
@@ -31,9 +36,7 @@ class WorkflowStagesController extends Controller
         $roleIds = is_array($rawRoleIds) ? array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $rawRoleIds) : [];
         unset($data['role_ids']);
 
-        /** @var WorkflowStage $stage */
-        $stage = $workflowTemplate->stages()->create($data);
-        $stage->roles()->sync($roleIds);
+        $this->service->create($workflowTemplate, $data, $roleIds);
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
             ->with('success', 'Stage added.');
@@ -56,8 +59,7 @@ class WorkflowStagesController extends Controller
         $roleIds = is_array($rawRoleIds) ? array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $rawRoleIds) : [];
         unset($data['role_ids']);
 
-        $workflowStage->update($data);
-        $workflowStage->roles()->sync($roleIds);
+        $this->service->update($workflowStage, $data, $roleIds);
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
             ->with('success', 'Stage updated.');

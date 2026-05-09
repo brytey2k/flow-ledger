@@ -12,6 +12,7 @@ use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class WorkflowEngineService
 {
@@ -19,26 +20,28 @@ class WorkflowEngineService
 
     public function startWorkflow(Model $subject, WorkflowTemplate $template): WorkflowInstance
     {
-        $instance = WorkflowInstance::create([
-            'workflow_template_id' => $template->id,
-            'workflowable_type' => $subject::class,
-            'workflowable_id' => $subject->getKey(),
-            'status' => 'in_progress',
-        ]);
-
-        foreach ($template->stages as $stage) {
-            WorkflowInstanceStage::create([
-                'workflow_instance_id' => $instance->id,
-                'workflow_stage_id' => $stage->id,
-                'status' => 'pending',
+        return DB::transaction(function () use ($subject, $template): WorkflowInstance {
+            $instance = WorkflowInstance::create([
+                'workflow_template_id' => $template->id,
+                'workflowable_type' => $subject::class,
+                'workflowable_id' => $subject->getKey(),
+                'status' => 'in_progress',
             ]);
-        }
 
-        /** @var WorkflowInstance $freshInstance */
-        $freshInstance = $instance->fresh('instanceStages.stage');
-        $this->activateNextStages($freshInstance);
+            foreach ($template->stages as $stage) {
+                WorkflowInstanceStage::create([
+                    'workflow_instance_id' => $instance->id,
+                    'workflow_stage_id' => $stage->id,
+                    'status' => 'pending',
+                ]);
+            }
 
-        return $instance;
+            /** @var WorkflowInstance $freshInstance */
+            $freshInstance = $instance->fresh('instanceStages.stage');
+            $this->activateNextStages($freshInstance);
+
+            return $instance;
+        });
     }
 
     public function activateNextStages(WorkflowInstance $instance): void
@@ -97,159 +100,171 @@ class WorkflowEngineService
 
     public function approve(WorkflowInstanceStage $instanceStage, User $user, string|null $comment = null): void
     {
-        WorkflowAction::create([
-            'workflow_instance_stage_id' => $instanceStage->id,
-            'user_id' => $user->id,
-            'action' => 'approve',
-            'comment' => $comment,
-        ]);
+        DB::transaction(function () use ($instanceStage, $user, $comment): void {
+            WorkflowAction::create([
+                'workflow_instance_stage_id' => $instanceStage->id,
+                'user_id' => $user->id,
+                'action' => 'approve',
+                'comment' => $comment,
+            ]);
 
-        $instanceStage->update(['status' => 'approved', 'completed_at' => now()]);
+            $instanceStage->update(['status' => 'approved', 'completed_at' => now()]);
 
-        /** @var WorkflowStage $stage */
-        $stage = $instanceStage->stage;
-        /** @var WorkflowInstance $instance */
-        $instance = $instanceStage->instance;
+            /** @var WorkflowStage $stage */
+            $stage = $instanceStage->stage;
+            /** @var WorkflowInstance $instance */
+            $instance = $instanceStage->instance;
 
-        /** @var Model $approveWorkflowable */
-        $approveWorkflowable = $instance->workflowable;
-        activity()
-            ->performedOn($approveWorkflowable)
-            ->causedBy($user)
-            ->event('stage.approved')
-            ->withProperties(['stage' => $stage->name, 'comment' => $comment])
-            ->log('Stage approved');
+            /** @var Model $approveWorkflowable */
+            $approveWorkflowable = $instance->workflowable;
+            activity()
+                ->performedOn($approveWorkflowable)
+                ->causedBy($user)
+                ->event('stage.approved')
+                ->withProperties(['stage' => $stage->name, 'comment' => $comment])
+                ->log('Stage approved');
 
-        if ($stage->parallel_group_id !== null) {
-            /** @var \App\Models\Tenant\WorkflowParallelGroup $group */
-            $group = $stage->parallelGroup;
+            if ($stage->parallel_group_id !== null) {
+                /** @var \App\Models\Tenant\WorkflowParallelGroup $group */
+                $group = $stage->parallelGroup;
 
-            $siblings = $instance->instanceStages()
-                ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $stage->parallel_group_id))
-                ->where('id', '!=', $instanceStage->id)
-                ->get();
+                $siblings = $instance->instanceStages()
+                    ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $stage->parallel_group_id))
+                    ->where('id', '!=', $instanceStage->id)
+                    ->get();
 
-            if ($group->require_all) {
-                $allResolved = $siblings->every(
-                    fn(WorkflowInstanceStage $s) => in_array($s->status, ['approved', 'skipped', 'cancelled'], true),
-                );
-                if (! $allResolved) {
-                    return;
-                }
-            } else {
-                $siblings->each(function (WorkflowInstanceStage $sibling): void {
-                    if (in_array($sibling->status, ['pending', 'active'], true)) {
-                        $sibling->update(['status' => 'cancelled', 'completed_at' => now()]);
+                if ($group->require_all) {
+                    $allResolved = $siblings->every(
+                        fn(WorkflowInstanceStage $s) => in_array($s->status, ['approved', 'skipped', 'cancelled'], true),
+                    );
+                    if (! $allResolved) {
+                        return;
                     }
-                });
+                } else {
+                    $siblings->each(function (WorkflowInstanceStage $sibling): void {
+                        if (in_array($sibling->status, ['pending', 'active'], true)) {
+                            $sibling->update(['status' => 'cancelled', 'completed_at' => now()]);
+                        }
+                    });
+                }
             }
-        }
 
-        /** @var WorkflowInstance $freshInstance */
-        $freshInstance = $instance->fresh();
-        $this->advanceWorkflow($freshInstance);
+            /** @var WorkflowInstance $freshInstance */
+            $freshInstance = $instance->fresh();
+            $this->advanceWorkflow($freshInstance);
+        });
     }
 
     public function reject(WorkflowInstanceStage $instanceStage, User $user, string $comment): void
     {
-        WorkflowAction::create([
-            'workflow_instance_stage_id' => $instanceStage->id,
-            'user_id' => $user->id,
-            'action' => 'reject',
-            'comment' => $comment,
-        ]);
-
-        $instanceStage->update(['status' => 'rejected', 'completed_at' => now()]);
-
-        /** @var WorkflowInstance $instance */
-        $instance = $instanceStage->instance;
-        $instance->instanceStages()
-            ->whereIn('status', ['pending', 'active'])
-            ->update(['status' => 'cancelled', 'completed_at' => now()]);
-
-        $instance->update(['status' => 'cancelled']);
-        /** @var Model $workflowable */
-        $workflowable = $instance->workflowable;
-        $workflowable->update(['status' => 'cancelled']);
-
-        /** @var WorkflowStage $stage */
-        $stage = $instanceStage->stage;
-
-        activity()
-            ->performedOn($workflowable)
-            ->causedBy($user)
-            ->event('stage.rejected')
-            ->withProperties([
-                'old_status' => 'in_workflow',
-                'new_status' => 'cancelled',
-                'stage' => $stage->name,
+        $workflowable = DB::transaction(function () use ($instanceStage, $user, $comment): Model {
+            WorkflowAction::create([
+                'workflow_instance_stage_id' => $instanceStage->id,
+                'user_id' => $user->id,
+                'action' => 'reject',
                 'comment' => $comment,
-            ])
-            ->log('Stage rejected');
+            ]);
+
+            $instanceStage->update(['status' => 'rejected', 'completed_at' => now()]);
+
+            /** @var WorkflowInstance $instance */
+            $instance = $instanceStage->instance;
+            $instance->instanceStages()
+                ->whereIn('status', ['pending', 'active'])
+                ->update(['status' => 'cancelled', 'completed_at' => now()]);
+
+            $instance->update(['status' => 'cancelled']);
+            /** @var Model $workflowable */
+            $workflowable = $instance->workflowable;
+            $workflowable->update(['status' => 'cancelled']);
+
+            /** @var WorkflowStage $stage */
+            $stage = $instanceStage->stage;
+
+            activity()
+                ->performedOn($workflowable)
+                ->causedBy($user)
+                ->event('stage.rejected')
+                ->withProperties([
+                    'old_status' => 'in_workflow',
+                    'new_status' => 'cancelled',
+                    'stage' => $stage->name,
+                    'comment' => $comment,
+                ])
+                ->log('Stage rejected');
+
+            return $workflowable;
+        });
 
         $this->notifications->notifyRejected($workflowable, $comment);
     }
 
     public function sendBack(WorkflowInstanceStage $instanceStage, User $user, string $comment): void
     {
-        WorkflowAction::create([
-            'workflow_instance_stage_id' => $instanceStage->id,
-            'user_id' => $user->id,
-            'action' => 'send_back',
-            'comment' => $comment,
-        ]);
-
-        $instanceStage->update(['status' => 'sent_back', 'completed_at' => now()]);
-
-        /** @var WorkflowInstance $instance */
-        $instance = $instanceStage->instance;
-        $instance->update(['sent_back_to_stage_id' => $instanceStage->id]);
-        /** @var Model $workflowable */
-        $workflowable = $instance->workflowable;
-        $workflowable->update(['status' => 'sent_back']);
-
-        /** @var WorkflowStage $stage */
-        $stage = $instanceStage->stage;
-
-        activity()
-            ->performedOn($workflowable)
-            ->causedBy($user)
-            ->event('stage.sent_back')
-            ->withProperties([
-                'old_status' => 'in_workflow',
-                'new_status' => 'sent_back',
-                'stage' => $stage->name,
+        $workflowable = DB::transaction(function () use ($instanceStage, $user, $comment): Model {
+            WorkflowAction::create([
+                'workflow_instance_stage_id' => $instanceStage->id,
+                'user_id' => $user->id,
+                'action' => 'send_back',
                 'comment' => $comment,
-            ])
-            ->log('Sent back for revision');
+            ]);
+
+            $instanceStage->update(['status' => 'sent_back', 'completed_at' => now()]);
+
+            /** @var WorkflowInstance $instance */
+            $instance = $instanceStage->instance;
+            $instance->update(['sent_back_to_stage_id' => $instanceStage->id]);
+            /** @var Model $workflowable */
+            $workflowable = $instance->workflowable;
+            $workflowable->update(['status' => 'sent_back']);
+
+            /** @var WorkflowStage $stage */
+            $stage = $instanceStage->stage;
+
+            activity()
+                ->performedOn($workflowable)
+                ->causedBy($user)
+                ->event('stage.sent_back')
+                ->withProperties([
+                    'old_status' => 'in_workflow',
+                    'new_status' => 'sent_back',
+                    'stage' => $stage->name,
+                    'comment' => $comment,
+                ])
+                ->log('Sent back for revision');
+
+            return $workflowable;
+        });
 
         $this->notifications->notifySentBack($workflowable, $comment);
     }
 
     public function resubmitAfterFix(Model $subject, User $user): void
     {
-        $instance = WorkflowInstance::where('workflowable_type', $subject::class)
-            ->where('workflowable_id', $subject->getKey())
-            ->where('status', 'in_progress')
-            ->firstOrFail();
+        DB::transaction(function () use ($subject, $user): void {
+            $instance = WorkflowInstance::where('workflowable_type', $subject::class)
+                ->where('workflowable_id', $subject->getKey())
+                ->where('status', 'in_progress')
+                ->firstOrFail();
 
-        $sentBackStage = WorkflowInstanceStage::findOrFail($instance->sent_back_to_stage_id);
+            $sentBackStage = WorkflowInstanceStage::findOrFail($instance->sent_back_to_stage_id);
 
-        $sentBackStage->update([
-            'status' => 'active',
-            'started_at' => now(),
-            'completed_at' => null,
-        ]);
+            $sentBackStage->update([
+                'status' => 'active',
+                'started_at' => now(),
+                'completed_at' => null,
+            ]);
 
-        $instance->update(['sent_back_to_stage_id' => null]);
-        $subject->update(['status' => 'in_workflow']);
+            $instance->update(['sent_back_to_stage_id' => null]);
+            $subject->update(['status' => 'in_workflow']);
 
-        activity()
-            ->performedOn($subject)
-            ->causedBy($user)
-            ->event('request.resubmitted')
-            ->withProperties(['old_status' => 'sent_back', 'new_status' => 'in_workflow'])
-            ->log('Resubmitted for approval');
+            activity()
+                ->performedOn($subject)
+                ->causedBy($user)
+                ->event('request.resubmitted')
+                ->withProperties(['old_status' => 'sent_back', 'new_status' => 'in_workflow'])
+                ->log('Resubmitted for approval');
+        });
     }
 
     public function canUserActOnStage(WorkflowInstanceStage $instanceStage, User $user): bool

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\DisbursementStoreRequest;
 use App\Models\Tenant\PaymentRequest;
+use App\Repositories\PaymentRequestRepository;
 use App\Services\PaymentRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -15,14 +16,12 @@ class DisbursementsController extends Controller
 {
     public function __construct(
         private readonly PaymentRequestService $service,
+        private readonly PaymentRequestRepository $repository,
     ) {}
 
     public function index(): View
     {
-        $requests = PaymentRequest::with(['staff', 'branch', 'currency'])
-            ->where('status', 'approved')
-            ->orderBy('approved_at', 'asc')
-            ->paginate(20);
+        $requests = $this->repository->pendingDisbursement();
 
         return view('tenant.disbursements.index', compact('requests'));
     }

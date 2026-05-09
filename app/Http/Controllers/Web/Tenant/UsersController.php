@@ -11,17 +11,21 @@ use App\Http\Requests\Tenant\UserUpdateRequest;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Tenant\User;
+use App\Repositories\UserRepository;
+use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class UsersController extends Controller
 {
+    public function __construct(
+        private readonly UserService $service,
+        private readonly UserRepository $repository,
+    ) {}
+
     public function index(): View
     {
-        $users = User::query()
-            ->with('roles')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $users = $this->repository->allWithRoles();
 
         return view('tenant.users.index', [
             'users' => $users,
@@ -39,26 +43,7 @@ class UsersController extends Controller
 
     public function store(UserStoreRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-
-        $user = User::create([
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-        ]);
-
-        $roles = $validated['roles'] ?? null;
-        if (is_array($roles)) {
-            $user->syncRoles(array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $roles));
-        }
-
-        activity()
-            ->performedOn($user)
-            ->causedBy($request->user())
-            ->event('user.created')
-            ->withProperties(['email' => $user->email])
-            ->log('User account created');
+        $this->service->create($request->validated(), $request->user());
 
         return redirect()
             ->route('users.index')
@@ -78,33 +63,7 @@ class UsersController extends Controller
 
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
-        $validated = $request->validated();
-
-        $data = [
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'email' => $validated['email'],
-        ];
-
-        if ($request->filled('password')) {
-            $data['password'] = $validated['password'];
-        }
-
-        $user->update($data);
-
-        $roles = $validated['roles'] ?? null;
-        if (is_array($roles)) {
-            $user->syncRoles(array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $roles));
-        } else {
-            $user->syncRoles([]);
-        }
-
-        activity()
-            ->performedOn($user)
-            ->causedBy($request->user())
-            ->event('user.updated')
-            ->withProperties(['email' => $user->email])
-            ->log('User account updated');
+        $this->service->update($user, $request->validated(), $request->user());
 
         return redirect()
             ->route('users.index')
@@ -113,14 +72,7 @@ class UsersController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        activity()
-            ->performedOn($user)
-            ->causedBy(auth()->user())
-            ->event('user.deleted')
-            ->withProperties(['email' => $user->email, 'name' => $user->name])
-            ->log('User account deleted');
-
-        $user->delete();
+        $this->service->delete($user, auth()->user());
 
         return redirect()
             ->route('users.index')

@@ -11,6 +11,7 @@ use App\Http\Requests\Tenant\RoleUpdateRequest;
 use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class RolesController extends Controller
@@ -89,13 +90,15 @@ class RolesController extends Controller
 
     public function updatePermissions(PermissionsSyncRequest $request, Role $role): RedirectResponse
     {
-        if ($request->has('permissions')) {
-            $permissionIds = $request->validated()['permissions'];
-            $permissions = Permission::whereIn('id', $permissionIds)->get();
-            $role->syncPermissions($permissions);
-        } else {
-            $role->syncPermissions([]);
-        }
+        DB::transaction(function () use ($request, $role): void {
+            if ($request->has('permissions')) {
+                $permissionIds = $request->validated()['permissions'];
+                $permissions = Permission::whereIn('id', $permissionIds)->get();
+                $role->syncPermissions($permissions);
+            } else {
+                $role->syncPermissions([]);
+            }
+        });
 
         return redirect()
             ->route('roles.edit', $role)

@@ -17,6 +17,15 @@ class PaymentRequestRepository
             ->paginate($perPage);
     }
 
+    /** @return LengthAwarePaginator<int, PaymentRequest> */
+    public function pendingDisbursement(int $perPage = 20): LengthAwarePaginator
+    {
+        return PaymentRequest::with(['staff', 'branch', 'currency'])
+            ->where('status', 'approved')
+            ->orderBy('approved_at', 'asc')
+            ->paginate($perPage);
+    }
+
     public function findWithDetails(int|string $id): PaymentRequest
     {
         return PaymentRequest::with([
