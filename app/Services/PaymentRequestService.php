@@ -16,6 +16,7 @@ class PaymentRequestService
     public function __construct(
         private readonly WorkflowEngineService $engine,
         private readonly NotificationService $notifications,
+        private readonly CashbookService $cashbook,
     ) {}
 
     public function createDraft(CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
@@ -87,6 +88,8 @@ class PaymentRequestService
                 'disbursement_method' => $dto->method,
                 'disbursement_reference' => $dto->reference,
             ]);
+
+            $this->cashbook->recordDisbursement($request, $user);
 
             activity()
                 ->performedOn($request)

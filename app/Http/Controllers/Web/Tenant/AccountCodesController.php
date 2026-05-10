@@ -8,22 +8,28 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\AccountCodeStoreRequest;
 use App\Http\Requests\Tenant\AccountCodeUpdateRequest;
 use App\Models\Tenant\AccountCode;
-use App\Models\Tenant\Department;
+use App\Repositories\AccountCodeRepository;
+use App\Repositories\DepartmentRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class AccountCodesController extends Controller
 {
+    public function __construct(
+        private readonly AccountCodeRepository $repository,
+        private readonly DepartmentRepository $departmentRepository,
+    ) {}
+
     public function index(): View
     {
-        $accountCodes = AccountCode::with('department')->orderBy('code')->get();
+        $accountCodes = $this->repository->allWithDepartment();
 
         return view('tenant.account-codes.index', compact('accountCodes'));
     }
 
     public function create(): View
     {
-        $departments = Department::orderBy('name')->get();
+        $departments = $this->departmentRepository->allOrderedByName();
 
         return view('tenant.account-codes.create', compact('departments'));
     }
@@ -42,7 +48,7 @@ class AccountCodesController extends Controller
 
     public function edit(AccountCode $accountCode): View
     {
-        $departments = Department::orderBy('name')->get();
+        $departments = $this->departmentRepository->allOrderedByName();
 
         return view('tenant.account-codes.edit', compact('accountCode', 'departments'));
     }

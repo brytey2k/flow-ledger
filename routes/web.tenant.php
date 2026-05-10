@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\Tenant\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\LoginController;
 use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
+use App\Http\Controllers\Web\Tenant\CashbookController;
 use App\Http\Controllers\Web\Tenant\CommentsController;
 use App\Http\Controllers\Web\Tenant\CurrenciesController;
 use App\Http\Controllers\Web\Tenant\DashboardController;
@@ -375,5 +376,22 @@ Route::middleware([
         Route::delete('/currencies/{currency}', [CurrenciesController::class, 'destroy'])
             ->can(PermissionKey::DeleteCurrency->value)
             ->name('currencies.destroy');
+
+        // Cashbook
+        Route::get('/cashbook', [CashbookController::class, 'branches'])
+            ->can(PermissionKey::AccessCashbook->value)
+            ->name('cashbook.branches');
+        Route::get('/branches/{branch}/cashbook', [CashbookController::class, 'index'])
+            ->can(PermissionKey::AccessCashbook->value)
+            ->name('cashbook.index');
+        Route::get('/branches/{branch}/cashbook/receipts/create', [CashbookController::class, 'create'])
+            ->can(PermissionKey::CreateCashbookEntry->value)
+            ->name('cashbook.create');
+        Route::post('/branches/{branch}/cashbook/receipts', [CashbookController::class, 'store'])
+            ->can(PermissionKey::CreateCashbookEntry->value)
+            ->name('cashbook.store');
+        Route::delete('/branches/{branch}/cashbook/entries/{entry}', [CashbookController::class, 'destroy'])
+            ->can(PermissionKey::DeleteCashbookEntry->value)
+            ->name('cashbook.destroy');
     });
 });

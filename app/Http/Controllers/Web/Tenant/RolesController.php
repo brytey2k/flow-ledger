@@ -8,19 +8,23 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\PermissionsSyncRequest;
 use App\Http\Requests\Tenant\RoleStoreRequest;
 use App\Http\Requests\Tenant\RoleUpdateRequest;
-use App\Models\Permission;
 use App\Models\Role;
+use App\Repositories\PermissionRepository;
+use App\Repositories\RoleRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class RolesController extends Controller
 {
+    public function __construct(
+        private readonly RoleRepository $repository,
+        private readonly PermissionRepository $permissionRepository,
+    ) {}
+
     public function index(): View
     {
-        $roles = Role::withCount(['users', 'permissions'])
-            ->orderBy('name')
-            ->get();
+        $roles = $this->repository->allWithCounts();
 
         return view('tenant.roles.index', [
             'roles' => $roles,
@@ -81,7 +85,7 @@ class RolesController extends Controller
 
     public function editPermissions(Role $role): View
     {
-        $permissions = Permission::orderBy('name')->get();
+        $permissions = $this->permissionRepository->allOrderedByName();
         $role->load('permissions');
 
         return view('tenant.roles.permissions', [
@@ -96,7 +100,7 @@ class RolesController extends Controller
 
         DB::transaction(function () use ($dto, $role): void {
             if (! empty($dto->permissionIds)) {
-                $permissions = Permission::whereIn('id', $dto->permissionIds)->get();
+                $permissions = $this->permissionRepository->findByIds(array_values($dto->permissionIds));
                 $role->syncPermissions($permissions);
             } else {
                 $role->syncPermissions([]);

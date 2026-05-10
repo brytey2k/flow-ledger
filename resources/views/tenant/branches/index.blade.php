@@ -126,6 +126,13 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-2">
+                                                @can(\App\Enums\Tenant\PermissionKey::AccessCashbook->value)
+                                                    <a href="{{ route('cashbook.index', $branch) }}"
+                                                       class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost text-primary"
+                                                       title="Cashbook">
+                                                        <i class="ki-filled ki-calculator text-lg"></i>
+                                                    </a>
+                                                @endcan
                                                 @can(App\Enums\Tenant\PermissionKey::AccessBranches->value)
                                                     <a href="{{ route('branches.edit', $branch) }}"
                                                        class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost text-primary"

@@ -6,9 +6,9 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\RetirementRequestStoreRequest;
-use App\Models\Tenant\AccountCode;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
+use App\Repositories\AccountCodeRepository;
 use App\Repositories\RetirementRequestRepository;
 use App\Services\RetirementService;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +19,7 @@ class RetirementRequestsController extends Controller
     public function __construct(
         private readonly RetirementRequestRepository $repository,
         private readonly RetirementService $service,
+        private readonly AccountCodeRepository $accountCodeRepository,
     ) {}
 
     public function index(): View
@@ -33,7 +34,7 @@ class RetirementRequestsController extends Controller
         abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
         abort_if($paymentRequest->retirementRequest()->exists(), 422, 'This advance has already been retired.');
 
-        $accountCodes = AccountCode::orderBy('code')->get();
+        $accountCodes = $this->accountCodeRepository->allOrderedByCode();
 
         return view('tenant.retirement-requests.create', compact('paymentRequest', 'accountCodes'));
     }

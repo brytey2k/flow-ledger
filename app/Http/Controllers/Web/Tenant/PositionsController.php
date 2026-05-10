@@ -8,14 +8,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\PositionStoreRequest;
 use App\Http\Requests\Tenant\PositionUpdateRequest;
 use App\Models\Tenant\Position;
+use App\Repositories\PositionRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class PositionsController extends Controller
 {
+    public function __construct(
+        private readonly PositionRepository $repository,
+    ) {}
+
     public function index(): View
     {
-        $positions = Position::orderBy('name')->get();
+        $positions = $this->repository->allOrderedByName();
 
         return view('tenant.positions.index', compact('positions'));
     }

@@ -8,6 +8,7 @@ use Franzose\ClosureTable\Models\Entity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -51,5 +52,11 @@ class Branch extends Entity
     public function staff(): HasMany
     {
         return $this->hasMany(Staff::class);
+    }
+
+    /** @return HasOne<Cashbook, $this> */
+    public function cashbook(): HasOne
+    {
+        return $this->hasOne(Cashbook::class);
     }
 }

@@ -75,4 +75,9 @@ enum PermissionKey: string
     case CreateWorkflowTemplate = 'create workflow template';
     case EditWorkflowTemplate = 'edit workflow template';
     case DeleteWorkflowTemplate = 'delete workflow template';
+
+    // Cashbook
+    case AccessCashbook = 'access cashbook';
+    case CreateCashbookEntry = 'create cashbook entry';
+    case DeleteCashbookEntry = 'delete cashbook entry';
 }

@@ -8,22 +8,26 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\LevelStoreRequest;
 use App\Http\Requests\Tenant\LevelUpdateRequest;
 use App\Models\Tenant\Level;
+use App\Repositories\LevelRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class LevelController extends Controller
 {
+    public function __construct(
+        private readonly LevelRepository $repository,
+    ) {}
+
     public function index(): View
     {
-        $levels = Level::orderBy('position')->get();
+        $levels = $this->repository->allOrderedByPosition();
 
         return view('tenant.levels.index', compact('levels'));
     }
 
     public function create(): View
     {
-        $maxPosition = Level::max('position');
-        $nextPosition = (is_numeric($maxPosition) ? (int) $maxPosition : 0) + 1;
+        $nextPosition = $this->repository->nextPosition();
 
         return view('tenant.levels.create', compact('nextPosition'));
     }

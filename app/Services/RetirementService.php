@@ -15,6 +15,7 @@ class RetirementService
 {
     public function __construct(
         private readonly WorkflowEngineService $engine,
+        private readonly CashbookService $cashbook,
     ) {}
 
     public function createDraft(PaymentRequest $paymentRequest, CreateRetirementRequestDto $dto, User|null $user = null): RetirementRequest
@@ -90,6 +91,8 @@ class RetirementService
                 'settled_by_user_id' => $user?->id,
                 'settlement_notes' => $notes,
             ]);
+
+            $this->cashbook->recordRetirementSettlement($retirement, $user);
 
             activity()
                 ->performedOn($retirement)

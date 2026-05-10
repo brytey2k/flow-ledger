@@ -8,25 +8,32 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\BranchStoreRequest;
 use App\Http\Requests\Tenant\BranchUpdateRequest;
 use App\Models\Tenant\Branch;
-use App\Models\Tenant\Currency;
-use App\Models\Tenant\Level;
+use App\Repositories\BranchRepository;
+use App\Repositories\CurrencyRepository;
+use App\Repositories\LevelRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class BranchesController extends Controller
 {
+    public function __construct(
+        private readonly BranchRepository $repository,
+        private readonly LevelRepository $levelRepository,
+        private readonly CurrencyRepository $currencyRepository,
+    ) {}
+
     public function index(): View
     {
-        $branches = Branch::with(['level', 'parent'])->orderBy('position')->get();
+        $branches = $this->repository->allWithRelations();
 
         return view('tenant.branches.index', compact('branches'));
     }
 
     public function create(): View
     {
-        $levels = Level::orderBy('position')->get();
-        $branches = Branch::orderBy('name')->get();
-        $currencies = Currency::orderBy('short_name')->get();
+        $levels = $this->levelRepository->allOrderedByPosition();
+        $branches = $this->repository->allOrderedByName();
+        $currencies = $this->currencyRepository->allOrderedByShortName();
 
         return view('tenant.branches.create', compact('levels', 'branches', 'currencies'));
     }
@@ -44,8 +51,7 @@ class BranchesController extends Controller
         ]);
 
         if ($dto->parentId !== null) {
-            /** @var Branch $parent */
-            $parent = Branch::findOrFail($dto->parentId);
+            $parent = $this->repository->findOrFail($dto->parentId);
             $parent->appendChild($branch);
         } else {
             $branch->save();
@@ -56,9 +62,9 @@ class BranchesController extends Controller
 
     public function edit(Branch $branch): View
     {
-        $levels = Level::orderBy('position')->get();
-        $branches = Branch::where('id', '!=', $branch->id)->orderBy('name')->get();
-        $currencies = Currency::orderBy('short_name')->get();
+        $levels = $this->levelRepository->allOrderedByPosition();
+        $branches = $this->repository->allExcept($branch->id);
+        $currencies = $this->currencyRepository->allOrderedByShortName();
         $descendantsCount = $branch->descendants()->count();
 
         return view('tenant.branches.edit', compact('branch', 'levels', 'branches', 'currencies', 'descendantsCount'));
@@ -78,8 +84,7 @@ class BranchesController extends Controller
 
         if ($dto->parentId !== (int) $branch->parent_id) {
             if ($dto->parentId !== null) {
-                /** @var Branch $parent */
-                $parent = Branch::findOrFail($dto->parentId);
+                $parent = $this->repository->findOrFail($dto->parentId);
                 $branch->moveTo(0, $parent);
             } else {
                 $branch->makeRoot(0);

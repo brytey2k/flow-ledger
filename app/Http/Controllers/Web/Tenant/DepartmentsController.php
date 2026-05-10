@@ -8,14 +8,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\DepartmentStoreRequest;
 use App\Http\Requests\Tenant\DepartmentUpdateRequest;
 use App\Models\Tenant\Department;
+use App\Repositories\DepartmentRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DepartmentsController extends Controller
 {
+    public function __construct(
+        private readonly DepartmentRepository $repository,
+    ) {}
+
     public function index(): View
     {
-        $departments = Department::orderBy('name')->get();
+        $departments = $this->repository->allOrderedByName();
 
         return view('tenant.departments.index', compact('departments'));
     }

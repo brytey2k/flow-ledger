@@ -8,14 +8,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\CurrencyStoreRequest;
 use App\Http\Requests\Tenant\CurrencyUpdateRequest;
 use App\Models\Tenant\Currency;
+use App\Repositories\CurrencyRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class CurrenciesController extends Controller
 {
+    public function __construct(
+        private readonly CurrencyRepository $repository,
+    ) {}
+
     public function index(): View
     {
-        $currencies = Currency::orderBy('short_name')->get();
+        $currencies = $this->repository->allOrderedByShortName();
 
         return view('tenant.currencies.index', [
             'currencies' => $currencies,

@@ -8,9 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\PermissionsSyncRequest;
 use App\Http\Requests\Tenant\UserStoreRequest;
 use App\Http\Requests\Tenant\UserUpdateRequest;
-use App\Models\Permission;
-use App\Models\Role;
 use App\Models\Tenant\User;
+use App\Repositories\PermissionRepository;
+use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +22,8 @@ class UsersController extends Controller
     public function __construct(
         private readonly UserService $service,
         private readonly UserRepository $repository,
+        private readonly RoleRepository $roleRepository,
+        private readonly PermissionRepository $permissionRepository,
     ) {}
 
     public function index(): View
@@ -35,7 +37,7 @@ class UsersController extends Controller
 
     public function create(): View
     {
-        $roles = Role::orderBy('name')->get();
+        $roles = $this->roleRepository->allOrderedByName();
 
         return view('tenant.users.create', [
             'roles' => $roles,
@@ -53,7 +55,7 @@ class UsersController extends Controller
 
     public function edit(User $user): View
     {
-        $roles = Role::orderBy('name')->get();
+        $roles = $this->roleRepository->allOrderedByName();
         $user->load('roles');
 
         return view('tenant.users.edit', [
@@ -82,7 +84,7 @@ class UsersController extends Controller
 
     public function editPermissions(User $user): View
     {
-        $permissions = Permission::orderBy('name')->get();
+        $permissions = $this->permissionRepository->allOrderedByName();
         $user->load('permissions');
 
         return view('tenant.users.permissions', [
@@ -97,7 +99,7 @@ class UsersController extends Controller
 
         DB::transaction(function () use ($user, $dto): void {
             if (! empty($dto->permissionIds)) {
-                $permissions = Permission::whereIn('id', $dto->permissionIds)->get();
+                $permissions = $this->permissionRepository->findByIds(array_values($dto->permissionIds));
                 $user->syncPermissions($permissions);
             } else {
                 $user->syncPermissions([]);

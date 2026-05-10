@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('cashbooks', static function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('branch_id')->unique()->constrained('branches')->restrictOnDelete();
+            $table->foreignId('currency_id')->constrained('currencies')->restrictOnDelete();
+            $table->decimal('balance', 15, 2)->default(0);
+            $table->softDeletes();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('cashbooks');
+    }
+};

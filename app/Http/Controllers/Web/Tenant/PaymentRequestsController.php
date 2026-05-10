@@ -6,10 +6,10 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\PaymentRequestStoreRequest;
-use App\Models\Tenant\AccountCode;
-use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
+use App\Repositories\AccountCodeRepository;
+use App\Repositories\CurrencyRepository;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\PaymentRequestService;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +21,8 @@ class PaymentRequestsController extends Controller
     public function __construct(
         private readonly PaymentRequestRepository $repository,
         private readonly PaymentRequestService $service,
+        private readonly CurrencyRepository $currencyRepository,
+        private readonly AccountCodeRepository $accountCodeRepository,
     ) {}
 
     public function index(): View
@@ -41,8 +43,8 @@ class PaymentRequestsController extends Controller
                 ->with('error', 'Your account is not linked to a staff profile with a branch. Please contact an administrator.');
         }
 
-        $currencies = Currency::orderBy('name')->get();
-        $accountCodes = AccountCode::orderBy('code')->get();
+        $currencies = $this->currencyRepository->allOrderedByName();
+        $accountCodes = $this->accountCodeRepository->allOrderedByCode();
 
         return view('tenant.payment-requests.create', compact('staffProfile', 'currencies', 'accountCodes'));
     }

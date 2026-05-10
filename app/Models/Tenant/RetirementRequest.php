@@ -88,6 +88,12 @@ class RetirementRequest extends Model
         return $this->morphMany(Comment::class, 'commentable')->latest();
     }
 
+    /** @return MorphMany<CashbookEntry, $this> */
+    public function cashbookEntries(): MorphMany
+    {
+        return $this->morphMany(CashbookEntry::class, 'sourceable');
+    }
+
     public function isDraft(): bool
     {
         return $this->status === 'draft';

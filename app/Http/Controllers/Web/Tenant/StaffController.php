@@ -7,10 +7,10 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StaffStoreRequest;
 use App\Http\Requests\Tenant\StaffUpdateRequest;
-use App\Models\Tenant\Branch;
-use App\Models\Tenant\Department;
-use App\Models\Tenant\Position;
 use App\Models\Tenant\Staff;
+use App\Repositories\BranchRepository;
+use App\Repositories\DepartmentRepository;
+use App\Repositories\PositionRepository;
 use App\Repositories\StaffRepository;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +21,9 @@ class StaffController extends Controller
     public function __construct(
         private readonly StaffService $service,
         private readonly StaffRepository $repository,
+        private readonly DepartmentRepository $departmentRepository,
+        private readonly PositionRepository $positionRepository,
+        private readonly BranchRepository $branchRepository,
     ) {}
 
     public function index(): View
@@ -32,10 +35,10 @@ class StaffController extends Controller
 
     public function create(): View
     {
-        $departments = Department::orderBy('name')->get();
-        $positions = Position::orderBy('name')->get();
+        $departments = $this->departmentRepository->allOrderedByName();
+        $positions = $this->positionRepository->allOrderedByName();
         $users = $this->repository->unlinkedUsers();
-        $branches = Branch::orderBy('name')->get();
+        $branches = $this->branchRepository->allOrderedByName();
 
         return view('tenant.staff.create', compact('departments', 'positions', 'branches', 'users'));
     }
@@ -49,10 +52,10 @@ class StaffController extends Controller
 
     public function edit(Staff $staff): View
     {
-        $departments = Department::orderBy('name')->get();
-        $positions = Position::orderBy('name')->get();
+        $departments = $this->departmentRepository->allOrderedByName();
+        $positions = $this->positionRepository->allOrderedByName();
         $users = $this->repository->unlinkedUsersOrCurrent($staff);
-        $branches = Branch::orderBy('name')->get();
+        $branches = $this->branchRepository->allOrderedByName();
 
         return view('tenant.staff.edit', compact('staff', 'departments', 'positions', 'branches', 'users'));
     }
