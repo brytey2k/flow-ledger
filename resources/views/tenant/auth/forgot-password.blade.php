@@ -1,6 +1,6 @@
 @extends('tenant.layouts.auth')
 
-@section('title', 'Forgot Password')
+@section('title', __('auth.forgot_password'))
 
 @push('styles')
 <style>
@@ -19,10 +19,10 @@
         <div class="kt-card-content flex flex-col gap-5 p-10">
             <div class="text-center mb-2.5">
                 <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
-                    Forgot Password
+                    {{ __('auth.forgot_password') }}
                 </h3>
                 <p class="text-sm text-secondary-foreground">
-                    Enter your email and we'll send you a reset link.
+                    {{ __('auth.forgot_password_hint') }}
                 </p>
             </div>
 
@@ -53,13 +53,13 @@
 
                 <div class="flex flex-col gap-1">
                     <label class="kt-form-label font-normal text-mono" for="email">
-                        Email
+                        {{ __('auth.email') }}
                     </label>
                     <input
                         class="kt-input"
                         id="email"
                         name="email"
-                        placeholder="email@email.com"
+                        placeholder="{{ __('auth.email_placeholder') }}"
                         type="email"
                         value="{{ old('email') }}"
                         required
@@ -72,15 +72,30 @@
                 </div>
 
                 <button class="kt-btn kt-btn-primary flex justify-center grow" type="submit">
-                    Send Reset Link
+                    {{ __('auth.send_reset_link') }}
                 </button>
             </form>
 
             <div class="text-center">
                 <a class="text-sm kt-link" href="{{ route('login') }}">
-                    Back to Sign In
+                    {{ __('auth.back_to_sign_in') }}
                 </a>
             </div>
+        </div>
+        <div class="border-t border-border px-10 py-4">
+            <form method="POST" action="{{ route('locale.update') }}" class="flex justify-center">
+                @csrf
+                <label class="sr-only" for="tenant-forgot-locale">{{ __('navigation.language') }}</label>
+                <select
+                    id="tenant-forgot-locale"
+                    name="locale"
+                    class="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
+                    onchange="this.form.submit()"
+                >
+                    <option value="en" @selected(app()->getLocale() === 'en')>English</option>
+                    <option value="fr" @selected(app()->getLocale() === 'fr')>Francais</option>
+                </select>
+            </form>
         </div>
     </div>
 </div>

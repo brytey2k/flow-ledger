@@ -57,7 +57,7 @@ class BranchesController extends Controller
             $branch->save();
         }
 
-        return redirect()->route('branches.index')->with('success', 'Branch created successfully.');
+        return redirect()->route('branches.index')->with('success', __('flash.branches.created'));
     }
 
     public function edit(Branch $branch): View
@@ -93,21 +93,21 @@ class BranchesController extends Controller
             $branch->save();
         }
 
-        return redirect()->route('branches.index')->with('success', 'Branch updated successfully.');
+        return redirect()->route('branches.index')->with('success', __('flash.branches.updated'));
     }
 
     public function destroy(Branch $branch): RedirectResponse
     {
         if ($branch->staff()->exists()) {
-            return back()->with('error', 'Cannot delete a branch that has staff assigned to it.');
+            return back()->with('error', __('flash.branches.delete_blocked_staff'));
         }
 
         if ($branch->descendants()->exists()) {
-            return back()->with('error', 'Cannot delete a branch that has child branches.');
+            return back()->with('error', __('flash.branches.delete_blocked_children'));
         }
 
         $branch->delete();
 
-        return redirect()->route('branches.index')->with('success', 'Branch deleted.');
+        return redirect()->route('branches.index')->with('success', __('flash.branches.deleted'));
     }
 }

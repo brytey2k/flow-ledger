@@ -47,7 +47,7 @@ class StaffController extends Controller
     {
         $this->service->create($request->toDto(), $request->user());
 
-        return redirect()->route('staff.index')->with('success', 'Staff member created successfully.');
+        return redirect()->route('staff.index')->with('success', __('flash.staff.created'));
     }
 
     public function edit(Staff $staff): View
@@ -64,13 +64,13 @@ class StaffController extends Controller
     {
         $this->service->update($staff, $request->toDto(), $request->user());
 
-        return redirect()->route('staff.index')->with('success', 'Staff member updated successfully.');
+        return redirect()->route('staff.index')->with('success', __('flash.staff.updated'));
     }
 
     public function destroy(Staff $staff): RedirectResponse
     {
         $this->service->delete($staff, auth()->user());
 
-        return redirect()->route('staff.index')->with('success', 'Staff member deleted.');
+        return redirect()->route('staff.index')->with('success', __('flash.staff.deleted'));
     }
 }

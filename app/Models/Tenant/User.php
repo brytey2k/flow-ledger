@@ -17,6 +17,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $last_name
  * @property string $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string|null $locale
  * @property string $password
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -50,6 +51,7 @@ class User extends Authenticatable
         'last_name',
         'email',
         'password',
+        'locale',
     ];
 
     protected $hidden = [

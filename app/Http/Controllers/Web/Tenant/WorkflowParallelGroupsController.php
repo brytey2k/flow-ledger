@@ -21,7 +21,7 @@ class WorkflowParallelGroupsController extends Controller
         ]);
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
-            ->with('success', 'Parallel group created.');
+            ->with('success', __('flash.workflows.parallel_group_created'));
     }
 
     public function destroy(WorkflowTemplate $workflowTemplate, WorkflowParallelGroup $workflowParallelGroup): RedirectResponse
@@ -29,6 +29,6 @@ class WorkflowParallelGroupsController extends Controller
         $workflowParallelGroup->delete();
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
-            ->with('success', 'Parallel group deleted.');
+            ->with('success', __('flash.workflows.parallel_group_deleted'));
     }
 }

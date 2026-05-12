@@ -20,12 +20,12 @@ class PaymentRequestSubmitController extends Controller
     {
         if (! $paymentRequest->isDraft()) {
             return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('error', 'Only draft requests can be submitted.');
+                ->with('error', __('flash.requests.submit_only_draft'));
         }
 
         if (! WorkflowTemplate::where('type', $paymentRequest->type)->exists()) {
             return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('error', 'No workflow template configured for this request type. Please ask an administrator to set one up.');
+                ->with('error', __('flash.requests.missing_workflow_template'));
         }
 
         /** @var \App\Models\Tenant\User $user */
@@ -33,6 +33,6 @@ class PaymentRequestSubmitController extends Controller
         $this->service->submit($paymentRequest, $user);
 
         return redirect()->route('payment-requests.show', $paymentRequest)
-            ->with('success', 'Request submitted for approval.');
+            ->with('success', __('flash.requests.submitted'));
     }
 }

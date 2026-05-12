@@ -22,15 +22,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Payment Requests</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('payment_requests.title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Manage advance and expense reimbursement requests
+                {{ __('payment_requests.subtitle') }}
             </div>
         </div>
         @can(PermissionKey::CreatePaymentRequest->value)
             <a class="kt-btn kt-btn-primary" href="{{ route('payment-requests.create') }}">
                 <i class="ki-filled ki-plus"></i>
-                New Request
+                {{ __('payment_requests.add_new') }}
             </a>
         @endcan
     </div>
@@ -53,7 +53,7 @@
 
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">All Requests</h3>
+                <h3 class="kt-card-title">{{ __('payment_requests.all') }}</h3>
                 <span class="kt-badge kt-badge-sm kt-badge-outline">
                     {{ $requests->total() }} {{ Str::plural('Request', $requests->total()) }}
                 </span>
@@ -63,12 +63,12 @@
                 <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
                         <i class="ki-filled ki-wallet text-6xl text-muted-foreground mb-4"></i>
-                        <h3 class="text-lg font-medium text-foreground mb-2">No requests yet</h3>
-                        <p class="text-sm text-secondary-foreground mb-4">Create a new advance or expense request to get started</p>
+                        <h3 class="text-lg font-medium text-foreground mb-2">{{ __('payment_requests.empty.heading') }}</h3>
+                        <p class="text-sm text-secondary-foreground mb-4">{{ __('payment_requests.empty.subtext') }}</p>
                         @can(PermissionKey::CreatePaymentRequest->value)
                             <a href="{{ route('payment-requests.create') }}" class="kt-btn kt-btn-primary">
                                 <i class="ki-filled ki-plus"></i>
-                                New Request
+                                {{ __('payment_requests.add_new') }}
                             </a>
                         @endcan
                     </div>
@@ -80,13 +80,13 @@
                             <thead>
                                 <tr>
                                     <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">#</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">Staff</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">Branch</span></span></th>
-                                    <th class="min-w-[80px]"><span class="kt-table-col"><span class="kt-table-col-label">Type</span></span></th>
-                                    <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">Amount</span></span></th>
-                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">Status</span></span></th>
-                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">Date</span></span></th>
-                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">Actions</span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.staff') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.branch') }}</span></span></th>
+                                    <th class="min-w-[80px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.type') }}</span></span></th>
+                                    <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.status') }}</span></span></th>
+                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.date') }}</span></span></th>
+                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -119,7 +119,7 @@
                                             <a href="{{ route('payment-requests.show', $req) }}"
                                                class="kt-btn kt-btn-sm kt-btn-outline">
                                                 <i class="ki-filled ki-eye"></i>
-                                                View
+                                                {{ __('common.view') }}
                                             </a>
                                         </td>
                                     </tr>

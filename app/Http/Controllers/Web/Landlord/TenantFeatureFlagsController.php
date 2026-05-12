@@ -47,7 +47,7 @@ class TenantFeatureFlagsController extends Controller
             }
         }
 
-        return back()->with('success', 'Feature flags updated.');
+        return back()->with('success', __('flash.feature_flags.updated'));
     }
 
     public function bulkUpdate(BulkFeatureFlagUpdateRequest $request): RedirectResponse
@@ -61,6 +61,6 @@ class TenantFeatureFlagsController extends Controller
             $this->featureFlagService->deactivateForAll($flag);
         }
 
-        return back()->with('success', 'Bulk feature flag update applied.');
+        return back()->with('success', __('flash.feature_flags.bulk_updated'));
     }
 }

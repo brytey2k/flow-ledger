@@ -33,7 +33,7 @@
                         <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                             <i class="ki-filled ki-element-11 text-lg"></i>
                         </span>
-                        <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Dashboard</span>
+                        <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.dashboard') }}</span>
                     </a>
                 </div>
 
@@ -41,7 +41,7 @@
                 @can(PermissionKey::AccessPaymentRequests->value)
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
-                            Requests
+                            {{ __('navigation.sections.requests') }}
                         </span>
                     </div>
 
@@ -51,7 +51,7 @@
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                 <i class="ki-filled ki-wallet text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Payment Requests</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.payment_requests') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -63,7 +63,7 @@
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                 <i class="ki-filled ki-file-up text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Retirements</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.retirements') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -72,7 +72,7 @@
                 @canany([PermissionKey::DisburseRequests->value, PermissionKey::AccessCashbook->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
-                            Finance
+                            {{ __('navigation.sections.finance') }}
                         </span>
                     </div>
                 @endcanany
@@ -82,9 +82,9 @@
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('disbursements.index') }}">
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                                <i class="ki-filled ki-dollar text-lg"></i>
+                                <i class="ki-filled ki-bank text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Disbursements</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.disbursements') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -96,7 +96,7 @@
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                 <i class="ki-filled ki-calculator text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Cashbook</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.cashbook') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -109,7 +109,7 @@
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                 <i class="ki-filled ki-shield-tick text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Approvals</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.approvals') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -118,7 +118,7 @@
                 @canany([PermissionKey::AccessLevels->value, PermissionKey::AccessBranches->value, PermissionKey::AccessDepartments->value, PermissionKey::AccessAccountCodes->value, PermissionKey::AccessPositions->value, PermissionKey::AccessStaff->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
-                            Organisation
+                            {{ __('navigation.sections.organisation') }}
                         </span>
                     </div>
 
@@ -127,9 +127,9 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('levels.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                                    <i class="ki-filled ki-layers text-lg"></i>
+                                    <i class="ki-filled ki-element-11 text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Levels</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.levels') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -141,7 +141,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-office-bag text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Branches</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.branches') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -153,7 +153,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-people text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Departments</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.departments') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -165,7 +165,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-book text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Account Codes</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.account_codes') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -177,7 +177,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-briefcase text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Positions</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.positions') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -189,7 +189,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-people text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Staff</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.staff') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -199,7 +199,7 @@
                 @canany([PermissionKey::AccessUsers->value, PermissionKey::AccessRoles->value, PermissionKey::AccessCurrencies->value, PermissionKey::AccessWorkflowTemplates->value, PermissionKey::AccessActivityLog->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
-                            Settings
+                            {{ __('navigation.sections.settings') }}
                         </span>
                     </div>
 
@@ -208,9 +208,9 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('users.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                                    <i class="ki-filled ki-profile-user text-lg"></i>
+                                    <i class="ki-filled ki-users text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Users</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.users') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -222,7 +222,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-security-user text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Roles</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.roles') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -232,9 +232,9 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('currencies.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                                    <i class="ki-filled ki-dollar text-lg"></i>
+                                    <i class="ki-filled ki-bank text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Currencies</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.currencies') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -246,7 +246,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-arrow-right-left text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Workflows</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.workflows') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -258,7 +258,7 @@
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
                                     <i class="ki-filled ki-time text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">Activity Log</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.activity_log') }}</span>
                             </a>
                         </div>
                     @endcan

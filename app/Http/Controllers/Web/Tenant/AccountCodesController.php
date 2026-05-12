@@ -43,7 +43,7 @@ class AccountCodesController extends Controller
             'department_id' => $dto->departmentId,
         ]);
 
-        return redirect()->route('account-codes.index')->with('success', 'Account code created successfully.');
+        return redirect()->route('account-codes.index')->with('success', __('flash.account_codes.created'));
     }
 
     public function edit(AccountCode $accountCode): View
@@ -62,13 +62,13 @@ class AccountCodesController extends Controller
             'department_id' => $dto->departmentId,
         ]);
 
-        return redirect()->route('account-codes.index')->with('success', 'Account code updated successfully.');
+        return redirect()->route('account-codes.index')->with('success', __('flash.account_codes.updated'));
     }
 
     public function destroy(AccountCode $accountCode): RedirectResponse
     {
         $accountCode->delete();
 
-        return redirect()->route('account-codes.index')->with('success', 'Account code deleted.');
+        return redirect()->route('account-codes.index')->with('success', __('flash.account_codes.deleted'));
     }
 }

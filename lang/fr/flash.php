@@ -1,0 +1,121 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'attachments' => [
+        'uploaded' => 'Piece jointe telechargee.',
+        'deleted' => 'Piece jointe supprimee.',
+    ],
+    'cashbook' => [
+        'receipt_recorded' => 'Recu enregistre avec succes.',
+        'receipt_deleted' => 'Recu supprime avec succes.',
+        'auto_entry_delete_forbidden' => 'Les ecritures generees automatiquement ne peuvent pas etre supprimees.',
+    ],
+    'comments' => [
+        'added' => 'Commentaire ajoute.',
+        'deleted' => 'Commentaire supprime.',
+    ],
+    'currencies' => [
+        'created' => 'Devise creee avec succes.',
+        'updated' => 'Devise mise a jour avec succes.',
+        'deleted' => 'Devise supprimee avec succes.',
+    ],
+    'levels' => [
+        'created' => 'Niveau cree avec succes.',
+        'updated' => 'Niveau mis a jour avec succes.',
+        'deleted' => 'Niveau supprime.',
+        'delete_blocked_branches' => 'Impossible de supprimer un niveau auquel des succursales sont affectees.',
+    ],
+    'positions' => [
+        'created' => 'Poste cree avec succes.',
+        'updated' => 'Poste mis a jour avec succes.',
+        'deleted' => 'Poste supprime.',
+        'delete_blocked_staff' => 'Impossible de supprimer un poste auquel du personnel est affecte.',
+    ],
+    'departments' => [
+        'created' => 'Departement cree avec succes.',
+        'updated' => 'Departement mis a jour avec succes.',
+        'deleted' => 'Departement supprime.',
+    ],
+    'account_codes' => [
+        'created' => 'Code de compte cree avec succes.',
+        'updated' => 'Code de compte mis a jour avec succes.',
+        'deleted' => 'Code de compte supprime.',
+    ],
+    'branches' => [
+        'created' => 'Succursale creee avec succes.',
+        'updated' => 'Succursale mise a jour avec succes.',
+        'deleted' => 'Succursale supprimee.',
+        'delete_blocked_staff' => 'Impossible de supprimer une succursale a laquelle du personnel est affecte.',
+        'delete_blocked_children' => 'Impossible de supprimer une succursale qui a des succursales enfants.',
+    ],
+    'staff' => [
+        'created' => 'Membre du personnel cree avec succes.',
+        'updated' => 'Membre du personnel mis a jour avec succes.',
+        'deleted' => 'Membre du personnel supprime.',
+    ],
+    'users' => [
+        'created' => 'Utilisateur cree avec succes.',
+        'updated' => 'Utilisateur mis a jour avec succes.',
+        'deleted' => 'Utilisateur supprime avec succes.',
+        'permissions_updated' => 'Permissions utilisateur mises a jour avec succes.',
+    ],
+    'roles' => [
+        'created' => 'Role cree avec succes.',
+        'updated' => 'Role mis a jour avec succes.',
+        'deleted' => 'Role supprime avec succes.',
+        'permissions_updated' => 'Permissions du role mises a jour avec succes.',
+        'delete_blocked_users' => 'Impossible de supprimer un role associe a des utilisateurs.',
+    ],
+    'workflows' => [
+        'template_created' => 'Modele de workflow cree. Ajoutez maintenant des etapes.',
+        'template_updated' => 'Modele de workflow mis a jour.',
+        'template_deleted' => 'Modele de workflow supprime.',
+        'stage_added' => 'Etape ajoutee.',
+        'stage_updated' => 'Etape mise a jour.',
+        'stage_deleted' => 'Etape supprimee.',
+        'parallel_group_created' => 'Groupe parallele cree.',
+        'parallel_group_deleted' => 'Groupe parallele supprime.',
+    ],
+    'requests' => [
+        'missing_staff_profile' => 'Votre compte n est pas lie a un profil de personnel avec une succursale. Veuillez contacter un administrateur.',
+        'draft_saved' => 'Demande enregistree en brouillon.',
+        'draft_delete_only' => 'Seules les demandes en brouillon peuvent etre supprimees.',
+        'deleted' => 'Demande supprimee.',
+        'submitted' => 'Demande soumise pour approbation.',
+        'resubmitted' => 'Demande renvoyee pour approbation.',
+        'submit_only_draft' => 'Seules les demandes en brouillon peuvent etre soumises.',
+        'resubmit_only_sent_back' => 'Seules les demandes renvoyees peuvent etre soumises a nouveau.',
+        'missing_workflow_template' => 'Aucun modele de workflow configure pour ce type de demande. Veuillez demander a un administrateur d en configurer un.',
+        'disburse_only_approved' => 'Seules les demandes approuvees peuvent etre decaissees.',
+        'disbursed' => 'Demande marquee comme decaissee.',
+    ],
+    'retirements' => [
+        'draft_saved' => 'Reddition enregistree en brouillon.',
+        'submitted' => 'Reddition soumise pour approbation.',
+        'resubmitted' => 'Reddition renvoyee pour approbation.',
+        'submit_only_draft' => 'Seules les redditions en brouillon peuvent etre soumises.',
+        'resubmit_only_sent_back' => 'Seules les redditions renvoyees peuvent etre soumises a nouveau.',
+        'settled' => 'Reddition marquee comme reglee.',
+        'settle_only_approved' => 'Seules les redditions approuvees peuvent etre reglees.',
+    ],
+    'approvals' => [
+        'action_recorded' => 'Action enregistree avec succes.',
+    ],
+    'tenants' => [
+        'created' => 'Locataire cree avec succes.',
+        'suspended' => 'Locataire suspendu.',
+        'reactivated' => 'Locataire reactive.',
+        'reset_failed' => 'Echec de la reinitialisation du locataire.',
+        'reset_confirm_mismatch' => 'Reinitialisation du locataire annulee : le nom de confirmation ne correspond pas.',
+        'reset_success' => 'Locataire reinitialise avec succes.',
+        'delete_failed' => 'Echec de la suppression du locataire.',
+        'delete_confirm_mismatch' => 'Suppression du locataire annulee : le nom de confirmation ne correspond pas.',
+        'deleted' => 'Locataire supprime avec succes.',
+    ],
+    'feature_flags' => [
+        'updated' => 'Drapeaux de fonctionnalite mis a jour.',
+        'bulk_updated' => 'Mise a jour en masse des drapeaux appliquee.',
+    ],
+];

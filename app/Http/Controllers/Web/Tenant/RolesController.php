@@ -46,7 +46,7 @@ class RolesController extends Controller
 
         return redirect()
             ->route('roles.index')
-            ->with('success', 'Role created successfully.');
+            ->with('success', __('flash.roles.created'));
     }
 
     public function edit(Role $role): View
@@ -65,7 +65,7 @@ class RolesController extends Controller
 
         return redirect()
             ->route('roles.index')
-            ->with('success', 'Role updated successfully.');
+            ->with('success', __('flash.roles.updated'));
     }
 
     public function destroy(Role $role): RedirectResponse
@@ -73,14 +73,14 @@ class RolesController extends Controller
         if ($role->users()->count() > 0) {
             return redirect()
                 ->route('roles.index')
-                ->with('error', 'Cannot delete role that has associated users.');
+                ->with('error', __('flash.roles.delete_blocked_users'));
         }
 
         $role->delete();
 
         return redirect()
             ->route('roles.index')
-            ->with('success', 'Role deleted successfully.');
+            ->with('success', __('flash.roles.deleted'));
     }
 
     public function editPermissions(Role $role): View
@@ -109,6 +109,6 @@ class RolesController extends Controller
 
         return redirect()
             ->route('roles.edit', $role)
-            ->with('success', 'Role permissions updated successfully.');
+            ->with('success', __('flash.roles.permissions_updated'));
     }
 }

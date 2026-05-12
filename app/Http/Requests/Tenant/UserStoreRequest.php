@@ -29,16 +29,6 @@ class UserStoreRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'roles.*' => 'role',
-        ];
-    }
-
     public function toDto(): \App\DTOs\Tenant\CreateUserDto
     {
         /** @var list<int|string> $rawRoles */

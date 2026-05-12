@@ -35,7 +35,7 @@ class PositionsController extends Controller
         $dto = $request->toDto();
         Position::create(['name' => $dto->name]);
 
-        return redirect()->route('positions.index')->with('success', 'Position created successfully.');
+        return redirect()->route('positions.index')->with('success', __('flash.positions.created'));
     }
 
     public function edit(Position $position): View
@@ -48,17 +48,17 @@ class PositionsController extends Controller
         $dto = $request->toDto();
         $position->update(['name' => $dto->name]);
 
-        return redirect()->route('positions.index')->with('success', 'Position updated successfully.');
+        return redirect()->route('positions.index')->with('success', __('flash.positions.updated'));
     }
 
     public function destroy(Position $position): RedirectResponse
     {
         if ($position->staff()->exists()) {
-            return back()->with('error', 'Cannot delete a position that has staff assigned to it.');
+            return back()->with('error', __('flash.positions.delete_blocked_staff'));
         }
 
         $position->delete();
 
-        return redirect()->route('positions.index')->with('success', 'Position deleted.');
+        return redirect()->route('positions.index')->with('success', __('flash.positions.deleted'));
     }
 }

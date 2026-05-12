@@ -5,15 +5,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Create Role</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('roles.create_title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Add a new role to your system
+                {{ __('roles.create_subtitle') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
             <a class="kt-btn kt-btn-outline" href="{{ route('roles.index') }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back to Roles
+                {{ __('roles.back') }}
             </a>
         </div>
     </div>
@@ -25,7 +25,7 @@
     <div class="grid gap-5 lg:gap-7.5">
         <div class="kt-card">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Role Details</h3>
+                <h3 class="kt-card-title">{{ __('roles.details_card') }}</h3>
             </div>
             <div class="kt-card-content">
                 <form method="POST" action="{{ route('roles.store') }}" class="grid gap-7">
@@ -35,10 +35,10 @@
                         <!-- Role Name -->
                         <div>
                             <label class="kt-form-label block mb-2" for="name">
-                                Role Name <span class="text-destructive">*</span>
+                                {{ __('roles.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name') }}" class="kt-input w-full" placeholder="e.g. Administrator" required aria-invalid="@error('name') true @else false @enderror" />
-                            <p class="mt-1 text-xs text-muted-foreground">Enter a descriptive name for this role.</p>
+                            <p class="mt-1 text-xs text-muted-foreground">{{ __('roles.fields.name_hint') }}</p>
                             @error('name')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
@@ -46,18 +46,18 @@
 
                         <!-- Guard Name -->
                         <div>
-                            <label class="kt-form-label block mb-2" for="guard_name">Guard Name</label>
+                            <label class="kt-form-label block mb-2" for="guard_name">{{ __('roles.fields.guard') }}</label>
                             <input id="guard_name" name="guard_name" type="text" value="{{ old('guard_name', 'web') }}" class="kt-input w-full" readonly />
-                            <p class="mt-1 text-xs text-muted-foreground">The authentication guard for this role (default: web).</p>
+                            <p class="mt-1 text-xs text-muted-foreground">{{ __('roles.fields.guard_hint') }}</p>
                         </div>
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
                         <button type="submit" class="kt-btn kt-btn-primary">
                             <i class="ki-filled ki-plus"></i>
-                            Create Role
+                            {{ __('roles.buttons.create') }}
                         </button>
-                        <a class="kt-btn kt-btn-light" href="{{ route('roles.index') }}">Cancel</a>
+                        <a class="kt-btn kt-btn-light" href="{{ route('roles.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

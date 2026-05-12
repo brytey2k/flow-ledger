@@ -35,7 +35,7 @@ class DepartmentsController extends Controller
         $dto = $request->toDto();
         Department::create(['name' => $dto->name]);
 
-        return redirect()->route('departments.index')->with('success', 'Department created successfully.');
+        return redirect()->route('departments.index')->with('success', __('flash.departments.created'));
     }
 
     public function edit(Department $department): View
@@ -48,13 +48,13 @@ class DepartmentsController extends Controller
         $dto = $request->toDto();
         $department->update(['name' => $dto->name]);
 
-        return redirect()->route('departments.index')->with('success', 'Department updated successfully.');
+        return redirect()->route('departments.index')->with('success', __('flash.departments.updated'));
     }
 
     public function destroy(Department $department): RedirectResponse
     {
         $department->delete();
 
-        return redirect()->route('departments.index')->with('success', 'Department deleted.');
+        return redirect()->route('departments.index')->with('success', __('flash.departments.deleted'));
     }
 }

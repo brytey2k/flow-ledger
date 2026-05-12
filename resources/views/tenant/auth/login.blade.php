@@ -1,6 +1,6 @@
 @extends('tenant.layouts.auth')
 
-@section('title', 'Sign In')
+@section('title', __('auth.sign_in'))
 
 @push('styles')
 <style>
@@ -21,7 +21,7 @@
 
             <div class="text-center mb-2.5">
                 <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
-                    Sign in
+                    {{ __('auth.sign_in_heading') }}
                 </h3>
             </div>
 
@@ -40,13 +40,13 @@
 
             <div class="flex flex-col gap-1">
                 <label class="kt-form-label font-normal text-mono" for="email">
-                    Email
+                    {{ __('auth.email') }}
                 </label>
                 <input
                     class="kt-input"
                     id="email"
                     name="email"
-                    placeholder="email@email.com"
+                    placeholder="{{ __('auth.email_placeholder') }}"
                     type="email"
                     value="{{ old('email') }}"
                     required
@@ -61,17 +61,17 @@
             <div class="flex flex-col gap-1">
                 <div class="flex items-center justify-between gap-1">
                     <label class="kt-form-label font-normal text-mono" for="password">
-                        Password
+                        {{ __('auth.password') }}
                     </label>
                     <a class="text-sm kt-link shrink-0" href="{{ route('password.request') }}">
-                        Forgot Password?
+                        {{ __('auth.forgot_password_link') }}
                     </a>
                 </div>
                 <div class="kt-input" data-kt-toggle-password="true" aria-invalid="@error('password') true @else false @enderror">
                     <input
                         id="password"
                         name="password"
-                        placeholder="Enter Password"
+                        placeholder="{{ __('auth.enter_password') }}"
                         type="password"
                         required
                     />
@@ -92,14 +92,29 @@
             <label class="kt-label">
                 <input class="kt-checkbox kt-checkbox-sm" name="remember" type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}/>
                 <span class="kt-checkbox-label">
-                    Remember me
+                    {{ __('auth.remember_me') }}
                 </span>
             </label>
 
             <button class="kt-btn kt-btn-primary flex justify-center grow" type="submit">
-                Sign In
+                {{ __('auth.sign_in') }}
             </button>
         </form>
+        <div class="border-t border-border px-10 py-4">
+            <form method="POST" action="{{ route('locale.update') }}" class="flex justify-center">
+                @csrf
+                <label class="sr-only" for="tenant-auth-locale">{{ __('navigation.language') }}</label>
+                <select
+                    id="tenant-auth-locale"
+                    name="locale"
+                    class="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
+                    onchange="this.form.submit()"
+                >
+                    <option value="en" @selected(app()->getLocale() === 'en')>English</option>
+                    <option value="fr" @selected(app()->getLocale() === 'fr')>Francais</option>
+                </select>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

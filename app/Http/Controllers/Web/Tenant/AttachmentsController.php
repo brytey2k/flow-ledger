@@ -32,13 +32,13 @@ class AttachmentsController extends Controller
         $this->service->store($retirementRequest, $file, $user);
 
         return redirect()->route('retirement-requests.show', $retirementRequest)
-            ->with('success', 'Attachment uploaded.');
+            ->with('success', __('flash.attachments.uploaded'));
     }
 
     public function destroy(Request $request, Attachment $attachment): RedirectResponse
     {
         $this->service->delete($attachment);
 
-        return redirect()->back()->with('success', 'Attachment deleted.');
+        return redirect()->back()->with('success', __('flash.attachments.deleted'));
     }
 }

@@ -37,7 +37,7 @@ class LevelController extends Controller
         $dto = $request->toDto();
         Level::create(['name' => $dto->name, 'position' => $dto->position]);
 
-        return redirect()->route('levels.index')->with('success', 'Level created successfully.');
+        return redirect()->route('levels.index')->with('success', __('flash.levels.created'));
     }
 
     public function edit(Level $level): View
@@ -50,17 +50,17 @@ class LevelController extends Controller
         $dto = $request->toDto();
         $level->update(['name' => $dto->name, 'position' => $dto->position]);
 
-        return redirect()->route('levels.index')->with('success', 'Level updated successfully.');
+        return redirect()->route('levels.index')->with('success', __('flash.levels.updated'));
     }
 
     public function destroy(Level $level): RedirectResponse
     {
         if ($level->branches()->exists()) {
-            return back()->with('error', 'Cannot delete a level that has branches assigned to it.');
+            return back()->with('error', __('flash.levels.delete_blocked_branches'));
         }
 
         $level->delete();
 
-        return redirect()->route('levels.index')->with('success', 'Level deleted.');
+        return redirect()->route('levels.index')->with('success', __('flash.levels.deleted'));
     }
 }

@@ -11,9 +11,9 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Disbursements</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('disbursements.title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Approved requests awaiting payment disbursement
+                {{ __('disbursements.subtitle') }}
             </div>
         </div>
     </div>
@@ -31,7 +31,7 @@
 
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Pending Disbursement</h3>
+                <h3 class="kt-card-title">{{ __('disbursements.pending_card') }}</h3>
                 <span class="kt-badge kt-badge-sm kt-badge-outline">
                     {{ $requests->total() }} {{ Str::plural('Request', $requests->total()) }}
                 </span>
@@ -41,8 +41,8 @@
                 <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
                         <i class="ki-filled ki-dollar text-6xl text-muted-foreground mb-4"></i>
-                        <h3 class="text-lg font-medium text-foreground mb-2">All caught up</h3>
-                        <p class="text-sm text-secondary-foreground">No approved requests are awaiting disbursement.</p>
+                        <h3 class="text-lg font-medium text-foreground mb-2">{{ __('disbursements.empty.heading') }}</h3>
+                        <p class="text-sm text-secondary-foreground">{{ __('disbursements.empty.subtext') }}</p>
                     </div>
                 </div>
             @else
@@ -52,12 +52,12 @@
                             <thead>
                                 <tr>
                                     <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">#</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">Staff</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">Branch</span></span></th>
-                                    <th class="min-w-[80px]"><span class="kt-table-col"><span class="kt-table-col-label">Type</span></span></th>
-                                    <th class="min-w-[140px]"><span class="kt-table-col"><span class="kt-table-col-label">Amount</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">Approved</span></span></th>
-                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">Actions</span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.staff') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.branch') }}</span></span></th>
+                                    <th class="min-w-[80px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.type') }}</span></span></th>
+                                    <th class="min-w-[140px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('disbursements.columns.approved') }}</span></span></th>
+                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -87,7 +87,7 @@
                                             <a href="{{ route('payment-requests.show', $req) }}"
                                                class="kt-btn kt-btn-sm kt-btn-primary">
                                                 <i class="ki-filled ki-dollar"></i>
-                                                Disburse
+                                                {{ __('disbursements.buttons.disburse') }}
                                             </a>
                                         </td>
                                     </tr>

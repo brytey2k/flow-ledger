@@ -12,20 +12,20 @@
         'cancelled'   => 'kt-badge-danger',
     ];
     $diffTypeInfo = [
-        'pay_to_staff'      => ['label' => 'Pay to Staff',       'class' => 'bg-warning/10 text-warning'],
-        'refund_to_company' => ['label' => 'Refund to Company',  'class' => 'bg-destructive/10 text-destructive'],
-        'nil'               => ['label' => 'No Difference',      'class' => 'bg-success/10 text-success'],
+        'pay_to_staff'      => ['label' => __('retirements.status.pay_to_staff'),   'class' => 'bg-warning/10 text-warning'],
+        'refund_to_company' => ['label' => __('retirements.status.refund_company'), 'class' => 'bg-destructive/10 text-destructive'],
+        'nil'               => ['label' => __('retirements.status.nil'),             'class' => 'bg-success/10 text-success'],
     ];
     $eventLabels = [
-        'retirement.created'    => 'Created as draft',
-        'retirement.submitted'  => 'Submitted for approval',
-        'retirement.approved'   => 'Fully approved',
-        'retirement.cancelled'  => 'Cancelled',
-        'retirement.settled'    => 'Difference settled',
-        'retirement.resubmitted'=> 'Resubmitted for approval',
-        'stage.approved'        => 'Stage approved',
-        'stage.rejected'        => 'Stage rejected',
-        'stage.sent_back'       => 'Sent back for revision',
+        'retirement.created'    => __('retirements.timeline.created_draft'),
+        'retirement.submitted'  => __('retirements.timeline.submitted'),
+        'retirement.approved'   => __('retirements.timeline.fully_approved'),
+        'retirement.cancelled'  => __('retirements.timeline.cancelled'),
+        'retirement.settled'    => __('retirements.timeline.settled'),
+        'retirement.resubmitted'=> __('retirements.timeline.resubmitted'),
+        'stage.approved'        => __('retirements.timeline.stage_approved'),
+        'stage.rejected'        => __('retirements.timeline.stage_rejected'),
+        'stage.sent_back'       => __('retirements.timeline.sent_back'),
     ];
     $pr = $retirementRequest->paymentRequest;
     $diffInfo = $diffTypeInfo[$retirementRequest->difference_type] ?? ['label' => '—', 'class' => 'bg-muted text-muted-foreground'];
@@ -42,14 +42,14 @@
                 </span>
             </div>
             <div class="text-sm text-secondary-foreground">
-                For Advance <a href="{{ route('payment-requests.show', $pr) }}" class="text-primary hover:underline">#{{ $pr->id }}</a>
+                {{ __('retirements.show.for_advance') }} <a href="{{ route('payment-requests.show', $pr) }}" class="text-primary hover:underline">#{{ $pr->id }}</a>
                 &mdash; {{ $pr->staff->full_name ?? '—' }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
             <a class="kt-btn kt-btn-outline" href="{{ route('retirement-requests.index') }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back to Retirements
+                {{ __('retirements.show.back') }}
             </a>
         </div>
     </div>
@@ -79,45 +79,45 @@
                 {{-- Summary --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Retirement Summary</h3>
+                        <h3 class="kt-card-title">{{ __('retirements.show.summary_card') }}</h3>
                     </div>
                     <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Staff Member</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.staff_member') }}</dt>
                                 <dd class="text-sm font-medium text-mono">{{ $pr->staff->full_name ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Branch</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('common.columns.branch') }}</dt>
                                 <dd class="text-sm text-foreground">{{ $pr->branch->name ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Advance Amount</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('retirements.fields.advance_amount') }}</dt>
                                 <dd class="text-sm font-medium text-mono">
                                     {{ $pr->currency->symbol ?? '' }} {{ number_format((float) $pr->total_amount, 2) }}
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Total Expended</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('retirements.fields.total_expended') }}</dt>
                                 <dd class="text-lg font-semibold text-mono">
                                     {{ $pr->currency->symbol ?? '' }} {{ number_format((float) $retirementRequest->total_amount_expended, 2) }}
                                 </dd>
                             </div>
                             @if($retirementRequest->submitted_at)
                                 <div>
-                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Submitted</dt>
+                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('common.columns.submitted') }}</dt>
                                     <dd class="text-sm text-foreground">{{ $retirementRequest->submitted_at->format('M d, Y H:i') }}</dd>
                                 </div>
                             @endif
                             @if($retirementRequest->approved_at)
                                 <div>
-                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Approved</dt>
+                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.show.approved') }}</dt>
                                     <dd class="text-sm text-foreground">{{ $retirementRequest->approved_at->format('M d, Y H:i') }}</dd>
                                 </div>
                             @endif
                             @if($retirementRequest->notes)
                                 <div class="sm:col-span-2">
-                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Notes</dt>
+                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('common.notes') }}</dt>
                                     <dd class="text-sm text-foreground whitespace-pre-line">{{ $retirementRequest->notes }}</dd>
                                 </div>
                             @endif
@@ -140,7 +140,7 @@
                 {{-- Expenditure Items --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Expenditure Items</h3>
+                        <h3 class="kt-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
                         <span class="kt-badge kt-badge-sm kt-badge-outline">
                             {{ $retirementRequest->items->count() }} {{ Str::plural('item', $retirementRequest->items->count()) }}
                         </span>
@@ -150,10 +150,10 @@
                             <table class="kt-table kt-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Description</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Account Code</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Receipt</span></span></th>
-                                        <th class="w-[140px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">Amount</span></span></th>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('retirements.fields.account_code') }}</span></span></th>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
+                                        <th class="w-[140px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -179,7 +179,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="3" class="text-end text-sm font-medium text-secondary-foreground">Total Expended</td>
+                                        <td colspan="3" class="text-end text-sm font-medium text-secondary-foreground">{{ __('retirements.fields.total_expended') }}</td>
                                         <td class="text-end">
                                             <span class="text-base font-semibold text-mono">
                                                 {{ $pr->currency->symbol ?? '' }} {{ number_format((float) $retirementRequest->total_amount_expended, 2) }}
@@ -195,7 +195,7 @@
                 {{-- Attachments --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Attachments</h3>
+                        <h3 class="kt-card-title">{{ __('retirements.show.attachments_card') }}</h3>
                         <span class="kt-badge kt-badge-sm kt-badge-outline">
                             {{ $retirementRequest->attachments->count() }} {{ Str::plural('file', $retirementRequest->attachments->count()) }}
                         </span>
@@ -211,7 +211,7 @@
                                     </div>
                                 </div>
                                 @can(App\Enums\Tenant\PermissionKey::DeleteAttachment->value)
-                                    <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('Delete this attachment?')">
+                                    <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('retirements.show.confirm_delete_attachment') }}')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline text-destructive hover:bg-destructive/10">
                                             <i class="ki-filled ki-trash"></i>
@@ -220,7 +220,7 @@
                                 @endcan
                             </div>
                         @empty
-                            <p class="text-sm text-secondary-foreground text-center py-2">No attachments yet.</p>
+                            <p class="text-sm text-secondary-foreground text-center py-2">{{ __('retirements.show.no_attachments') }}</p>
                         @endforelse
 
                         @can(App\Enums\Tenant\PermissionKey::CreateRetirementRequest->value)
@@ -231,7 +231,7 @@
                                         <input type="file" name="file" class="block text-sm text-secondary-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-muted/80 flex-1" />
                                         <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline shrink-0">
                                             <i class="ki-filled ki-upload"></i>
-                                            Upload
+                                            {{ __('common.upload') }}
                                         </button>
                                     </div>
                                     @error('file') <p class="mt-1 text-xs text-destructive">{{ $message }}</p> @enderror
@@ -256,7 +256,7 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Timeline</h3>
+                        <h3 class="kt-card-title">{{ __('payment_requests.show.timeline') }}</h3>
                     </div>
                     <div class="kt-card-content p-5 flex flex-col gap-4">
                         @forelse($timelineItems as $entry)
@@ -293,7 +293,7 @@
                                 </div>
                             @endif
                         @empty
-                            <p class="text-sm text-secondary-foreground text-center py-4">No activity yet.</p>
+                            <p class="text-sm text-secondary-foreground text-center py-4">{{ __('retirements.timeline.no_activity') }}</p>
                         @endforelse
                     </div>
                 </div>
@@ -306,7 +306,7 @@
                 {{-- Actions --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Actions</h3>
+                        <h3 class="kt-card-title">{{ __('payment_requests.show.actions') }}</h3>
                     </div>
                     <div class="kt-card-content p-5 flex flex-col gap-3">
                         @if($retirementRequest->isDraft())
@@ -314,30 +314,30 @@
                                 @csrf
                                 <button type="submit" class="kt-btn kt-btn-primary w-full">
                                     <i class="ki-filled ki-send"></i>
-                                    Submit for Approval
+                                    {{ __('retirements.buttons.submit') }}
                                 </button>
                             </form>
                         @elseif($retirementRequest->status === 'in_workflow')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
                                 <i class="ki-filled ki-time"></i>
-                                Awaiting approval
+                                {{ __('payment_requests.status.awaiting_approval') }}
                             </div>
                         @elseif($retirementRequest->status === 'approved')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-sm mb-2">
                                 <i class="ki-filled ki-check-circle"></i>
-                                Fully approved
+                                {{ __('retirements.status.fully_approved') }}
                             </div>
                             @can(App\Enums\Tenant\PermissionKey::SettleRetirements->value)
                                 @if($retirementRequest->difference_type !== 'nil')
                                     <form method="POST" action="{{ route('retirement-requests.settle', $retirementRequest) }}" class="flex flex-col gap-2">
                                         @csrf
                                         <div>
-                                            <label class="kt-form-label text-xs block mb-1">Settlement Notes <span class="text-muted-foreground">(optional)</span></label>
+                                            <label class="kt-form-label text-xs block mb-1">{{ __('retirements.show.settlement_notes') }} <span class="text-muted-foreground">(optional)</span></label>
                                             <textarea name="settlement_notes" rows="2" class="kt-textarea w-full text-sm" placeholder="e.g. Cheque #1234 issued..."></textarea>
                                         </div>
                                         <button type="submit" class="kt-btn kt-btn-primary w-full">
                                             <i class="ki-filled ki-check-circle"></i>
-                                            Mark as Settled
+                                            {{ __('retirements.buttons.settle') }}
                                         </button>
                                     </form>
                                 @else
@@ -345,7 +345,7 @@
                                         @csrf
                                         <button type="submit" class="kt-btn kt-btn-primary w-full">
                                             <i class="ki-filled ki-check-circle"></i>
-                                            Mark as Settled
+                                            {{ __('retirements.buttons.settle') }}
                                         </button>
                                     </form>
                                 @endif
@@ -353,20 +353,20 @@
                         @elseif($retirementRequest->isSentBack())
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-warning/10 text-warning text-sm mb-2">
                                 <i class="ki-filled ki-information-2"></i>
-                                This retirement was sent back for review
+                                {{ __('retirements.show.sent_back_notice') }}
                             </div>
                             <form method="POST" action="{{ route('retirement-requests.resubmit', $retirementRequest) }}">
                                 @csrf
                                 <button type="submit" class="kt-btn kt-btn-primary w-full">
                                     <i class="ki-filled ki-send"></i>
-                                    Resubmit for Approval
+                                    {{ __('retirements.buttons.resubmit') }}
                                 </button>
                             </form>
                         @elseif($retirementRequest->status === 'settled')
                             <div class="flex flex-col gap-1 p-3 rounded-lg bg-info/10 text-info text-sm">
                                 <div class="flex items-center gap-2">
                                     <i class="ki-filled ki-check-circle"></i>
-                                    Settled
+                                    {{ __('retirements.status.settled') }}
                                 </div>
                                 @if($retirementRequest->settled_at)
                                     <span class="text-xs">{{ $retirementRequest->settled_at->format('M d, Y') }}</span>
@@ -378,7 +378,7 @@
                         @elseif($retirementRequest->status === 'cancelled')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                                 <i class="ki-filled ki-cross-circle"></i>
-                                Cancelled
+                                {{ __('retirements.status.cancelled') }}
                             </div>
                         @endif
                     </div>
@@ -389,7 +389,7 @@
                     @php $instance = $retirementRequest->activeWorkflowInstance; @endphp
                     <div class="kt-card">
                         <div class="kt-card-header">
-                            <h3 class="kt-card-title">Approval Progress</h3>
+                            <h3 class="kt-card-title">{{ __('approvals.show.approval_progress') }}</h3>
                         </div>
                         <div class="kt-card-content p-5 flex flex-col gap-3">
                             @foreach($instance->instanceStages->sortBy('stage.display_order') as $instanceStage)

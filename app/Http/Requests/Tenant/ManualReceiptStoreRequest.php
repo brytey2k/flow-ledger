@@ -26,19 +26,6 @@ class ManualReceiptStoreRequest extends FormRequest
         ];
     }
 
-    /** @return array<string, string> */
-    public function messages(): array
-    {
-        return [
-            'amount.required' => 'Please enter an amount.',
-            'amount.numeric' => 'Amount must be a number.',
-            'amount.min' => 'Amount must be greater than zero.',
-            'entry_date.required' => 'Please enter the entry date.',
-            'entry_date.date' => 'Please enter a valid date.',
-            'entry_date.before_or_equal' => 'Entry date cannot be in the future.',
-        ];
-    }
-
     public function toDto(): CashbookEntryDto
     {
         return new CashbookEntryDto(

@@ -50,7 +50,7 @@ class UsersController extends Controller
 
         return redirect()
             ->route('users.index')
-            ->with('success', 'User created successfully.');
+            ->with('success', __('flash.users.created'));
     }
 
     public function edit(User $user): View
@@ -70,7 +70,7 @@ class UsersController extends Controller
 
         return redirect()
             ->route('users.index')
-            ->with('success', 'User updated successfully.');
+            ->with('success', __('flash.users.updated'));
     }
 
     public function destroy(User $user): RedirectResponse
@@ -79,7 +79,7 @@ class UsersController extends Controller
 
         return redirect()
             ->route('users.index')
-            ->with('success', 'User deleted successfully.');
+            ->with('success', __('flash.users.deleted'));
     }
 
     public function editPermissions(User $user): View
@@ -108,6 +108,6 @@ class UsersController extends Controller
 
         return redirect()
             ->route('users.edit', $user)
-            ->with('success', 'User permissions updated successfully.');
+            ->with('success', __('flash.users.permissions_updated'));
     }
 }

@@ -38,4 +38,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getLocaleAttribute(): string|null
+    {
+        return null;
+    }
 }

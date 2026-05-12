@@ -39,7 +39,7 @@ class WorkflowTemplatesController extends Controller
         ]);
 
         return redirect()->route('workflow-templates.show', $template)
-            ->with('success', 'Workflow template created. Now add stages.');
+            ->with('success', __('flash.workflows.template_created'));
     }
 
     public function show(WorkflowTemplate $workflowTemplate): View
@@ -63,7 +63,7 @@ class WorkflowTemplatesController extends Controller
         ]);
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
-            ->with('success', 'Workflow template updated.');
+            ->with('success', __('flash.workflows.template_updated'));
     }
 
     public function destroy(WorkflowTemplate $workflowTemplate): RedirectResponse
@@ -71,6 +71,6 @@ class WorkflowTemplatesController extends Controller
         $workflowTemplate->delete();
 
         return redirect()->route('workflow-templates.index')
-            ->with('success', 'Workflow template deleted.');
+            ->with('success', __('flash.workflows.template_deleted'));
     }
 }

@@ -70,6 +70,6 @@ class WorkflowApprovalsController extends Controller
         $subject = $instanceStage->instance?->workflowable;
 
         return redirect()->route('payment-requests.show', $subject)
-            ->with('success', 'Action recorded successfully.');
+            ->with('success', __('flash.approvals.action_recorded'));
     }
 }

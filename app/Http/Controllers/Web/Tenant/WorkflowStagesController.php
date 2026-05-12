@@ -34,7 +34,7 @@ class WorkflowStagesController extends Controller
         $this->service->create($workflowTemplate, $request->toDto());
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
-            ->with('success', 'Stage added.');
+            ->with('success', __('flash.workflows.stage_added'));
     }
 
     public function edit(WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): View
@@ -51,7 +51,7 @@ class WorkflowStagesController extends Controller
         $this->service->update($workflowStage, $request->toDto());
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
-            ->with('success', 'Stage updated.');
+            ->with('success', __('flash.workflows.stage_updated'));
     }
 
     public function destroy(WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): RedirectResponse
@@ -59,6 +59,6 @@ class WorkflowStagesController extends Controller
         $workflowStage->delete();
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
-            ->with('success', 'Stage deleted.');
+            ->with('success', __('flash.workflows.stage_deleted'));
     }
 }

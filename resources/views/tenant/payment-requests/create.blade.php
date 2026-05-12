@@ -4,15 +4,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">New Payment Request</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('payment_requests.create_title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Submit an advance or expense reimbursement request
+                {{ __('payment_requests.create_subtitle') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
             <a class="kt-btn kt-btn-outline" href="{{ route('payment-requests.index') }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back to Requests
+                {{ __('payment_requests.back') }}
             </a>
         </div>
     </div>
@@ -27,7 +27,7 @@
             {{-- Request Details --}}
             <div class="kt-card">
                 <div class="kt-card-header">
-                    <h3 class="kt-card-title">Request Details</h3>
+                    <h3 class="kt-card-title">{{ __('payment_requests.details_card') }}</h3>
                 </div>
                 <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -35,16 +35,16 @@
                         {{-- Type --}}
                         <div>
                             <label class="kt-form-label block mb-2" for="type">
-                                Request Type <span class="text-destructive">*</span>
+                                {{ __('payment_requests.fields.type') }} <span class="text-destructive">*</span>
                             </label>
                             <select id="type" name="type" class="kt-select w-full"
                                     aria-invalid="@error('type') true @else false @enderror">
-                                <option value="">Select type…</option>
+                                <option value="">{{ __('payment_requests.fields.select_type') }}</option>
                                 <option value="advance" {{ old('type') === 'advance' ? 'selected' : '' }}>
-                                    Advance — request funds before spending
+                                    {{ __('payment_requests.fields.type_advance') }}
                                 </option>
                                 <option value="expense" {{ old('type') === 'expense' ? 'selected' : '' }}>
-                                    Expense — reimburse money already spent
+                                    {{ __('payment_requests.fields.type_expense') }}
                                 </option>
                             </select>
                             @error('type')
@@ -54,7 +54,7 @@
 
                         {{-- Submitting As (read-only) --}}
                         <div class="lg:col-span-2">
-                            <label class="kt-form-label block mb-2">Submitting As</label>
+                            <label class="kt-form-label block mb-2">{{ __('payment_requests.fields.submitting_as') }}</label>
                             <div class="kt-input w-full bg-muted/40 flex items-center gap-3 px-4 py-3 rounded-md">
                                 <i class="ki-filled ki-user text-secondary-foreground"></i>
                                 <div>
@@ -68,11 +68,11 @@
                         {{-- Currency --}}
                         <div>
                             <label class="kt-form-label block mb-2" for="currency_id">
-                                Currency <span class="text-destructive">*</span>
+                                {{ __('payment_requests.fields.currency') }} <span class="text-destructive">*</span>
                             </label>
                             <select id="currency_id" name="currency_id" class="kt-select w-full"
                                     aria-invalid="@error('currency_id') true @else false @enderror">
-                                <option value="">Select currency…</option>
+                                <option value="">{{ __('payment_requests.fields.select_currency') }}</option>
                                 @foreach($currencies as $currency)
                                     <option value="{{ $currency->id }}" {{ old('currency_id') == $currency->id ? 'selected' : '' }}>
                                         {{ $currency->short_name }} — {{ $currency->name }} ({{ $currency->symbol }})
@@ -86,7 +86,7 @@
 
                         {{-- Notes --}}
                         <div class="lg:col-span-2">
-                            <label class="kt-form-label block mb-2" for="notes">Notes</label>
+                            <label class="kt-form-label block mb-2" for="notes">{{ __('payment_requests.fields.notes') }}</label>
                             <textarea id="notes" name="notes" rows="3"
                                       class="kt-textarea w-full"
                                       placeholder="Optional: provide context or justification for this request…"
@@ -102,8 +102,8 @@
             {{-- Line Items --}}
             <div class="kt-card">
                 <div class="kt-card-header">
-                    <h3 class="kt-card-title">Line Items</h3>
-                    <span class="text-sm text-secondary-foreground">Add each item to be funded or reimbursed</span>
+                    <h3 class="kt-card-title">{{ __('payment_requests.fields.line_items') }}</h3>
+                    <span class="text-sm text-secondary-foreground">{{ __('payment_requests.fields.line_items_hint') }}</span>
                 </div>
                 <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
                     @error('items')
@@ -123,7 +123,7 @@
                             <div class="item-row p-4 rounded-lg border border-border flex flex-col gap-3" id="item-row-{{ $i }}">
                                 <div class="grid grid-cols-1 lg:grid-cols-[1fr_180px_40px] gap-3 items-start">
                                     <div>
-                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Description *</label>
+                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('common.columns.description') }} *</label>
                                         <input type="text"
                                                name="items[{{ $i }}][description]"
                                                value="{{ $item['description'] ?? '' }}"
@@ -136,7 +136,7 @@
                                         @enderror
                                     </div>
                                     <div>
-                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Amount *</label>
+                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('common.columns.amount') }} *</label>
                                         <input type="number"
                                                name="items[{{ $i }}][amount]"
                                                value="{{ $item['amount'] ?? '' }}"
@@ -167,10 +167,10 @@
                                 {{-- Expense-only fields --}}
                                 <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="{{ $oldType !== 'expense' ? 'display:none' : '' }}">
                                     <div>
-                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Account Code *</label>
+                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('payment_requests.fields.account_code') }} *</label>
                                         <select name="items[{{ $i }}][account_code_id]" class="kt-select w-full"
                                                 aria-invalid="@error('items.{{ $i }}.account_code_id') true @else false @enderror">
-                                            <option value="">Select…</option>
+                                            <option value="">{{ __('payment_requests.fields.select') }}</option>
                                             @foreach($accountCodes as $code)
                                                 <option value="{{ $code->id }}"
                                                     {{ isset($item['account_code_id']) && $item['account_code_id'] == $code->id ? 'selected' : '' }}>
@@ -183,7 +183,7 @@
                                         @enderror
                                     </div>
                                     <div>
-                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Receipt Number</label>
+                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('payment_requests.fields.receipt_number') }}</label>
                                         <input type="text"
                                                name="items[{{ $i }}][receipt_number]"
                                                value="{{ $item['receipt_number'] ?? '' }}"
@@ -199,10 +199,10 @@
                     <div class="flex items-center justify-between mt-5 pt-4 border-t border-border">
                         <button type="button" class="kt-btn kt-btn-sm kt-btn-outline" onclick="addItem()">
                             <i class="ki-filled ki-plus"></i>
-                            Add Item
+                            {{ __('common.add_item') }}
                         </button>
                         <div class="flex items-center gap-3">
-                            <span class="text-sm text-secondary-foreground">Total:</span>
+                            <span class="text-sm text-secondary-foreground">{{ __('common.total') }}:</span>
                             <span class="text-lg font-semibold text-mono" id="total-display">
                                 {{ number_format(collect(old('items', []))->sum('amount'), 2) }}
                             </span>
@@ -215,9 +215,9 @@
             <div class="flex items-center gap-2.5 pb-7.5">
                 <button type="submit" class="kt-btn kt-btn-primary">
                     <i class="ki-filled ki-floppy-disk"></i>
-                    Save as Draft
+                    {{ __('payment_requests.buttons.save_draft') }}
                 </button>
-                <a class="kt-btn kt-btn-light" href="{{ route('payment-requests.index') }}">Cancel</a>
+                <a class="kt-btn kt-btn-light" href="{{ route('payment-requests.index') }}">{{ __('common.cancel') }}</a>
             </div>
 
         </div>

@@ -30,7 +30,7 @@ class DisbursementsController extends Controller
     {
         if ($paymentRequest->status !== 'approved') {
             return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('error', 'Only approved requests can be disbursed.');
+                ->with('error', __('flash.requests.disburse_only_approved'));
         }
 
         /** @var \App\Models\Tenant\User $user */
@@ -39,6 +39,6 @@ class DisbursementsController extends Controller
         $this->service->disburse($paymentRequest, $request->toDto(), $user);
 
         return redirect()->route('payment-requests.show', $paymentRequest)
-            ->with('success', 'Request marked as disbursed.');
+            ->with('success', __('flash.requests.disbursed'));
     }
 }

@@ -39,17 +39,17 @@
                 </span>
             </div>
             <div class="text-sm text-secondary-foreground">
-                Stage: <span class="font-medium text-mono">{{ $instanceStage->stage->name }}</span>
+                {{ __('common.columns.stage') }}: <span class="font-medium text-mono">{{ $instanceStage->stage->name }}</span>
             </div>
         </div>
         <div class="flex items-center gap-2.5">
             <a class="kt-btn kt-btn-outline" href="{{ route('approvals.index') }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back to Inbox
+                {{ __('approvals.show.back') }}
             </a>
             <a class="kt-btn kt-btn-outline" href="{{ route('payment-requests.show', $req) }}">
                 <i class="ki-filled ki-eye"></i>
-                View Request
+                {{ __('approvals.show.view_request') }}
             </a>
         </div>
     </div>
@@ -72,37 +72,37 @@
                 {{-- Request Details --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Request Details</h3>
+                        <h3 class="kt-card-title">{{ __('approvals.show.request_details') }}</h3>
                     </div>
                     <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Staff Member</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.staff_member') }}</dt>
                                 <dd class="text-sm font-medium text-mono">{{ $req->staff->full_name ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Branch</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('common.columns.branch') }}</dt>
                                 <dd class="text-sm text-foreground">{{ $req->branch->name ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Currency</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.currency') }}</dt>
                                 <dd class="text-sm text-foreground">{{ $req->currency->short_name ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Total Amount</dt>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.total_amount') }}</dt>
                                 <dd class="text-lg font-semibold text-mono">
                                     {{ $req->currency->symbol ?? '' }} {{ number_format((float) $req->total_amount, 2) }}
                                 </dd>
                             </div>
                             @if($req->submitted_at)
                                 <div>
-                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Submitted</dt>
+                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.submitted_label') }}</dt>
                                     <dd class="text-sm text-foreground">{{ $req->submitted_at->format('M d, Y H:i') }}</dd>
                                 </div>
                             @endif
                             @if($req->notes)
                                 <div class="sm:col-span-2">
-                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">Notes</dt>
+                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.notes') }}</dt>
                                     <dd class="text-sm text-foreground whitespace-pre-line">{{ $req->notes }}</dd>
                                 </div>
                             @endif
@@ -113,7 +113,7 @@
                 {{-- Line Items --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Line Items</h3>
+                        <h3 class="kt-card-title">{{ __('approvals.show.line_items') }}</h3>
                         <span class="kt-badge kt-badge-sm kt-badge-outline">
                             {{ $req->items->count() }} {{ Str::plural('item', $req->items->count()) }}
                         </span>
@@ -123,8 +123,8 @@
                             <table class="kt-table kt-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Description</span></span></th>
-                                        <th class="w-[160px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">Amount</span></span></th>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th class="w-[160px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -141,7 +141,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td class="text-end text-sm font-medium text-secondary-foreground">Total</td>
+                                        <td class="text-end text-sm font-medium text-secondary-foreground">{{ __('common.total') }}</td>
                                         <td class="text-end">
                                             <span class="text-base font-semibold text-mono">
                                                 {{ $req->currency->symbol ?? '' }} {{ number_format((float) $req->total_amount, 2) }}
@@ -158,7 +158,7 @@
                 @if($instanceStage->actions->isNotEmpty())
                     <div class="kt-card">
                         <div class="kt-card-header">
-                            <h3 class="kt-card-title">Action History</h3>
+                            <h3 class="kt-card-title">{{ __('approvals.show.action_history') }}</h3>
                         </div>
                         <div class="kt-card-content p-5 flex flex-col gap-4">
                             @foreach($instanceStage->actions as $action)
@@ -191,7 +191,7 @@
                 {{-- Action Panel --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Your Decision</h3>
+                        <h3 class="kt-card-title">{{ __('approvals.show.your_decision') }}</h3>
                     </div>
                     <div class="kt-card-content p-5">
                         <form method="POST" action="{{ route('approvals.store', $instanceStage) }}" id="approval-form">
@@ -200,12 +200,12 @@
                             {{-- Comment --}}
                             <div class="mb-4">
                                 <label class="kt-form-label block mb-2" for="comment">
-                                    Comment
-                                    <span class="text-secondary-foreground font-normal text-xs">(required for reject / send back)</span>
+                                    {{ __('approvals.show.comment_label') }}
+                                    <span class="text-secondary-foreground font-normal text-xs">{{ __('approvals.show.comment_required') }}</span>
                                 </label>
                                 <textarea id="comment" name="comment" rows="4"
                                           class="kt-textarea w-full"
-                                          placeholder="Add a comment…"
+                                          placeholder="{{ __('approvals.show.comment_placeholder') }}"
                                           aria-invalid="@error('comment') true @else false @enderror">{{ old('comment') }}</textarea>
                                 @error('comment')
                                     <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
@@ -220,18 +220,18 @@
                                 <button type="submit" name="action" value="approve"
                                         class="kt-btn kt-btn-success w-full">
                                     <i class="ki-filled ki-check-circle"></i>
-                                    Approve
+                                    {{ __('common.approve') }}
                                 </button>
                                 <button type="submit" name="action" value="send_back"
                                         class="kt-btn kt-btn-warning kt-btn-outline w-full">
                                     <i class="ki-filled ki-arrow-left"></i>
-                                    Send Back
+                                    {{ __('common.send_back') }}
                                 </button>
                                 <button type="submit" name="action" value="reject"
-                                        onclick="return confirm('Reject this request? This will cancel the entire workflow.')"
+                                        onclick="return confirm('{{ __('approvals.show.reject_confirm') }}')"
                                         class="kt-btn kt-btn-danger kt-btn-outline w-full">
                                     <i class="ki-filled ki-cross-circle"></i>
-                                    Reject
+                                    {{ __('common.reject') }}
                                 </button>
                             </div>
                         </form>
@@ -241,7 +241,7 @@
                 {{-- Workflow Progress --}}
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="kt-card-title">Approval Progress</h3>
+                        <h3 class="kt-card-title">{{ __('approvals.show.approval_progress') }}</h3>
                     </div>
                     <div class="kt-card-content p-5 flex flex-col gap-3">
                         @foreach($instanceStage->instance->instanceStages->sortBy('stage.display_order') as $is)
@@ -258,7 +258,7 @@
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-sm font-medium text-mono {{ $isCurrent ? 'text-primary' : '' }}">
                                         {{ $is->stage->name }}
-                                        @if($isCurrent) <span class="text-xs font-normal">(current)</span> @endif
+                                        @if($isCurrent) <span class="text-xs font-normal">({{ __('common.current') }})</span> @endif
                                     </span>
                                     <span class="text-xs text-secondary-foreground capitalize">
                                         {{ str_replace('_', ' ', $is->status) }}

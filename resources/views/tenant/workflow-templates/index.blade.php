@@ -4,15 +4,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Workflow Templates</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('workflows.title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Configure approval workflows for requests
+                {{ __('workflows.subtitle') }}
             </div>
         </div>
         @can(App\Enums\Tenant\PermissionKey::CreateWorkflowTemplate->value)
             <a class="kt-btn kt-btn-primary" href="{{ route('workflow-templates.create') }}">
                 <i class="ki-filled ki-plus"></i>
-                New Template
+                {{ __('workflows.add_new') }}
             </a>
         @endcan
     </div>
@@ -29,7 +29,7 @@
 
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">All Templates</h3>
+                <h3 class="kt-card-title">{{ __('workflows.all') }}</h3>
                 <span class="kt-badge kt-badge-sm kt-badge-outline">
                     {{ $templates->count() }} {{ Str::plural('Template', $templates->count()) }}
                 </span>
@@ -39,12 +39,12 @@
                 <div class="kt-card-content p-5 lg:p-7.5">
                     <div class="flex flex-col items-center justify-center py-12">
                         <i class="ki-filled ki-document text-6xl text-muted-foreground mb-4"></i>
-                        <h3 class="text-lg font-medium text-foreground mb-2">No templates yet</h3>
-                        <p class="text-sm text-secondary-foreground mb-4">Create your first workflow template to enable approvals</p>
+                        <h3 class="text-lg font-medium text-foreground mb-2">{{ __('workflows.empty.heading') }}</h3>
+                        <p class="text-sm text-secondary-foreground mb-4">{{ __('workflows.empty.subtext') }}</p>
                         @can(App\Enums\Tenant\PermissionKey::CreateWorkflowTemplate->value)
                             <a href="{{ route('workflow-templates.create') }}" class="kt-btn kt-btn-primary">
                                 <i class="ki-filled ki-plus"></i>
-                                New Template
+                                {{ __('workflows.buttons.add') }}
                             </a>
                         @endcan
                     </div>
@@ -55,11 +55,11 @@
                         <table class="kt-table kt-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[200px]"><span class="kt-table-col"><span class="kt-table-col-label">Name</span></span></th>
-                                    <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">Type</span></span></th>
-                                    <th class="min-w-[100px]"><span class="kt-table-col"><span class="kt-table-col-label">Stages</span></span></th>
-                                    <th class="min-w-[150px]"><span class="kt-table-col"><span class="kt-table-col-label">Created</span></span></th>
-                                    <th class="min-w-[120px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">Actions</span></span></th>
+                                    <th class="min-w-[200px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.name') }}</span></span></th>
+                                    <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.type') }}</span></span></th>
+                                    <th class="min-w-[100px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.columns.stages') }}</span></span></th>
+                                    <th class="min-w-[150px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.created') }}</span></span></th>
+                                    <th class="min-w-[120px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -75,7 +75,11 @@
                                                 $typeColors = ['advance' => 'kt-badge-primary', 'expense' => 'kt-badge-success', 'retirement' => 'kt-badge-warning'];
                                             @endphp
                                             <span class="kt-badge kt-badge-sm {{ $typeColors[$template->type] ?? 'kt-badge-outline' }}">
-                                                {{ ucfirst($template->type) }}
+                                                @if($template->type === 'advance') {{ __('workflows.fields.type_advance') }}
+                                                @elseif($template->type === 'expense') {{ __('workflows.fields.type_expense') }}
+                                                @elseif($template->type === 'retirement') {{ __('workflows.fields.type_retirement') }}
+                                                @else {{ ucfirst($template->type) }}
+                                                @endif
                                             </span>
                                         </td>
                                         <td>
@@ -87,7 +91,7 @@
                                         <td class="text-center">
                                             <a href="{{ route('workflow-templates.show', $template) }}" class="kt-btn kt-btn-sm kt-btn-outline">
                                                 <i class="ki-filled ki-setting-2"></i>
-                                                Configure
+                                                {{ __('workflows.buttons.configure') }}
                                             </a>
                                         </td>
                                     </tr>

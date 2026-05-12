@@ -111,6 +111,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
         $response->assertRedirect(route('payment-requests.index'));
         $response->assertSessionHas('error');
+        $response->assertSessionHas('error', __('flash.requests.missing_staff_profile'));
     }
 
     public function test_create_form_redirects_if_staff_has_no_branch(): void

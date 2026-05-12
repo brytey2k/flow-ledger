@@ -18,7 +18,7 @@ class RetirementRequestSubmitController extends Controller
     {
         if (! $retirementRequest->isDraft()) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
-                ->with('error', 'Only draft retirements can be submitted.');
+                ->with('error', __('flash.retirements.submit_only_draft'));
         }
 
         /** @var \App\Models\Tenant\User $user */
@@ -26,6 +26,6 @@ class RetirementRequestSubmitController extends Controller
         $this->service->submit($retirementRequest, $user);
 
         return redirect()->route('retirement-requests.show', $retirementRequest)
-            ->with('success', 'Retirement submitted for approval.');
+            ->with('success', __('flash.retirements.submitted'));
     }
 }

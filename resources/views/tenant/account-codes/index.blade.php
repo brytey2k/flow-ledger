@@ -4,15 +4,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Account Codes</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('account_codes.title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Manage account codes and their department assignments
+                {{ __('account_codes.subtitle') }}
             </div>
         </div>
         @can(App\Enums\Tenant\PermissionKey::CreateAccountCode->value)
             <a class="kt-btn kt-btn-primary" href="{{ route('account-codes.create') }}">
                 <i class="ki-filled ki-plus"></i>
-                Add New Account Code
+                {{ __('account_codes.add_new') }}
             </a>
         @endcan
     </div>
@@ -36,7 +36,7 @@
 
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">All Account Codes</h3>
+                <h3 class="kt-card-title">{{ __('account_codes.all') }}</h3>
                 <div class="flex items-center gap-2">
                     <span class="kt-badge kt-badge-sm kt-badge-outline">
                         {{ $accountCodes->count() }} {{ Str::plural('Account Code', $accountCodes->count()) }}
@@ -48,12 +48,12 @@
                 <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
                         <i class="ki-filled ki-book text-6xl text-muted-foreground mb-4"></i>
-                        <h3 class="text-lg font-medium text-foreground mb-2">No account codes found</h3>
-                        <p class="text-sm text-secondary-foreground mb-4">Get started by creating your first account code</p>
+                        <h3 class="text-lg font-medium text-foreground mb-2">{{ __('account_codes.empty.heading') }}</h3>
+                        <p class="text-sm text-secondary-foreground mb-4">{{ __('account_codes.empty.subtext') }}</p>
                         @can(App\Enums\Tenant\PermissionKey::CreateAccountCode->value)
                             <a href="{{ route('account-codes.create') }}" class="kt-btn kt-btn-primary">
                                 <i class="ki-filled ki-plus"></i>
-                                Add Account Code
+                                {{ __('account_codes.buttons.add') }}
                             </a>
                         @endcan
                     </div>
@@ -66,32 +66,32 @@
                                 <tr>
                                     <th class="min-w-[80px]">
                                         <span class="kt-table-col">
-                                            <span class="kt-table-col-label">ID</span>
+                                            <span class="kt-table-col-label">{{ __('common.columns.id') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[120px]">
                                         <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Code</span>
+                                            <span class="kt-table-col-label">{{ __('common.columns.code') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
                                         <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Name</span>
+                                            <span class="kt-table-col-label">{{ __('common.columns.name') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[180px]">
                                         <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Department</span>
+                                            <span class="kt-table-col-label">{{ __('common.columns.department') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
                                         <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Created</span>
+                                            <span class="kt-table-col-label">{{ __('common.columns.created') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[100px] text-center">
                                         <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Actions</span>
+                                            <span class="kt-table-col-label">{{ __('common.columns.actions') }}</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -119,7 +119,7 @@
                                                 <a href="{{ route('account-codes.edit', $accountCode) }}"
                                                    class="kt-btn kt-btn-sm kt-btn-outline">
                                                     <i class="ki-filled ki-pencil"></i>
-                                                    Edit
+                                                    {{ __('common.edit') }}
                                                 </a>
                                             @endcan
                                         </td>

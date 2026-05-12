@@ -1,6 +1,6 @@
 @extends('tenant.layouts.auth')
 
-@section('title', 'Reset Password')
+@section('title', __('auth.reset_password'))
 
 @push('styles')
 <style>
@@ -19,7 +19,7 @@
         <div class="kt-card-content flex flex-col gap-5 p-10">
             <div class="text-center mb-2.5">
                 <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
-                    Reset Password
+                    {{ __('auth.reset_password') }}
                 </h3>
             </div>
 
@@ -43,13 +43,13 @@
 
                 <div class="flex flex-col gap-1">
                     <label class="kt-form-label font-normal text-mono" for="email">
-                        Email
+                        {{ __('auth.email') }}
                     </label>
                     <input
                         class="kt-input"
                         id="email"
                         name="email"
-                        placeholder="email@email.com"
+                        placeholder="{{ __('auth.email_placeholder') }}"
                         type="email"
                         value="{{ old('email', $email) }}"
                         required
@@ -63,13 +63,13 @@
 
                 <div class="flex flex-col gap-1">
                     <label class="kt-form-label font-normal text-mono" for="password">
-                        New Password
+                        {{ __('auth.new_password') }}
                     </label>
                     <div class="kt-input" data-kt-toggle-password="true" aria-invalid="@error('password') true @else false @enderror">
                         <input
                             id="password"
                             name="password"
-                            placeholder="Enter new password"
+                            placeholder="{{ __('auth.enter_new_password') }}"
                             type="password"
                             required
                         />
@@ -89,13 +89,13 @@
 
                 <div class="flex flex-col gap-1">
                     <label class="kt-form-label font-normal text-mono" for="password_confirmation">
-                        Confirm Password
+                        {{ __('auth.confirm_password') }}
                     </label>
                     <div class="kt-input" data-kt-toggle-password="true">
                         <input
                             id="password_confirmation"
                             name="password_confirmation"
-                            placeholder="Confirm new password"
+                            placeholder="{{ __('auth.confirm_new_password') }}"
                             type="password"
                             required
                         />
@@ -111,13 +111,13 @@
                 </div>
 
                 <button class="kt-btn kt-btn-primary flex justify-center grow" type="submit">
-                    Reset Password
+                    {{ __('auth.reset_password') }}
                 </button>
             </form>
 
             <div class="text-center">
                 <a class="text-sm kt-link" href="{{ route('login') }}">
-                    Back to Sign In
+                    {{ __('auth.back_to_sign_in') }}
                 </a>
             </div>
         </div>

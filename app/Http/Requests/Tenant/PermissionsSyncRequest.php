@@ -24,16 +24,6 @@ class PermissionsSyncRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'permissions.*' => 'permission',
-        ];
-    }
-
     public function toDto(): \App\DTOs\Tenant\SyncPermissionsDto
     {
         /** @var list<int|string> $rawIds */

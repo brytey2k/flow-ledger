@@ -5,15 +5,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Manage User Permissions</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('users.permissions.title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Assign direct permissions to {{ $user->first_name }} {{ $user->last_name }}
+                {{ __('users.permissions.subtitle', ['name' => $user->name]) }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
             <a class="kt-btn kt-btn-outline" href="{{ route('users.edit', $user) }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back to Edit User
+                {{ __('users.permissions.back') }}
             </a>
         </div>
     </div>
@@ -25,7 +25,7 @@
     <div class="grid gap-5 lg:gap-7.5">
         <div class="kt-card">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Direct Permissions</h3>
+                <h3 class="kt-card-title">{{ __('users.permissions.card') }}</h3>
             </div>
             <div class="kt-card-content">
                 <form method="POST" action="{{ route('users.permissions.update', $user) }}" class="grid gap-7">
@@ -35,15 +35,14 @@
                     <div class="p-4 rounded-lg bg-muted/50">
                         <p class="text-sm text-secondary-foreground">
                             <i class="ki-filled ki-information-2"></i>
-                            These are direct permissions assigned to this user, independent of their roles.
-                            The user will also have all permissions from their assigned roles.
+                            {{ __('users.permissions.description') }}
                         </p>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                         @if($permissions->isEmpty())
                             <div class="col-span-full">
-                                <p class="text-sm text-muted-foreground">No permissions available in the system.</p>
+                                <p class="text-sm text-muted-foreground">{{ __('users.permissions.none') }}</p>
                             </div>
                         @else
                             @foreach($permissions as $permission)
@@ -67,9 +66,9 @@
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5 border-t">
                         <button type="submit" class="kt-btn kt-btn-primary">
                             <i class="ki-filled ki-check"></i>
-                            Update Permissions
+                            {{ __('users.permissions.update') }}
                         </button>
-                        <a class="kt-btn kt-btn-light" href="{{ route('users.edit', $user) }}">Cancel</a>
+                        <a class="kt-btn kt-btn-light" href="{{ route('users.edit', $user) }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

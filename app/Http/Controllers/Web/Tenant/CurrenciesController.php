@@ -44,7 +44,7 @@ class CurrenciesController extends Controller
 
         return redirect()
             ->route('currencies.index')
-            ->with('success', 'Currency created successfully.');
+            ->with('success', __('flash.currencies.created'));
     }
 
     public function edit(Currency $currency): View
@@ -66,7 +66,7 @@ class CurrenciesController extends Controller
 
         return redirect()
             ->route('currencies.index')
-            ->with('success', 'Currency updated successfully.');
+            ->with('success', __('flash.currencies.updated'));
     }
 
     public function destroy(Currency $currency): RedirectResponse
@@ -75,6 +75,6 @@ class CurrenciesController extends Controller
 
         return redirect()
             ->route('currencies.index')
-            ->with('success', 'Currency deleted successfully.');
+            ->with('success', __('flash.currencies.deleted'));
     }
 }

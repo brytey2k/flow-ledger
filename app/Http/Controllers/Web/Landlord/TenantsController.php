@@ -43,21 +43,21 @@ class TenantsController extends Controller
 
         return redirect()
             ->route('landlord.tenants.index')
-            ->with('success', 'Tenant created successfully.');
+            ->with('success', __('flash.tenants.created'));
     }
 
     public function suspend(Tenant $tenant): RedirectResponse
     {
         $tenant->update(['is_suspended' => true]);
 
-        return back()->with('success', 'Tenant suspended.');
+        return back()->with('success', __('flash.tenants.suspended'));
     }
 
     public function unsuspend(Tenant $tenant): RedirectResponse
     {
         $tenant->update(['is_suspended' => false]);
 
-        return back()->with('success', 'Tenant reactivated.');
+        return back()->with('success', __('flash.tenants.reactivated'));
     }
 
     public function reset(TenantResetRequest $request, Tenant $tenant, TenantResetService $tenantResetService): RedirectResponse
@@ -68,7 +68,7 @@ class TenantsController extends Controller
         if (strcasecmp($providedName, $expectedName) !== 0) {
             return redirect()
                 ->route('landlord.tenants.index')
-                ->with('error', 'Tenant reset canceled: confirmation name does not match.');
+                ->with('error', __('flash.tenants.reset_confirm_mismatch'));
         }
 
         try {
@@ -78,12 +78,12 @@ class TenantsController extends Controller
 
             return redirect()
                 ->route('landlord.tenants.index')
-                ->with('error', 'Failed to reset tenant.');
+                ->with('error', __('flash.tenants.reset_failed'));
         }
 
         return redirect()
             ->route('landlord.tenants.index')
-            ->with('success', 'Tenant reset successfully.');
+            ->with('success', __('flash.tenants.reset_success'));
     }
 
     public function destroy(TenantDeleteRequest $request, Tenant $tenant): RedirectResponse
@@ -94,7 +94,7 @@ class TenantsController extends Controller
         if (strcasecmp($providedName, $expectedName) !== 0) {
             return redirect()
                 ->route('landlord.tenants.index')
-                ->with('error', 'Tenant deletion canceled: confirmation name does not match.');
+                ->with('error', __('flash.tenants.delete_confirm_mismatch'));
         }
 
         try {
@@ -108,12 +108,12 @@ class TenantsController extends Controller
 
             return redirect()
                 ->route('landlord.tenants.index')
-                ->with('error', 'Failed to delete tenant.');
+                ->with('error', __('flash.tenants.delete_failed'));
         }
 
         return redirect()
             ->route('landlord.tenants.index')
-            ->with('success', 'Tenant deleted successfully.');
+            ->with('success', __('flash.tenants.deleted'));
     }
 
     private function resolveTenantName(Tenant $tenant): string

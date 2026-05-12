@@ -4,15 +4,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Edit Staff Member</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('staff.edit_title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Update staff member details
+                {{ __('staff.edit_subtitle') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
             <a class="kt-btn kt-btn-outline" href="{{ route('staff.index') }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back to Staff
+                {{ __('staff.back') }}
             </a>
         </div>
     </div>
@@ -22,7 +22,7 @@
     <div class="grid gap-5 lg:gap-7.5">
         <div class="kt-card">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Staff Details</h3>
+                <h3 class="kt-card-title">{{ __('staff.details_card') }}</h3>
             </div>
             <div class="kt-card-content">
                 <form method="POST" action="{{ route('staff.update', $staff) }}" class="grid gap-7">
@@ -32,7 +32,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="first_name">
-                                First Name <span class="text-destructive">*</span>
+                                {{ __('staff.fields.first_name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="first_name" name="first_name" type="text" value="{{ old('first_name', $staff->first_name) }}"
                                    class="kt-input w-full" placeholder="e.g. John" required
@@ -44,7 +44,7 @@
 
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="last_name">
-                                Last Name <span class="text-destructive">*</span>
+                                {{ __('staff.fields.last_name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="last_name" name="last_name" type="text" value="{{ old('last_name', $staff->last_name) }}"
                                    class="kt-input w-full" placeholder="e.g. Doe" required
@@ -56,7 +56,7 @@
 
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="email">
-                                Email
+                                {{ __('staff.fields.email') }}
                             </label>
                             <input id="email" name="email" type="email" value="{{ old('email', $staff->email) }}"
                                    class="kt-input w-full" placeholder="e.g. john.doe@example.com"
@@ -68,7 +68,7 @@
 
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="phone">
-                                Phone
+                                {{ __('staff.fields.phone') }}
                             </label>
                             <input id="phone" name="phone" type="text" value="{{ old('phone', $staff->phone) }}"
                                    class="kt-input w-full" placeholder="e.g. +1 234 567 8900"
@@ -80,11 +80,11 @@
 
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="department_id">
-                                Department <span class="text-destructive">*</span>
+                                {{ __('staff.fields.department') }} <span class="text-destructive">*</span>
                             </label>
                             <select id="department_id" name="department_id" class="kt-select w-full" required
                                     aria-invalid="@error('department_id') true @else false @enderror">
-                                <option value="">Select a department</option>
+                                <option value="">{{ __('staff.fields.select_department') }}</option>
                                 @foreach($departments as $department)
                                     <option value="{{ $department->id }}" {{ old('department_id', $staff->department_id) == $department->id ? 'selected' : '' }}>
                                         {{ $department->name }}
@@ -98,11 +98,11 @@
 
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="position_id">
-                                Position <span class="text-destructive">*</span>
+                                {{ __('staff.fields.position') }} <span class="text-destructive">*</span>
                             </label>
                             <select id="position_id" name="position_id" class="kt-select w-full" required
                                     aria-invalid="@error('position_id') true @else false @enderror">
-                                <option value="">Select a position</option>
+                                <option value="">{{ __('staff.fields.select_position') }}</option>
                                 @foreach($positions as $position)
                                     <option value="{{ $position->id }}" {{ old('position_id', $staff->position_id) == $position->id ? 'selected' : '' }}>
                                         {{ $position->name }}
@@ -116,11 +116,11 @@
 
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="branch_id">
-                                Branch
+                                {{ __('staff.fields.branch') }}
                             </label>
                             <select id="branch_id" name="branch_id" class="kt-select w-full"
                                     aria-invalid="@error('branch_id') true @else false @enderror">
-                                <option value="">Select a branch</option>
+                                <option value="">{{ __('staff.fields.select_branch') }}</option>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}" {{ old('branch_id', $staff->branch_id) == $branch->id ? 'selected' : '' }}>
                                         {{ $branch->name }}
@@ -134,11 +134,11 @@
 
                         <div class="col-span-1">
                             <label class="kt-form-label block mb-2" for="user_id">
-                                User Account
+                                {{ __('staff.fields.user_account') }}
                             </label>
                             <select id="user_id" name="user_id" class="kt-select w-full"
                                     aria-invalid="@error('user_id') true @else false @enderror">
-                                <option value="">No linked account</option>
+                                <option value="">{{ __('staff.fields.no_linked_account') }}</option>
                                 @foreach($users as $u)
                                     <option value="{{ $u->id }}" {{ old('user_id', $staff->user_id) == $u->id ? 'selected' : '' }}>
                                         {{ $u->name }} — {{ $u->email }}
@@ -155,15 +155,15 @@
                         <div class="flex items-center gap-2.5">
                             <button type="submit" class="kt-btn kt-btn-primary">
                                 <i class="ki-filled ki-check"></i>
-                                Update Staff Member
+                                {{ __('staff.buttons.update') }}
                             </button>
-                            <a class="kt-btn kt-btn-light" href="{{ route('staff.index') }}">Cancel</a>
+                            <a class="kt-btn kt-btn-light" href="{{ route('staff.index') }}">{{ __('common.cancel') }}</a>
                         </div>
                         @can(App\Enums\Tenant\PermissionKey::DeleteStaff->value)
                             <button type="button" class="kt-btn kt-btn-danger"
-                                    onclick="if(confirm('Are you sure you want to delete this staff member? This action cannot be undone.')) { document.getElementById('delete-staff-form').submit(); }">
+                                    onclick="if(confirm('{{ __('staff.confirm_delete') }}')) { document.getElementById('delete-staff-form').submit(); }">
                                 <i class="ki-filled ki-trash"></i>
-                                Delete Staff Member
+                                {{ __('staff.buttons.delete') }}
                             </button>
                         @endcan
                     </div>

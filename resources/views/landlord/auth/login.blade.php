@@ -90,6 +90,21 @@
                 Sign In
             </button>
         </form>
+        <div class="border-t border-border px-10 py-4">
+            <form method="POST" action="{{ route('locale.update') }}" class="flex justify-center">
+                @csrf
+                <label class="sr-only" for="landlord-auth-locale">{{ __('navigation.language') }}</label>
+                <select
+                    id="landlord-auth-locale"
+                    name="locale"
+                    class="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
+                    onchange="this.form.submit()"
+                >
+                    <option value="en" @selected(app()->getLocale() === 'en')>English</option>
+                    <option value="fr" @selected(app()->getLocale() === 'fr')>Francais</option>
+                </select>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

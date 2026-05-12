@@ -5,10 +5,10 @@
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
-                Dashboard
+                {{ __('dashboard.title') }}
             </h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Welcome to Flow Ledger
+                {{ __('dashboard.welcome') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
@@ -23,12 +23,12 @@
             <div class="kt-card">
                 <div class="kt-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-muted-foreground">Accounts</span>
+                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.accounts') }}</span>
                         <i class="ki-filled ki-wallet text-lg text-primary"></i>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-3xl font-semibold">—</span>
-                        <span class="text-sm text-muted-foreground">No accounts yet</span>
+                        <span class="text-sm text-muted-foreground">{{ __('dashboard.no_accounts') }}</span>
                     </div>
                 </div>
             </div>
@@ -36,12 +36,12 @@
             <div class="kt-card">
                 <div class="kt-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-muted-foreground">Transactions</span>
+                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.transactions') }}</span>
                         <i class="ki-filled ki-arrows-loop text-lg text-blue-500"></i>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-3xl font-semibold">—</span>
-                        <span class="text-sm text-muted-foreground">No transactions yet</span>
+                        <span class="text-sm text-muted-foreground">{{ __('dashboard.no_transactions') }}</span>
                     </div>
                 </div>
             </div>
@@ -49,12 +49,12 @@
             <div class="kt-card">
                 <div class="kt-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-muted-foreground">Reports</span>
+                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.reports') }}</span>
                         <i class="ki-filled ki-chart-line-up text-lg text-green-500"></i>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-3xl font-semibold">—</span>
-                        <span class="text-sm text-muted-foreground">No data yet</span>
+                        <span class="text-sm text-muted-foreground">{{ __('dashboard.no_data') }}</span>
                     </div>
                 </div>
             </div>
@@ -66,9 +66,9 @@
                     <i class="ki-filled ki-book-open text-3xl text-primary"></i>
                 </div>
                 <div class="flex flex-col items-center gap-2 text-center">
-                    <h3 class="text-lg font-semibold">Your ledger is ready</h3>
+                    <h3 class="text-lg font-semibold">{{ __('dashboard.ledger_ready') }}</h3>
                     <p class="text-sm text-muted-foreground max-w-sm">
-                        Start by creating accounts and recording your first transactions.
+                        {{ __('dashboard.ledger_hint') }}
                     </p>
                 </div>
             </div>

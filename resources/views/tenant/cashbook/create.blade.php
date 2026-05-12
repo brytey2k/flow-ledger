@@ -5,15 +5,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Add Receipt — {{ $branch->name }}</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('cashbook.create.title', ['branch' => $branch->name]) }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Record cash received from the bank or an external source
+                {{ __('cashbook.create.subtitle') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
             <a class="kt-btn kt-btn-outline" href="{{ route('cashbook.index', $branch) }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back to Cashbook
+                {{ __('cashbook.create.back') }}
             </a>
         </div>
     </div>
@@ -25,7 +25,7 @@
     <div class="grid gap-5 lg:gap-7.5">
         <div class="kt-card">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Receipt Details</h3>
+                <h3 class="kt-card-title">{{ __('cashbook.create.card') }}</h3>
             </div>
             <div class="kt-card-content">
                 <form method="POST" action="{{ route('cashbook.store', $branch) }}" class="grid gap-7">
@@ -35,7 +35,7 @@
                         <!-- Amount -->
                         <div>
                             <label class="kt-form-label block mb-2" for="amount">
-                                Amount ({{ $cashbook->currency->symbol }}) <span class="text-destructive">*</span>
+                                {{ __('cashbook.fields.amount', ['symbol' => $cashbook->currency->symbol]) }} <span class="text-destructive">*</span>
                             </label>
                             <input id="amount" name="amount" type="number" step="0.01" min="0.01"
                                    value="{{ old('amount') }}"
@@ -51,7 +51,7 @@
                         <!-- Entry Date -->
                         <div>
                             <label class="kt-form-label block mb-2" for="entry_date">
-                                Date <span class="text-destructive">*</span>
+                                {{ __('common.columns.date') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="entry_date" name="entry_date" type="date"
                                    value="{{ old('entry_date', date('Y-m-d')) }}"
@@ -67,12 +67,12 @@
                         <!-- Reference -->
                         <div>
                             <label class="kt-form-label block mb-2" for="reference">
-                                Reference Number <span class="text-muted-foreground text-xs">(optional)</span>
+                                {{ __('cashbook.fields.reference') }} <span class="text-muted-foreground text-xs">(optional)</span>
                             </label>
                             <input id="reference" name="reference" type="text"
                                    value="{{ old('reference') }}"
                                    class="kt-input w-full"
-                                   placeholder="e.g. Bank transfer reference, cheque number"
+                                   placeholder="{{ __('cashbook.fields.reference_placeholder') }}"
                                    maxlength="100"
                                    aria-invalid="@error('reference') true @else false @enderror" />
                             @error('reference')
@@ -84,11 +84,11 @@
                     <!-- Notes -->
                     <div>
                         <label class="kt-form-label block mb-2" for="notes">
-                            Notes <span class="text-muted-foreground text-xs">(optional)</span>
+                            {{ __('common.notes') }} <span class="text-muted-foreground text-xs">(optional)</span>
                         </label>
                         <textarea id="notes" name="notes" rows="3"
                                   class="kt-input w-full"
-                                  placeholder="Additional details about this receipt"
+                                  placeholder="{{ __('cashbook.fields.notes_placeholder') }}"
                                   maxlength="5000"
                                   aria-invalid="@error('notes') true @else false @enderror">{{ old('notes') }}</textarea>
                         @error('notes')
@@ -99,9 +99,9 @@
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
                         <button type="submit" class="kt-btn kt-btn-primary">
                             <i class="ki-filled ki-check"></i>
-                            Save Receipt
+                            {{ __('cashbook.create.save') }}
                         </button>
-                        <a class="kt-btn kt-btn-light" href="{{ route('cashbook.index', $branch) }}">Cancel</a>
+                        <a class="kt-btn kt-btn-light" href="{{ route('cashbook.index', $branch) }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

@@ -4,9 +4,9 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Activity Log</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('activity_log.title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Audit trail of all actions performed in the system
+                {{ __('activity_log.subtitle') }}
             </div>
         </div>
     </div>
@@ -18,40 +18,40 @@
         {{-- Filters --}}
         <div class="kt-card">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Filters</h3>
+                <h3 class="kt-card-title">{{ __('activity_log.filters.heading') }}</h3>
             </div>
             <div class="kt-card-content p-5">
                 <form method="GET" action="{{ route('activity-log.index') }}" class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     <div>
-                        <label class="kt-form-label block mb-1.5" for="subject_type">Subject Type</label>
+                        <label class="kt-form-label block mb-1.5" for="subject_type">{{ __('activity_log.filters.subject_type') }}</label>
                         <select id="subject_type" name="subject_type" class="kt-select w-full">
-                            <option value="">All types</option>
-                            <option value="user" {{ request('subject_type') === 'user' ? 'selected' : '' }}>User</option>
-                            <option value="staff" {{ request('subject_type') === 'staff' ? 'selected' : '' }}>Staff</option>
-                            <option value="payment_request" {{ request('subject_type') === 'payment_request' ? 'selected' : '' }}>Payment Request</option>
-                            <option value="retirement_request" {{ request('subject_type') === 'retirement_request' ? 'selected' : '' }}>Retirement Request</option>
+                            <option value="">{{ __('activity_log.filters.all_types') }}</option>
+                            <option value="user" {{ request('subject_type') === 'user' ? 'selected' : '' }}>{{ __('activity_log.filters.user') }}</option>
+                            <option value="staff" {{ request('subject_type') === 'staff' ? 'selected' : '' }}>{{ __('activity_log.filters.staff') }}</option>
+                            <option value="payment_request" {{ request('subject_type') === 'payment_request' ? 'selected' : '' }}>{{ __('activity_log.filters.payment_request') }}</option>
+                            <option value="retirement_request" {{ request('subject_type') === 'retirement_request' ? 'selected' : '' }}>{{ __('activity_log.filters.retirement_request') }}</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="kt-form-label block mb-1.5" for="event">Event</label>
+                        <label class="kt-form-label block mb-1.5" for="event">{{ __('activity_log.filters.event') }}</label>
                         <input id="event" name="event" type="text" class="kt-input w-full"
-                               placeholder="e.g. user.created" value="{{ request('event') }}">
+                               placeholder="{{ __('activity_log.filters.event_placeholder') }}" value="{{ request('event') }}">
                     </div>
 
                     <div>
-                        <label class="kt-form-label block mb-1.5" for="causer">Performed By</label>
+                        <label class="kt-form-label block mb-1.5" for="causer">{{ __('activity_log.filters.performed_by') }}</label>
                         <input id="causer" name="causer" type="text" class="kt-input w-full"
-                               placeholder="Name or email…" value="{{ request('causer') }}">
+                               placeholder="{{ __('activity_log.filters.performed_by_placeholder') }}" value="{{ request('causer') }}">
                     </div>
 
                     <div class="flex items-end gap-2">
                         <button type="submit" class="kt-btn kt-btn-primary">
                             <i class="ki-filled ki-magnifier"></i>
-                            Filter
+                            {{ __('common.filter') }}
                         </button>
                         @if(request()->hasAny(['subject_type', 'event', 'causer']))
-                            <a href="{{ route('activity-log.index') }}" class="kt-btn kt-btn-light">Clear</a>
+                            <a href="{{ route('activity-log.index') }}" class="kt-btn kt-btn-light">{{ __('common.clear') }}</a>
                         @endif
                     </div>
                 </form>
@@ -62,26 +62,26 @@
         <div class="kt-card">
             <div class="kt-card-header">
                 <h3 class="kt-card-title">
-                    Entries
-                    <span class="text-sm font-normal text-secondary-foreground ml-2">({{ $logs->total() }} total)</span>
+                    {{ __('activity_log.entries_heading') }}
+                    <span class="text-sm font-normal text-secondary-foreground ml-2">({{ $logs->total() }} {{ __('activity_log.total') }})</span>
                 </h3>
             </div>
             <div class="kt-card-content p-0">
                 @if($logs->isEmpty())
                     <div class="p-10 text-center text-sm text-secondary-foreground">
-                        No activity log entries found.
+                        {{ __('activity_log.no_entries') }}
                     </div>
                 @else
                     <div class="overflow-x-auto">
                         <table class="kt-table w-full text-sm">
                             <thead>
                                 <tr class="border-b border-border">
-                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">When</th>
-                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">Subject</th>
-                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">Event</th>
-                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">Description</th>
-                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">Performed By</th>
-                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">Details</th>
+                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.when') }}</th>
+                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.subject') }}</th>
+                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.event') }}</th>
+                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.columns.description') }}</th>
+                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.performed_by') }}</th>
+                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.details') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
@@ -113,7 +113,7 @@
                                                     #{{ $log->subject_id }}
                                                 </div>
                                             @else
-                                                <div class="text-xs text-muted-foreground mt-0.5 italic">deleted</div>
+                                                <div class="text-xs text-muted-foreground mt-0.5 italic">{{ __('common.deleted') }}</div>
                                             @endif
                                         </td>
                                         <td class="px-5 py-3">
@@ -129,7 +129,7 @@
                                                 <span class="font-medium text-mono">{{ $log->causer->name }}</span>
                                                 <div class="text-xs text-secondary-foreground">{{ $log->causer->email }}</div>
                                             @else
-                                                <span class="text-secondary-foreground italic">System</span>
+                                                <span class="text-secondary-foreground italic">{{ __('common.system') }}</span>
                                             @endif
                                         </td>
                                         <td class="px-5 py-3">

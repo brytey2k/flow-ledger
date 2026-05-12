@@ -17,7 +17,7 @@ class RetirementSettlementController extends Controller
     public function store(Request $request, RetirementRequest $retirementRequest): RedirectResponse
     {
         if ($retirementRequest->status !== 'approved') {
-            return redirect()->back()->with('error', 'Only approved retirements can be settled.');
+            return redirect()->back()->with('error', __('flash.retirements.settle_only_approved'));
         }
 
         $request->validate([
@@ -33,6 +33,6 @@ class RetirementSettlementController extends Controller
         );
 
         return redirect()->route('retirement-requests.show', $retirementRequest)
-            ->with('success', 'Retirement marked as settled.');
+            ->with('success', __('flash.retirements.settled'));
     }
 }

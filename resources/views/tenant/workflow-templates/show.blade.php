@@ -17,12 +17,12 @@
             @can(App\Enums\Tenant\PermissionKey::EditWorkflowTemplate->value)
                 <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.edit', $workflowTemplate) }}">
                     <i class="ki-filled ki-pencil"></i>
-                    Edit Template
+                    {{ __('workflows.edit_title') }}
                 </a>
             @endcan
             <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.index') }}">
                 <i class="ki-filled ki-arrow-left"></i>
-                Back
+                {{ __('workflows.back') }}
             </a>
         </div>
     </div>
@@ -46,8 +46,8 @@
         {{-- Parallel Groups --}}
         <div class="kt-card">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Parallel Groups</h3>
-                <div class="text-xs text-muted-foreground">Assign stages to a group to run them simultaneously</div>
+                <h3 class="kt-card-title">{{ __('workflows.show.parallel_groups') }}</h3>
+                <div class="text-xs text-muted-foreground">{{ __('workflows.show.parallel_groups_hint') }}</div>
             </div>
             <div class="kt-card-content p-5">
                 @if($workflowTemplate->parallelGroups->isNotEmpty())
@@ -60,7 +60,7 @@
                                 </span>
                                 <form action="{{ route('workflow-templates.parallel-groups.destroy', [$workflowTemplate, $group]) }}" method="POST" class="inline">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="text-muted-foreground hover:text-destructive" onclick="return confirm('Delete this group?')">
+                                    <button type="submit" class="text-muted-foreground hover:text-destructive" onclick="return confirm('{{ __('workflows.show.delete_group') }}')">
                                         <i class="ki-filled ki-cross text-xs"></i>
                                     </button>
                                 </form>
@@ -85,7 +85,7 @@
                     </div>
                     <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline">
                         <i class="ki-filled ki-plus"></i>
-                        Add Group
+                        {{ __('workflows.show.add_group') }}
                     </button>
                 </form>
             </div>
@@ -94,15 +94,15 @@
         {{-- Stages --}}
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">Approval Stages</h3>
-                <div class="text-xs text-muted-foreground">Stages run in order (lower number first). Same order = parallel.</div>
+                <h3 class="kt-card-title">{{ __('workflows.show.approval_stages') }}</h3>
+                <div class="text-xs text-muted-foreground">{{ __('workflows.show.stages_hint') }}</div>
             </div>
 
             @if($workflowTemplate->stages->isEmpty())
                 <div class="kt-card-content p-5 lg:p-7.5">
                     <div class="flex flex-col items-center justify-center py-8">
                         <i class="ki-filled ki-arrow-right-left text-5xl text-muted-foreground mb-3"></i>
-                        <p class="text-sm text-secondary-foreground mb-4">No stages yet. Add the first approval stage below.</p>
+                        <p class="text-sm text-secondary-foreground mb-4">{{ __('workflows.show.no_stages') }}</p>
                     </div>
                 </div>
             @else
@@ -111,12 +111,12 @@
                         <table class="kt-table kt-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">Order</span></span></th>
-                                    <th class="min-w-[180px]"><span class="kt-table-col"><span class="kt-table-col-label">Stage Name</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">Roles</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">Parallel Group</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">Skip Below</span></span></th>
-                                    <th class="min-w-[100px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">Actions</span></span></th>
+                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.order') }}</span></span></th>
+                                    <th class="min-w-[180px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.stage_name') }}</span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.roles') }}</span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.parallel_group') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.skip_below') }}</span></span></th>
+                                    <th class="min-w-[100px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -138,11 +138,11 @@
                                                 <div class="flex items-center gap-1">
                                                     <span class="text-sm text-foreground">{{ $stage->parallelGroup->name }}</span>
                                                     <span class="kt-badge kt-badge-sm {{ $stage->parallelGroup->require_all ? 'kt-badge-warning' : 'kt-badge-success' }}">
-                                                        {{ $stage->parallelGroup->require_all ? 'AND' : 'OR' }}
+                                                        {{ $stage->parallelGroup->require_all ? __('workflows.show.and_label') : __('workflows.show.or_label') }}
                                                     </span>
                                                 </div>
                                             @else
-                                                <span class="text-xs text-muted-foreground">Sequential</span>
+                                                <span class="text-xs text-muted-foreground">{{ __('workflows.show.sequential') }}</span>
                                             @endif
                                         </td>
                                         <td>
@@ -171,7 +171,7 @@
             <div class="kt-card-footer p-5">
                 <a href="{{ route('workflow-templates.stages.create', $workflowTemplate) }}" class="kt-btn kt-btn-sm kt-btn-primary">
                     <i class="ki-filled ki-plus"></i>
-                    Add Stage
+                    {{ __('workflows.show.add_stage') }}
                 </a>
             </div>
         </div>

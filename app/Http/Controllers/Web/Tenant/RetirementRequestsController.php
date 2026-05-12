@@ -49,7 +49,7 @@ class RetirementRequestsController extends Controller
         $retirement = $this->service->createDraft($paymentRequest, $request->toDto(), $user);
 
         return redirect()->route('retirement-requests.show', $retirement)
-            ->with('success', 'Retirement saved as draft.');
+            ->with('success', __('flash.retirements.draft_saved'));
     }
 
     public function show(RetirementRequest $retirementRequest): View

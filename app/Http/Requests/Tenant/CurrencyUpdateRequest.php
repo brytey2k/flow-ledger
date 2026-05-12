@@ -31,23 +31,6 @@ class CurrencyUpdateRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'name.required' => 'Please provide a currency name.',
-            'name.unique' => 'A currency with this name already exists.',
-            'name.max' => 'The currency name may not exceed 255 characters.',
-            'short_name.required' => 'Please provide a currency code.',
-            'short_name.unique' => 'A currency with this code already exists.',
-            'short_name.max' => 'The currency code may not exceed 10 characters.',
-            'symbol.required' => 'Please provide a currency symbol.',
-            'symbol.max' => 'The currency symbol may not exceed 10 characters.',
-        ];
-    }
-
     public function toDto(): \App\DTOs\Tenant\CurrencyDto
     {
         return new \App\DTOs\Tenant\CurrencyDto(

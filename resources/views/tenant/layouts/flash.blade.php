@@ -7,27 +7,27 @@
         'success' => [
             'icon'    => 'ki-check',
             'variant' => 'kt-alert-success',
-            'label'   => 'Success',
+            'label'   => __('common.alerts.success'),
         ],
         'error' => [
             'icon'    => 'ki-information-2',
             'variant' => 'kt-alert-destructive',
-            'label'   => 'Error',
+            'label'   => __('common.alerts.error'),
         ],
         'warning' => [
             'icon'    => 'ki-information-4',
             'variant' => 'kt-alert-warning',
-            'label'   => 'Warning',
+            'label'   => __('common.alerts.warning'),
         ],
         'info' => [
             'icon'    => 'ki-information',
             'variant' => 'kt-alert-info',
-            'label'   => 'Info',
+            'label'   => __('common.alerts.info'),
         ],
         'status' => [ // legacy alias used by Laravel redirects
             'icon'    => 'ki-check',
             'variant' => 'kt-alert-success',
-            'label'   => 'Success',
+            'label'   => __('common.alerts.success'),
         ],
     ];
 
@@ -46,7 +46,7 @@
             <div class="kt-alert kt-alert-light kt-alert-destructive">
                 <span class="kt-alert-icon"><i class="ki-filled ki-information-2 text-xl"></i></span>
                 <div class="kt-alert-content">
-                    <h4 class="kt-alert-title">Please fix the following errors</h4>
+                    <h4 class="kt-alert-title">{{ __('common.fix_errors') }}</h4>
                     <ul class="kt-alert-description list-disc ps-5">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>

@@ -18,6 +18,7 @@ use App\Http\Controllers\Web\Tenant\DepartmentsController;
 use App\Http\Controllers\Web\Tenant\DisbursementsController;
 use App\Http\Controllers\Web\Tenant\DocumentationController;
 use App\Http\Controllers\Web\Tenant\LevelController;
+use App\Http\Controllers\Web\Tenant\LocaleController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestResubmitController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestsController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestSubmitController;
@@ -49,6 +50,8 @@ Route::middleware([
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendLink'])->name('password.email');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+
+    Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
     Route::middleware(['auth'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

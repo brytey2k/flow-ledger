@@ -25,7 +25,7 @@ class CommentsController extends Controller
         ]);
 
         return redirect()->route('payment-requests.show', $paymentRequest)
-            ->with('success', 'Comment added.');
+            ->with('success', __('flash.comments.added'));
     }
 
     public function destroy(PaymentRequest $paymentRequest, Comment $comment): RedirectResponse
@@ -38,6 +38,6 @@ class CommentsController extends Controller
         $comment->delete();
 
         return redirect()->route('payment-requests.show', $paymentRequest)
-            ->with('success', 'Comment deleted.');
+            ->with('success', __('flash.comments.deleted'));
     }
 }

@@ -19,7 +19,7 @@ class PaymentRequestResubmitController extends Controller
     {
         if ($paymentRequest->status !== 'sent_back') {
             return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('error', 'Only sent-back requests can be resubmitted.');
+                ->with('error', __('flash.requests.resubmit_only_sent_back'));
         }
 
         /** @var \App\Models\Tenant\User $user */
@@ -28,6 +28,6 @@ class PaymentRequestResubmitController extends Controller
         $this->engine->resubmitAfterFix($paymentRequest, $user);
 
         return redirect()->route('payment-requests.show', $paymentRequest)
-            ->with('success', 'Request resubmitted for approval.');
+            ->with('success', __('flash.requests.resubmitted'));
     }
 }

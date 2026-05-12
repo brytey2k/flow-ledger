@@ -10,9 +10,9 @@
         'cancelled'   => 'kt-badge-danger',
     ];
     $diffTypeLabels = [
-        'pay_to_staff'       => ['label' => 'Pay to Staff', 'class' => 'kt-badge-warning'],
-        'refund_to_company'  => ['label' => 'Refund to Company', 'class' => 'kt-badge-danger'],
-        'nil'                => ['label' => 'Nil', 'class' => 'kt-badge-outline'],
+        'pay_to_staff'       => ['label' => __('retirements.status.pay_to_staff'), 'class' => 'kt-badge-warning'],
+        'refund_to_company'  => ['label' => __('retirements.status.refund_company'), 'class' => 'kt-badge-danger'],
+        'nil'                => ['label' => __('retirements.status.nil'), 'class' => 'kt-badge-outline'],
     ];
 @endphp
 
@@ -20,9 +20,9 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">Retirement Requests</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">{{ __('retirements.title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                Advance retirement and expense reconciliation
+                {{ __('retirements.subtitle') }}
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
 
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
-                <h3 class="kt-card-title">All Retirements</h3>
+                <h3 class="kt-card-title">{{ __('retirements.all') }}</h3>
                 <span class="kt-badge kt-badge-sm kt-badge-outline">
                     {{ $retirements->total() }} {{ Str::plural('Retirement', $retirements->total()) }}
                 </span>
@@ -50,8 +50,8 @@
                 <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
                         <i class="ki-filled ki-file-up text-6xl text-muted-foreground mb-4"></i>
-                        <h3 class="text-lg font-medium text-foreground mb-2">No retirements yet</h3>
-                        <p class="text-sm text-secondary-foreground">Retirements are created from disbursed advance requests.</p>
+                        <h3 class="text-lg font-medium text-foreground mb-2">{{ __('retirements.empty.heading') }}</h3>
+                        <p class="text-sm text-secondary-foreground">{{ __('retirements.empty.subtext') }}</p>
                     </div>
                 </div>
             @else
@@ -61,13 +61,13 @@
                             <thead>
                                 <tr>
                                     <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">#</span></span></th>
-                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">Advance</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">Staff</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">Amount Expended</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">Difference</span></span></th>
-                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">Status</span></span></th>
-                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">Date</span></span></th>
-                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">Actions</span></span></th>
+                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('retirements.columns.advance') }}</span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.staff') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('retirements.columns.amount_expended') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('retirements.columns.difference') }}</span></span></th>
+                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.status') }}</span></span></th>
+                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.date') }}</span></span></th>
+                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -106,7 +106,7 @@
                                             <a href="{{ route('retirement-requests.show', $ret) }}"
                                                class="kt-btn kt-btn-sm kt-btn-outline">
                                                 <i class="ki-filled ki-eye"></i>
-                                                View
+                                                {{ __('common.view') }}
                                             </a>
                                         </td>
                                     </tr>

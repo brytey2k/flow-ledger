@@ -40,7 +40,7 @@ class PaymentRequestsController extends Controller
 
         if (! $staffProfile instanceof Staff || $staffProfile->branch_id === null) {
             return redirect()->route('payment-requests.index')
-                ->with('error', 'Your account is not linked to a staff profile with a branch. Please contact an administrator.');
+                ->with('error', __('flash.requests.missing_staff_profile'));
         }
 
         $currencies = $this->currencyRepository->allOrderedByName();
@@ -62,7 +62,7 @@ class PaymentRequestsController extends Controller
         );
 
         return redirect()->route('payment-requests.show', $paymentRequest)
-            ->with('success', 'Request saved as draft.');
+            ->with('success', __('flash.requests.draft_saved'));
     }
 
     public function show(PaymentRequest $paymentRequest): View
@@ -76,12 +76,12 @@ class PaymentRequestsController extends Controller
     {
         if (! $paymentRequest->isDraft()) {
             return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('error', 'Only draft requests can be deleted.');
+                ->with('error', __('flash.requests.draft_delete_only'));
         }
 
         $paymentRequest->delete();
 
         return redirect()->route('payment-requests.index')
-            ->with('success', 'Request deleted.');
+            ->with('success', __('flash.requests.deleted'));
     }
 }

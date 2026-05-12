@@ -18,7 +18,7 @@ class RetirementRequestResubmitController extends Controller
     {
         if (! $retirementRequest->isSentBack()) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
-                ->with('error', 'Only sent-back retirements can be resubmitted.');
+                ->with('error', __('flash.retirements.resubmit_only_sent_back'));
         }
 
         /** @var \App\Models\Tenant\User $user */
@@ -26,6 +26,6 @@ class RetirementRequestResubmitController extends Controller
         $this->engine->resubmitAfterFix($retirementRequest, $user);
 
         return redirect()->route('retirement-requests.show', $retirementRequest)
-            ->with('success', 'Retirement resubmitted for approval.');
+            ->with('success', __('flash.retirements.resubmitted'));
     }
 }
