@@ -31,6 +31,11 @@ class WorkflowStagesController extends Controller
 
     public function store(WorkflowStageStoreRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
+        if ($workflowTemplate->hasActiveInstances()) {
+            return redirect()->route('workflow-templates.show', $workflowTemplate)
+                ->with('error', __('flash.workflows.template_locked'));
+        }
+
         $this->service->create($workflowTemplate, $request->toDto());
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
@@ -48,6 +53,11 @@ class WorkflowStagesController extends Controller
 
     public function update(WorkflowStageUpdateRequest $request, WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): RedirectResponse
     {
+        if ($workflowTemplate->hasActiveInstances()) {
+            return redirect()->route('workflow-templates.show', $workflowTemplate)
+                ->with('error', __('flash.workflows.template_locked'));
+        }
+
         $this->service->update($workflowStage, $request->toDto());
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
@@ -56,6 +66,11 @@ class WorkflowStagesController extends Controller
 
     public function destroy(WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): RedirectResponse
     {
+        if ($workflowTemplate->hasActiveInstances()) {
+            return redirect()->route('workflow-templates.show', $workflowTemplate)
+                ->with('error', __('flash.workflows.template_locked'));
+        }
+
         $workflowStage->delete();
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)

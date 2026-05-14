@@ -231,6 +231,159 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $response->assertViewHas('paymentRequest');
     }
 
+    // ── Edit ─────────────────────────────────────────────────────────────────
+
+    public function test_edit_renders_for_sent_back_request_owner(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'sent_back',
+            'staff_id' => $staff->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.edit', $paymentRequest));
+
+        $response->assertOk();
+        $response->assertViewIs('tenant.payment-requests.edit');
+        $response->assertViewHas(['paymentRequest', 'currencies', 'accountCodes']);
+    }
+
+    public function test_edit_redirects_if_request_is_not_sent_back(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'staff_id' => $staff->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.edit', $paymentRequest));
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('error', __('flash.requests.edit_only_sent_back'));
+    }
+
+    public function test_edit_redirects_if_not_owner(): void
+    {
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'sent_back']);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.edit', $paymentRequest));
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('error', __('flash.requests.edit_not_owner'));
+    }
+
+    // ── Update ────────────────────────────────────────────────────────────────
+
+    public function test_update_saves_changes_and_redirects_to_show(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $oldCurrency = Currency::factory()->create();
+        $newCurrency = Currency::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'sent_back',
+            'staff_id' => $staff->id,
+            'currency_id' => $oldCurrency->id,
+            'total_amount' => 100.00,
+        ]);
+        PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id, 'amount' => 100.00]);
+
+        $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
+            'currency_id' => $newCurrency->id,
+            'notes' => 'Updated notes',
+            'items' => [
+                ['description' => 'New item', 'amount' => '250.00'],
+                ['description' => 'Second item', 'amount' => '50.00'],
+            ],
+        ]);
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('payment_requests', [
+            'id' => $paymentRequest->id,
+            'currency_id' => $newCurrency->id,
+            'notes' => 'Updated notes',
+            'total_amount' => '300.00',
+            'status' => 'sent_back',
+        ]);
+        $this->assertDatabaseHas('payment_request_items', ['payment_request_id' => $paymentRequest->id, 'description' => 'New item']);
+        $this->assertDatabaseHas('payment_request_items', ['payment_request_id' => $paymentRequest->id, 'description' => 'Second item']);
+    }
+
+    public function test_update_replaces_old_items(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'sent_back',
+            'staff_id' => $staff->id,
+            'currency_id' => $currency->id,
+        ]);
+        PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id, 'description' => 'Old item']);
+
+        $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Brand new item', 'amount' => '75.00']],
+        ]);
+
+        $this->assertDatabaseMissing('payment_request_items', ['payment_request_id' => $paymentRequest->id, 'description' => 'Old item']);
+        $this->assertDatabaseHas('payment_request_items', ['payment_request_id' => $paymentRequest->id, 'description' => 'Brand new item']);
+    }
+
+    public function test_update_rejects_non_sent_back_request(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'staff_id' => $staff->id,
+            'currency_id' => $currency->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Item', 'amount' => '100']],
+        ]);
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('error', __('flash.requests.edit_only_sent_back'));
+    }
+
+    public function test_update_rejects_non_owner(): void
+    {
+        $currency = Currency::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'sent_back',
+            'currency_id' => $currency->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Item', 'amount' => '100']],
+        ]);
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('error', __('flash.requests.edit_not_owner'));
+    }
+
+    public function test_update_fails_validation_without_items(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'sent_back',
+            'staff_id' => $staff->id,
+            'currency_id' => $currency->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
+            'currency_id' => $currency->id,
+            'items' => [],
+        ]);
+
+        $response->assertSessionHasErrors('items');
+    }
+
     // ── Destroy ───────────────────────────────────────────────────────────────
 
     public function test_destroy_deletes_draft_and_redirects_to_index(): void

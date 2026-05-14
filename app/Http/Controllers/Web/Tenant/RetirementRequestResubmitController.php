@@ -23,6 +23,13 @@ class RetirementRequestResubmitController extends Controller
 
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
+
+        $ownerStaffId = $retirementRequest->paymentRequest?->staff_id;
+        if ($user->staffProfile?->id !== $ownerStaffId) {
+            return redirect()->route('retirement-requests.show', $retirementRequest)
+                ->with('error', __('flash.retirements.resubmit_not_owner'));
+        }
+
         $this->engine->resubmitAfterFix($retirementRequest, $user);
 
         return redirect()->route('retirement-requests.show', $retirementRequest)

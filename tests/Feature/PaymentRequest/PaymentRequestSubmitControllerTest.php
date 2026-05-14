@@ -6,6 +6,7 @@ namespace Tests\Feature\PaymentRequest;
 
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\WorkflowInstance;
+use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use Tests\TenantAppTestCase;
 
@@ -39,7 +40,8 @@ class PaymentRequestSubmitControllerTest extends TenantAppTestCase
     public function test_submit_starts_workflow_and_redirects(): void
     {
         $request = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
-        WorkflowTemplate::factory()->advance()->create();
+        $template = WorkflowTemplate::factory()->advance()->create();
+        WorkflowStage::factory()->for($template, 'template')->create();
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
 
@@ -68,6 +70,20 @@ class PaymentRequestSubmitControllerTest extends TenantAppTestCase
     {
         WorkflowTemplate::query()->delete();
         $request = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+
+        $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
+
+        $response->assertRedirect(route('payment-requests.show', $request));
+        $response->assertSessionHas('error');
+
+        $request->refresh();
+        $this->assertSame('draft', $request->status);
+    }
+
+    public function test_cannot_submit_when_workflow_template_has_no_stages(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        WorkflowTemplate::factory()->advance()->create();
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
 

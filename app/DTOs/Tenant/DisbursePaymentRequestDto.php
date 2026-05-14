@@ -7,7 +7,7 @@ namespace App\DTOs\Tenant;
 readonly class DisbursePaymentRequestDto
 {
     public function __construct(
-        public string $method,
+        public \App\Enums\Tenant\PaymentMethod $method,
         public string|null $reference,
     ) {}
 }

@@ -17,12 +17,19 @@ class WorkflowInstance extends Model
         'workflowable_id',
         'status',
         'sent_back_to_stage_id',
+        'submitter_user_id',
     ];
 
     /** @return MorphTo<Model, $this> */
     public function workflowable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function submitter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitter_user_id');
     }
 
     /** @return BelongsTo<WorkflowTemplate, $this> */

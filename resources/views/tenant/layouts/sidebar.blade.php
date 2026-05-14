@@ -30,10 +30,10 @@
                 <div class="kt-menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                        href="{{ route('dashboard') }}">
-                        <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                        <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                             <i class="ki-filled ki-element-11 text-lg"></i>
                         </span>
-                        <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.dashboard') }}</span>
+                        <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.dashboard') }}</span>
                     </a>
                 </div>
 
@@ -48,10 +48,10 @@
                     <div class="kt-menu-item {{ request()->routeIs('payment-requests.*') ? 'active' : '' }}">
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('payment-requests.index') }}">
-                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                 <i class="ki-filled ki-wallet text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.payment_requests') }}</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.payment_requests') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -60,10 +60,10 @@
                     <div class="kt-menu-item {{ request()->routeIs('retirement-requests.*') ? 'active' : '' }}">
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('retirement-requests.index') }}">
-                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                 <i class="ki-filled ki-file-up text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.retirements') }}</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.retirements') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -81,10 +81,10 @@
                     <div class="kt-menu-item {{ request()->routeIs('disbursements.*') ? 'active' : '' }}">
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('disbursements.index') }}">
-                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                 <i class="ki-filled ki-bank text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.disbursements') }}</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.disbursements') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -93,10 +93,10 @@
                     <div class="kt-menu-item {{ request()->routeIs('cashbook.*') ? 'active' : '' }}">
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('cashbook.branches') }}">
-                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                 <i class="ki-filled ki-calculator text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.cashbook') }}</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.cashbook') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -106,10 +106,10 @@
                     <div class="kt-menu-item {{ request()->routeIs('approvals.*') ? 'active' : '' }}">
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('approvals.index') }}">
-                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                 <i class="ki-filled ki-shield-tick text-lg"></i>
                             </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.approvals') }}</span>
+                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.approvals') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -126,10 +126,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('levels.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('levels.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-element-11 text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.levels') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.levels') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -138,10 +138,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('branches.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('branches.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-office-bag text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.branches') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.branches') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -150,10 +150,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('departments.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('departments.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-people text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.departments') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.departments') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -162,10 +162,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('account-codes.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('account-codes.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-book text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.account_codes') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.account_codes') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -174,10 +174,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('positions.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('positions.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-briefcase text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.positions') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.positions') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -186,10 +186,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('staff.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('staff.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-people text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.staff') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.staff') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -207,10 +207,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('users.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-users text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.users') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.users') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -219,10 +219,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('roles.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-security-user text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.roles') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.roles') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -231,10 +231,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('currencies.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('currencies.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-bank text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.currencies') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.currencies') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -243,10 +243,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('workflow-templates.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('workflow-templates.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-arrow-right-left text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.workflows') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.workflows') }}</span>
                             </a>
                         </div>
                     @endcan
@@ -255,10 +255,10 @@
                         <div class="kt-menu-item {{ request()->routeIs('activity-log.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('activity-log.index') }}">
-                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-time text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono">{{ __('navigation.activity_log') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.activity_log') }}</span>
                             </a>
                         </div>
                     @endcan

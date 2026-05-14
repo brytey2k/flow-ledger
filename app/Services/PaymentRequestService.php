@@ -74,7 +74,7 @@ class PaymentRequestService
                 ->withProperties(['old_status' => 'draft', 'new_status' => 'in_workflow'])
                 ->log('Submitted for approval');
 
-            $this->engine->startWorkflow($request, $template);
+            $this->engine->startWorkflow($request, $template, $user);
         });
     }
 
@@ -95,11 +95,47 @@ class PaymentRequestService
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.disbursed')
-                ->withProperties(['old_status' => 'approved', 'new_status' => 'disbursed', 'method' => $dto->method])
+                ->withProperties(['old_status' => 'approved', 'new_status' => 'disbursed', 'method' => $dto->method->value])
                 ->log('Disbursed');
         });
 
         $this->notifications->notifyDisbursed($request);
+    }
+
+    public function updateSentBack(PaymentRequest $paymentRequest, CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
+    {
+        return DB::transaction(function () use ($paymentRequest, $dto, $user): PaymentRequest {
+            $totalAmount = array_sum(array_column(
+                array_map(fn($item) => ['amount' => $item->amount], $dto->items),
+                'amount',
+            ));
+
+            $paymentRequest->update([
+                'currency_id' => $dto->currencyId,
+                'notes' => $dto->notes,
+                'total_amount' => $totalAmount,
+            ]);
+
+            $paymentRequest->items()->delete();
+
+            foreach ($dto->items as $item) {
+                $paymentRequest->items()->create([
+                    'description' => $item->description,
+                    'amount' => $item->amount,
+                    'account_code_id' => $item->accountCodeId,
+                    'receipt_number' => $item->receiptNumber,
+                ]);
+            }
+
+            activity()
+                ->performedOn($paymentRequest)
+                ->causedBy($user)
+                ->event('request.updated')
+                ->withProperties(['new_status' => 'sent_back'])
+                ->log('Request updated while sent back');
+
+            return $paymentRequest->refresh();
+        });
     }
 
     public function cancel(PaymentRequest $request, User|null $user = null): void

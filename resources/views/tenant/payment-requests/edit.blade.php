@@ -4,13 +4,15 @@
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">{{ __('payment_requests.create_title') }}</h1>
+            <h1 class="text-xl font-medium leading-none text-mono">
+                {{ __('payment_requests.edit_title', ['id' => $paymentRequest->id]) }}
+            </h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                {{ __('payment_requests.create_subtitle') }}
+                {{ __('payment_requests.edit_subtitle') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('payment-requests.index') }}">
+            <a class="kt-btn kt-btn-outline" href="{{ route('payment-requests.show', $paymentRequest) }}">
                 <i class="ki-filled ki-arrow-left"></i>
                 {{ __('payment_requests.back') }}
             </a>
@@ -19,8 +21,9 @@
 </div>
 
 <div class="kt-container-fixed">
-    <form method="POST" action="{{ route('payment-requests.store') }}" id="request-form">
+    <form method="POST" action="{{ route('payment-requests.update', $paymentRequest) }}" id="request-form">
         @csrf
+        @method('PUT')
 
         <div class="grid gap-5 lg:gap-7.5">
 
@@ -32,24 +35,16 @@
                 <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-                        {{-- Type --}}
+                        {{-- Type (read-only) --}}
                         <div>
-                            <label class="kt-form-label block mb-2" for="type">
-                                {{ __('payment_requests.fields.type') }} <span class="text-destructive">*</span>
-                            </label>
-                            <select id="type" name="type" class="kt-select w-full"
-                                    aria-invalid="@error('type') true @else false @enderror">
-                                <option value="">{{ __('payment_requests.fields.select_type') }}</option>
-                                <option value="advance" {{ old('type') === 'advance' ? 'selected' : '' }}>
-                                    {{ __('payment_requests.fields.type_advance') }}
-                                </option>
-                                <option value="expense" {{ old('type') === 'expense' ? 'selected' : '' }}>
-                                    {{ __('payment_requests.fields.type_expense') }}
-                                </option>
-                            </select>
-                            @error('type')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
+                            <label class="kt-form-label block mb-2">{{ __('payment_requests.fields.type') }}</label>
+                            <div class="kt-input w-full bg-muted/40 flex items-center gap-3 px-4 py-3 rounded-md">
+                                <span class="kt-badge kt-badge-sm {{ $paymentRequest->type === 'expense' ? 'kt-badge-warning' : 'kt-badge-primary' }}">
+                                    {{ $paymentRequest->type === 'expense'
+                                        ? __('payment_requests.fields.type_expense')
+                                        : __('payment_requests.fields.type_advance') }}
+                                </span>
+                            </div>
                         </div>
 
                         {{-- Submitting As (read-only) --}}
@@ -58,9 +53,9 @@
                             <div class="kt-input w-full bg-muted/40 flex items-center gap-3 px-4 py-3 rounded-md">
                                 <i class="ki-filled ki-user text-secondary-foreground"></i>
                                 <div>
-                                    <span class="font-medium text-mono">{{ $staffProfile->full_name }}</span>
-                                    <span class="text-secondary-foreground"> &middot; {{ $staffProfile->department?->name }}</span>
-                                    <span class="text-secondary-foreground"> &middot; {{ $staffProfile->branch?->name }}</span>
+                                    <span class="font-medium text-mono">{{ $paymentRequest->staff->full_name }}</span>
+                                    <span class="text-secondary-foreground"> &middot; {{ $paymentRequest->staff->department?->name }}</span>
+                                    <span class="text-secondary-foreground"> &middot; {{ $paymentRequest->staff->branch?->name }}</span>
                                 </div>
                             </div>
                         </div>
@@ -74,7 +69,8 @@
                                     aria-invalid="@error('currency_id') true @else false @enderror">
                                 <option value="">{{ __('payment_requests.fields.select_currency') }}</option>
                                 @foreach($currencies as $currency)
-                                    <option value="{{ $currency->id }}" {{ old('currency_id') == $currency->id ? 'selected' : '' }}>
+                                    <option value="{{ $currency->id }}"
+                                        {{ old('currency_id', $paymentRequest->currency_id) == $currency->id ? 'selected' : '' }}>
                                         {{ $currency->short_name }} — {{ $currency->name }} ({{ $currency->symbol }})
                                     </option>
                                 @endforeach
@@ -90,7 +86,7 @@
                             <textarea id="notes" name="notes" rows="3"
                                       class="kt-textarea w-full"
                                       placeholder="Optional: provide context or justification for this request…"
-                                      aria-invalid="@error('notes') true @else false @enderror">{{ old('notes') }}</textarea>
+                                      aria-invalid="@error('notes') true @else false @enderror">{{ old('notes', $paymentRequest->notes) }}</textarea>
                             @error('notes')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
@@ -113,13 +109,17 @@
                         </div>
                     @enderror
 
-                    {{-- Items container --}}
                     <div id="items-container" class="flex flex-col gap-4">
                         @php
-                            $oldItems = old('items', [['description' => '', 'amount' => '']]);
-                            $oldType = old('type', '');
+                            $editItems = old('items') ?? $paymentRequest->items->map(fn($item) => [
+                                'description' => $item->description,
+                                'amount' => $item->amount,
+                                'account_code_id' => $item->account_code_id,
+                                'receipt_number' => $item->receipt_number,
+                            ])->all();
+                            $isExpenseType = $paymentRequest->type === 'expense';
                         @endphp
-                        @foreach($oldItems as $i => $item)
+                        @foreach($editItems as $i => $item)
                             <div class="item-row p-4 rounded-lg border border-border flex flex-col gap-3" id="item-row-{{ $i }}">
                                 <div class="flex gap-3 items-start">
                                     <div class="flex-1 min-w-0">
@@ -164,8 +164,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                {{-- Expense-only fields --}}
-                                <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="{{ $oldType !== 'expense' ? 'display:none' : '' }}">
+                                <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="{{ ! $isExpenseType ? 'display:none' : '' }}">
                                     <div>
                                         <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('payment_requests.fields.account_code') }} *</label>
                                         <select name="items[{{ $i }}][account_code_id]" class="kt-select w-full"
@@ -195,7 +194,6 @@
                         @endforeach
                     </div>
 
-                    {{-- Add item + Total --}}
                     <div class="flex items-center justify-between mt-5 pt-4 border-t border-border">
                         <button type="button" class="kt-btn kt-btn-sm kt-btn-outline" onclick="addItem()">
                             <i class="ki-filled ki-plus"></i>
@@ -204,7 +202,7 @@
                         <div class="flex items-center gap-3">
                             <span class="text-sm text-secondary-foreground">{{ __('common.total') }}:</span>
                             <span class="text-lg font-semibold text-mono" id="total-display">
-                                {{ number_format(collect(old('items', []))->sum('amount'), 2) }}
+                                {{ number_format(collect($editItems)->sum('amount'), 2) }}
                             </span>
                         </div>
                     </div>
@@ -215,9 +213,9 @@
             <div class="flex items-center gap-2.5 pb-7.5">
                 <button type="submit" class="kt-btn kt-btn-primary">
                     <i class="ki-filled ki-floppy-disk"></i>
-                    {{ __('payment_requests.buttons.save_draft') }}
+                    {{ __('payment_requests.buttons.save_changes') }}
                 </button>
-                <a class="kt-btn kt-btn-light" href="{{ route('payment-requests.index') }}">{{ __('common.cancel') }}</a>
+                <a class="kt-btn kt-btn-light" href="{{ route('payment-requests.show', $paymentRequest) }}">{{ __('common.cancel') }}</a>
             </div>
 
         </div>
@@ -226,17 +224,14 @@
 
 @push('page_js')
 <script>
-    let nextIndex = {{ count(old('items', [['description' => '', 'amount' => '']])) }};
+    const isExpense = {{ $paymentRequest->type === 'expense' ? 'true' : 'false' }};
+    let nextIndex = {{ count($editItems) }};
 
     const accountCodeOptions = `@foreach($accountCodes as $code)<option value="{{ $code->id }}">{{ $code->code }} — {{ addslashes($code->name) }}</option>@endforeach`;
 
-    function isExpense() {
-        return document.getElementById('type').value === 'expense';
-    }
-
     function buildExpenseFields(index) {
         return `
-            <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="${isExpense() ? '' : 'display:none'}">
+            <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="${isExpense ? '' : 'display:none'}">
                 <div>
                     <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Account Code *</label>
                     <select name="items[${index}][account_code_id]" class="kt-select w-full">
@@ -288,13 +283,6 @@
         document.querySelectorAll('.amount-input').forEach(input => { total += parseFloat(input.value) || 0; });
         document.getElementById('total-display').textContent = total.toFixed(2);
     }
-
-    document.getElementById('type').addEventListener('change', function () {
-        const show = this.value === 'expense';
-        document.querySelectorAll('.expense-fields').forEach(el => {
-            el.style.display = show ? '' : 'none';
-        });
-    });
 
     recalcTotal();
 </script>

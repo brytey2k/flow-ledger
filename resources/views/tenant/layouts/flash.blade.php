@@ -5,13 +5,13 @@
      */
     $flashMap = [
         'success' => [
-            'icon'    => 'ki-check',
+            'icon'    => 'ki-check-circle',
             'variant' => 'kt-alert-success',
             'label'   => __('common.alerts.success'),
         ],
         'error' => [
-            'icon'    => 'ki-information-2',
-            'variant' => 'kt-alert-destructive',
+            'icon'    => 'ki-information',
+            'variant' => 'kt-alert-danger',
             'label'   => __('common.alerts.error'),
         ],
         'warning' => [
@@ -25,7 +25,7 @@
             'label'   => __('common.alerts.info'),
         ],
         'status' => [ // legacy alias used by Laravel redirects
-            'icon'    => 'ki-check',
+            'icon'    => 'ki-check-circle',
             'variant' => 'kt-alert-success',
             'label'   => __('common.alerts.success'),
         ],
@@ -43,16 +43,13 @@
     @endphp
     <div class="{{ $hasFlash ? 'grid gap-3 pb-5' : '' }}">
         @if($errors->any())
-            <div class="kt-alert kt-alert-light kt-alert-destructive">
-                <span class="kt-alert-icon"><i class="ki-filled ki-information-2 text-xl"></i></span>
-                <div class="kt-alert-content">
-                    <h4 class="kt-alert-title">{{ __('common.fix_errors') }}</h4>
-                    <ul class="kt-alert-description list-disc ps-5">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+            <div class="kt-alert kt-alert-danger">
+                <i class="ki-filled ki-information"></i>
+                <ul class="list-disc ps-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -61,36 +58,26 @@
                 $type   = $structured['type'] ?? 'info';
                 $config = $flashMap[$type] ?? $flashMap['info'];
             @endphp
-            <div class="kt-alert kt-alert-light {{ $config['variant'] }}">
-                <span class="kt-alert-icon">
-                    <i class="ki-filled {{ $config['icon'] }} text-xl"></i>
-                </span>
-                <div class="kt-alert-content">
-                    <h4 class="kt-alert-title">{{ $structured['title'] ?? $config['label'] }}</h4>
-                    <div class="kt-alert-description">{!! is_array($structured['message']) ? implode('<br>', array_map('e', $structured['message'])) : e($structured['message']) !!}</div>
-                </div>
+            <div class="kt-alert {{ $config['variant'] }}">
+                <i class="ki-filled {{ $config['icon'] }}"></i>
+                {!! is_array($structured['message']) ? implode('<br>', array_map('e', $structured['message'])) : e($structured['message']) !!}
             </div>
         @endif
 
         @foreach($flashMap as $key => $config)
             @if (session($key))
                 @php $message = session($key); @endphp
-                <div class="kt-alert kt-alert-light {{ $config['variant'] }}">
-                    <span class="kt-alert-icon">
-                        <i class="ki-filled {{ $config['icon'] }} text-xl"></i>
-                    </span>
-                    <div class="kt-alert-content">
-                        <h4 class="kt-alert-title">{{ $config['label'] }}</h4>
-                        @if (is_array($message))
-                            <ul class="kt-alert-description list-disc ps-5">
-                                @foreach ($message as $line)
-                                    <li>{{ $line }}</li>
-                                @endforeach
-                            </ul>
-                        @else
-                            <div class="kt-alert-description">{{ $message }}</div>
-                        @endif
-                    </div>
+                <div class="kt-alert {{ $config['variant'] }}">
+                    <i class="ki-filled {{ $config['icon'] }}"></i>
+                    @if (is_array($message))
+                        <ul class="list-disc ps-5">
+                            @foreach ($message as $line)
+                                <li>{{ $line }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        {{ $message }}
+                    @endif
                 </div>
             @endif
         @endforeach

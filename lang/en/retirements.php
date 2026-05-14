@@ -61,10 +61,18 @@ return [
 
     'buttons' => [
         'save_draft' => 'Save as Draft',
+        'save_changes' => 'Save Changes',
         'submit' => 'Submit for Approval',
         'resubmit' => 'Resubmit for Approval',
+        'edit_request' => 'Edit Retirement',
         'settle' => 'Mark as Settled',
         'upload' => 'Upload',
+    ],
+
+    'edit' => [
+        'title' => 'Edit Retirement #:id',
+        'subtitle' => 'Update your retirement before resubmitting for approval',
+        'back' => 'Back to Retirement',
     ],
 
     'timeline' => [
@@ -74,6 +82,7 @@ return [
         'cancelled' => 'Cancelled',
         'settled' => 'Difference settled',
         'resubmitted' => 'Resubmitted for approval',
+        'updated' => 'Retirement updated',
         'stage_approved' => 'Stage approved',
         'stage_rejected' => 'Stage rejected',
         'sent_back' => 'Sent back for revision',

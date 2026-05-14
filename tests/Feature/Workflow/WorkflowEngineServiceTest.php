@@ -346,6 +346,39 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
         ]);
     }
 
+    public function test_send_back_in_parallel_group_cancels_sibling_stages(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
+        $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+
+        $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
+        $s1->roles()->sync([$role->id]);
+        $s2 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
+        $s2->roles()->sync([$role->id]);
+
+        $template->load('stages');
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template);
+
+        $stage1 = $instance->instanceStages()->where('workflow_stage_id', $s1->id)->firstOrFail();
+        $stage2 = $instance->instanceStages()->where('workflow_stage_id', $s2->id)->firstOrFail();
+
+        $this->engine->sendBack($stage1, $this->user, 'Needs revision.');
+
+        $stage1->refresh();
+        $stage2->refresh();
+
+        $this->assertEquals('sent_back', $stage1->status);
+        $this->assertEquals('cancelled', $stage2->status);
+
+        $subject->refresh();
+        $this->assertEquals('sent_back', $subject->status);
+
+        $instance->refresh();
+        $this->assertEquals($stage1->id, $instance->sent_back_to_stage_id);
+    }
+
     // ── resubmitAfterFix ──────────────────────────────────────────────────────
 
     public function test_resubmit_after_fix_reactivates_sent_back_stage_and_clears_flag(): void
@@ -369,6 +402,150 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
 
         $subject->refresh();
         $this->assertEquals('in_workflow', $subject->status);
+    }
+
+    public function test_resubmit_after_fix_reactivates_cancelled_parallel_siblings(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
+        $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+
+        $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
+        $s1->roles()->sync([$role->id]);
+        $s2 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
+        $s2->roles()->sync([$role->id]);
+
+        $template->load('stages');
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template);
+
+        $stage1 = $instance->instanceStages()->where('workflow_stage_id', $s1->id)->firstOrFail();
+        $stage2 = $instance->instanceStages()->where('workflow_stage_id', $s2->id)->firstOrFail();
+
+        // Send back stage1 — stage2 gets cancelled
+        $this->engine->sendBack($stage1, $this->user, 'Fix needed.');
+
+        $subject->refresh();
+        $this->engine->resubmitAfterFix($subject, $this->user);
+
+        $stage1->refresh();
+        $stage2->refresh();
+
+        $this->assertEquals('active', $stage1->status);
+        $this->assertEquals('active', $stage2->status);
+
+        $subject->refresh();
+        $this->assertEquals('in_workflow', $subject->status);
+
+        $instance->refresh();
+        $this->assertNull($instance->sent_back_to_stage_id);
+    }
+
+    // ── activateNextStages (submitter auto-skip) ──────────────────────────────
+
+    public function test_stage_is_auto_skipped_when_submitter_has_stage_role(): void
+    {
+        ['template' => $template, 'role' => $role, 'stages' => $stages] = $this->makeSequentialTemplate(1);
+        $subject = $this->makePaymentRequest();
+        $this->user->assignRole($role);
+
+        $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+
+        $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
+        $this->assertEquals('skipped', $instanceStage->status);
+        $this->assertNotNull($instanceStage->completed_at);
+    }
+
+    public function test_stage_is_not_auto_skipped_when_submitter_lacks_stage_role(): void
+    {
+        ['template' => $template, 'stages' => $stages] = $this->makeSequentialTemplate(1);
+        $subject = $this->makePaymentRequest();
+
+        $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+
+        $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
+        $this->assertEquals('active', $instanceStage->status);
+    }
+
+    public function test_all_stages_auto_skipped_completes_workflow(): void
+    {
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(2);
+        $subject = $this->makePaymentRequest();
+        $this->user->assignRole($role);
+
+        $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+
+        $instance->refresh();
+        $this->assertEquals('completed', $instance->status);
+
+        $subject->refresh();
+        $this->assertEquals('approved', $subject->status);
+        $this->assertNotNull($subject->approved_at);
+    }
+
+    public function test_submitter_skip_advances_to_next_sequential_stage(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $role1 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+        $role2 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+
+        $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+        $s1->roles()->sync([$role1->id]);
+
+        $s2 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 2]);
+        $s2->roles()->sync([$role2->id]);
+
+        $template->load('stages');
+        $subject = $this->makePaymentRequest();
+        $this->user->assignRole($role1);
+
+        $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+
+        $instanceStage1 = $instance->instanceStages()->where('workflow_stage_id', $s1->id)->firstOrFail();
+        $instanceStage2 = $instance->instanceStages()->where('workflow_stage_id', $s2->id)->firstOrFail();
+
+        $this->assertEquals('skipped', $instanceStage1->status);
+        $this->assertEquals('active', $instanceStage2->status);
+    }
+
+    public function test_submitter_skip_in_parallel_group(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
+        $role1 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+        $role2 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+
+        $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
+        $s1->roles()->sync([$role1->id]);
+
+        $s2 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
+        $s2->roles()->sync([$role2->id]);
+
+        $template->load('stages');
+        $subject = $this->makePaymentRequest();
+        $this->user->assignRole($role1);
+
+        $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+
+        $instanceStage1 = $instance->instanceStages()->where('workflow_stage_id', $s1->id)->firstOrFail();
+        $instanceStage2 = $instance->instanceStages()->where('workflow_stage_id', $s2->id)->firstOrFail();
+
+        $this->assertEquals('skipped', $instanceStage1->status);
+        $this->assertEquals('active', $instanceStage2->status);
+    }
+
+    public function test_no_submitter_preserves_existing_behavior(): void
+    {
+        ['template' => $template, 'role' => $role, 'stages' => $stages] = $this->makeSequentialTemplate(1);
+        $subject = $this->makePaymentRequest();
+        $this->user->assignRole($role);
+
+        // Pass null submitter — stage must activate even though $this->user has the role
+        $instance = $this->engine->startWorkflow($subject, $template, null);
+
+        $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
+        $this->assertEquals('active', $instanceStage->status);
+        $this->assertDatabaseHas('workflow_instances', ['id' => $instance->id, 'submitter_user_id' => null]);
     }
 
     // ── canUserActOnStage ─────────────────────────────────────────────────────

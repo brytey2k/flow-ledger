@@ -44,6 +44,7 @@ class PaymentRequest extends Model
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
             'disbursed_at' => 'datetime',
+            'disbursement_method' => \App\Enums\Tenant\PaymentMethod::class,
         ];
     }
 

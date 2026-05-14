@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Approvals;
 
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\Staff;
+use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
@@ -23,7 +25,11 @@ class PaymentRequestResubmitControllerTest extends TenantAppTestCase
         ]);
         $stage->roles()->attach($this->role->id);
 
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'staff_id' => $staff->id,
+        ]);
         app(PaymentRequestService::class)->submit($paymentRequest);
 
         $instanceStage = WorkflowInstanceStage::where('status', 'active')->latest()->first();
@@ -83,5 +89,22 @@ class PaymentRequestResubmitControllerTest extends TenantAppTestCase
 
         $response->assertRedirect(route('payment-requests.show', $paymentRequest));
         $response->assertSessionHas('error');
+    }
+
+    public function test_non_owner_cannot_resubmit(): void
+    {
+        $paymentRequest = $this->buildSentBackRequest();
+
+        $otherUser = User::factory()->create();
+        $otherUser->assignRole($this->role);
+
+        $response = $this->actingAs($otherUser)
+            ->post(route('payment-requests.resubmit', $paymentRequest));
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('error');
+
+        $paymentRequest->refresh();
+        $this->assertSame('sent_back', $paymentRequest->status);
     }
 }

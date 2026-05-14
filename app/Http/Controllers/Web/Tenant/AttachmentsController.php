@@ -11,6 +11,8 @@ use App\Models\Tenant\User;
 use App\Services\AttachmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttachmentsController extends Controller
 {
@@ -33,6 +35,13 @@ class AttachmentsController extends Controller
 
         return redirect()->route('retirement-requests.show', $retirementRequest)
             ->with('success', __('flash.attachments.uploaded'));
+    }
+
+    public function download(Attachment $attachment): StreamedResponse
+    {
+        abort_unless(Storage::disk('local')->exists($attachment->path), 404);
+
+        return Storage::disk('local')->download($attachment->path, $attachment->original_name);
     }
 
     public function destroy(Request $request, Attachment $attachment): RedirectResponse

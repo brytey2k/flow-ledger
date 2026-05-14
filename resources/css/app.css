@@ -8,5 +8,39 @@
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    :root {
+        --app-link-color: #2563eb;
+        --app-link-hover-color: #1d4ed8;
+    }
+
+    .dark {
+        --app-link-color: #93c5fd;
+        --app-link-hover-color: #bfdbfe;
+    }
+
+    #content a[href]:not(.btn):not(.kt-btn):not(.kt-menu-link):not([role='button']) {
+        color: var(--app-link-color);
+        font-weight: 500;
+        text-decoration-line: none;
+        transition: color 180ms ease;
+    }
+
+    #content a[href]:not(.btn):not(.kt-btn):not(.kt-menu-link):not([role='button']):hover {
+        color: var(--app-link-hover-color);
+    }
+
+    #content a[href]:not(.btn):not(.kt-btn):not(.kt-menu-link):not([role='button']):focus-visible {
+        outline: 2px solid var(--app-link-color);
+        outline-offset: 2px;
+    }
+}
+
+/* Make the native date/month input calendar picker icon visible in dark mode */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="month"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
 }

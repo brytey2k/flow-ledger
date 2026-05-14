@@ -20,4 +20,10 @@ class AccountCodeRepository
     {
         return AccountCode::orderBy('code')->get();
     }
+
+    /** @return Collection<int, AccountCode> */
+    public function forDepartment(int $departmentId): Collection
+    {
+        return AccountCode::where('department_id', $departmentId)->orderBy('code')->get();
+    }
 }

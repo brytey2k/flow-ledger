@@ -11,6 +11,7 @@ use App\Models\Tenant\Staff;
 use App\Repositories\BranchRepository;
 use App\Repositories\DepartmentRepository;
 use App\Repositories\PositionRepository;
+use App\Repositories\RoleRepository;
 use App\Repositories\StaffRepository;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class StaffController extends Controller
         private readonly DepartmentRepository $departmentRepository,
         private readonly PositionRepository $positionRepository,
         private readonly BranchRepository $branchRepository,
+        private readonly RoleRepository $roleRepository,
     ) {}
 
     public function index(): View
@@ -37,10 +39,11 @@ class StaffController extends Controller
     {
         $departments = $this->departmentRepository->allOrderedByName();
         $positions = $this->positionRepository->allOrderedByName();
-        $users = $this->repository->unlinkedUsers();
         $branches = $this->branchRepository->allOrderedByName();
+        $roles = $this->roleRepository->allOrderedByName();
+        $unlinkedUsers = $this->repository->unlinkedUsers();
 
-        return view('tenant.staff.create', compact('departments', 'positions', 'branches', 'users'));
+        return view('tenant.staff.create', compact('departments', 'positions', 'branches', 'roles', 'unlinkedUsers'));
     }
 
     public function store(StaffStoreRequest $request): RedirectResponse
@@ -54,10 +57,11 @@ class StaffController extends Controller
     {
         $departments = $this->departmentRepository->allOrderedByName();
         $positions = $this->positionRepository->allOrderedByName();
-        $users = $this->repository->unlinkedUsersOrCurrent($staff);
         $branches = $this->branchRepository->allOrderedByName();
+        $roles = $this->roleRepository->allOrderedByName();
+        $unlinkedUsers = $staff->user_id === null ? $this->repository->unlinkedUsers() : collect();
 
-        return view('tenant.staff.edit', compact('staff', 'departments', 'positions', 'branches', 'users'));
+        return view('tenant.staff.edit', compact('staff', 'departments', 'positions', 'branches', 'roles', 'unlinkedUsers'));
     }
 
     public function update(StaffUpdateRequest $request, Staff $staff): RedirectResponse

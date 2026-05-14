@@ -22,6 +22,15 @@ class WorkflowParallelGroupStoreRequest extends FormRequest
         ];
     }
 
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Please provide a group name.',
+            'name.max' => 'The group name may not exceed 150 characters.',
+        ];
+    }
+
     public function toDto(): \App\DTOs\Tenant\WorkflowParallelGroupDto
     {
         return new \App\DTOs\Tenant\WorkflowParallelGroupDto(

@@ -177,30 +177,57 @@ Staff represent employees who will raise requests.
 | Field | Notes |
 |-------|-------|
 | First Name / Last Name | Employee's full name |
-| Staff ID | Unique identifier (e.g. EMP001) |
-| Email | Employee email |
+| Email | Employee email (optional) |
+| Phone | Employee phone (optional) |
 | Department | Select from configured departments |
 | Position | Select from configured positions |
-| Level | Select from configured levels |
-| Branch | Select from configured branches |
+| Branch | Select from configured branches (optional) |
 
-Create at least **2 staff members** — one to be the requester, one as an approver.
+#### Optional: Grant Login Access
 
-### 4.2 Create Users
+The **Login Account** card at the bottom of the create form lets you set up system access for the staff member without a separate step. Check **Grant login access** to expand it, then choose one of two options:
 
-**URL:** `/users/create`
-
-Users are the system login accounts. Link each user to a staff profile if they need to raise requests themselves.
+**Create new account** — generates a brand-new user account linked to this staff member.
 
 | Field | Notes |
 |-------|-------|
-| Name | Display name |
+| Login Email | Email used to log in (distinct from the staff email field above) |
+| Password / Confirm Password | Initial password |
+| Roles | One or more roles to assign (optional) |
+
+**Link existing account** — attaches an already-created user account to this staff member.
+
+| Field | Notes |
+|-------|-------|
+| User Account | Dropdown of users not yet linked to any staff member |
+
+> Leave the **Grant login access** toggle off for staff members who do not need system access (e.g. employees who only appear on org charts or as payees).
+
+Create at least **2 staff members** — one to be the requester (with login access), one as an approver (with login access).
+
+### 4.2 Edit Staff — Managing the Linked Account
+
+**URL:** `/staff/{id}/edit`
+
+The **Login Account** card on the edit page behaves differently depending on whether the staff member already has a linked account:
+
+- **Already linked** — the account name and email are shown as read-only. The link cannot be changed from here; manage the user account directly via `/users`.
+- **Not yet linked** — an **Assign login access** toggle appears. Expand it to either create a new account or link an existing one, using the same options as the create form.
+
+### 4.3 Create Users Independently
+
+**URL:** `/users/create`
+
+Users can also be created directly, outside of the staff flow. Use this when you need a system account that is not tied to a staff profile (e.g. a system administrator).
+
+| Field | Notes |
+|-------|-------|
+| First Name / Last Name | Display name |
 | Email | Login email |
 | Password | Initial password |
 | Role | Assign one or more roles |
-| Linked Staff | (Optional) Link to a staff profile |
 
-Create users for each role you need to test:
+Create users for each role you need to test (if not already created via the staff form):
 - `requester@example.com` → Role: Finance Officer, linked to a staff profile
 - `manager@example.com` → Role: Finance Manager
 - `director@example.com` → Role: Finance Director
@@ -571,7 +598,7 @@ Use this as your testing punch list:
 
 - [ ] Created at least one currency, level, department, position, branch, and account code
 - [ ] Created roles with correct permissions assigned (including `AccessCashbook`, `CreateCashbookEntry`, `DeleteCashbookEntry`)
-- [ ] Created staff members and linked users to staff profiles
+- [ ] Created staff members (with login access granted inline or assigned separately)
 - [ ] Created workflow templates for `advance`, `expense`, and `retirement` types
 - [ ] Each template has at least one stage with roles assigned
 - [ ] Created a draft **advance** payment request

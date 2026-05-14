@@ -136,6 +136,62 @@ class AttachmentsControllerTest extends TenantAppTestCase
             ->assertSessionHasErrors('file');
     }
 
+    // ── Download ──────────────────────────────────────────────────────────────
+
+    public function test_guest_cannot_download(): void
+    {
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $this->draftRetirement()->id,
+            'user_id' => $this->user->id,
+            'path' => 'retirements/1/attachments/test.pdf',
+            'original_name' => 'test.pdf',
+        ]);
+
+        $this->get(route('attachments.download', $attachment))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_user_can_download_attachment(): void
+    {
+        Storage::fake('local');
+        $retirement = $this->draftRetirement();
+        Storage::disk('local')->put("retirements/{$retirement->id}/attachments/test.pdf", 'file content');
+
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $retirement->id,
+            'user_id' => $this->user->id,
+            'path' => "retirements/{$retirement->id}/attachments/test.pdf",
+            'original_name' => 'test.pdf',
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $this->actingAs($this->user)
+            ->get(route('attachments.download', $attachment))
+            ->assertOk()
+            ->assertDownload('test.pdf');
+    }
+
+    public function test_download_returns_404_when_file_missing_from_storage(): void
+    {
+        Storage::fake('local');
+        $retirement = $this->draftRetirement();
+
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $retirement->id,
+            'user_id' => $this->user->id,
+            'path' => 'retirements/99/attachments/nonexistent.pdf',
+            'original_name' => 'nonexistent.pdf',
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $this->actingAs($this->user)
+            ->get(route('attachments.download', $attachment))
+            ->assertNotFound();
+    }
+
     // ── Delete ────────────────────────────────────────────────────────────────
 
     public function test_user_can_delete_attachment(): void

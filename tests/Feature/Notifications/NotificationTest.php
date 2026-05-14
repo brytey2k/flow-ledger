@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Notifications;
 
+use App\Enums\Tenant\PaymentMethod;
+use App\Models\Role;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
+use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
@@ -20,6 +23,7 @@ use App\Services\PaymentRequestService;
 use App\Services\RetirementService;
 use App\Services\WorkflowEngineService;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Tests\TenantAppTestCase;
 
 class NotificationTest extends TenantAppTestCase
@@ -31,7 +35,8 @@ class NotificationTest extends TenantAppTestCase
             'workflow_template_id' => $template->id,
             'display_order' => 1,
         ]);
-        $stage->roles()->attach($this->role->id);
+        $approverRole = Role::create(['name' => 'approver_' . Str::uuid(), 'guard_name' => 'web']);
+        $stage->roles()->attach($approverRole->id);
 
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
 
@@ -57,7 +62,9 @@ class NotificationTest extends TenantAppTestCase
 
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
 
-        app(PaymentRequestService::class)->submit($paymentRequest, $this->user);
+        $submitter = User::factory()->create();
+
+        app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
 
         Notification::assertSentTo($this->user, StageReadyForApprovalNotification::class);
     }
@@ -77,7 +84,8 @@ class NotificationTest extends TenantAppTestCase
         $stage2->roles()->attach($this->role->id);
 
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
-        app(PaymentRequestService::class)->submit($paymentRequest, $this->user);
+        $submitter = User::factory()->create();
+        app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
 
         $instanceStage = WorkflowInstanceStage::where('status', 'active')->latest()->first();
 
@@ -117,7 +125,8 @@ class NotificationTest extends TenantAppTestCase
             'workflow_template_id' => $template->id,
             'display_order' => 1,
         ]);
-        $stage->roles()->attach($this->role->id);
+        $approverRole = Role::create(['name' => 'approver_' . Str::uuid(), 'guard_name' => 'web']);
+        $stage->roles()->attach($approverRole->id);
 
         app(RetirementService::class)->submit($retirement, $this->user);
 
@@ -170,7 +179,7 @@ class NotificationTest extends TenantAppTestCase
 
         Notification::fake();
 
-        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: 'bank_transfer', reference: 'REF-001'), $this->user);
+        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: PaymentMethod::BankTransfer, reference: 'REF-001'), $this->user);
 
         Notification::assertSentTo($this->user, RequestDisbursedNotification::class);
     }
@@ -187,7 +196,7 @@ class NotificationTest extends TenantAppTestCase
 
         Notification::fake();
 
-        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: 'cash', reference: null), $this->user);
+        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: PaymentMethod::Cash, reference: null), $this->user);
 
         Notification::assertSentTo($this->user, RetirementRequiredNotification::class);
     }
@@ -204,7 +213,7 @@ class NotificationTest extends TenantAppTestCase
 
         Notification::fake();
 
-        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: 'bank_transfer', reference: null), $this->user);
+        app(PaymentRequestService::class)->disburse($paymentRequest, new \App\DTOs\Tenant\DisbursePaymentRequestDto(method: PaymentMethod::BankTransfer, reference: null), $this->user);
 
         Notification::assertSentTo($this->user, RequestDisbursedNotification::class);
         Notification::assertNotSentTo($this->user, RetirementRequiredNotification::class);

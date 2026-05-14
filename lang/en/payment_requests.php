@@ -10,6 +10,8 @@ return [
 
     'create_title' => 'New Payment Request',
     'create_subtitle' => 'Submit an advance or expense reimbursement request',
+    'edit_title' => 'Edit Request #:id',
+    'edit_subtitle' => 'Update your request before resubmitting for approval',
     'back' => 'Back to Requests',
     'details_card' => 'Request Details',
 
@@ -32,12 +34,15 @@ return [
 
     'buttons' => [
         'save_draft' => 'Save as Draft',
+        'save_changes' => 'Save Changes',
         'submit' => 'Submit for Approval',
         'resubmit' => 'Resubmit for Approval',
+        'edit_request' => 'Edit Request',
         'delete_draft' => 'Delete Draft',
         'disburse' => 'Mark as Disbursed',
         'retire' => 'Retire this Advance',
         'view_retirement' => 'View Retirement',
+        'review_and_approve' => 'Review & Approve',
     ],
 
     'show' => [
@@ -76,6 +81,7 @@ return [
         'fully_approved' => 'Fully approved',
         'cancelled' => 'Cancelled',
         'resubmitted' => 'Resubmitted for approval',
+        'updated' => 'Request updated',
         'stage_approved' => 'Stage approved',
         'stage_rejected' => 'Stage rejected',
         'sent_back' => 'Sent back for revision',

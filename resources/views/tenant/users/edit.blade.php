@@ -28,7 +28,7 @@
                 <h3 class="kt-card-title">{{ __('users.details_card') }}</h3>
             </div>
             <div class="kt-card-content">
-                <form method="POST" action="{{ route('users.update', $user) }}" class="grid gap-7">
+                <form id="edit-user-form" method="POST" action="{{ route('users.update', $user) }}" class="grid gap-7">
                     @csrf
                     @method('PUT')
 
@@ -110,30 +110,31 @@
                         </div>
                     </div>
 
-                    <div class="pt-5 mt-2 flex justify-between items-center gap-2.5">
-                        <div class="flex items-center gap-2.5">
-                            <button type="submit" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-check"></i>
-                                {{ __('users.buttons.update') }}
-                            </button>
-                            <a class="kt-btn kt-btn-outline" href="{{ route('users.permissions.edit', $user) }}">
-                                <i class="ki-filled ki-security-user"></i>
-                                {{ __('users.buttons.manage_perms') }}
-                            </a>
-                            <a class="kt-btn kt-btn-light" href="{{ route('users.index') }}">{{ __('common.cancel') }}</a>
-                        </div>
-                        @can(\App\Enums\Tenant\PermissionKey::DeleteUser->value)
-                            <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('{{ __('users.confirm_delete') }}');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="kt-btn kt-btn-danger">
-                                    <i class="ki-filled ki-trash"></i>
-                                    {{ __('users.buttons.delete') }}
-                                </button>
-                            </form>
-                        @endcan
-                    </div>
                 </form>
+
+                <div class="pt-5 mt-2 flex justify-between items-center gap-2.5">
+                    <div class="flex items-center gap-2.5">
+                        <button type="submit" form="edit-user-form" class="kt-btn kt-btn-primary">
+                            <i class="ki-filled ki-check"></i>
+                            {{ __('users.buttons.update') }}
+                        </button>
+                        <a class="kt-btn kt-btn-outline" href="{{ route('users.permissions.edit', $user) }}">
+                            <i class="ki-filled ki-security-user"></i>
+                            {{ __('users.buttons.manage_perms') }}
+                        </a>
+                        <a class="kt-btn kt-btn-light" href="{{ route('users.index') }}">{{ __('common.cancel') }}</a>
+                    </div>
+                    @can(\App\Enums\Tenant\PermissionKey::DeleteUser->value)
+                        <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('{{ __('users.confirm_delete') }}');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="kt-btn kt-btn-danger">
+                                <i class="ki-filled ki-trash"></i>
+                                {{ __('users.buttons.delete') }}
+                            </button>
+                        </form>
+                    @endcan
+                </div>
             </div>
         </div>
     </div>

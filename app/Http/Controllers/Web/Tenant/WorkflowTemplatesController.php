@@ -56,6 +56,11 @@ class WorkflowTemplatesController extends Controller
 
     public function update(WorkflowTemplateUpdateRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
+        if ($workflowTemplate->hasActiveInstances()) {
+            return redirect()->route('workflow-templates.show', $workflowTemplate)
+                ->with('error', __('flash.workflows.template_locked'));
+        }
+
         $dto = $request->toDto();
         $workflowTemplate->update([
             'name' => $dto->name,
@@ -68,6 +73,11 @@ class WorkflowTemplatesController extends Controller
 
     public function destroy(WorkflowTemplate $workflowTemplate): RedirectResponse
     {
+        if ($workflowTemplate->hasActiveInstances()) {
+            return redirect()->route('workflow-templates.show', $workflowTemplate)
+                ->with('error', __('flash.workflows.template_locked'));
+        }
+
         $workflowTemplate->delete();
 
         return redirect()->route('workflow-templates.index')

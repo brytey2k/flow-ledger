@@ -2,6 +2,7 @@
 
 @php
     use App\Enums\Tenant\PermissionKey;
+    use App\Enums\Tenant\PaymentMethod;
 
     $statusColors = [
         'draft'       => 'kt-badge-outline',
@@ -48,19 +49,6 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-
-        @if(session('success'))
-            <div class="kt-alert kt-alert-success">
-                <i class="ki-filled ki-check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="kt-alert kt-alert-danger">
-                <i class="ki-filled ki-information"></i>
-                {{ session('error') }}
-            </div>
-        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
 
@@ -202,6 +190,7 @@
                         'request.approved'   => __('payment_requests.timeline.fully_approved'),
                         'request.cancelled'  => __('payment_requests.timeline.cancelled'),
                         'request.resubmitted'=> __('payment_requests.timeline.resubmitted'),
+                        'request.updated'    => __('payment_requests.timeline.updated'),
                         'stage.approved'     => __('payment_requests.timeline.stage_approved'),
                         'stage.rejected'     => __('payment_requests.timeline.stage_rejected'),
                         'stage.sent_back'    => __('payment_requests.timeline.sent_back'),
@@ -327,10 +316,18 @@
                                 </form>
                             @endcan
                         @elseif($paymentRequest->status === 'in_workflow')
-                            <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
-                                <i class="ki-filled ki-time"></i>
-                                {{ __('payment_requests.status.awaiting_approval') }}
-                            </div>
+                            @if($canActOnActiveStage && $activeInstanceStage)
+                                <a href="{{ route('approvals.show', $activeInstanceStage) }}"
+                                   class="kt-btn kt-btn-primary w-full">
+                                    <i class="ki-filled ki-check-circle"></i>
+                                    {{ __('payment_requests.buttons.review_and_approve') }}
+                                </a>
+                            @else
+                                <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
+                                    <i class="ki-filled ki-time"></i>
+                                    {{ __('payment_requests.status.awaiting_approval') }}
+                                </div>
+                            @endif
                         @elseif($paymentRequest->status === 'approved')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-sm mb-2">
                                 <i class="ki-filled ki-check-circle"></i>
@@ -341,11 +338,16 @@
                                     @csrf
                                     <div>
                                         <label class="kt-form-label block mb-1.5 text-sm" for="disbursement_method">{{ __('payment_requests.show.payment_method') }} <span class="text-destructive">*</span></label>
-                                        <input id="disbursement_method" name="disbursement_method" type="text"
-                                               class="kt-input w-full"
-                                               placeholder="e.g. Cash, Bank Transfer, Mobile Money"
-                                               value="{{ old('disbursement_method') }}"
-                                               aria-invalid="@error('disbursement_method') true @else false @enderror">
+                                        <select id="disbursement_method" name="disbursement_method"
+                                                class="kt-select w-full"
+                                                aria-invalid="@error('disbursement_method') true @else false @enderror">
+                                            <option value="">— Select method —</option>
+                                            @foreach(PaymentMethod::cases() as $method)
+                                                <option value="{{ $method->value }}" @selected(old('disbursement_method') === $method->value)>
+                                                    {{ $method->label() }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                         @error('disbursement_method')
                                             <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                                         @enderror
@@ -373,22 +375,29 @@
                                 <i class="ki-filled ki-information-2"></i>
                                 {{ __('payment_requests.show.sent_back_notice') }}
                             </div>
-                            <form method="POST" action="{{ route('payment-requests.resubmit', $paymentRequest) }}">
-                                @csrf
-                                <button type="submit" class="kt-btn kt-btn-primary w-full">
-                                    <i class="ki-filled ki-send"></i>
-                                    {{ __('payment_requests.buttons.resubmit') }}
-                                </button>
-                            </form>
+                            @if($isOwner)
+                                <a href="{{ route('payment-requests.edit', $paymentRequest) }}"
+                                   class="kt-btn kt-btn-outline w-full">
+                                    <i class="ki-filled ki-pencil"></i>
+                                    {{ __('payment_requests.buttons.edit_request') }}
+                                </a>
+                                <form method="POST" action="{{ route('payment-requests.resubmit', $paymentRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-primary w-full">
+                                        <i class="ki-filled ki-send"></i>
+                                        {{ __('payment_requests.buttons.resubmit') }}
+                                    </button>
+                                </form>
+                            @endif
                         @elseif($paymentRequest->status === 'disbursed')
                             @can(PermissionKey::CreateRetirementRequest->value)
-                                @if(! $paymentRequest->retirementRequest)
+                                @if($isOwner && ! $paymentRequest->retirementRequest)
                                     <a href="{{ route('retirement-requests.create', $paymentRequest) }}"
                                        class="kt-btn kt-btn-primary w-full">
                                         <i class="ki-filled ki-file-up"></i>
                                         {{ __('payment_requests.buttons.retire') }}
                                     </a>
-                                @else
+                                @elseif($paymentRequest->retirementRequest)
                                     <a href="{{ route('retirement-requests.show', $paymentRequest->retirementRequest) }}"
                                        class="kt-btn kt-btn-outline w-full">
                                         <i class="ki-filled ki-eye"></i>
@@ -402,7 +411,7 @@
                                     {{ __('payment_requests.show.disbursed_on') }} {{ $paymentRequest->disbursed_at?->format('M d, Y') }}
                                 </div>
                                 @if($paymentRequest->disbursement_method)
-                                    <span class="text-xs">{{ __('payment_requests.show.method_label') }} {{ $paymentRequest->disbursement_method }}</span>
+                                    <span class="text-xs">{{ __('payment_requests.show.method_label') }} {{ $paymentRequest->disbursement_method->label() }}</span>
                                 @endif
                                 @if($paymentRequest->disbursement_reference)
                                     <span class="text-xs">{{ __('payment_requests.show.ref_label') }} {{ $paymentRequest->disbursement_reference }}</span>

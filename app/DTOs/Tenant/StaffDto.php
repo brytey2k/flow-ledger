@@ -15,5 +15,6 @@ readonly class StaffDto
         public int $positionId,
         public int|null $userId,
         public int|null $branchId,
+        public CreateUserDto|null $newUser = null,
     ) {}
 }

@@ -23,9 +23,16 @@ class PaymentRequestSubmitController extends Controller
                 ->with('error', __('flash.requests.submit_only_draft'));
         }
 
-        if (! WorkflowTemplate::where('type', $paymentRequest->type)->exists()) {
+        $template = WorkflowTemplate::where('type', $paymentRequest->type)->first();
+
+        if ($template === null) {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.missing_workflow_template'));
+        }
+
+        if (! $template->stages()->exists()) {
+            return redirect()->route('payment-requests.show', $paymentRequest)
+                ->with('error', __('flash.requests.no_workflow_stages'));
         }
 
         /** @var \App\Models\Tenant\User $user */

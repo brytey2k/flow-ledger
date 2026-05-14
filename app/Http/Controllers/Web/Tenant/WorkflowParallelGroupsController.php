@@ -14,6 +14,11 @@ class WorkflowParallelGroupsController extends Controller
 {
     public function store(WorkflowParallelGroupStoreRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
+        if ($workflowTemplate->hasActiveInstances()) {
+            return redirect()->route('workflow-templates.show', $workflowTemplate)
+                ->with('error', __('flash.workflows.template_locked'));
+        }
+
         $dto = $request->toDto();
         $workflowTemplate->parallelGroups()->create([
             'name' => $dto->name,
@@ -26,6 +31,11 @@ class WorkflowParallelGroupsController extends Controller
 
     public function destroy(WorkflowTemplate $workflowTemplate, WorkflowParallelGroup $workflowParallelGroup): RedirectResponse
     {
+        if ($workflowTemplate->hasActiveInstances()) {
+            return redirect()->route('workflow-templates.show', $workflowTemplate)
+                ->with('error', __('flash.workflows.template_locked'));
+        }
+
         $workflowParallelGroup->delete();
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)

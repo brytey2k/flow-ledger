@@ -30,19 +30,6 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        @if(session('success'))
-            <div class="kt-alert kt-alert-success">
-                <i class="ki-filled ki-check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="kt-alert kt-alert-danger">
-                <i class="ki-filled ki-information"></i>
-                {{ session('error') }}
-            </div>
-        @endif
-
         {{-- Parallel Groups --}}
         <div class="kt-card">
             <div class="kt-card-header">
@@ -69,12 +56,14 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('workflow-templates.parallel-groups.store', $workflowTemplate) }}" class="flex flex-wrap items-end gap-3">
+                <form method="POST" action="{{ route('workflow-templates.parallel-groups.store', $workflowTemplate) }}" class="flex flex-wrap items-start gap-3">
                     @csrf
                     <div>
                         <label class="kt-form-label block mb-1 text-xs" for="pg_name">Group Name</label>
                         <input id="pg_name" name="name" type="text" class="kt-input" placeholder="e.g. Finance & HR" />
-                        @error('name') <p class="mt-1 text-xs text-destructive">{{ $message }}</p> @enderror
+                        @error('name')
+                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label class="kt-form-label block mb-1 text-xs" for="pg_require_all">Logic</label>
@@ -83,7 +72,7 @@
                             <option value="0">ANY one approves (OR)</option>
                         </select>
                     </div>
-                    <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline">
+                    <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline mt-5">
                         <i class="ki-filled ki-plus"></i>
                         {{ __('workflows.show.add_group') }}
                     </button>

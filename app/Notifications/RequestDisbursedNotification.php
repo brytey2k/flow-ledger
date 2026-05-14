@@ -35,7 +35,7 @@ class RequestDisbursedNotification extends Notification implements ShouldQueue
         $rawAmount = $this->subject->getAttribute('total_amount');
         $totalAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
         $rawMethod = $this->subject->getAttribute('disbursement_method');
-        $method = is_string($rawMethod) ? $rawMethod : '—';
+        $method = $rawMethod instanceof \App\Enums\Tenant\PaymentMethod ? $rawMethod->label() : '—';
         $reference = $this->subject->getAttribute('disbursement_reference');
         $referenceStr = is_string($reference) ? $reference : null;
 

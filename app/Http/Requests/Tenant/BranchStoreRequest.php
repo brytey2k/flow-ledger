@@ -22,7 +22,6 @@ class BranchStoreRequest extends FormRequest
             'level_id' => ['required', 'integer', 'exists:levels,id'],
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
             'parent_id' => ['nullable', 'integer', 'exists:branches,id'],
-            'position' => ['required', 'integer', 'min:1'],
         ];
     }
 
@@ -34,7 +33,6 @@ class BranchStoreRequest extends FormRequest
             levelId: $this->integer('level_id'),
             currencyId: $this->integer('currency_id'),
             parentId: $this->filled('parent_id') ? $this->integer('parent_id') : null,
-            position: $this->integer('position'),
         );
     }
 }

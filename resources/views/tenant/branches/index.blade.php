@@ -70,11 +70,6 @@
                                             <span class="kt-table-col-label">{{ __('common.columns.parent') }}</span>
                                         </span>
                                     </th>
-                                    <th class="min-w-[80px] text-center">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('common.columns.position') }}</span>
-                                        </span>
-                                    </th>
                                     <th class="min-w-[100px] text-center">
                                         <span class="kt-table-col">
                                             <span class="kt-table-col-label">{{ __('common.columns.actions') }}</span>
@@ -120,9 +115,6 @@
                                             @else
                                                 <span class="text-2sm text-muted-foreground">{{ __('common.root') }}</span>
                                             @endif
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="kt-badge kt-badge-sm">{{ $branch->position }}</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-2">

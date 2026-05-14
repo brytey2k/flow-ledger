@@ -55,10 +55,18 @@ return [
     ],
     'buttons' => [
         'save_draft' => 'Enregistrer en brouillon',
+        'save_changes' => 'Enregistrer les modifications',
         'submit' => 'Soumettre pour approbation',
         'resubmit' => 'Renvoyer pour approbation',
+        'edit_request' => 'Modifier la reddition',
         'settle' => 'Marquer comme regle',
         'upload' => 'Televerser',
+    ],
+
+    'edit' => [
+        'title' => 'Modifier la reddition #:id',
+        'subtitle' => 'Mettre a jour votre reddition avant de la soumettre a nouveau',
+        'back' => 'Retour a la reddition',
     ],
     'timeline' => [
         'created_draft' => 'Creee en brouillon',
@@ -67,6 +75,7 @@ return [
         'cancelled' => 'Annulee',
         'settled' => 'Difference reglee',
         'resubmitted' => 'Renvoyee pour approbation',
+        'updated' => 'Reddition mise a jour',
         'stage_approved' => 'Etape approuvee',
         'stage_rejected' => 'Etape rejetee',
         'sent_back' => 'Renvoyee pour revision',

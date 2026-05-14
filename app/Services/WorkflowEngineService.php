@@ -18,14 +18,15 @@ class WorkflowEngineService
 {
     public function __construct(private readonly NotificationService $notifications) {}
 
-    public function startWorkflow(Model $subject, WorkflowTemplate $template): WorkflowInstance
+    public function startWorkflow(Model $subject, WorkflowTemplate $template, User|null $submitter = null): WorkflowInstance
     {
-        return DB::transaction(function () use ($subject, $template): WorkflowInstance {
+        return DB::transaction(function () use ($subject, $template, $submitter): WorkflowInstance {
             $instance = WorkflowInstance::create([
                 'workflow_template_id' => $template->id,
                 'workflowable_type' => $subject::class,
                 'workflowable_id' => $subject->getKey(),
                 'status' => 'in_progress',
+                'submitter_user_id' => $submitter?->id,
             ]);
 
             foreach ($template->stages as $stage) {
@@ -67,6 +68,12 @@ class WorkflowEngineService
         $workflowable = $instance->workflowable;
         $requestAmount = $this->resolveRequestAmount($workflowable);
 
+        /** @var User|null $submitter */
+        $submitter = $instance->submitter;
+        $submitterRoleIds = $submitter !== null
+            ? $submitter->roles()->pluck('roles.id')
+            : collect();
+
         $anyActivated = false;
         $activatedStages = new Collection();
 
@@ -74,7 +81,12 @@ class WorkflowEngineService
             /** @var WorkflowStage $stageDef */
             $stageDef = $instanceStage->stage;
             $threshold = $stageDef->skip_below_amount;
-            if ($threshold !== null && $requestAmount < (float) $threshold) {
+
+            $belowThreshold = $threshold !== null && $requestAmount < (float) $threshold;
+            $submitterIsApprover = $submitter !== null
+                && $stageDef->roles()->whereIn('roles.id', $submitterRoleIds)->exists();
+
+            if ($belowThreshold || $submitterIsApprover) {
                 $instanceStage->update(['status' => 'skipped', 'completed_at' => now()]);
             } else {
                 $instanceStage->update(['status' => 'active', 'started_at' => now()]);
@@ -85,8 +97,8 @@ class WorkflowEngineService
 
         if (! $anyActivated) {
             /** @var WorkflowInstance $freshInstance */
-            $freshInstance = $instance->fresh('instanceStages.stage');
-            $this->activateNextStages($freshInstance);
+            $freshInstance = $instance->fresh();
+            $this->advanceWorkflow($freshInstance);
 
             return;
         }
@@ -213,13 +225,22 @@ class WorkflowEngineService
 
             /** @var WorkflowInstance $instance */
             $instance = $instanceStage->instance;
+
+            /** @var WorkflowStage $stage */
+            $stage = $instanceStage->stage;
+
+            if ($stage->parallel_group_id !== null) {
+                $instance->instanceStages()
+                    ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $stage->parallel_group_id))
+                    ->where('id', '!=', $instanceStage->id)
+                    ->whereIn('status', ['active', 'pending'])
+                    ->update(['status' => 'cancelled', 'completed_at' => now()]);
+            }
+
             $instance->update(['sent_back_to_stage_id' => $instanceStage->id]);
             /** @var Model $workflowable */
             $workflowable = $instance->workflowable;
             $workflowable->update(['status' => 'sent_back']);
-
-            /** @var WorkflowStage $stage */
-            $stage = $instanceStage->stage;
 
             activity()
                 ->performedOn($workflowable)
@@ -254,6 +275,17 @@ class WorkflowEngineService
                 'started_at' => now(),
                 'completed_at' => null,
             ]);
+
+            /** @var WorkflowStage $sentBackWorkflowStage */
+            $sentBackWorkflowStage = $sentBackStage->stage;
+
+            if ($sentBackWorkflowStage->parallel_group_id !== null) {
+                $instance->instanceStages()
+                    ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $sentBackWorkflowStage->parallel_group_id))
+                    ->where('id', '!=', $sentBackStage->id)
+                    ->where('status', 'cancelled')
+                    ->update(['status' => 'active', 'started_at' => now(), 'completed_at' => null]);
+            }
 
             $instance->update(['sent_back_to_stage_id' => null]);
             $subject->update(['status' => 'in_workflow']);

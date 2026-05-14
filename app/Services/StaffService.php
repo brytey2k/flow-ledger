@@ -11,9 +11,18 @@ use Illuminate\Support\Facades\DB;
 
 class StaffService
 {
+    public function __construct(private readonly UserService $userService) {}
+
     public function create(StaffDto $dto, Model|null $actor = null): Staff
     {
         return DB::transaction(function () use ($dto, $actor): Staff {
+            $userId = $dto->userId;
+
+            if ($dto->newUser !== null) {
+                $user = $this->userService->create($dto->newUser, $actor);
+                $userId = $user->id;
+            }
+
             $staff = Staff::create([
                 'first_name' => $dto->firstName,
                 'last_name' => $dto->lastName,
@@ -21,7 +30,7 @@ class StaffService
                 'phone' => $dto->phone,
                 'department_id' => $dto->departmentId,
                 'position_id' => $dto->positionId,
-                'user_id' => $dto->userId,
+                'user_id' => $userId,
                 'branch_id' => $dto->branchId,
             ]);
 
@@ -39,6 +48,17 @@ class StaffService
     public function update(Staff $staff, StaffDto $dto, Model|null $actor = null): void
     {
         DB::transaction(function () use ($staff, $dto, $actor): void {
+            $userId = $staff->user_id;
+
+            if ($userId === null) {
+                if ($dto->newUser !== null) {
+                    $user = $this->userService->create($dto->newUser, $actor);
+                    $userId = $user->id;
+                } elseif ($dto->userId !== null) {
+                    $userId = $dto->userId;
+                }
+            }
+
             $staff->update([
                 'first_name' => $dto->firstName,
                 'last_name' => $dto->lastName,
@@ -46,7 +66,7 @@ class StaffService
                 'phone' => $dto->phone,
                 'department_id' => $dto->departmentId,
                 'position_id' => $dto->positionId,
-                'user_id' => $dto->userId,
+                'user_id' => $userId,
                 'branch_id' => $dto->branchId,
             ]);
 

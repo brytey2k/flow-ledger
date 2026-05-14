@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant\PaymentRequest;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class PaymentRequestResubmitController extends Controller
 {
@@ -15,7 +16,7 @@ class PaymentRequestResubmitController extends Controller
         private readonly WorkflowEngineService $engine,
     ) {}
 
-    public function store(PaymentRequest $paymentRequest): RedirectResponse
+    public function store(Request $request, PaymentRequest $paymentRequest): RedirectResponse
     {
         if ($paymentRequest->status !== 'sent_back') {
             return redirect()->route('payment-requests.show', $paymentRequest)
@@ -23,7 +24,12 @@ class PaymentRequestResubmitController extends Controller
         }
 
         /** @var \App\Models\Tenant\User $user */
-        $user = auth()->user();
+        $user = $request->user();
+
+        if ($user->staffProfile?->id !== $paymentRequest->staff_id) {
+            return redirect()->route('payment-requests.show', $paymentRequest)
+                ->with('error', __('flash.requests.resubmit_not_owner'));
+        }
 
         $this->engine->resubmitAfterFix($paymentRequest, $user);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Disbursement;
 
+use App\Enums\Tenant\PaymentMethod;
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\PaymentRequest;
 use Tests\TenantAppTestCase;
@@ -24,7 +25,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
 
         $response = $this->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => 'Cash',
+            'disbursement_method' => PaymentMethod::Cash->value,
         ]);
 
         $response->assertRedirect(route('login'));
@@ -47,7 +48,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => 'Cash',
+            'disbursement_method' => PaymentMethod::Cash->value,
         ]);
 
         $response->assertForbidden();
@@ -86,7 +87,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => 'Bank Transfer',
+            'disbursement_method' => PaymentMethod::BankTransfer->value,
             'disbursement_reference' => 'TXN-001',
         ]);
 
@@ -96,7 +97,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
         $this->assertDatabaseHas('payment_requests', [
             'id' => $paymentRequest->id,
             'status' => 'disbursed',
-            'disbursement_method' => 'Bank Transfer',
+            'disbursement_method' => PaymentMethod::BankTransfer->value,
             'disbursement_reference' => 'TXN-001',
             'disbursed_by_user_id' => $this->user->id,
         ]);
@@ -107,7 +108,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => 'Cash',
+            'disbursement_method' => PaymentMethod::Cash->value,
         ]);
 
         $response->assertRedirect(route('payment-requests.show', $paymentRequest));
@@ -123,7 +124,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => 'Cash',
+            'disbursement_method' => PaymentMethod::Cash->value,
         ]);
 
         $response->assertRedirect(route('payment-requests.show', $paymentRequest));
@@ -149,7 +150,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
 
         $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => 'Mobile Money',
+            'disbursement_method' => PaymentMethod::MobileMoney->value,
             'disbursement_reference' => 'MM-999',
         ]);
 

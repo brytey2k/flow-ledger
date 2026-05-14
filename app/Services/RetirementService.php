@@ -78,7 +78,7 @@ class RetirementService
                 ->withProperties(['old_status' => 'draft', 'new_status' => 'in_workflow'])
                 ->log('Submitted for approval');
 
-            $this->engine->startWorkflow($retirement, $template);
+            $this->engine->startWorkflow($retirement, $template, $user);
         });
     }
 
@@ -100,6 +100,92 @@ class RetirementService
                 ->event('retirement.settled')
                 ->withProperties(['old_status' => 'approved', 'new_status' => 'settled'])
                 ->log('Difference settled');
+        });
+    }
+
+    public function updateDraft(RetirementRequest $retirement, CreateRetirementRequestDto $dto, User|null $user = null): RetirementRequest
+    {
+        return DB::transaction(function () use ($retirement, $dto, $user): RetirementRequest {
+            $totalExpended = array_sum(array_map(fn($item) => $item->amount, $dto->items));
+            $rawAmount = $retirement->paymentRequest?->getAttribute('total_amount');
+            $advanceAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
+            $diff = round($totalExpended - $advanceAmount, 2);
+
+            $differenceType = match (true) {
+                $diff > 0 => 'pay_to_staff',
+                $diff < 0 => 'refund_to_company',
+                default => 'nil',
+            };
+
+            $retirement->update([
+                'notes' => $dto->notes,
+                'total_amount_expended' => $totalExpended,
+                'difference_amount' => abs($diff),
+                'difference_type' => $differenceType,
+            ]);
+
+            $retirement->items()->delete();
+
+            foreach ($dto->items as $item) {
+                $retirement->items()->create([
+                    'description' => $item->description,
+                    'amount' => $item->amount,
+                    'account_code_id' => $item->accountCodeId,
+                    'receipt_number' => $item->receiptNumber,
+                ]);
+            }
+
+            activity()
+                ->performedOn($retirement)
+                ->causedBy($user)
+                ->event('retirement.updated')
+                ->withProperties(['new_status' => 'draft'])
+                ->log('Retirement draft updated');
+
+            return $retirement->refresh();
+        });
+    }
+
+    public function updateSentBack(RetirementRequest $retirement, CreateRetirementRequestDto $dto, User|null $user = null): RetirementRequest
+    {
+        return DB::transaction(function () use ($retirement, $dto, $user): RetirementRequest {
+            $totalExpended = array_sum(array_map(fn($item) => $item->amount, $dto->items));
+            $rawAmount = $retirement->paymentRequest?->getAttribute('total_amount');
+            $advanceAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
+            $diff = round($totalExpended - $advanceAmount, 2);
+
+            $differenceType = match (true) {
+                $diff > 0 => 'pay_to_staff',
+                $diff < 0 => 'refund_to_company',
+                default => 'nil',
+            };
+
+            $retirement->update([
+                'notes' => $dto->notes,
+                'total_amount_expended' => $totalExpended,
+                'difference_amount' => abs($diff),
+                'difference_type' => $differenceType,
+            ]);
+
+            $retirement->items()->delete();
+
+            foreach ($dto->items as $item) {
+                $retirement->items()->create([
+                    'description' => $item->description,
+                    'amount' => $item->amount,
+                    'account_code_id' => $item->accountCodeId,
+                    'receipt_number' => $item->receiptNumber,
+                ]);
+            }
+
+            activity()
+                ->performedOn($retirement)
+                ->causedBy($user)
+                ->event('retirement.updated')
+                ->withProperties(['new_status' => 'sent_back'])
+                ->log('Retirement updated while sent back');
+
+            return $retirement->refresh();
         });
     }
 

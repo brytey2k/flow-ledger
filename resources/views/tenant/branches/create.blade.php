@@ -63,22 +63,6 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="kt-form-label block mb-2" for="position">
-                                {{ __('branches.fields.position') }} <span class="text-destructive">*</span>
-                            </label>
-                            <input id="position" name="position" type="number" min="1"
-                                   value="{{ old('position', 1) }}"
-                                   class="kt-input w-full" placeholder="e.g. 1" required
-                                   aria-invalid="@error('position') true @else false @enderror" />
-                            <div class="mt-1 text-xs text-muted-foreground">
-                                {{ __('branches.fields.position_hint') }}
-                            </div>
-                            @error('position')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="col-span-1 lg:col-span-1">
                             <label class="kt-form-label block mb-2" for="level_id">
                                 {{ __('branches.fields.level') }} <span class="text-destructive">*</span>
                             </label>

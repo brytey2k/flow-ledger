@@ -9,6 +9,8 @@ return [
     'all' => 'Toutes les demandes',
     'create_title' => 'Nouvelle demande de paiement',
     'create_subtitle' => 'Soumettre une avance ou un remboursement',
+    'edit_title' => 'Modifier la demande #:id',
+    'edit_subtitle' => 'Mettre a jour votre demande avant de la soumettre a nouveau',
     'back' => 'Retour aux demandes',
     'details_card' => 'Details de la demande',
     'fields' => [
@@ -29,12 +31,15 @@ return [
     ],
     'buttons' => [
         'save_draft' => 'Enregistrer en brouillon',
+        'save_changes' => 'Enregistrer les modifications',
         'submit' => 'Soumettre pour approbation',
         'resubmit' => 'Renvoyer pour approbation',
+        'edit_request' => 'Modifier la demande',
         'delete_draft' => 'Supprimer le brouillon',
         'disburse' => 'Marquer comme decaisse',
         'retire' => 'Reddition de cette avance',
         'view_retirement' => 'Voir la reddition',
+        'review_and_approve' => 'Examiner et approuver',
     ],
     'show' => [
         'title' => 'Demande #:id',
@@ -70,6 +75,7 @@ return [
         'fully_approved' => 'Entierement approuvee',
         'cancelled' => 'Annulee',
         'resubmitted' => 'Renvoyee pour approbation',
+        'updated' => 'Demande mise a jour',
         'stage_approved' => 'Etape approuvee',
         'stage_rejected' => 'Etape rejetee',
         'sent_back' => 'Renvoyee pour revision',

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -57,6 +58,24 @@ class RetirementRequest extends Model
         return $this->belongsTo(PaymentRequest::class);
     }
 
+    /** @return HasOneThrough<Staff, PaymentRequest, $this> */
+    public function staff(): HasOneThrough
+    {
+        return $this->hasOneThrough(Staff::class, PaymentRequest::class, 'id', 'id', 'payment_request_id', 'staff_id');
+    }
+
+    /** @return HasOneThrough<Branch, PaymentRequest, $this> */
+    public function branch(): HasOneThrough
+    {
+        return $this->hasOneThrough(Branch::class, PaymentRequest::class, 'id', 'id', 'payment_request_id', 'branch_id');
+    }
+
+    /** @return HasOneThrough<Currency, PaymentRequest, $this> */
+    public function currency(): HasOneThrough
+    {
+        return $this->hasOneThrough(Currency::class, PaymentRequest::class, 'id', 'id', 'payment_request_id', 'currency_id');
+    }
+
     /** @return HasMany<RetirementRequestItem, $this> */
     public function items(): HasMany
     {
@@ -92,6 +111,11 @@ class RetirementRequest extends Model
     public function cashbookEntries(): MorphMany
     {
         return $this->morphMany(CashbookEntry::class, 'sourceable');
+    }
+
+    public function getTypeAttribute(): string
+    {
+        return 'retirement';
     }
 
     public function isDraft(): bool

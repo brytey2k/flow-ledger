@@ -296,6 +296,12 @@ Route::middleware([
         Route::get('/requests/{paymentRequest}', [PaymentRequestsController::class, 'show'])
             ->can(PermissionKey::AccessPaymentRequests->value)
             ->name('payment-requests.show');
+        Route::get('/requests/{paymentRequest}/edit', [PaymentRequestsController::class, 'edit'])
+            ->can(PermissionKey::CreatePaymentRequest->value)
+            ->name('payment-requests.edit');
+        Route::put('/requests/{paymentRequest}', [PaymentRequestsController::class, 'update'])
+            ->can(PermissionKey::CreatePaymentRequest->value)
+            ->name('payment-requests.update');
         Route::delete('/requests/{paymentRequest}', [PaymentRequestsController::class, 'destroy'])
             ->can(PermissionKey::DeletePaymentRequest->value)
             ->name('payment-requests.destroy');
@@ -325,6 +331,12 @@ Route::middleware([
         Route::get('/retirements/{retirementRequest}', [RetirementRequestsController::class, 'show'])
             ->can(PermissionKey::AccessRetirementRequests->value)
             ->name('retirement-requests.show');
+        Route::get('/retirements/{retirementRequest}/edit', [RetirementRequestsController::class, 'edit'])
+            ->can(PermissionKey::CreateRetirementRequest->value)
+            ->name('retirement-requests.edit');
+        Route::put('/retirements/{retirementRequest}', [RetirementRequestsController::class, 'update'])
+            ->can(PermissionKey::CreateRetirementRequest->value)
+            ->name('retirement-requests.update');
         Route::post('/retirements/{retirementRequest}/submit', [RetirementRequestSubmitController::class, 'store'])
             ->can(PermissionKey::CreateRetirementRequest->value)
             ->name('retirement-requests.submit');
@@ -337,6 +349,8 @@ Route::middleware([
         Route::post('/retirements/{retirementRequest}/attachments', [AttachmentsController::class, 'store'])
             ->can(PermissionKey::CreateRetirementRequest->value)
             ->name('retirement-requests.attachments.store');
+        Route::get('/attachments/{attachment}/download', [AttachmentsController::class, 'download'])
+            ->name('attachments.download');
         Route::delete('/attachments/{attachment}', [AttachmentsController::class, 'destroy'])
             ->can(PermissionKey::DeleteAttachment->value)
             ->name('attachments.destroy');

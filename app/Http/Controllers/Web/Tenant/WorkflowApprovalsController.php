@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\ApprovalActionRequest;
+use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\WorkflowInstanceRepository;
 use App\Services\WorkflowEngineService;
@@ -69,7 +70,10 @@ class WorkflowApprovalsController extends Controller
         /** @var \Illuminate\Database\Eloquent\Model $subject */
         $subject = $instanceStage->instance?->workflowable;
 
-        return redirect()->route('payment-requests.show', $subject)
-            ->with('success', __('flash.approvals.action_recorded'));
+        $route = $subject instanceof RetirementRequest
+            ? route('retirement-requests.show', $subject)
+            : route('payment-requests.show', $subject);
+
+        return redirect($route)->with('success', __('flash.approvals.action_recorded'));
     }
 }

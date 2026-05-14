@@ -47,13 +47,14 @@ class BranchesController extends Controller
             'code' => $dto->code,
             'level_id' => $dto->levelId,
             'currency_id' => $dto->currencyId,
-            'position' => $dto->position,
         ]);
 
         if ($dto->parentId !== null) {
             $parent = $this->repository->findOrFail($dto->parentId);
-            $parent->appendChild($branch);
+            $parent->addChild($branch);
         } else {
+            $maxPosition = Branch::whereNull('parent_id')->max('position');
+            $branch->position = (is_int($maxPosition) ? $maxPosition : -1) + 1;
             $branch->save();
         }
 
@@ -79,7 +80,6 @@ class BranchesController extends Controller
             'code' => $dto->code,
             'level_id' => $dto->levelId,
             'currency_id' => $dto->currencyId,
-            'position' => $dto->position,
         ]);
 
         if ($dto->parentId !== (int) $branch->parent_id) {

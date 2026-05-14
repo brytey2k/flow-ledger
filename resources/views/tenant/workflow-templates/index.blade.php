@@ -20,13 +20,6 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        @if(session('success'))
-            <div class="kt-alert kt-alert-success">
-                <i class="ki-filled ki-check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
-
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
                 <h3 class="kt-card-title">{{ __('workflows.all') }}</h3>
@@ -66,7 +59,7 @@
                                 @foreach($templates as $template)
                                     <tr>
                                         <td>
-                                            <a href="{{ route('workflow-templates.show', $template) }}" class="text-sm font-medium text-mono hover:underline">
+                                            <a href="{{ route('workflow-templates.show', $template) }}" class="text-sm font-medium text-primary hover:underline">
                                                 {{ $template->name }}
                                             </a>
                                         </td>

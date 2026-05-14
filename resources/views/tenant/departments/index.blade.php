@@ -20,20 +20,6 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        @if(session('success'))
-            <div class="kt-alert kt-alert-success">
-                <i class="ki-filled ki-check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="kt-alert kt-alert-danger">
-                <i class="ki-filled ki-information"></i>
-                {{ session('error') }}
-            </div>
-        @endif
-
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
                 <h3 class="kt-card-title">{{ __('departments.all') }}</h3>

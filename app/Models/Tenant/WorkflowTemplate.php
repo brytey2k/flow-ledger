@@ -32,4 +32,9 @@ class WorkflowTemplate extends Model
     {
         return $this->hasMany(WorkflowInstance::class);
     }
+
+    public function hasActiveInstances(): bool
+    {
+        return $this->instances()->where('status', 'in_progress')->exists();
+    }
 }

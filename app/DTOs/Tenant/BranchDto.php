@@ -12,6 +12,5 @@ readonly class BranchDto
         public int $levelId,
         public int $currencyId,
         public int|null $parentId,
-        public int $position,
     ) {}
 }

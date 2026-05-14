@@ -28,7 +28,7 @@
                 <h3 class="kt-card-title">{{ __('roles.details_card') }}</h3>
             </div>
             <div class="kt-card-content">
-                <form method="POST" action="{{ route('roles.update', $role) }}" class="grid gap-7">
+                <form id="update-role-form" method="POST" action="{{ route('roles.update', $role) }}" class="grid gap-7">
                     @csrf
                     @method('PUT')
 
@@ -44,31 +44,34 @@
                             @enderror
                         </div>
                     </div>
-
-                    <div class="pt-5 mt-2 flex justify-between items-center gap-2.5">
-                        <div class="flex items-center gap-2.5">
-                            <button type="submit" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-check"></i>
-                                {{ __('roles.buttons.update') }}
-                            </button>
-                            <a class="kt-btn kt-btn-outline" href="{{ route('roles.permissions.edit', $role) }}">
-                                <i class="ki-filled ki-security-user"></i>
-                                {{ __('roles.buttons.manage_perms') }}
-                            </a>
-                            <a class="kt-btn kt-btn-light" href="{{ route('roles.index') }}">{{ __('common.cancel') }}</a>
-                        </div>
-                        @can(\App\Enums\Tenant\PermissionKey::DeleteRole->value)
-                            <form action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm('{{ __('roles.confirm_delete') }}');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="kt-btn kt-btn-danger">
-                                    <i class="ki-filled ki-trash"></i>
-                                    {{ __('roles.buttons.delete') }}
-                                </button>
-                            </form>
-                        @endcan
-                    </div>
                 </form>
+
+                @can(\App\Enums\Tenant\PermissionKey::DeleteRole->value)
+                    <form id="delete-role-form" action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm('{{ __('roles.confirm_delete') }}');">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endcan
+
+                <div class="pt-5 mt-2 flex justify-between items-center gap-2.5">
+                    <div class="flex items-center gap-2.5">
+                        <button type="submit" form="update-role-form" class="kt-btn kt-btn-primary">
+                            <i class="ki-filled ki-check"></i>
+                            {{ __('roles.buttons.update') }}
+                        </button>
+                        <a class="kt-btn kt-btn-outline" href="{{ route('roles.permissions.edit', $role) }}">
+                            <i class="ki-filled ki-security-user"></i>
+                            {{ __('roles.buttons.manage_perms') }}
+                        </a>
+                        <a class="kt-btn kt-btn-light" href="{{ route('roles.index') }}">{{ __('common.cancel') }}</a>
+                    </div>
+                    @can(\App\Enums\Tenant\PermissionKey::DeleteRole->value)
+                        <button type="submit" form="delete-role-form" class="kt-btn kt-btn-danger">
+                            <i class="ki-filled ki-trash"></i>
+                            {{ __('roles.buttons.delete') }}
+                        </button>
+                    @endcan
+                </div>
             </div>
         </div>
     </div>

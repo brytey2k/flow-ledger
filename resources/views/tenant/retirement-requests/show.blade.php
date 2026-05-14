@@ -23,6 +23,7 @@
         'retirement.cancelled'  => __('retirements.timeline.cancelled'),
         'retirement.settled'    => __('retirements.timeline.settled'),
         'retirement.resubmitted'=> __('retirements.timeline.resubmitted'),
+        'retirement.updated'    => __('retirements.timeline.updated'),
         'stage.approved'        => __('retirements.timeline.stage_approved'),
         'stage.rejected'        => __('retirements.timeline.stage_rejected'),
         'stage.sent_back'       => __('retirements.timeline.sent_back'),
@@ -57,19 +58,6 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-
-        @if(session('success'))
-            <div class="kt-alert kt-alert-success">
-                <i class="ki-filled ki-check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="kt-alert kt-alert-danger">
-                <i class="ki-filled ki-information"></i>
-                {{ session('error') }}
-            </div>
-        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
 
@@ -210,14 +198,20 @@
                                         <p class="text-xs text-secondary-foreground">{{ $attachment->formattedSize() }} &bull; {{ $attachment->created_at->format('M d, Y') }}</p>
                                     </div>
                                 </div>
-                                @can(App\Enums\Tenant\PermissionKey::DeleteAttachment->value)
-                                    <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('retirements.show.confirm_delete_attachment') }}')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline text-destructive hover:bg-destructive/10">
-                                            <i class="ki-filled ki-trash"></i>
-                                        </button>
-                                    </form>
-                                @endcan
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="{{ route('attachments.download', $attachment) }}"
+                                       class="kt-btn kt-btn-sm kt-btn-outline">
+                                        <i class="ki-filled ki-cloud-download"></i>
+                                    </a>
+                                    @can(App\Enums\Tenant\PermissionKey::DeleteAttachment->value)
+                                        <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('retirements.show.confirm_delete_attachment') }}')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline text-destructive hover:bg-destructive/10">
+                                                <i class="ki-filled ki-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </div>
                             </div>
                         @empty
                             <p class="text-sm text-secondary-foreground text-center py-2">{{ __('retirements.show.no_attachments') }}</p>
@@ -227,13 +221,12 @@
                             @if(!in_array($retirementRequest->status, ['settled', 'cancelled']))
                                 <form method="POST" action="{{ route('retirement-requests.attachments.store', $retirementRequest) }}" enctype="multipart/form-data" class="mt-2">
                                     @csrf
-                                    <div class="flex items-center gap-3">
-                                        <input type="file" name="file" class="block text-sm text-secondary-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-muted/80 flex-1" />
-                                        <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline shrink-0">
-                                            <i class="ki-filled ki-upload"></i>
-                                            {{ __('common.upload') }}
-                                        </button>
-                                    </div>
+                                    <label class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                                        <i class="ki-filled ki-cloud-add text-2xl text-muted-foreground"></i>
+                                        <span class="text-sm font-medium text-foreground">{{ __('common.upload') }}</span>
+                                        <span class="text-xs text-secondary-foreground">PDF, JPG, PNG, Word, Excel &mdash; max 10MB</span>
+                                        <input type="file" name="file" class="sr-only" onchange="this.closest('form').submit()" />
+                                    </label>
                                     @error('file') <p class="mt-1 text-xs text-destructive">{{ $message }}</p> @enderror
                                 </form>
                             @endif
@@ -310,6 +303,13 @@
                     </div>
                     <div class="kt-card-content p-5 flex flex-col gap-3">
                         @if($retirementRequest->isDraft())
+                            @if($isOwner)
+                                <a href="{{ route('retirement-requests.edit', $retirementRequest) }}"
+                                   class="kt-btn kt-btn-outline w-full">
+                                    <i class="ki-filled ki-pencil"></i>
+                                    {{ __('retirements.buttons.edit_request') }}
+                                </a>
+                            @endif
                             <form method="POST" action="{{ route('retirement-requests.submit', $retirementRequest) }}">
                                 @csrf
                                 <button type="submit" class="kt-btn kt-btn-primary w-full">
@@ -318,10 +318,18 @@
                                 </button>
                             </form>
                         @elseif($retirementRequest->status === 'in_workflow')
-                            <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
-                                <i class="ki-filled ki-time"></i>
-                                {{ __('payment_requests.status.awaiting_approval') }}
-                            </div>
+                            @if($canActOnActiveStage && $activeInstanceStage)
+                                <a href="{{ route('approvals.show', $activeInstanceStage) }}"
+                                   class="kt-btn kt-btn-primary w-full">
+                                    <i class="ki-filled ki-check-circle"></i>
+                                    {{ __('payment_requests.buttons.review_and_approve') }}
+                                </a>
+                            @else
+                                <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
+                                    <i class="ki-filled ki-time"></i>
+                                    {{ __('payment_requests.status.awaiting_approval') }}
+                                </div>
+                            @endif
                         @elseif($retirementRequest->status === 'approved')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-sm mb-2">
                                 <i class="ki-filled ki-check-circle"></i>
@@ -355,13 +363,20 @@
                                 <i class="ki-filled ki-information-2"></i>
                                 {{ __('retirements.show.sent_back_notice') }}
                             </div>
-                            <form method="POST" action="{{ route('retirement-requests.resubmit', $retirementRequest) }}">
-                                @csrf
-                                <button type="submit" class="kt-btn kt-btn-primary w-full">
-                                    <i class="ki-filled ki-send"></i>
-                                    {{ __('retirements.buttons.resubmit') }}
-                                </button>
-                            </form>
+                            @if($isOwner)
+                                <a href="{{ route('retirement-requests.edit', $retirementRequest) }}"
+                                   class="kt-btn kt-btn-outline w-full">
+                                    <i class="ki-filled ki-pencil"></i>
+                                    {{ __('retirements.buttons.edit_request') }}
+                                </a>
+                                <form method="POST" action="{{ route('retirement-requests.resubmit', $retirementRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-primary w-full">
+                                        <i class="ki-filled ki-send"></i>
+                                        {{ __('retirements.buttons.resubmit') }}
+                                    </button>
+                                </form>
+                            @endif
                         @elseif($retirementRequest->status === 'settled')
                             <div class="flex flex-col gap-1 p-3 rounded-lg bg-info/10 text-info text-sm">
                                 <div class="flex items-center gap-2">

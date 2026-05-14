@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Cashbook;
 
+use App\Enums\Tenant\PaymentMethod;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\Currency;
@@ -39,7 +40,7 @@ class CashbookAutoEntryTest extends TenantAppTestCase
         $request = $this->approvedAdvance(500.00);
 
         $this->actingAs($this->user)
-            ->post(route('disbursements.store', $request), ['disbursement_method' => 'Cash']);
+            ->post(route('disbursements.store', $request), ['disbursement_method' => PaymentMethod::Cash->value]);
 
         $cashbook = Cashbook::where('branch_id', $request->branch_id)->first();
         $this->assertNotNull($cashbook);
@@ -57,7 +58,7 @@ class CashbookAutoEntryTest extends TenantAppTestCase
         $request = $this->approvedAdvance(300.00);
 
         $this->actingAs($this->user)
-            ->post(route('disbursements.store', $request), ['disbursement_method' => 'Cash']);
+            ->post(route('disbursements.store', $request), ['disbursement_method' => PaymentMethod::Cash->value]);
 
         $cashbook = Cashbook::where('branch_id', $request->branch_id)->first();
         $this->assertEqualsWithDelta(-300.00, (float) $cashbook->balance, 0.01);
@@ -69,7 +70,7 @@ class CashbookAutoEntryTest extends TenantAppTestCase
         $this->assertNull(Cashbook::where('branch_id', $request->branch_id)->first());
 
         $this->actingAs($this->user)
-            ->post(route('disbursements.store', $request), ['disbursement_method' => 'Cash']);
+            ->post(route('disbursements.store', $request), ['disbursement_method' => PaymentMethod::Cash->value]);
 
         $this->assertNotNull(Cashbook::where('branch_id', $request->branch_id)->first());
     }
@@ -80,10 +81,10 @@ class CashbookAutoEntryTest extends TenantAppTestCase
         $branch = Branch::factory()->create(['currency_id' => $currency->id]);
 
         $this->actingAs($this->user)
-            ->post(route('disbursements.store', $this->approvedAdvance(200.00, $branch)), ['disbursement_method' => 'Cash']);
+            ->post(route('disbursements.store', $this->approvedAdvance(200.00, $branch)), ['disbursement_method' => PaymentMethod::Cash->value]);
 
         $this->actingAs($this->user)
-            ->post(route('disbursements.store', $this->approvedAdvance(300.00, $branch)), ['disbursement_method' => 'Cash']);
+            ->post(route('disbursements.store', $this->approvedAdvance(300.00, $branch)), ['disbursement_method' => PaymentMethod::Cash->value]);
 
         $cashbook = Cashbook::where('branch_id', $branch->id)->first();
         $this->assertEqualsWithDelta(-500.00, (float) $cashbook->balance, 0.01);
