@@ -19,6 +19,7 @@ return [
     'roles' => 'Roles',
     'currencies' => 'Currencies',
     'workflows' => 'Workflows',
+    'reports' => 'Reports',
     'activity_log' => 'Activity Log',
     'logout' => 'Logout',
     'dark_mode' => 'Dark Mode',
@@ -28,6 +29,7 @@ return [
         'requests' => 'Requests',
         'finance' => 'Finance',
         'organisation' => 'Organisation',
+        'reports' => 'Reports',
         'settings' => 'Settings',
     ],
 ];

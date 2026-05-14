@@ -19,6 +19,7 @@ return [
     'roles' => 'Roles',
     'currencies' => 'Devises',
     'workflows' => 'Workflows',
+    'reports' => 'Rapports',
     'activity_log' => 'Journal d activite',
     'logout' => 'Se deconnecter',
     'dark_mode' => 'Mode sombre',
@@ -27,6 +28,7 @@ return [
         'requests' => 'Demandes',
         'finance' => 'Finance',
         'organisation' => 'Organisation',
+        'reports' => 'Rapports',
         'settings' => 'Parametres',
     ],
 ];

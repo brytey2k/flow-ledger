@@ -30,6 +30,7 @@ use App\Http\Controllers\Web\Tenant\RetirementSettlementController;
 use App\Http\Controllers\Web\Tenant\RolesController;
 use App\Http\Controllers\Web\Tenant\StaffController;
 use App\Http\Controllers\Web\Tenant\UsersController;
+use App\Http\Controllers\Web\Tenant\ReportsController;
 use App\Http\Controllers\Web\Tenant\WorkflowApprovalsController;
 use App\Http\Controllers\Web\Tenant\WorkflowParallelGroupsController;
 use App\Http\Controllers\Web\Tenant\WorkflowStagesController;
@@ -57,6 +58,47 @@ Route::middleware([
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/documentation', [DocumentationController::class, 'index'])->name('documentation');
+
+        // Reports
+        Route::get('/reports', [ReportsController::class, 'index'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.index');
+        Route::get('/reports/expenditure-summary', [ReportsController::class, 'expenditureSummary'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.expenditure-summary');
+        Route::get('/reports/outstanding-advances', [ReportsController::class, 'outstandingAdvances'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.outstanding-advances');
+        Route::get('/reports/cash-position', [ReportsController::class, 'cashPosition'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.cash-position');
+        Route::get('/reports/disbursement-register', [ReportsController::class, 'disbursementRegister'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.disbursement-register');
+        Route::get('/reports/approval-turnaround', [ReportsController::class, 'approvalTurnaround'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.approval-turnaround');
+        Route::get('/reports/pending-requests-aging', [ReportsController::class, 'pendingRequestsAging'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.pending-requests-aging');
+        Route::get('/reports/send-back-rate', [ReportsController::class, 'sendBackRate'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.send-back-rate');
+        Route::get('/reports/audit-trail', [ReportsController::class, 'auditTrail'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.audit-trail');
+        Route::get('/reports/requests-by-status', [ReportsController::class, 'requestsByStatus'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.requests-by-status');
+        Route::get('/reports/workflow-sla', [ReportsController::class, 'workflowSla'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.workflow-sla');
+        Route::get('/reports/spend-trend', [ReportsController::class, 'spendTrend'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.spend-trend');
+        Route::get('/reports/top-spenders', [ReportsController::class, 'topSpenders'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.top-spenders');
 
         // Levels
         Route::get('/levels', [LevelController::class, 'index'])
