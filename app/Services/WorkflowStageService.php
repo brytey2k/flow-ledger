@@ -20,6 +20,8 @@ class WorkflowStageService
                 'display_order' => $dto->displayOrder,
                 'skip_below_amount' => $dto->skipBelowAmount,
                 'parallel_group_id' => $dto->parallelGroupId,
+                'scope_to_department' => $dto->scopeToDepartment,
+                'scope_to_branch' => $dto->scopeToBranch,
             ]);
             $stage->roles()->sync($dto->roleIds);
 
@@ -35,6 +37,8 @@ class WorkflowStageService
                 'display_order' => $dto->displayOrder,
                 'skip_below_amount' => $dto->skipBelowAmount,
                 'parallel_group_id' => $dto->parallelGroupId,
+                'scope_to_department' => $dto->scopeToDepartment,
+                'scope_to_branch' => $dto->scopeToBranch,
             ]);
             $stage->roles()->sync($dto->roleIds);
         });

@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property \Carbon\Carbon $started_at
+ * @property \Carbon\Carbon|null $completed_at
+ */
 class WorkflowInstanceStage extends Model
 {
     protected $fillable = [

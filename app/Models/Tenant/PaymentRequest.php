@@ -14,6 +14,11 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 
+/**
+ * @property \Carbon\Carbon|null $submitted_at
+ * @property \Carbon\Carbon|null $approved_at
+ * @property \Carbon\Carbon|null $disbursed_at
+ */
 class PaymentRequest extends Model
 {
     use HasActivity;

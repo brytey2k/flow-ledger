@@ -159,12 +159,12 @@ class ReportsController
             ->get()
             ->groupBy('workflow_stage_id')
             ->map(function ($group) {
-                $hours = $group->map(fn($s) => $s->started_at->diffInMinutes($s->completed_at) / 60);
+                $hours = $group->map(fn(WorkflowInstanceStage $s) => $s->started_at->diffInMinutes($s->completed_at) / 60);
                 $approved = $group->where('status', 'approved')->count();
                 $sentBack = $group->where('status', 'sent_back')->count();
 
                 return [
-                    'stage_name' => $group->first()->stage?->name ?? 'Unknown',
+                    'stage_name' => $group->first()->stage->name ?? 'Unknown',
                     'count' => $group->count(),
                     'approved' => $approved,
                     'sent_back' => $sentBack,
@@ -230,12 +230,15 @@ class ReportsController
             ->keyBy('user_id');
 
         $rows = $totalByUser->map(function ($row) use ($sentBackByUser) {
-            $sentBack = $sentBackByUser->get($row->user_id)?->sent_back_count ?? 0;
-            $rate = $row->total_actions > 0 ? round(($sentBack / $row->total_actions) * 100, 1) : 0;
+            $totalActionsRaw = $row->getAttribute('total_actions');
+            $totalActions = is_numeric($totalActionsRaw) ? (int) $totalActionsRaw : 0;
+            $sentBackRaw = $sentBackByUser->get($row->user_id)?->getAttribute('sent_back_count') ?? 0;
+            $sentBack = is_numeric($sentBackRaw) ? (int) $sentBackRaw : 0;
+            $rate = $totalActions > 0 ? round(($sentBack / $totalActions) * 100, 1) : 0;
 
             return [
                 'user' => $row->user,
-                'total_actions' => $row->total_actions,
+                'total_actions' => $totalActions,
                 'sent_back_count' => $sentBack,
                 'rate' => $rate,
             ];
@@ -288,7 +291,7 @@ class ReportsController
 
     public function workflowSla(Request $request): View
     {
-        $slaDays = (int) $request->input('sla_days', 3);
+        $slaDays = $request->integer('sla_days', 3);
         $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());
         $dateTo = $request->input('date_to', now()->toDateString());
         $type = $request->input('type');
@@ -300,7 +303,9 @@ class ReportsController
             ->with(['staff', 'branch', 'currency'])
             ->get()
             ->map(function (PaymentRequest $req) use ($slaDays) {
-                $days = $req->submitted_at->diffInDays($req->approved_at);
+                $days = $req->submitted_at && $req->approved_at
+                    ? $req->submitted_at->diffInDays($req->approved_at)
+                    : 0;
 
                 return [
                     'request' => $req,
@@ -312,14 +317,14 @@ class ReportsController
         $compliantCount = $requests->where('compliant', true)->count();
         $total = $requests->count();
         $complianceRate = $total > 0 ? round(($compliantCount / $total) * 100, 1) : 0;
-        $avgDays = $total > 0 ? round($requests->avg('days'), 1) : 0;
+        $avgDays = $total > 0 ? round((float) $requests->avg('days'), 1) : 0;
 
         return view('tenant.reports.workflow-sla', compact('requests', 'compliantCount', 'total', 'complianceRate', 'avgDays', 'slaDays', 'dateFrom', 'dateTo', 'type'));
     }
 
     public function spendTrend(Request $request): View
     {
-        $year = (int) $request->input('year', now()->year);
+        $year = $request->integer('year', now()->year);
         $type = $request->input('type');
 
         $rows = PaymentRequest::where('status', 'disbursed')
@@ -337,7 +342,7 @@ class ReportsController
             ->groupByRaw('EXTRACT(YEAR FROM disbursed_at)')
             ->orderByRaw('EXTRACT(YEAR FROM disbursed_at) DESC')
             ->pluck('yr')
-            ->map(fn($y) => (int) $y);
+            ->map(fn($y) => is_numeric($y) ? (int) $y : 0);
 
         if ($years->isEmpty()) {
             $years = collect([now()->year]);

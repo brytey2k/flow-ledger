@@ -23,6 +23,8 @@ class WorkflowStageUpdateRequest extends FormRequest
             'parallel_group_id' => ['nullable', 'integer', 'exists:workflow_parallel_groups,id'],
             'role_ids' => ['required', 'array', 'min:1'],
             'role_ids.*' => ['integer', 'exists:roles,id'],
+            'scope_to_department' => ['nullable', 'boolean'],
+            'scope_to_branch' => ['nullable', 'boolean'],
         ];
     }
 
@@ -37,6 +39,8 @@ class WorkflowStageUpdateRequest extends FormRequest
             skipBelowAmount: $this->filled('skip_below_amount') ? (float) $this->string('skip_below_amount')->toString() : null,
             parallelGroupId: $this->filled('parallel_group_id') ? $this->integer('parallel_group_id') : null,
             roleIds: array_map(fn(int|string $v): int => (int) $v, $rawRoleIds),
+            scopeToDepartment: (bool) $this->input('scope_to_department', false),
+            scopeToBranch: (bool) $this->input('scope_to_branch', false),
         );
     }
 }

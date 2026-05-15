@@ -70,9 +70,6 @@ class WorkflowEngineService
 
         /** @var User|null $submitter */
         $submitter = $instance->submitter;
-        $submitterRoleIds = $submitter !== null
-            ? $submitter->roles()->pluck('roles.id')
-            : collect();
 
         $anyActivated = false;
         $activatedStages = new Collection();
@@ -84,7 +81,7 @@ class WorkflowEngineService
 
             $belowThreshold = $threshold !== null && $requestAmount < (float) $threshold;
             $submitterIsApprover = $submitter !== null
-                && $stageDef->roles()->whereIn('roles.id', $submitterRoleIds)->exists();
+                && $this->submitterQualifiesAsApprover($submitter, $stageDef, $instance);
 
             if ($belowThreshold || $submitterIsApprover) {
                 $instanceStage->update(['status' => 'skipped', 'completed_at' => now()]);
@@ -305,7 +302,69 @@ class WorkflowEngineService
         $stage = $instanceStage->stage;
         $roleIds = $stage->roles()->pluck('roles.id');
 
-        return $user->roles()->whereIn('id', $roleIds)->exists();
+        if (! $user->roles()->whereIn('id', $roleIds)->exists()) {
+            return false;
+        }
+
+        /** @var WorkflowInstance $instance */
+        $instance = $instanceStage->instance;
+
+        if ($stage->scope_to_department) {
+            $submitterDepartmentId = $instance->submitter?->staffProfile?->department_id;
+            $approverDepartmentId = $user->staffProfile?->department_id;
+
+            if ($submitterDepartmentId === null || $approverDepartmentId === null) {
+                return false;
+            }
+            if ($approverDepartmentId !== $submitterDepartmentId) {
+                return false;
+            }
+        }
+
+        if ($stage->scope_to_branch) {
+            $requestBranchId = $instance->workflowable?->getAttribute('branch_id');
+            $approverBranchId = $user->staffProfile?->branch_id;
+
+            if ($requestBranchId === null || $approverBranchId === null) {
+                return false;
+            }
+            if ($approverBranchId !== $requestBranchId) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function submitterQualifiesAsApprover(
+        User $submitter,
+        WorkflowStage $stageDef,
+        WorkflowInstance $instance,
+    ): bool {
+        $submitterRoleIds = $submitter->roles()->pluck('roles.id');
+
+        if (! $stageDef->roles()->whereIn('roles.id', $submitterRoleIds)->exists()) {
+            return false;
+        }
+
+        // Submitter IS the requester so dept always matches — deny only if no staff profile.
+        if ($stageDef->scope_to_department && $submitter->staffProfile === null) {
+            return false;
+        }
+
+        if ($stageDef->scope_to_branch) {
+            $requestBranchId = $instance->workflowable?->getAttribute('branch_id');
+            $approverBranchId = $submitter->staffProfile?->branch_id;
+
+            if ($requestBranchId === null || $approverBranchId === null) {
+                return false;
+            }
+            if ($approverBranchId !== $requestBranchId) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function advanceWorkflow(WorkflowInstance $instance): void

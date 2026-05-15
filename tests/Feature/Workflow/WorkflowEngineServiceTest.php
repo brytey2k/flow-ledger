@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature\Workflow;
 
 use App\Models\Role;
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\Currency;
+use App\Models\Tenant\Department;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\Staff;
+use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowParallelGroup;
 use App\Models\Tenant\WorkflowStage;
@@ -569,9 +573,254 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
         $instance = $this->engine->startWorkflow($subject, $template);
 
         // Create a different user with no relevant roles
-        $otherUser = \App\Models\Tenant\User::factory()->create();
+        $otherUser = User::factory()->create();
         $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
 
         $this->assertFalse($this->engine->canUserActOnStage($activeStage, $otherUser));
+    }
+
+    // ── canUserActOnStage (department scoping) ────────────────────────────────
+
+    public function test_department_scoped_stage_allows_approver_in_same_department(): void
+    {
+        $dept = Department::factory()->create();
+        $submitter = $this->makeUserWithStaff(departmentId: $dept->id);
+        $approver = $this->makeUserWithStaff(departmentId: $dept->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertTrue($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    public function test_department_scoped_stage_blocks_approver_in_different_department(): void
+    {
+        $submitter = $this->makeUserWithStaff(departmentId: Department::factory()->create()->id);
+        $approver = $this->makeUserWithStaff(departmentId: Department::factory()->create()->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    public function test_department_scoped_stage_blocks_approver_with_no_staff_profile(): void
+    {
+        $submitter = $this->makeUserWithStaff(departmentId: Department::factory()->create()->id);
+        $approver = User::factory()->create(); // no Staff record
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    public function test_department_scoped_stage_blocks_when_submitter_has_no_staff_profile(): void
+    {
+        $submitter = User::factory()->create(); // no Staff record
+        $approver = $this->makeUserWithStaff(departmentId: Department::factory()->create()->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    // ── canUserActOnStage (branch scoping) ────────────────────────────────────
+
+    public function test_branch_scoped_stage_allows_approver_in_same_branch(): void
+    {
+        $approver = $this->makeUserWithStaff(branchId: $this->branch->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
+        $approver->assignRole($role);
+
+        // Request is in $this->branch
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertTrue($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    public function test_branch_scoped_stage_blocks_approver_in_different_branch(): void
+    {
+        $otherBranch = Branch::factory()->create();
+        $approver = $this->makeUserWithStaff(branchId: $otherBranch->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
+        $approver->assignRole($role);
+
+        // Request is in $this->branch (different from approver's branch)
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    public function test_branch_scoped_stage_blocks_approver_with_no_branch(): void
+    {
+        $approver = $this->makeUserWithStaff(branchId: null); // staff exists but no branch
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    // ── canUserActOnStage (combined scoping) ──────────────────────────────────
+
+    public function test_both_scopes_allow_when_department_and_branch_match(): void
+    {
+        $dept = Department::factory()->create();
+        $submitter = $this->makeUserWithStaff(departmentId: $dept->id, branchId: $this->branch->id);
+        $approver = $this->makeUserWithStaff(departmentId: $dept->id, branchId: $this->branch->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update([
+            'scope_to_department' => true,
+            'scope_to_branch' => true,
+        ]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertTrue($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    public function test_both_scopes_block_when_branch_mismatches(): void
+    {
+        $dept = Department::factory()->create();
+        $submitter = $this->makeUserWithStaff(departmentId: $dept->id, branchId: $this->branch->id);
+        $otherBranch = Branch::factory()->create();
+        $approver = $this->makeUserWithStaff(departmentId: $dept->id, branchId: $otherBranch->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update([
+            'scope_to_department' => true,
+            'scope_to_branch' => true,
+        ]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    public function test_both_scopes_block_when_department_mismatches(): void
+    {
+        $dept = Department::factory()->create();
+        $submitter = $this->makeUserWithStaff(departmentId: $dept->id, branchId: $this->branch->id);
+        $approver = $this->makeUserWithStaff(departmentId: Department::factory()->create()->id, branchId: $this->branch->id);
+
+        ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update([
+            'scope_to_department' => true,
+            'scope_to_branch' => true,
+        ]);
+        $approver->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+    }
+
+    // ── activateNextStages (submitter auto-skip with scoping) ─────────────────
+
+    public function test_branch_scoped_submitter_not_auto_skipped_when_branch_differs(): void
+    {
+        $otherBranch = Branch::factory()->create();
+        $submitter = $this->makeUserWithStaff(branchId: $otherBranch->id);
+
+        ['template' => $template, 'role' => $role, 'stages' => $stages] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
+        $submitter->assignRole($role);
+
+        // Request branch is $this->branch, submitter branch is $otherBranch
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
+
+        $this->assertEquals('active', $instanceStage->status);
+    }
+
+    public function test_branch_scoped_submitter_is_auto_skipped_when_branch_matches(): void
+    {
+        $submitter = $this->makeUserWithStaff(branchId: $this->branch->id);
+
+        ['template' => $template, 'role' => $role, 'stages' => $stages] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
+        $submitter->assignRole($role);
+
+        // Request branch is $this->branch, submitter branch also $this->branch
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
+
+        $this->assertEquals('skipped', $instanceStage->status);
+    }
+
+    public function test_department_scoped_submitter_not_auto_skipped_when_no_staff_profile(): void
+    {
+        $submitter = User::factory()->create(); // no Staff record
+
+        ['template' => $template, 'role' => $role, 'stages' => $stages] = $this->makeSequentialTemplate(1);
+        WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
+        $submitter->assignRole($role);
+
+        $subject = $this->makePaymentRequest();
+        $instance = $this->engine->startWorkflow($subject, $template, $submitter);
+        $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
+
+        $this->assertEquals('active', $instanceStage->status);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function makeUserWithStaff(
+        int|null $departmentId = null,
+        int|null $branchId = null,
+    ): User {
+        $user = User::factory()->create();
+        Staff::factory()->withUser($user)->create([
+            'department_id' => $departmentId ?? Department::factory()->create()->id,
+            'branch_id' => $branchId,
+        ]);
+
+        return $user->fresh('staffProfile');
     }
 }

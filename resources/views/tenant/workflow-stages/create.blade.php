@@ -78,6 +78,23 @@
                         @endif
                     </div>
 
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="hidden" name="scope_to_department" value="0" />
+                            <input type="checkbox" id="scope_to_department" name="scope_to_department" value="1"
+                                   class="kt-checkbox"
+                                   {{ old('scope_to_department') ? 'checked' : '' }} />
+                            <span class="kt-form-label mb-0">{{ __('workflows.stages.fields.scope_to_department') }}</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="hidden" name="scope_to_branch" value="0" />
+                            <input type="checkbox" id="scope_to_branch" name="scope_to_branch" value="1"
+                                   class="kt-checkbox"
+                                   {{ old('scope_to_branch') ? 'checked' : '' }} />
+                            <span class="kt-form-label mb-0">{{ __('workflows.stages.fields.scope_to_branch') }}</span>
+                        </label>
+                    </div>
+
                     <div>
                         <label class="kt-form-label block mb-2">
                             {{ __('workflows.stages.fields.roles_label') }} <span class="text-destructive">*</span>

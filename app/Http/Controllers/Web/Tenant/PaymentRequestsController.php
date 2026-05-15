@@ -48,7 +48,7 @@ class PaymentRequestsController extends Controller
         }
 
         $currencies = $this->currencyRepository->allOrderedByName();
-        $accountCodes = $this->accountCodeRepository->allOrderedByCode();
+        $accountCodes = $this->accountCodeRepository->forDepartment($staffProfile->department_id);
 
         return view('tenant.payment-requests.create', compact('staffProfile', 'currencies', 'accountCodes'));
     }
@@ -112,7 +112,10 @@ class PaymentRequestsController extends Controller
         $paymentRequest->load('items.accountCode', 'currency', 'staff.department', 'staff.branch');
 
         $currencies = $this->currencyRepository->allOrderedByName();
-        $accountCodes = $this->accountCodeRepository->allOrderedByCode();
+        $departmentId = $paymentRequest->staff?->department_id;
+        $accountCodes = $departmentId !== null
+            ? $this->accountCodeRepository->forDepartment((int) $departmentId)
+            : $this->accountCodeRepository->allOrderedByCode();
 
         return view('tenant.payment-requests.edit', compact('paymentRequest', 'currencies', 'accountCodes'));
     }

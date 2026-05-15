@@ -13,5 +13,7 @@ readonly class WorkflowStageDto
         public float|null $skipBelowAmount,
         public int|null $parallelGroupId,
         public array $roleIds,
+        public bool $scopeToDepartment = false,
+        public bool $scopeToBranch = false,
     ) {}
 }

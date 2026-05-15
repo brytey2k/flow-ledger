@@ -31,8 +31,33 @@ class NotificationService
             return;
         }
 
+        /** @var \App\Models\Tenant\WorkflowInstance $instance */
+        $instance = $instanceStage->instance;
+
         $users = User::whereHas('roles', fn($q) => $q->whereIn('id', $roleIds))
             ->whereNotNull('email')
+            ->when(
+                $stage->scope_to_department,
+                function ($query) use ($instance): void {
+                    $deptId = $instance->submitter?->staffProfile?->department_id;
+                    if ($deptId !== null) {
+                        $query->whereHas('staffProfile', fn($q) => $q->where('department_id', $deptId));
+                    } else {
+                        $query->whereRaw('0 = 1');
+                    }
+                },
+            )
+            ->when(
+                $stage->scope_to_branch,
+                function ($query) use ($instance): void {
+                    $branchId = $instance->workflowable?->getAttribute('branch_id');
+                    if ($branchId !== null) {
+                        $query->whereHas('staffProfile', fn($q) => $q->where('branch_id', $branchId));
+                    } else {
+                        $query->whereRaw('0 = 1');
+                    }
+                },
+            )
             ->get();
 
         NotificationFacade::send($users, new StageReadyForApprovalNotification($instanceStage));

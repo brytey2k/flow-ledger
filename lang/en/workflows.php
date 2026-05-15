@@ -82,6 +82,8 @@ return [
             'any_approves' => 'ANY one approves',
             'roles_label' => 'Roles that can approve this stage',
             'roles_hint' => 'Any user with one of these roles will see this stage in their approvals inbox.',
+            'scope_to_department' => 'Restrict approvers to submitter\'s department',
+            'scope_to_branch' => 'Restrict approvers to request\'s branch',
         ],
         'buttons' => [
             'add' => 'Add Stage',

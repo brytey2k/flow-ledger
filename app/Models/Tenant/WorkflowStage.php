@@ -11,6 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property bool $scope_to_department
+ * @property bool $scope_to_branch
+ */
 class WorkflowStage extends Model
 {
     /** @use HasFactory<\Database\Factories\Tenant\WorkflowStageFactory> */
@@ -22,6 +26,8 @@ class WorkflowStage extends Model
         'name',
         'display_order',
         'skip_below_amount',
+        'scope_to_department',
+        'scope_to_branch',
     ];
 
     protected function casts(): array
@@ -29,6 +35,8 @@ class WorkflowStage extends Model
         return [
             'skip_below_amount' => 'decimal:2',
             'display_order' => 'integer',
+            'scope_to_department' => 'boolean',
+            'scope_to_branch' => 'boolean',
         ];
     }
 

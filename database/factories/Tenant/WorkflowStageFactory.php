@@ -30,4 +30,14 @@ class WorkflowStageFactory extends Factory
     {
         return $this->state(['skip_below_amount' => $amount]);
     }
+
+    public function scopedToDepartment(): static
+    {
+        return $this->state(['scope_to_department' => true]);
+    }
+
+    public function scopedToBranch(): static
+    {
+        return $this->state(['scope_to_branch' => true]);
+    }
 }
