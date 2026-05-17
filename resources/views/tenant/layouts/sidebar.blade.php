@@ -134,7 +134,7 @@
                 @endcan
 
                 {{-- Organisation --}}
-                @canany([PermissionKey::AccessLevels->value, PermissionKey::AccessBranches->value, PermissionKey::AccessDepartments->value, PermissionKey::AccessAccountCodes->value, PermissionKey::AccessPositions->value, PermissionKey::AccessStaff->value])
+                @canany([PermissionKey::AccessLevels->value, PermissionKey::AccessBranches->value, PermissionKey::AccessDepartments->value, PermissionKey::AccessCostCodes->value, PermissionKey::AccessPositions->value, PermissionKey::AccessStaff->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
                             {{ __('navigation.sections.organisation') }}
@@ -177,14 +177,14 @@
                         </div>
                     @endcan
 
-                    @can(PermissionKey::AccessAccountCodes->value)
-                        <div class="kt-menu-item {{ request()->routeIs('account-codes.*') ? 'active' : '' }}">
+                    @can(PermissionKey::AccessCostCodes->value)
+                        <div class="kt-menu-item {{ request()->routeIs('cost-codes.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
-                               href="{{ route('account-codes.index') }}">
+                               href="{{ route('cost-codes.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
                                     <i class="ki-filled ki-book text-lg"></i>
                                 </span>
-                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.account_codes') }}</span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.cost_codes') }}</span>
                             </a>
                         </div>
                     @endcan

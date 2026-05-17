@@ -12,7 +12,7 @@ return [
     'levels' => 'Levels',
     'branches' => 'Branches',
     'departments' => 'Departments',
-    'account_codes' => 'Account Codes',
+    'cost_codes' => 'Cost Codes',
     'positions' => 'Positions',
     'staff' => 'Staff',
     'users' => 'Users',

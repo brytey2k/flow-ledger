@@ -221,7 +221,7 @@ class UsersControllerTest extends TenantAppTestCase
     public function test_permissions_update_syncs_permissions_to_user(): void
     {
         $user = User::factory()->create();
-        $permission = Permission::findOrCreate(PermissionKey::AccessAccountCodes->value, 'web');
+        $permission = Permission::findOrCreate(PermissionKey::AccessCostCodes->value, 'web');
 
         $response = $this->actingAs($this->user)->put(route('users.permissions.update', $user), [
             'permissions' => [$permission->id],
@@ -234,7 +234,7 @@ class UsersControllerTest extends TenantAppTestCase
     public function test_permissions_update_with_empty_array_removes_all_permissions(): void
     {
         $user = User::factory()->create();
-        $permission = Permission::findOrCreate(PermissionKey::AccessAccountCodes->value, 'web');
+        $permission = Permission::findOrCreate(PermissionKey::AccessCostCodes->value, 'web');
         $user->givePermissionTo($permission);
 
         $response = $this->actingAs($this->user)->put(route('users.permissions.update', $user), [

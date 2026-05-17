@@ -21,20 +21,20 @@ class RetirementRequestUpdateRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],
-            'items.*.account_code_id' => ['required', 'integer', 'exists:account_codes,id'],
+            'items.*.cost_code_id' => ['required', 'integer', 'exists:cost_codes,id'],
             'items.*.receipt_number' => ['nullable', 'string', 'max:100'],
         ];
     }
 
     public function toDto(): \App\DTOs\Tenant\CreateRetirementRequestDto
     {
-        /** @var list<array{description: string, amount: string|float, account_code_id: string|int, receipt_number?: string|null}> $rawItems */
+        /** @var list<array{description: string, amount: string|float, cost_code_id: string|int, receipt_number?: string|null}> $rawItems */
         $rawItems = $this->input('items', []) ?? [];
         $items = array_map(
             fn(array $item): \App\DTOs\Tenant\RetirementRequestItemDto => new \App\DTOs\Tenant\RetirementRequestItemDto(
                 description: (string) $item['description'],
                 amount: (float) $item['amount'],
-                accountCodeId: (int) $item['account_code_id'],
+                costCodeId: (int) $item['cost_code_id'],
                 receiptNumber: isset($item['receipt_number']) ? (string) $item['receipt_number'] : null,
             ),
             $rawItems,

@@ -9,7 +9,7 @@ readonly class PaymentRequestItemDto
     public function __construct(
         public string $description,
         public float $amount,
-        public int|null $accountCodeId,
+        public int|null $costCodeId,
         public string|null $receiptNumber,
     ) {}
 }

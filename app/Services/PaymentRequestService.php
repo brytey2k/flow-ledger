@@ -41,7 +41,7 @@ class PaymentRequestService
                 $request->items()->create([
                     'description' => $item->description,
                     'amount' => $item->amount,
-                    'account_code_id' => $item->accountCodeId,
+                    'cost_code_id' => $item->costCodeId,
                     'receipt_number' => $item->receiptNumber,
                 ]);
             }
@@ -122,7 +122,7 @@ class PaymentRequestService
                 $paymentRequest->items()->create([
                     'description' => $item->description,
                     'amount' => $item->amount,
-                    'account_code_id' => $item->accountCodeId,
+                    'cost_code_id' => $item->costCodeId,
                     'receipt_number' => $item->receiptNumber,
                 ]);
             }

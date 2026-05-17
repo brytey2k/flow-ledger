@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Enums\Tenant\PermissionKey;
-use App\Http\Controllers\Web\Tenant\AccountCodesController;
 use App\Http\Controllers\Web\Tenant\ActivityLogController;
 use App\Http\Controllers\Web\Tenant\AttachmentsController;
 use App\Http\Controllers\Web\Tenant\Auth\ForgotPasswordController;
@@ -12,6 +11,7 @@ use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
 use App\Http\Controllers\Web\Tenant\CashbookController;
 use App\Http\Controllers\Web\Tenant\CommentsController;
+use App\Http\Controllers\Web\Tenant\CostCodesController;
 use App\Http\Controllers\Web\Tenant\CurrenciesController;
 use App\Http\Controllers\Web\Tenant\DashboardController;
 use App\Http\Controllers\Web\Tenant\DepartmentsController;
@@ -140,25 +140,25 @@ Route::middleware([
             ->can(PermissionKey::DeleteDepartment->value)
             ->name('departments.destroy');
 
-        // Account Codes
-        Route::get('/account-codes', [AccountCodesController::class, 'index'])
-            ->can(PermissionKey::AccessAccountCodes->value)
-            ->name('account-codes.index');
-        Route::get('/account-codes/create', [AccountCodesController::class, 'create'])
-            ->can(PermissionKey::CreateAccountCode->value)
-            ->name('account-codes.create');
-        Route::post('/account-codes', [AccountCodesController::class, 'store'])
-            ->can(PermissionKey::CreateAccountCode->value)
-            ->name('account-codes.store');
-        Route::get('/account-codes/{account_code}/edit', [AccountCodesController::class, 'edit'])
-            ->can(PermissionKey::AccessAccountCodes->value)
-            ->name('account-codes.edit');
-        Route::put('/account-codes/{account_code}', [AccountCodesController::class, 'update'])
-            ->can(PermissionKey::AccessAccountCodes->value)
-            ->name('account-codes.update');
-        Route::delete('/account-codes/{account_code}', [AccountCodesController::class, 'destroy'])
-            ->can(PermissionKey::DeleteAccountCode->value)
-            ->name('account-codes.destroy');
+        // Cost Codes
+        Route::get('/cost-codes', [CostCodesController::class, 'index'])
+            ->can(PermissionKey::AccessCostCodes->value)
+            ->name('cost-codes.index');
+        Route::get('/cost-codes/create', [CostCodesController::class, 'create'])
+            ->can(PermissionKey::CreateCostCode->value)
+            ->name('cost-codes.create');
+        Route::post('/cost-codes', [CostCodesController::class, 'store'])
+            ->can(PermissionKey::CreateCostCode->value)
+            ->name('cost-codes.store');
+        Route::get('/cost-codes/{cost_code}/edit', [CostCodesController::class, 'edit'])
+            ->can(PermissionKey::AccessCostCodes->value)
+            ->name('cost-codes.edit');
+        Route::put('/cost-codes/{cost_code}', [CostCodesController::class, 'update'])
+            ->can(PermissionKey::AccessCostCodes->value)
+            ->name('cost-codes.update');
+        Route::delete('/cost-codes/{cost_code}', [CostCodesController::class, 'destroy'])
+            ->can(PermissionKey::DeleteCostCode->value)
+            ->name('cost-codes.destroy');
 
         // Positions
         Route::get('/positions', [PositionsController::class, 'index'])

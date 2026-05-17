@@ -29,7 +29,7 @@ class RetirementRequestRepository
             'paymentRequest.staff',
             'paymentRequest.branch',
             'paymentRequest.currency',
-            'items.accountCode',
+            'items.costCode',
             'attachments.user',
             'activeWorkflowInstance.instanceStages.stage.roles',
             'activities.causer',

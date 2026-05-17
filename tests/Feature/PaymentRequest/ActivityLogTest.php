@@ -26,7 +26,7 @@ class ActivityLogTest extends TenantAppTestCase
             currencyId: $currency->id,
             type: 'advance',
             notes: null,
-            items: [new \App\DTOs\Tenant\PaymentRequestItemDto(description: 'Test', amount: 100.0, accountCodeId: null, receiptNumber: null)],
+            items: [new \App\DTOs\Tenant\PaymentRequestItemDto(description: 'Test', amount: 100.0, costCodeId: null, receiptNumber: null)],
         );
         $paymentRequest = app(PaymentRequestService::class)->createDraft($dto, $this->user);
 

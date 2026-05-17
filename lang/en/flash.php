@@ -38,10 +38,10 @@ return [
         'updated' => 'Department updated successfully.',
         'deleted' => 'Department deleted.',
     ],
-    'account_codes' => [
-        'created' => 'Account code created successfully.',
-        'updated' => 'Account code updated successfully.',
-        'deleted' => 'Account code deleted.',
+    'cost_codes' => [
+        'created' => 'Cost code created successfully.',
+        'updated' => 'Cost code updated successfully.',
+        'deleted' => 'Cost code deleted.',
     ],
     'branches' => [
         'created' => 'Branch created successfully.',

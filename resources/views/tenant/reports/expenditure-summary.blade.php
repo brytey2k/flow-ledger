@@ -37,7 +37,7 @@
                     <select name="group_by" class="kt-select kt-select-sm">
                         <option value="department" @selected($groupBy === 'department')>Department</option>
                         <option value="branch" @selected($groupBy === 'branch')>Branch</option>
-                        <option value="account_code" @selected($groupBy === 'account_code')>Account Code</option>
+                        <option value="cost_code" @selected($groupBy === 'cost_code')>Cost Code</option>
                     </select>
                 </div>
                 <div class="flex flex-col gap-1.5">

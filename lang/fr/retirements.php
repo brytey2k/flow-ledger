@@ -32,7 +32,7 @@ return [
         'expenditure_items' => 'Articles de depenses',
         'description' => 'Description',
         'what_purchased' => 'Article achete',
-        'account_code' => 'Code de compte',
+        'cost_code' => 'Code de coût',
         'receipt_no' => 'Numero de recu',
         'notes' => 'Notes',
         'notes_placeholder' => 'Notes optionnelles...',

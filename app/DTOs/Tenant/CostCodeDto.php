@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DTOs\Tenant;
 
-readonly class AccountCodeDto
+readonly class CostCodeDto
 {
     public function __construct(
         public string $code,

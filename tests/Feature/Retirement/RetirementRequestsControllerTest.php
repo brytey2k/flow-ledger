@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Retirement;
 
 use App\Enums\Tenant\PermissionKey;
-use App\Models\Tenant\AccountCode;
+use App\Models\Tenant\CostCode;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\Staff;
@@ -27,10 +27,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
     private function validItems(): array
     {
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         return [
-            ['description' => 'Hotel stay', 'amount' => '500.00', 'account_code_id' => $accountCode->id, 'receipt_number' => 'RCP-001'],
+            ['description' => 'Hotel stay', 'amount' => '500.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-001'],
         ];
     }
 
@@ -134,11 +134,11 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'total_amount' => 1000.00,
             'branch_id' => $this->branch->id,
         ]);
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'items' => [
-                ['description' => 'Item A', 'amount' => '600.00', 'account_code_id' => $accountCode->id, 'receipt_number' => null],
+                ['description' => 'Item A', 'amount' => '600.00', 'cost_code_id' => $costCode->id, 'receipt_number' => null],
             ],
         ]);
 
@@ -158,11 +158,11 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'total_amount' => 500.00,
             'branch_id' => $this->branch->id,
         ]);
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'items' => [
-                ['description' => 'Extra cost', 'amount' => '700.00', 'account_code_id' => $accountCode->id, 'receipt_number' => null],
+                ['description' => 'Extra cost', 'amount' => '700.00', 'cost_code_id' => $costCode->id, 'receipt_number' => null],
             ],
         ]);
 
@@ -183,17 +183,17 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $response->assertSessionHasErrors('items');
     }
 
-    public function test_store_validation_requires_account_code(): void
+    public function test_store_validation_requires_cost_code(): void
     {
         $paymentRequest = $this->disbursedAdvance();
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'items' => [
-                ['description' => 'Hotel', 'amount' => '100', 'account_code_id' => '', 'receipt_number' => null],
+                ['description' => 'Hotel', 'amount' => '100', 'cost_code_id' => '', 'receipt_number' => null],
             ],
         ]);
 
-        $response->assertSessionHasErrors('items.0.account_code_id');
+        $response->assertSessionHasErrors('items.0.cost_code_id');
     }
 
     // ── Show ──────────────────────────────────────────────────────────────────
@@ -328,7 +328,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertViewIs('tenant.retirement-requests.edit');
-        $response->assertViewHas(['retirementRequest', 'accountCodes']);
+        $response->assertViewHas(['retirementRequest', 'costCodes']);
     }
 
     public function test_edit_renders_for_draft_retirement_owner(): void
@@ -389,12 +389,12 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
     public function test_update_saves_changes_and_redirects_to_show(): void
     {
         $retirement = $this->sentBackRetirementWithOwner();
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
             'notes' => 'Updated retirement notes',
             'items' => [
-                ['description' => 'Updated hotel', 'amount' => '600.00', 'account_code_id' => $accountCode->id, 'receipt_number' => 'RCP-002'],
+                ['description' => 'Updated hotel', 'amount' => '600.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-002'],
             ],
         ]);
 
@@ -428,11 +428,11 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'payment_request_id' => $paymentRequest->id,
             'difference_type' => 'nil',
         ]);
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
             'items' => [
-                ['description' => 'Extra expense', 'amount' => '1200.00', 'account_code_id' => $accountCode->id, 'receipt_number' => null],
+                ['description' => 'Extra expense', 'amount' => '1200.00', 'cost_code_id' => $costCode->id, 'receipt_number' => null],
             ],
         ]);
 
@@ -457,11 +457,11 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'draft',
             'payment_request_id' => $paymentRequest->id,
         ]);
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
             'notes' => 'Draft edit notes',
-            'items' => [['description' => 'Fuel', 'amount' => '150.00', 'account_code_id' => $accountCode->id, 'receipt_number' => 'RCP-D01']],
+            'items' => [['description' => 'Fuel', 'amount' => '150.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-D01']],
         ]);
 
         $response->assertRedirect(route('retirement-requests.show', $retirement));
@@ -486,10 +486,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'in_workflow',
             'payment_request_id' => $paymentRequest->id,
         ]);
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
-            'items' => [['description' => 'Item', 'amount' => '100', 'account_code_id' => $accountCode->id]],
+            'items' => [['description' => 'Item', 'amount' => '100', 'cost_code_id' => $costCode->id]],
         ]);
 
         $response->assertRedirect(route('retirement-requests.show', $retirement));
@@ -502,10 +502,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'sent_back',
             'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
         ]);
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
-            'items' => [['description' => 'Item', 'amount' => '100', 'account_code_id' => $accountCode->id]],
+            'items' => [['description' => 'Item', 'amount' => '100', 'cost_code_id' => $costCode->id]],
         ]);
 
         $response->assertRedirect(route('retirement-requests.show', $retirement));

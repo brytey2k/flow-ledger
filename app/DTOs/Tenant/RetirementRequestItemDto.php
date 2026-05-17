@@ -9,7 +9,7 @@ readonly class RetirementRequestItemDto
     public function __construct(
         public string $description,
         public float $amount,
-        public int $accountCodeId,
+        public int $costCodeId,
         public string|null $receiptNumber,
     ) {}
 }

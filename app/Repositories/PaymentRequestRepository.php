@@ -44,7 +44,7 @@ class PaymentRequestRepository
             'staff',
             'branch',
             'currency',
-            'items.accountCode',
+            'items.costCode',
             'activeWorkflowInstance.instanceStages.stage.roles',
             'activities.causer',
             'comments.user',

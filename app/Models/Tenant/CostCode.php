@@ -19,11 +19,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Department $department
  */
-class AccountCode extends Model
+class CostCode extends Model
 {
-    /** @use HasFactory<\Database\Factories\Tenant\AccountCodeFactory> */
+    /** @use HasFactory<\Database\Factories\Tenant\CostCodeFactory> */
     use HasFactory;
     use SoftDeletes;
+
+    protected $table = 'cost_codes';
 
     /** @var list<string> */
     protected $fillable = ['code', 'name', 'department_id'];

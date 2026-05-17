@@ -35,7 +35,7 @@ return [
         'expenditure_items' => 'Expenditure Items',
         'description' => 'Description',
         'what_purchased' => 'What was purchased',
-        'account_code' => 'Account Code',
+        'cost_code' => 'Cost Code',
         'receipt_no' => 'Receipt No.',
         'notes' => 'Notes',
         'notes_placeholder' => 'Optional notes…',

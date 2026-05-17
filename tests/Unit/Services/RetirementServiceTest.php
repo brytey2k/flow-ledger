@@ -6,8 +6,8 @@ namespace Tests\Unit\Services;
 
 use App\DTOs\Tenant\CreateRetirementRequestDto;
 use App\DTOs\Tenant\RetirementRequestItemDto;
-use App\Models\Tenant\AccountCode;
 use App\Models\Tenant\Branch;
+use App\Models\Tenant\CostCode;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowInstance;
@@ -26,7 +26,7 @@ class RetirementServiceTest extends TenantAppTestCase
 
     private function makeDto(float $amount = 500.0, string|null $notes = null): CreateRetirementRequestDto
     {
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         return new CreateRetirementRequestDto(
             notes: $notes,
@@ -34,7 +34,7 @@ class RetirementServiceTest extends TenantAppTestCase
                 new RetirementRequestItemDto(
                     description: 'Test item',
                     amount: $amount,
-                    accountCodeId: $accountCode->id,
+                    costCodeId: $costCode->id,
                     receiptNumber: null,
                 ),
             ],

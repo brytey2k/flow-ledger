@@ -10,7 +10,7 @@ use App\Http\Requests\Tenant\PaymentRequestUpdateRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowInstanceStage;
-use App\Repositories\AccountCodeRepository;
+use App\Repositories\CostCodeRepository;
 use App\Repositories\CurrencyRepository;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
@@ -26,7 +26,7 @@ class PaymentRequestsController extends Controller
         private readonly PaymentRequestRepository $repository,
         private readonly PaymentRequestService $service,
         private readonly CurrencyRepository $currencyRepository,
-        private readonly AccountCodeRepository $accountCodeRepository,
+        private readonly CostCodeRepository $costCodeRepository,
         private readonly WorkflowEngineService $workflowEngine,
         private readonly BranchScopeService $branchScope,
     ) {}
@@ -52,9 +52,9 @@ class PaymentRequestsController extends Controller
         }
 
         $currencies = $this->currencyRepository->allOrderedByName();
-        $accountCodes = $this->accountCodeRepository->forDepartment($staffProfile->department_id);
+        $costCodes = $this->costCodeRepository->forDepartment($staffProfile->department_id);
 
-        return view('tenant.payment-requests.create', compact('staffProfile', 'currencies', 'accountCodes'));
+        return view('tenant.payment-requests.create', compact('staffProfile', 'currencies', 'costCodes'));
     }
 
     public function store(PaymentRequestStoreRequest $request): RedirectResponse
@@ -116,15 +116,15 @@ class PaymentRequestsController extends Controller
                 ->with('error', __('flash.requests.edit_not_owner'));
         }
 
-        $paymentRequest->load('items.accountCode', 'currency', 'staff.department', 'staff.branch');
+        $paymentRequest->load('items.costCode', 'currency', 'staff.department', 'staff.branch');
 
         $currencies = $this->currencyRepository->allOrderedByName();
         $departmentId = $paymentRequest->staff?->department_id;
-        $accountCodes = $departmentId !== null
-            ? $this->accountCodeRepository->forDepartment((int) $departmentId)
-            : $this->accountCodeRepository->allOrderedByCode();
+        $costCodes = $departmentId !== null
+            ? $this->costCodeRepository->forDepartment((int) $departmentId)
+            : $this->costCodeRepository->allOrderedByCode();
 
-        return view('tenant.payment-requests.edit', compact('paymentRequest', 'currencies', 'accountCodes'));
+        return view('tenant.payment-requests.edit', compact('paymentRequest', 'currencies', 'costCodes'));
     }
 
     public function update(PaymentRequestUpdateRequest $request, PaymentRequest $paymentRequest): RedirectResponse

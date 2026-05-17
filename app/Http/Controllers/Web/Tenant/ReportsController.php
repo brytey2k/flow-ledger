@@ -49,17 +49,17 @@ class ReportsController
                 ->groupBy('branches.id', 'branches.name')
                 ->orderByDesc('total')
                 ->get();
-        } elseif ($groupBy === 'account_code') {
+        } elseif ($groupBy === 'cost_code') {
             $rows = DB::table('payment_request_items')
                 ->join('payment_requests', 'payment_request_items.payment_request_id', '=', 'payment_requests.id')
-                ->join('account_codes', 'payment_request_items.account_code_id', '=', 'account_codes.id')
+                ->join('cost_codes', 'payment_request_items.cost_code_id', '=', 'cost_codes.id')
                 ->where('payment_requests.status', 'disbursed')
                 ->whereNull('payment_requests.deleted_at')
                 ->whereIn('payment_requests.branch_id', $allowedBranchIds)
                 ->whereBetween('payment_requests.disbursed_at', [$dateFrom, $dateTo])
                 ->when($type, fn($q) => $q->where('payment_requests.type', $type))
-                ->selectRaw('CONCAT(account_codes.code, \' - \', account_codes.name) as label, COUNT(DISTINCT payment_requests.id) as count, SUM(payment_request_items.amount) as total')
-                ->groupBy('account_codes.id', 'account_codes.code', 'account_codes.name')
+                ->selectRaw('CONCAT(cost_codes.code, \' - \', cost_codes.name) as label, COUNT(DISTINCT payment_requests.id) as count, SUM(payment_request_items.amount) as total')
+                ->groupBy('cost_codes.id', 'cost_codes.code', 'cost_codes.name')
                 ->orderByDesc('total')
                 ->get();
         } else {

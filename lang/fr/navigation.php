@@ -12,7 +12,7 @@ return [
     'levels' => 'Niveaux',
     'branches' => 'Succursales',
     'departments' => 'Departements',
-    'account_codes' => 'Codes de compte',
+    'cost_codes' => 'Codes de coût',
     'positions' => 'Postes',
     'staff' => 'Personnel',
     'users' => 'Utilisateurs',

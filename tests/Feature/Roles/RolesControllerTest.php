@@ -188,7 +188,7 @@ class RolesControllerTest extends TenantAppTestCase
     public function test_permissions_update_syncs_permissions_to_role(): void
     {
         $role = Role::create(['name' => 'sync-test-' . Str::uuid(), 'guard_name' => 'web']);
-        $permission = Permission::findOrCreate(PermissionKey::AccessAccountCodes->value, 'web');
+        $permission = Permission::findOrCreate(PermissionKey::AccessCostCodes->value, 'web');
 
         $response = $this->actingAs($this->user)->put(route('roles.permissions.update', $role), [
             'permissions' => [$permission->id],
@@ -201,7 +201,7 @@ class RolesControllerTest extends TenantAppTestCase
     public function test_permissions_update_with_empty_array_removes_all_permissions(): void
     {
         $role = Role::create(['name' => 'remove-perms-' . Str::uuid(), 'guard_name' => 'web']);
-        $permission = Permission::findOrCreate(PermissionKey::AccessAccountCodes->value, 'web');
+        $permission = Permission::findOrCreate(PermissionKey::AccessCostCodes->value, 'web');
         $role->givePermissionTo($permission);
 
         $response = $this->actingAs($this->user)->put(route('roles.permissions.update', $role), [

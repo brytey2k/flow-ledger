@@ -13,7 +13,7 @@ class PaymentRequestItem extends Model
     /** @use HasFactory<\Database\Factories\Tenant\PaymentRequestItemFactory> */
     use HasFactory;
 
-    protected $fillable = ['payment_request_id', 'description', 'amount', 'account_code_id', 'receipt_number'];
+    protected $fillable = ['payment_request_id', 'description', 'amount', 'cost_code_id', 'receipt_number'];
 
     protected function casts(): array
     {
@@ -28,9 +28,9 @@ class PaymentRequestItem extends Model
         return $this->belongsTo(PaymentRequest::class);
     }
 
-    /** @return BelongsTo<AccountCode, $this> */
-    public function accountCode(): BelongsTo
+    /** @return BelongsTo<CostCode, $this> */
+    public function costCode(): BelongsTo
     {
-        return $this->belongsTo(AccountCode::class);
+        return $this->belongsTo(CostCode::class);
     }
 }

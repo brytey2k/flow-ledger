@@ -189,7 +189,7 @@ return [
         'first_name' => 'first name',
         'guard_name' => 'guard name',
         'items' => 'items',
-        'items.*.account_code_id' => 'account code',
+        'items.*.cost_code_id' => 'cost code',
         'items.*.amount' => 'amount',
         'items.*.description' => 'description',
         'items.*.receipt_number' => 'receipt number',

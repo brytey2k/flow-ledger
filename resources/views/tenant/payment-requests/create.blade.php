@@ -167,18 +167,18 @@
                                 {{-- Expense-only fields --}}
                                 <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="{{ $oldType !== 'expense' ? 'display:none' : '' }}">
                                     <div>
-                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('payment_requests.fields.account_code') }} *</label>
-                                        <select name="items[{{ $i }}][account_code_id]" class="kt-select w-full"
-                                                aria-invalid="@error('items.{{ $i }}.account_code_id') true @else false @enderror">
+                                        <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('payment_requests.fields.cost_code') }} *</label>
+                                        <select name="items[{{ $i }}][cost_code_id]" class="kt-select w-full"
+                                                aria-invalid="@error('items.{{ $i }}.cost_code_id') true @else false @enderror">
                                             <option value="">{{ __('payment_requests.fields.select') }}</option>
-                                            @foreach($accountCodes as $code)
+                                            @foreach($costCodes as $code)
                                                 <option value="{{ $code->id }}"
-                                                    {{ isset($item['account_code_id']) && $item['account_code_id'] == $code->id ? 'selected' : '' }}>
+                                                    {{ isset($item['cost_code_id']) && $item['cost_code_id'] == $code->id ? 'selected' : '' }}>
                                                     {{ $code->code }} — {{ $code->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error("items.{$i}.account_code_id")
+                                        @error("items.{$i}.cost_code_id")
                                             <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                                         @enderror
                                     </div>
@@ -228,7 +228,7 @@
 <script>
     let nextIndex = {{ count(old('items', [['description' => '', 'amount' => '']])) }};
 
-    const accountCodeOptions = `@foreach($accountCodes as $code)<option value="{{ $code->id }}">{{ $code->code }} — {{ addslashes($code->name) }}</option>@endforeach`;
+    const costCodeOptions = `@foreach($costCodes as $code)<option value="{{ $code->id }}">{{ $code->code }} — {{ addslashes($code->name) }}</option>@endforeach`;
 
     function isExpense() {
         return document.getElementById('type').value === 'expense';
@@ -238,10 +238,10 @@
         return `
             <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="${isExpense() ? '' : 'display:none'}">
                 <div>
-                    <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Account Code *</label>
-                    <select name="items[${index}][account_code_id]" class="kt-select w-full">
+                    <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Cost Code *</label>
+                    <select name="items[${index}][cost_code_id]" class="kt-select w-full">
                         <option value="">Select…</option>
-                        ${accountCodeOptions}
+                        ${costCodeOptions}
                     </select>
                 </div>
                 <div>

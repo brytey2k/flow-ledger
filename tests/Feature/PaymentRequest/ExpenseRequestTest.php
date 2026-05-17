@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\PaymentRequest;
 
-use App\Models\Tenant\AccountCode;
+use App\Models\Tenant\CostCode;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
@@ -22,7 +22,7 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     private function validExpensePayload(array $override = []): array
     {
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
 
         return array_merge([
             'currency_id' => Currency::factory()->create()->id,
@@ -32,7 +32,7 @@ class ExpenseRequestTest extends TenantAppTestCase
                 [
                     'description' => 'Flight ticket',
                     'amount' => '350.00',
-                    'account_code_id' => $accountCode->id,
+                    'cost_code_id' => $costCode->id,
                     'receipt_number' => 'RCP-100',
                 ],
             ],
@@ -41,15 +41,15 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     // ── Create form ───────────────────────────────────────────────────────────
 
-    public function test_create_form_provides_account_codes(): void
+    public function test_create_form_provides_cost_codes(): void
     {
         $this->linkUserToStaff();
-        AccountCode::factory()->count(3)->create();
+        CostCode::factory()->count(3)->create();
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.create'));
 
         $response->assertOk();
-        $response->assertViewHas('accountCodes');
+        $response->assertViewHas('costCodes');
     }
 
     // ── Store: expense ────────────────────────────────────────────────────────
@@ -68,15 +68,15 @@ class ExpenseRequestTest extends TenantAppTestCase
         ]);
     }
 
-    public function test_expense_items_store_account_code_and_receipt(): void
+    public function test_expense_items_store_cost_code_and_receipt(): void
     {
         $this->linkUserToStaff();
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
         $payload = $this->validExpensePayload([
             'items' => [[
                 'description' => 'Hotel stay',
                 'amount' => '200.00',
-                'account_code_id' => $accountCode->id,
+                'cost_code_id' => $costCode->id,
                 'receipt_number' => 'HTL-001',
             ]],
         ]);
@@ -85,29 +85,29 @@ class ExpenseRequestTest extends TenantAppTestCase
 
         $this->assertDatabaseHas('payment_request_items', [
             'description' => 'Hotel stay',
-            'account_code_id' => $accountCode->id,
+            'cost_code_id' => $costCode->id,
             'receipt_number' => 'HTL-001',
         ]);
     }
 
-    public function test_expense_requires_account_code_on_items(): void
+    public function test_expense_requires_cost_code_on_items(): void
     {
         $this->linkUserToStaff();
         $payload = $this->validExpensePayload([
             'items' => [[
                 'description' => 'Taxi',
                 'amount' => '50.00',
-                'account_code_id' => '',
+                'cost_code_id' => '',
                 'receipt_number' => null,
             ]],
         ]);
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.store'), $payload);
 
-        $response->assertSessionHasErrors('items.0.account_code_id');
+        $response->assertSessionHasErrors('items.0.cost_code_id');
     }
 
-    public function test_advance_does_not_require_account_code(): void
+    public function test_advance_does_not_require_cost_code(): void
     {
         $this->linkUserToStaff();
         $payload = [
@@ -115,7 +115,7 @@ class ExpenseRequestTest extends TenantAppTestCase
             'type' => 'advance',
             'notes' => null,
             'items' => [
-                ['description' => 'Planned transport', 'amount' => '100.00', 'account_code_id' => '', 'receipt_number' => null],
+                ['description' => 'Planned transport', 'amount' => '100.00', 'cost_code_id' => '', 'receipt_number' => null],
             ],
         ];
 
@@ -147,12 +147,12 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     public function test_show_renders_expense_request(): void
     {
-        $accountCode = AccountCode::factory()->create();
+        $costCode = CostCode::factory()->create();
         $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
         $paymentRequest->items()->create([
             'description' => 'Flight',
             'amount' => 300,
-            'account_code_id' => $accountCode->id,
+            'cost_code_id' => $costCode->id,
             'receipt_number' => 'FL-001',
         ]);
 
@@ -160,6 +160,6 @@ class ExpenseRequestTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertSee('FL-001');
-        $response->assertSee($accountCode->code);
+        $response->assertSee($costCode->code);
     }
 }

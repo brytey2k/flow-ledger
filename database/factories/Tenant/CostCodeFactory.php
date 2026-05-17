@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Database\Factories\Tenant;
 
-use App\Models\Tenant\AccountCode;
+use App\Models\Tenant\CostCode;
 use App\Models\Tenant\Department;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<AccountCode>
+ * @extends Factory<CostCode>
  */
-class AccountCodeFactory extends Factory
+class CostCodeFactory extends Factory
 {
-    protected $model = AccountCode::class;
+    protected $model = CostCode::class;
 
     public function definition(): array
     {

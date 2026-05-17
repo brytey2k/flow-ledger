@@ -84,10 +84,10 @@ class ReportsControllerTest extends TenantAppTestCase
             ->assertOk();
     }
 
-    public function test_expenditure_summary_grouped_by_account_code(): void
+    public function test_expenditure_summary_grouped_by_cost_code(): void
     {
         $this->actingAs($this->user)
-            ->get(route('reports.expenditure-summary', ['group_by' => 'account_code']))
+            ->get(route('reports.expenditure-summary', ['group_by' => 'cost_code']))
             ->assertOk();
     }
 

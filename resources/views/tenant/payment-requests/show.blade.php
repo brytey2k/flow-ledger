@@ -123,7 +123,7 @@
                                     <tr>
                                         <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
                                         @if($paymentRequest->isExpense())
-                                            <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.fields.account_code') }}</span></span></th>
+                                            <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
                                             <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
                                         @endif
                                         <th class="w-[160px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
@@ -136,9 +136,9 @@
                                             @if($paymentRequest->isExpense())
                                                 <td>
                                                     <span class="text-sm text-mono">
-                                                        {{ $item->accountCode->code ?? '—' }}
-                                                        @if($item->accountCode)
-                                                            <span class="text-secondary-foreground font-normal">— {{ $item->accountCode->name }}</span>
+                                                        {{ $item->costCode->code ?? '—' }}
+                                                        @if($item->costCode)
+                                                            <span class="text-secondary-foreground font-normal">— {{ $item->costCode->name }}</span>
                                                         @endif
                                                     </span>
                                                 </td>

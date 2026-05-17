@@ -73,18 +73,18 @@
                                     @enderror
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.account_code') }} <span class="text-destructive">*</span></label>
-                                    <select name="items[{{ $index }}][account_code_id]" class="kt-select w-full"
-                                            aria-invalid="@error('items.{{ $index }}.account_code_id') true @else false @enderror">
+                                    <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
+                                    <select name="items[{{ $index }}][cost_code_id]" class="kt-select w-full"
+                                            aria-invalid="@error('items.{{ $index }}.cost_code_id') true @else false @enderror">
                                         <option value="">Select…</option>
-                                        @foreach($accountCodes as $code)
+                                        @foreach($costCodes as $code)
                                             <option value="{{ $code->id }}"
-                                                {{ isset($oldItem['account_code_id']) && $oldItem['account_code_id'] == $code->id ? 'selected' : '' }}>
+                                                {{ isset($oldItem['cost_code_id']) && $oldItem['cost_code_id'] == $code->id ? 'selected' : '' }}>
                                                 {{ $code->code }} — {{ $code->name }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error("items.{$index}.account_code_id")
+                                    @error("items.{$index}.cost_code_id")
                                         <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                                     @enderror
                                 </div>
@@ -189,10 +189,10 @@
             <input type="text" name="items[__INDEX__][description]" class="kt-input w-full" placeholder="{{ __('retirements.fields.what_purchased') }}">
         </div>
         <div class="flex-1 min-w-0">
-            <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.account_code') }} <span class="text-destructive">*</span></label>
-            <select name="items[__INDEX__][account_code_id]" class="kt-select w-full">
+            <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
+            <select name="items[__INDEX__][cost_code_id]" class="kt-select w-full">
                 <option value="">Select…</option>
-                @foreach($accountCodes as $code)
+                @foreach($costCodes as $code)
                     <option value="{{ $code->id }}">{{ $code->code }} — {{ $code->name }}</option>
                 @endforeach
             </select>

@@ -27,20 +27,20 @@ class PaymentRequestUpdateRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],
-            'items.*.account_code_id' => [$isExpense ? 'required' : 'nullable', 'integer', 'exists:account_codes,id'],
+            'items.*.cost_code_id' => [$isExpense ? 'required' : 'nullable', 'integer', 'exists:cost_codes,id'],
             'items.*.receipt_number' => ['nullable', 'string', 'max:100'],
         ];
     }
 
     public function toDto(int $staffId, int $branchId, string $type): \App\DTOs\Tenant\CreatePaymentRequestDto
     {
-        /** @var list<array{description: string, amount: string|float, account_code_id?: string|int|null, receipt_number?: string|null}> $rawItems */
+        /** @var list<array{description: string, amount: string|float, cost_code_id?: string|int|null, receipt_number?: string|null}> $rawItems */
         $rawItems = $this->input('items', []) ?? [];
         $items = array_map(
             fn(array $item): \App\DTOs\Tenant\PaymentRequestItemDto => new \App\DTOs\Tenant\PaymentRequestItemDto(
                 description: (string) $item['description'],
                 amount: (float) $item['amount'],
-                accountCodeId: isset($item['account_code_id']) ? (int) $item['account_code_id'] : null,
+                costCodeId: isset($item['cost_code_id']) ? (int) $item['cost_code_id'] : null,
                 receiptNumber: isset($item['receipt_number']) ? (string) $item['receipt_number'] : null,
             ),
             $rawItems,

@@ -12,7 +12,7 @@ enum PermissionKey: string
     case AccessRoles = 'access roles';
     case AccessCurrencies = 'access currencies';
     case AccessDepartments = 'access departments';
-    case AccessAccountCodes = 'access account codes';
+    case AccessCostCodes = 'access cost codes';
     case AccessPositions = 'access positions';
     case AccessStaff = 'access staff';
     case AccessSettings = 'access settings';
@@ -35,7 +35,7 @@ enum PermissionKey: string
     case CreateRole = 'create role';
     case CreateCurrency = 'create currency';
     case CreateDepartment = 'create department';
-    case CreateAccountCode = 'create account code';
+    case CreateCostCode = 'create cost code';
     case CreatePosition = 'create position';
     case CreateStaff = 'create staff';
 
@@ -43,7 +43,7 @@ enum PermissionKey: string
     case DeleteRole = 'delete role';
     case DeleteCurrency = 'delete currency';
     case DeleteDepartment = 'delete department';
-    case DeleteAccountCode = 'delete account code';
+    case DeleteCostCode = 'delete cost code';
     case DeletePosition = 'delete position';
     case DeleteStaff = 'delete staff';
 

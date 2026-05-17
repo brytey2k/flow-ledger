@@ -16,7 +16,7 @@ class RetirementRequestItem extends Model
 
     protected $fillable = [
         'retirement_request_id',
-        'account_code_id',
+        'cost_code_id',
         'description',
         'amount',
         'receipt_number',
@@ -35,10 +35,10 @@ class RetirementRequestItem extends Model
         return $this->belongsTo(RetirementRequest::class);
     }
 
-    /** @return BelongsTo<AccountCode, $this> */
-    public function accountCode(): BelongsTo
+    /** @return BelongsTo<CostCode, $this> */
+    public function costCode(): BelongsTo
     {
-        return $this->belongsTo(AccountCode::class);
+        return $this->belongsTo(CostCode::class);
     }
 
     /** @return MorphMany<Attachment, $this> */

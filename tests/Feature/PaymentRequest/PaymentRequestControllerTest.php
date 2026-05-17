@@ -275,7 +275,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertViewIs('tenant.payment-requests.edit');
-        $response->assertViewHas(['paymentRequest', 'currencies', 'accountCodes']);
+        $response->assertViewHas(['paymentRequest', 'currencies', 'costCodes']);
     }
 
     public function test_edit_redirects_if_request_is_not_sent_back(): void

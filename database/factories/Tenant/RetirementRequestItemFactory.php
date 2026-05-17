@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories\Tenant;
 
-use App\Models\Tenant\AccountCode;
+use App\Models\Tenant\CostCode;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\RetirementRequestItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,7 +20,7 @@ class RetirementRequestItemFactory extends Factory
     {
         return [
             'retirement_request_id' => RetirementRequest::factory(),
-            'account_code_id' => AccountCode::factory(),
+            'cost_code_id' => CostCode::factory(),
             'description' => fake()->sentence(4),
             'amount' => fake()->randomFloat(2, 10, 2000),
             'receipt_number' => null,

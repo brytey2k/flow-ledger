@@ -38,10 +38,10 @@ return [
         'updated' => 'Departement mis a jour avec succes.',
         'deleted' => 'Departement supprime.',
     ],
-    'account_codes' => [
-        'created' => 'Code de compte cree avec succes.',
-        'updated' => 'Code de compte mis a jour avec succes.',
-        'deleted' => 'Code de compte supprime.',
+    'cost_codes' => [
+        'created' => 'Code de coût créé avec succès.',
+        'updated' => 'Code de coût mis à jour avec succès.',
+        'deleted' => 'Code de coût supprimé.',
     ],
     'branches' => [
         'created' => 'Succursale creee avec succes.',

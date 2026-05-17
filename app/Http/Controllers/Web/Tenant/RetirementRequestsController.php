@@ -10,7 +10,7 @@ use App\Http\Requests\Tenant\RetirementRequestUpdateRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowInstanceStage;
-use App\Repositories\AccountCodeRepository;
+use App\Repositories\CostCodeRepository;
 use App\Repositories\RetirementRequestRepository;
 use App\Services\BranchScopeService;
 use App\Services\RetirementService;
@@ -24,7 +24,7 @@ class RetirementRequestsController extends Controller
     public function __construct(
         private readonly RetirementRequestRepository $repository,
         private readonly RetirementService $service,
-        private readonly AccountCodeRepository $accountCodeRepository,
+        private readonly CostCodeRepository $costCodeRepository,
         private readonly WorkflowEngineService $workflowEngine,
         private readonly BranchScopeService $branchScope,
     ) {}
@@ -47,11 +47,11 @@ class RetirementRequestsController extends Controller
         abort_if($paymentRequest->retirementRequest()->exists(), 422, 'This advance has already been retired.');
 
         $departmentId = $paymentRequest->staff?->department_id;
-        $accountCodes = $departmentId
-            ? $this->accountCodeRepository->forDepartment($departmentId)
-            : $this->accountCodeRepository->allOrderedByCode();
+        $costCodes = $departmentId
+            ? $this->costCodeRepository->forDepartment($departmentId)
+            : $this->costCodeRepository->allOrderedByCode();
 
-        return view('tenant.retirement-requests.create', compact('paymentRequest', 'accountCodes'));
+        return view('tenant.retirement-requests.create', compact('paymentRequest', 'costCodes'));
     }
 
     public function store(RetirementRequestStoreRequest $request, PaymentRequest $paymentRequest): RedirectResponse
@@ -103,7 +103,7 @@ class RetirementRequestsController extends Controller
         $user = $request->user();
         abort_unless(in_array($retirementRequest->paymentRequest?->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
 
-        $retirementRequest->load('paymentRequest.currency', 'paymentRequest.staff.department', 'paymentRequest.branch', 'items.accountCode');
+        $retirementRequest->load('paymentRequest.currency', 'paymentRequest.staff.department', 'paymentRequest.branch', 'items.costCode');
 
         if (! $retirementRequest->isDraft() && ! $retirementRequest->isSentBack()) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
@@ -116,11 +116,11 @@ class RetirementRequestsController extends Controller
         }
 
         $departmentId = $retirementRequest->paymentRequest?->staff?->department_id;
-        $accountCodes = $departmentId
-            ? $this->accountCodeRepository->forDepartment($departmentId)
-            : $this->accountCodeRepository->allOrderedByCode();
+        $costCodes = $departmentId
+            ? $this->costCodeRepository->forDepartment($departmentId)
+            : $this->costCodeRepository->allOrderedByCode();
 
-        return view('tenant.retirement-requests.edit', compact('retirementRequest', 'accountCodes'));
+        return view('tenant.retirement-requests.edit', compact('retirementRequest', 'costCodes'));
     }
 
     public function update(RetirementRequestUpdateRequest $request, RetirementRequest $retirementRequest): RedirectResponse

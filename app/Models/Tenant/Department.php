@@ -15,8 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, AccountCode> $accountCodes
- * @property-read int|null $account_codes_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CostCode> $costCodes
+ * @property-read int|null $cost_codes_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Staff> $staff
  * @property-read int|null $staff_count
  */
@@ -29,10 +29,10 @@ class Department extends Model
     /** @var list<string> */
     protected $fillable = ['name'];
 
-    /** @return HasMany<AccountCode, $this> */
-    public function accountCodes(): HasMany
+    /** @return HasMany<CostCode, $this> */
+    public function costCodes(): HasMany
     {
-        return $this->hasMany(AccountCode::class);
+        return $this->hasMany(CostCode::class);
     }
 
     /** @return HasMany<Staff, $this> */
