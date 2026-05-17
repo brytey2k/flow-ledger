@@ -1,0 +1,156 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Services;
+
+use App\DTOs\Tenant\CreateRetirementRequestDto;
+use App\DTOs\Tenant\RetirementRequestItemDto;
+use App\Models\Tenant\AccountCode;
+use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\RetirementRequest;
+use App\Models\Tenant\WorkflowInstance;
+use App\Models\Tenant\WorkflowInstanceStage;
+use App\Models\Tenant\WorkflowStage;
+use App\Models\Tenant\WorkflowTemplate;
+use App\Services\RetirementService;
+use Tests\TenantAppTestCase;
+
+class RetirementServiceTest extends TenantAppTestCase
+{
+    private function makeService(): RetirementService
+    {
+        return app(RetirementService::class);
+    }
+
+    private function makeDto(float $amount = 500.0, string|null $notes = null): CreateRetirementRequestDto
+    {
+        $accountCode = AccountCode::factory()->create();
+
+        return new CreateRetirementRequestDto(
+            notes: $notes,
+            items: [
+                new RetirementRequestItemDto(
+                    description: 'Test item',
+                    amount: $amount,
+                    accountCodeId: $accountCode->id,
+                    receiptNumber: null,
+                ),
+            ],
+        );
+    }
+
+    private function disbursedAdvance(float $totalAmount = 500.0): PaymentRequest
+    {
+        return PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'total_amount' => $totalAmount,
+        ]);
+    }
+
+    // ── cancel() without active workflow instance ─────────────────────────────
+
+    public function test_cancel_without_active_instance_sets_status_to_cancelled(): void
+    {
+        $paymentRequest = $this->disbursedAdvance();
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'draft',
+        ]);
+
+        $this->makeService()->cancel($retirement, $this->user);
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'id' => $retirement->id,
+            'status' => 'cancelled',
+        ]);
+    }
+
+    // ── cancel() with active workflow instance ────────────────────────────────
+
+    public function test_cancel_with_active_instance_cancels_instance_and_stages(): void
+    {
+        $template = WorkflowTemplate::factory()->retirement()->create();
+        $stageDef = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+        ]);
+
+        $paymentRequest = $this->disbursedAdvance();
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'in_workflow',
+        ]);
+
+        $instance = WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => RetirementRequest::class,
+            'workflowable_id' => $retirement->id,
+            'status' => 'in_progress',
+        ]);
+
+        WorkflowInstanceStage::create([
+            'workflow_instance_id' => $instance->id,
+            'workflow_stage_id' => $stageDef->id,
+            'status' => 'active',
+            'started_at' => now(),
+        ]);
+
+        $this->makeService()->cancel($retirement, $this->user);
+
+        $this->assertDatabaseHas('retirement_requests', ['id' => $retirement->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('workflow_instances', ['id' => $instance->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('workflow_instance_stages', [
+            'workflow_instance_id' => $instance->id,
+            'status' => 'cancelled',
+        ]);
+    }
+
+    // ── createDraft() nil difference type ────────────────────────────────────
+
+    public function test_create_draft_sets_nil_difference_type_when_amounts_match(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(500.0);
+
+        $retirement = $this->makeService()->createDraft($paymentRequest, $this->makeDto(500.0), $this->user);
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'id' => $retirement->id,
+            'difference_type' => 'nil',
+            'difference_amount' => '0.00',
+        ]);
+    }
+
+    // ── updateDraft() nil difference type ────────────────────────────────────
+
+    public function test_update_draft_sets_nil_when_amounts_match(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(800.0);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'draft',
+            'difference_type' => 'refund_to_company',
+        ]);
+
+        $updated = $this->makeService()->updateDraft($retirement, $this->makeDto(800.0), $this->user);
+
+        $this->assertSame('nil', $updated->difference_type);
+    }
+
+    // ── updateSentBack() nil difference type ─────────────────────────────────
+
+    public function test_update_sent_back_sets_nil_when_amounts_match(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(300.0);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'sent_back',
+            'difference_type' => 'pay_to_staff',
+        ]);
+
+        $updated = $this->makeService()->updateSentBack($retirement, $this->makeDto(300.0), $this->user);
+
+        $this->assertSame('nil', $updated->difference_type);
+    }
+}

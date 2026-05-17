@@ -199,6 +199,25 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
         $response->assertSessionHasErrors('type');
     }
 
+    public function test_update_is_blocked_when_template_has_active_instances(): void
+    {
+        $template = WorkflowTemplate::factory()->create(['type' => 'advance']);
+        \App\Models\Tenant\PaymentRequest::factory()->advance()->create(['status' => 'in_workflow']);
+        \App\Models\Tenant\WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => \App\Models\Tenant\PaymentRequest::class,
+            'workflowable_id' => \App\Models\Tenant\PaymentRequest::factory()->advance()->create(['status' => 'in_workflow'])->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($this->user)->put(route('workflow-templates.update', $template), [
+            'name' => 'Changed Name',
+            'type' => 'advance',
+        ]);
+
+        $response->assertRedirect()->assertSessionHas('error');
+    }
+
     // ── Destroy ───────────────────────────────────────────────────────────────
 
     public function test_user_can_delete_workflow_template(): void
@@ -209,5 +228,20 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
 
         $response->assertRedirect(route('workflow-templates.index'));
         $this->assertDatabaseMissing('workflow_templates', ['id' => $template->id]);
+    }
+
+    public function test_destroy_is_blocked_when_template_has_active_instances(): void
+    {
+        $template = WorkflowTemplate::factory()->create(['type' => 'advance']);
+        \App\Models\Tenant\WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => \App\Models\Tenant\PaymentRequest::class,
+            'workflowable_id' => \App\Models\Tenant\PaymentRequest::factory()->advance()->create(['status' => 'in_workflow'])->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($this->user)->delete(route('workflow-templates.destroy', $template));
+
+        $response->assertRedirect()->assertSessionHas('error');
     }
 }

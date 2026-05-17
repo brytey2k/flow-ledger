@@ -9,6 +9,10 @@ use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\PaymentRequestItem;
 use App\Models\Tenant\Staff;
+use App\Models\Tenant\WorkflowInstance;
+use App\Models\Tenant\WorkflowInstanceStage;
+use App\Models\Tenant\WorkflowStage;
+use App\Models\Tenant\WorkflowTemplate;
 use Tests\TenantAppTestCase;
 
 class PaymentRequestControllerTest extends TenantAppTestCase
@@ -229,6 +233,31 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $response->assertOk();
         $response->assertViewIs('tenant.payment-requests.show');
         $response->assertViewHas('paymentRequest');
+    }
+
+    public function test_show_passes_active_stage_data_when_workflow_is_in_progress(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stageDef = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow']);
+
+        $instance = WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $paymentRequest->id,
+            'status' => 'in_progress',
+        ]);
+        WorkflowInstanceStage::create([
+            'workflow_instance_id' => $instance->id,
+            'workflow_stage_id' => $stageDef->id,
+            'status' => 'active',
+            'started_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.show', $paymentRequest));
+
+        $response->assertOk();
+        $response->assertViewHas('canActOnActiveStage');
     }
 
     // ── Edit ─────────────────────────────────────────────────────────────────

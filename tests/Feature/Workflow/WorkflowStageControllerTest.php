@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Workflow;
 
 use App\Models\Role;
+use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowParallelGroup;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
@@ -227,6 +229,59 @@ class WorkflowStageControllerTest extends TenantAppTestCase
         $this->assertDatabaseMissing('workflow_stage_roles', ['workflow_stage_id' => $stage->id, 'role_id' => $oldRole->id]);
     }
 
+    // ── Store blocked by active instances ────────────────────────────────────
+
+    public function test_store_is_blocked_when_template_has_active_instances(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $role = Role::create(['name' => 'approver_lock', 'guard_name' => 'web']);
+        $subject = PaymentRequest::factory()->inWorkflow()->create();
+        WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $subject->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->post(route('workflow-templates.stages.store', $template), [
+                'name' => 'Blocked Stage',
+                'display_order' => 1,
+                'role_ids' => [$role->id],
+            ]);
+
+        $response->assertRedirect(route('workflow-templates.show', $template));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('workflow_stages', ['name' => 'Blocked Stage']);
+    }
+
+    // ── Update blocked by active instances ───────────────────────────────────
+
+    public function test_update_is_blocked_when_template_has_active_instances(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+        $role = Role::create(['name' => 'update_lock_role', 'guard_name' => 'web']);
+        $subject = PaymentRequest::factory()->inWorkflow()->create();
+        WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $subject->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->put(route('workflow-templates.stages.update', [$template, $stage]), [
+                'name' => 'Should Not Update',
+                'display_order' => 1,
+                'role_ids' => [$role->id],
+            ]);
+
+        $response->assertRedirect(route('workflow-templates.show', $template));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('workflow_stages', ['name' => 'Should Not Update']);
+    }
+
     // ── Destroy ───────────────────────────────────────────────────────────────
 
     public function test_user_can_delete_stage(): void
@@ -239,5 +294,25 @@ class WorkflowStageControllerTest extends TenantAppTestCase
 
         $response->assertRedirect(route('workflow-templates.show', $template));
         $this->assertDatabaseMissing('workflow_stages', ['id' => $stage->id]);
+    }
+
+    public function test_destroy_is_blocked_when_template_has_active_instances(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+        $subject = PaymentRequest::factory()->inWorkflow()->create();
+        WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $subject->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('workflow-templates.stages.destroy', [$template, $stage]));
+
+        $response->assertRedirect(route('workflow-templates.show', $template));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('workflow_stages', ['id' => $stage->id]);
     }
 }

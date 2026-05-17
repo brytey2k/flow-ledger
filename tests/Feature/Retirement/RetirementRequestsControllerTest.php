@@ -205,6 +205,21 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $response->assertViewIs('tenant.retirement-requests.show');
     }
 
+    // ── Show — with active workflow instance ──────────────────────────────────
+
+    public function test_show_passes_active_instance_stage_when_workflow_is_in_progress(): void
+    {
+        $template = WorkflowTemplate::factory()->retirement()->create();
+        $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+        app(RetirementService::class)->submit($retirement);
+
+        $response = $this->actingAs($this->user)->get(route('retirement-requests.show', $retirement));
+
+        $response->assertOk();
+        $response->assertViewHas('canActOnActiveStage');
+    }
+
     // ── Submit ────────────────────────────────────────────────────────────────
 
     public function test_submit_transitions_draft_to_in_workflow(): void
