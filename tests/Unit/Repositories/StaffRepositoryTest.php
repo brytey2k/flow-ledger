@@ -24,16 +24,16 @@ class StaffRepositoryTest extends TenantAppTestCase
 
     public function test_all_with_relations_returns_collection(): void
     {
-        $result = $this->repository->allWithRelations();
+        $result = $this->repository->allWithRelations([$this->branch->id]);
 
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $result);
     }
 
     public function test_all_with_relations_includes_department_and_position(): void
     {
-        Staff::factory()->create();
+        Staff::factory()->withBranch($this->branch)->create();
 
-        $result = $this->repository->allWithRelations();
+        $result = $this->repository->allWithRelations([$this->branch->id]);
 
         $this->assertGreaterThan(0, $result->count());
         $first = $result->first();
@@ -43,11 +43,11 @@ class StaffRepositoryTest extends TenantAppTestCase
 
     public function test_all_with_relations_is_ordered_by_last_name_then_first_name(): void
     {
-        Staff::factory()->create(['last_name' => 'Zulu', 'first_name' => 'Alpha']);
-        Staff::factory()->create(['last_name' => 'Alpha', 'first_name' => 'Zulu']);
-        Staff::factory()->create(['last_name' => 'Alpha', 'first_name' => 'Able']);
+        Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Zulu', 'first_name' => 'Alpha']);
+        Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Alpha', 'first_name' => 'Zulu']);
+        Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Alpha', 'first_name' => 'Able']);
 
-        $result = $this->repository->allWithRelations();
+        $result = $this->repository->allWithRelations([$this->branch->id]);
 
         $lastNames = $result->pluck('last_name')->all();
         $sortedLastNames = $lastNames;

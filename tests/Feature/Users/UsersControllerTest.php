@@ -118,6 +118,7 @@ class UsersControllerTest extends TenantAppTestCase
             'email' => $email,
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'branch_id' => $this->branch->id,
         ]);
 
         $response->assertRedirect(route('users.index'));
@@ -179,6 +180,7 @@ class UsersControllerTest extends TenantAppTestCase
             'first_name' => 'Updated',
             'last_name' => 'Name',
             'email' => $user->email,
+            'branch_id' => $this->branch->id,
         ]);
 
         $response->assertRedirect(route('users.index'));

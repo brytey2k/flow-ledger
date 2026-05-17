@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -20,9 +21,13 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $locale
  * @property string $password
  * @property string|null $remember_token
+ * @property int $branch_id
+ * @property int $operational_branch_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read Branch $branch
+ * @property-read Branch $operationalBranch
  *
  * @method static \Database\Factories\Tenant\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
@@ -52,6 +57,8 @@ class User extends Authenticatable
         'email',
         'password',
         'locale',
+        'branch_id',
+        'operational_branch_id',
     ];
 
     protected $hidden = [
@@ -70,6 +77,18 @@ class User extends Authenticatable
     public function getNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /** @return BelongsTo<Branch, $this> */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /** @return BelongsTo<Branch, $this> */
+    public function operationalBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'operational_branch_id');
     }
 
     /** @return HasOne<Staff, $this> */

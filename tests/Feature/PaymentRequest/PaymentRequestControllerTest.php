@@ -55,7 +55,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_user_without_permission_cannot_access_show(): void
     {
-        $request = PaymentRequest::factory()->create();
+        $request = PaymentRequest::factory()->create(['branch_id' => $this->branch->id]);
         $this->role->revokePermissionTo('access payment requests');
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.show', $request));
@@ -65,7 +65,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_user_without_delete_permission_cannot_delete(): void
     {
-        $request = PaymentRequest::factory()->create();
+        $request = PaymentRequest::factory()->create(['branch_id' => $this->branch->id]);
         $this->role->revokePermissionTo('delete payment request');
 
         $response = $this->actingAs($this->user)->delete(route('payment-requests.destroy', $request));
@@ -77,7 +77,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_index_renders_with_requests(): void
     {
-        PaymentRequest::factory()->count(3)->create();
+        PaymentRequest::factory()->count(3)->create(['branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.index'));
 
@@ -225,7 +225,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_show_renders_payment_request(): void
     {
-        $paymentRequest = PaymentRequest::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->create(['branch_id' => $this->branch->id]);
         PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id]);
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.show', $paymentRequest));
@@ -239,7 +239,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
     {
         $template = WorkflowTemplate::factory()->advance()->create();
         $stageDef = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'branch_id' => $this->branch->id]);
 
         $instance = WorkflowInstance::create([
             'workflow_template_id' => $template->id,
@@ -268,6 +268,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create([
             'status' => 'sent_back',
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.edit', $paymentRequest));
@@ -283,6 +284,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create([
             'status' => 'draft',
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.edit', $paymentRequest));
@@ -293,7 +295,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_edit_redirects_if_not_owner(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'sent_back']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'sent_back', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->get(route('payment-requests.edit', $paymentRequest));
 
@@ -313,6 +315,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
             'staff_id' => $staff->id,
             'currency_id' => $oldCurrency->id,
             'total_amount' => 100.00,
+            'branch_id' => $this->branch->id,
         ]);
         PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id, 'amount' => 100.00]);
 
@@ -347,6 +350,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
             'status' => 'sent_back',
             'staff_id' => $staff->id,
             'currency_id' => $currency->id,
+            'branch_id' => $this->branch->id,
         ]);
         PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id, 'description' => 'Old item']);
 
@@ -367,6 +371,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
             'status' => 'draft',
             'staff_id' => $staff->id,
             'currency_id' => $currency->id,
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
@@ -384,6 +389,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $paymentRequest = PaymentRequest::factory()->advance()->create([
             'status' => 'sent_back',
             'currency_id' => $currency->id,
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
@@ -417,7 +423,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_destroy_deletes_draft_and_redirects_to_index(): void
     {
-        $paymentRequest = PaymentRequest::factory()->create(['status' => 'draft']);
+        $paymentRequest = PaymentRequest::factory()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->delete(route('payment-requests.destroy', $paymentRequest));
 
@@ -428,7 +434,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
     public function test_destroy_refuses_non_draft(): void
     {
-        $paymentRequest = PaymentRequest::factory()->inWorkflow()->create();
+        $paymentRequest = PaymentRequest::factory()->inWorkflow()->create(['branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->delete(route('payment-requests.destroy', $paymentRequest));
 

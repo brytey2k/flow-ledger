@@ -148,7 +148,7 @@ class ExpenseRequestTest extends TenantAppTestCase
     public function test_show_renders_expense_request(): void
     {
         $accountCode = AccountCode::factory()->create();
-        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'draft']);
+        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
         $paymentRequest->items()->create([
             'description' => 'Flight',
             'amount' => 300,

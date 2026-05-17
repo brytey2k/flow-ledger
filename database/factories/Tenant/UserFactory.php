@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories\Tenant;
 
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,17 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'branch_id' => Branch::factory(),
+            'operational_branch_id' => Branch::factory(),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            // Keep operational_branch_id in sync with branch_id by default
+            $user->update(['operational_branch_id' => $user->branch_id]);
+        });
     }
 
     public function unverified(): static

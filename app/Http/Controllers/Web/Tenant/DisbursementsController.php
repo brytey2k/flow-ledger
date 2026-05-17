@@ -8,8 +8,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\DisbursementStoreRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Repositories\PaymentRequestRepository;
+use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DisbursementsController extends Controller
@@ -17,11 +19,14 @@ class DisbursementsController extends Controller
     public function __construct(
         private readonly PaymentRequestService $service,
         private readonly PaymentRequestRepository $repository,
+        private readonly BranchScopeService $branchScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $requests = $this->repository->pendingDisbursement();
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $requests = $this->repository->pendingDisbursement($this->branchScope->allowedBranchIds($user));
 
         return view('tenant.disbursements.index', compact('requests'));
     }

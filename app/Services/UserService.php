@@ -20,6 +20,8 @@ class UserService
                 'last_name' => $dto->lastName,
                 'email' => $dto->email,
                 'password' => $dto->password,
+                'branch_id' => $dto->branchId,
+                'operational_branch_id' => $dto->operationalBranchId,
             ]);
 
             if (! empty($dto->roles)) {
@@ -44,6 +46,8 @@ class UserService
                 'first_name' => $dto->firstName,
                 'last_name' => $dto->lastName,
                 'email' => $dto->email,
+                'branch_id' => $dto->branchId,
+                'operational_branch_id' => $dto->operationalBranchId,
             ];
 
             if ($dto->password !== null) {

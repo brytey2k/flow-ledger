@@ -22,7 +22,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_guest_cannot_disburse(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
         $response = $this->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => PaymentMethod::Cash->value,
@@ -45,7 +45,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
     public function test_user_without_permission_cannot_disburse(): void
     {
         $this->role->revokePermissionTo(PermissionKey::DisburseRequests->value);
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => PaymentMethod::Cash->value,
@@ -58,8 +58,8 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_authorised_user_sees_disbursements_index(): void
     {
-        PaymentRequest::factory()->advance()->create(['status' => 'approved']);
-        PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+        PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->get(route('disbursements.index'));
 
@@ -69,9 +69,9 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_index_only_shows_approved_requests(): void
     {
-        $approved = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
-        PaymentRequest::factory()->advance()->create(['status' => 'draft']);
-        PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
+        $approved = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+        PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
+        PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->get(route('disbursements.index'));
 
@@ -84,7 +84,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_authorised_user_can_disburse_approved_request(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => PaymentMethod::BankTransfer->value,
@@ -105,7 +105,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_disburse_without_reference_is_allowed(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => PaymentMethod::Cash->value,
@@ -121,7 +121,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_cannot_disburse_non_approved_request(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => PaymentMethod::Cash->value,
@@ -135,7 +135,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_disbursement_method_is_required(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => '',
@@ -147,7 +147,7 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_disburse_logs_activity(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
         $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => PaymentMethod::MobileMoney->value,

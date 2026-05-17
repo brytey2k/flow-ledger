@@ -9,6 +9,7 @@ use App\Http\Requests\Tenant\PermissionsSyncRequest;
 use App\Http\Requests\Tenant\UserStoreRequest;
 use App\Http\Requests\Tenant\UserUpdateRequest;
 use App\Models\Tenant\User;
+use App\Repositories\BranchRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
@@ -24,6 +25,7 @@ class UsersController extends Controller
         private readonly UserRepository $repository,
         private readonly RoleRepository $roleRepository,
         private readonly PermissionRepository $permissionRepository,
+        private readonly BranchRepository $branchRepository,
     ) {}
 
     public function index(): View
@@ -38,9 +40,11 @@ class UsersController extends Controller
     public function create(): View
     {
         $roles = $this->roleRepository->allOrderedByName();
+        $branches = $this->branchRepository->allOrderedByName();
 
         return view('tenant.users.create', [
             'roles' => $roles,
+            'branches' => $branches,
         ]);
     }
 
@@ -56,11 +60,13 @@ class UsersController extends Controller
     public function edit(User $user): View
     {
         $roles = $this->roleRepository->allOrderedByName();
+        $branches = $this->branchRepository->allOrderedByName();
         $user->load('roles');
 
         return view('tenant.users.edit', [
             'user' => $user,
             'roles' => $roles,
+            'branches' => $branches,
         ]);
     }
 

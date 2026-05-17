@@ -10,10 +10,18 @@ use Illuminate\Database\Eloquent\Collection;
 
 class StaffRepository
 {
-    /** @return Collection<int, Staff> */
-    public function allWithRelations(): Collection
+    /**
+     * @param array<int, int> $branchIds
+     *
+     * @return Collection<int, Staff>
+     */
+    public function allWithRelations(array $branchIds): Collection
     {
-        return Staff::with(['department', 'position'])->orderBy('last_name')->orderBy('first_name')->get();
+        return Staff::with(['department', 'position'])
+            ->whereIn('branch_id', $branchIds)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
     }
 
     /** @return Collection<int, User> */

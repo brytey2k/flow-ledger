@@ -9,10 +9,16 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class RetirementRequestRepository
 {
-    /** @return LengthAwarePaginator<int, RetirementRequest> */
-    public function paginated(int $perPage = 20): LengthAwarePaginator
+    /**
+     * @param array<int, int> $branchIds
+     * @param int $perPage
+     *
+     * @return LengthAwarePaginator<int, RetirementRequest>
+     */
+    public function paginated(array $branchIds, int $perPage = 20): LengthAwarePaginator
     {
         return RetirementRequest::with(['paymentRequest.staff', 'paymentRequest.currency'])
+            ->whereHas('paymentRequest', fn($q) => $q->whereIn('branch_id', $branchIds))
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }

@@ -76,6 +76,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->create([
             'status' => 'disbursed',
             'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -103,6 +104,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'type' => 'expense',
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -127,6 +129,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->advance()->create([
             'status' => 'disbursed',
             'disbursed_at' => now()->subDays(10),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -139,6 +142,7 @@ class ReportsControllerTest extends TenantAppTestCase
         $request = PaymentRequest::factory()->advance()->create([
             'status' => 'disbursed',
             'disbursed_at' => now()->subDays(10),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -153,6 +157,7 @@ class ReportsControllerTest extends TenantAppTestCase
         $request = PaymentRequest::factory()->create([
             'status' => 'disbursed',
             'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -172,6 +177,7 @@ class ReportsControllerTest extends TenantAppTestCase
         $request = PaymentRequest::factory()->create([
             'status' => 'disbursed',
             'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -197,6 +203,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'submitted_at' => now()->subDays(2),
             'approved_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -229,6 +236,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->expense()->create([
             'status' => 'disbursed',
             'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -241,6 +249,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->create([
             'status' => 'disbursed',
             'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -256,6 +265,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->create([
             'status' => 'disbursed',
             'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $this->actingAs($this->user)
@@ -293,6 +303,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->advance()->create([
             'status' => 'disbursed',
             'disbursed_at' => now()->subDays(10),
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -308,6 +319,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->advance()->create([
             'status' => 'disbursed',
             'disbursed_at' => now()->subDays(45),
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -323,6 +335,7 @@ class ReportsControllerTest extends TenantAppTestCase
         PaymentRequest::factory()->advance()->create([
             'status' => 'disbursed',
             'disbursed_at' => now()->subDays(90),
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -343,7 +356,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'name' => 'Finance Review',
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now()]);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now(), 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -379,7 +392,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'name' => 'Director Review',
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'in_workflow', 'submitted_at' => now()]);
+        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'in_workflow', 'submitted_at' => now(), 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -417,7 +430,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'name' => 'Manager Approval',
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now()]);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now(), 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -449,7 +462,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'workflow_template_id' => $template->id,
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'in_workflow', 'submitted_at' => now()]);
+        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'in_workflow', 'submitted_at' => now(), 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -480,7 +493,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'workflow_template_id' => $template->id,
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now()]);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now(), 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -511,7 +524,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'workflow_template_id' => $template->id,
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now()]);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'submitted_at' => now(), 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -544,7 +557,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'workflow_template_id' => $template->id,
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -600,7 +613,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'workflow_template_id' => $template->id,
         ]);
 
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'branch_id' => $this->branch->id]);
         $instance = \App\Models\Tenant\WorkflowInstance::create([
             'workflow_template_id' => $template->id,
             'workflowable_type' => PaymentRequest::class,
@@ -649,10 +662,9 @@ class ReportsControllerTest extends TenantAppTestCase
 
     public function test_cash_position_renders_with_cashbook_and_entry_data(): void
     {
-        $branch = \App\Models\Tenant\Branch::factory()->create();
         $currency = \App\Models\Tenant\Currency::factory()->create();
         $cashbook = \App\Models\Tenant\Cashbook::create([
-            'branch_id' => $branch->id,
+            'branch_id' => $this->branch->id,
             'currency_id' => $currency->id,
             'balance' => '1000.00',
         ]);
@@ -694,6 +706,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'submitted_at' => now()->subDays(2),
             'approved_at' => now()->subDay(),
+            'branch_id' => $this->branch->id,
         ]);
 
         // non-compliant: approved after 5 days
@@ -701,6 +714,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'submitted_at' => now()->subDays(6),
             'approved_at' => now()->subDay(),
+            'branch_id' => $this->branch->id,
         ]);
 
         $response = $this->actingAs($this->user)

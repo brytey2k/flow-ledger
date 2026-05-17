@@ -9,18 +9,30 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class PaymentRequestRepository
 {
-    /** @return LengthAwarePaginator<int, PaymentRequest> */
-    public function paginated(int $perPage = 20): LengthAwarePaginator
+    /**
+     * @param array<int, int> $branchIds
+     * @param int $perPage
+     *
+     * @return LengthAwarePaginator<int, PaymentRequest>
+     */
+    public function paginated(array $branchIds, int $perPage = 20): LengthAwarePaginator
     {
         return PaymentRequest::with(['staff', 'branch', 'currency'])
+            ->whereIn('branch_id', $branchIds)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
-    /** @return LengthAwarePaginator<int, PaymentRequest> */
-    public function pendingDisbursement(int $perPage = 20): LengthAwarePaginator
+    /**
+     * @param array<int, int> $branchIds
+     * @param int $perPage
+     *
+     * @return LengthAwarePaginator<int, PaymentRequest>
+     */
+    public function pendingDisbursement(array $branchIds, int $perPage = 20): LengthAwarePaginator
     {
         return PaymentRequest::with(['staff', 'branch', 'currency'])
+            ->whereIn('branch_id', $branchIds)
             ->where('status', 'approved')
             ->orderBy('approved_at', 'asc')
             ->paginate($perPage);

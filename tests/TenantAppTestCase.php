@@ -125,6 +125,8 @@ abstract class TenantAppTestCase extends BaseTestCase
         /** @var User $user */
         $user = User::factory()->create([
             'email' => Str::uuid7()->toString() . '@example.com',
+            'branch_id' => $this->branch->id,
+            'operational_branch_id' => $this->branch->id,
         ]);
         $this->user = $user;
 

@@ -58,6 +58,9 @@ enum PermissionKey: string
     case CreateRetirementRequest = 'create retirement request';
     case EditRetirementRequest = 'edit retirement request';
 
+    // Branch Scoping
+    case ViewDescendantBranches = 'view descendant branches';
+
     // Approvals
     case ApproveRequests = 'approve requests';
 

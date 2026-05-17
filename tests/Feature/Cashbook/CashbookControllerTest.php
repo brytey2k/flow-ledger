@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Cashbook;
 
 use App\Enums\Tenant\PermissionKey;
-use App\Models\Tenant\Branch;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\CashbookEntry;
 use App\Models\Tenant\Currency;
@@ -41,7 +40,7 @@ class CashbookControllerTest extends TenantAppTestCase
 
     private function autoEntry(Cashbook $cashbook): CashbookEntry
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['branch_id' => $this->branch->id]);
 
         return CashbookEntry::create([
             'cashbook_id' => $cashbook->id,
@@ -141,15 +140,15 @@ class CashbookControllerTest extends TenantAppTestCase
     public function test_cashbook_is_auto_created_on_first_index_visit(): void
     {
         $currency = Currency::factory()->create();
-        $branch = Branch::factory()->create(['currency_id' => $currency->id]);
+        $this->branch->update(['currency_id' => $currency->id]);
 
-        $this->assertNull(Cashbook::where('branch_id', $branch->id)->first());
+        $this->assertNull(Cashbook::where('branch_id', $this->branch->id)->first());
 
         $this->actingAs($this->user)
-            ->get(route('cashbook.index', $branch))
+            ->get(route('cashbook.index', $this->branch))
             ->assertOk();
 
-        $this->assertNotNull(Cashbook::where('branch_id', $branch->id)->first());
+        $this->assertNotNull(Cashbook::where('branch_id', $this->branch->id)->first());
     }
 
     // ── Create ────────────────────────────────────────────────────────────────

@@ -21,6 +21,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         return PaymentRequest::factory()->advance()->create([
             'status' => 'disbursed',
             'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
         ]);
     }
 
@@ -87,7 +88,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
     public function test_create_rejects_non_disbursed_advance(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
         $this->actingAs($this->user)
             ->get(route('retirement-requests.create', $paymentRequest))
@@ -131,6 +132,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'total_amount' => 1000.00,
+            'branch_id' => $this->branch->id,
         ]);
         $accountCode = AccountCode::factory()->create();
 
@@ -154,6 +156,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'total_amount' => 500.00,
+            'branch_id' => $this->branch->id,
         ]);
         $accountCode = AccountCode::factory()->create();
 
@@ -197,7 +200,9 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
     public function test_show_renders(): void
     {
-        $retirement = RetirementRequest::factory()->create();
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
 
         $response = $this->actingAs($this->user)->get(route('retirement-requests.show', $retirement));
 
@@ -211,7 +216,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
     {
         $template = WorkflowTemplate::factory()->retirement()->create();
         $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
-        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'draft',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
         app(RetirementService::class)->submit($retirement);
 
         $response = $this->actingAs($this->user)->get(route('retirement-requests.show', $retirement));
@@ -227,7 +235,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $template = WorkflowTemplate::factory()->retirement()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
 
-        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'draft',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
 
@@ -243,7 +254,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $template = WorkflowTemplate::factory()->retirement()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
 
-        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'draft',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
 
         $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
 
@@ -257,7 +271,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
     public function test_cannot_submit_when_no_workflow_template_exists(): void
     {
         WorkflowTemplate::query()->delete();
-        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'draft',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
 
@@ -271,7 +288,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
     public function test_cannot_submit_when_workflow_template_has_no_stages(): void
     {
         WorkflowTemplate::factory()->retirement()->create();
-        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'draft',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
 
@@ -291,6 +311,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
 
         return RetirementRequest::factory()->create([
@@ -317,6 +338,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
         $retirement = RetirementRequest::factory()->create([
             'status' => 'draft',
@@ -336,6 +358,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
         $retirement = RetirementRequest::factory()->create([
             'status' => 'in_workflow',
@@ -350,7 +373,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
     public function test_edit_redirects_if_not_owner(): void
     {
-        $retirement = RetirementRequest::factory()->create(['status' => 'sent_back']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'sent_back',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
 
         $response = $this->actingAs($this->user)->get(route('retirement-requests.edit', $retirement));
 
@@ -395,6 +421,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'disbursed_at' => now(),
             'staff_id' => $staff->id,
             'total_amount' => 1000.00,
+            'branch_id' => $this->branch->id,
         ]);
         $retirement = RetirementRequest::factory()->create([
             'status' => 'sent_back',
@@ -424,6 +451,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
         $retirement = RetirementRequest::factory()->create([
             'status' => 'draft',
@@ -452,6 +480,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
         $retirement = RetirementRequest::factory()->create([
             'status' => 'in_workflow',
@@ -469,7 +498,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
     public function test_update_rejects_non_owner(): void
     {
-        $retirement = RetirementRequest::factory()->create(['status' => 'sent_back']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'sent_back',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
         $accountCode = AccountCode::factory()->create();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
@@ -503,6 +535,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'status' => 'disbursed',
             'disbursed_at' => now(),
             'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
         ]);
         $retirement = RetirementRequest::factory()->create([
             'status' => 'draft',
@@ -528,7 +561,10 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $template = WorkflowTemplate::factory()->retirement()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
 
-        $retirement = RetirementRequest::factory()->create(['status' => 'sent_back']);
+        $retirement = RetirementRequest::factory()->create([
+            'status' => 'sent_back',
+            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
+        ]);
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.resubmit', $retirement));
 

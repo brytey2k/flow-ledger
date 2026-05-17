@@ -71,11 +71,19 @@ class StaffUpdateRequest extends FormRequest
                 /** @var list<int|string> $rawRoles */
                 $rawRoles = (array) ($this->input('user_roles', []) ?? []);
 
+                /** @var \App\Models\Tenant\User $actor */
+                $actor = $this->user();
+                $branchId = $this->filled('branch_id')
+                    ? $this->integer('branch_id')
+                    : $actor->operational_branch_id;
+
                 $newUser = new CreateUserDto(
                     firstName: $this->string('first_name')->toString(),
                     lastName: $this->string('last_name')->toString(),
                     email: $this->string('user_email')->toString(),
                     password: $this->string('user_password')->toString(),
+                    branchId: $branchId,
+                    operationalBranchId: $branchId,
                     roles: array_map(fn(int|string $v): int => (int) $v, $rawRoles),
                 );
             }

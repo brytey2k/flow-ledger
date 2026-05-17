@@ -13,8 +13,10 @@ use App\Repositories\DepartmentRepository;
 use App\Repositories\PositionRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\StaffRepository;
+use App\Services\BranchScopeService;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class StaffController extends Controller
@@ -26,11 +28,14 @@ class StaffController extends Controller
         private readonly PositionRepository $positionRepository,
         private readonly BranchRepository $branchRepository,
         private readonly RoleRepository $roleRepository,
+        private readonly BranchScopeService $branchScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $staff = $this->repository->allWithRelations();
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $staff = $this->repository->allWithRelations($this->branchScope->allowedBranchIds($user));
 
         return view('tenant.staff.index', compact('staff'));
     }

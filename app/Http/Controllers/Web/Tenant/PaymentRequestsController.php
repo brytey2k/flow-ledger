@@ -13,6 +13,7 @@ use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\AccountCodeRepository;
 use App\Repositories\CurrencyRepository;
 use App\Repositories\PaymentRequestRepository;
+use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
@@ -27,11 +28,14 @@ class PaymentRequestsController extends Controller
         private readonly CurrencyRepository $currencyRepository,
         private readonly AccountCodeRepository $accountCodeRepository,
         private readonly WorkflowEngineService $workflowEngine,
+        private readonly BranchScopeService $branchScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $requests = $this->repository->paginated();
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $requests = $this->repository->paginated($this->branchScope->allowedBranchIds($user));
 
         return view('tenant.payment-requests.index', compact('requests'));
     }
@@ -71,10 +75,12 @@ class PaymentRequestsController extends Controller
 
     public function show(PaymentRequest $paymentRequest, Request $request): View
     {
-        $paymentRequest = $this->repository->findWithDetails($paymentRequest->id);
-
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
+        $paymentRequest = $this->repository->findWithDetails($paymentRequest->id);
+
         $activeInstanceStage = null;
         $canActOnActiveStage = false;
 
@@ -96,13 +102,14 @@ class PaymentRequestsController extends Controller
 
     public function edit(PaymentRequest $paymentRequest, Request $request): RedirectResponse|View
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
         if ($paymentRequest->status !== 'sent_back') {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.edit_only_sent_back'));
         }
-
-        /** @var \App\Models\Tenant\User $user */
-        $user = $request->user();
 
         if ($user->staffProfile?->id !== $paymentRequest->staff_id) {
             return redirect()->route('payment-requests.show', $paymentRequest)
@@ -122,13 +129,14 @@ class PaymentRequestsController extends Controller
 
     public function update(PaymentRequestUpdateRequest $request, PaymentRequest $paymentRequest): RedirectResponse
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
         if ($paymentRequest->status !== 'sent_back') {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.edit_only_sent_back'));
         }
-
-        /** @var \App\Models\Tenant\User $user */
-        $user = $request->user();
 
         if ($user->staffProfile?->id !== $paymentRequest->staff_id) {
             return redirect()->route('payment-requests.show', $paymentRequest)
@@ -148,8 +156,12 @@ class PaymentRequestsController extends Controller
             ->with('success', __('flash.requests.updated'));
     }
 
-    public function destroy(PaymentRequest $paymentRequest): RedirectResponse
+    public function destroy(PaymentRequest $paymentRequest, Request $request): RedirectResponse
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
         if (! $paymentRequest->isDraft()) {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.draft_delete_only'));

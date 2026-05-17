@@ -12,6 +12,7 @@ use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\AccountCodeRepository;
 use App\Repositories\RetirementRequestRepository;
+use App\Services\BranchScopeService;
 use App\Services\RetirementService;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
@@ -25,17 +26,23 @@ class RetirementRequestsController extends Controller
         private readonly RetirementService $service,
         private readonly AccountCodeRepository $accountCodeRepository,
         private readonly WorkflowEngineService $workflowEngine,
+        private readonly BranchScopeService $branchScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $retirements = $this->repository->paginated();
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $retirements = $this->repository->paginated($this->branchScope->allowedBranchIds($user));
 
         return view('tenant.retirement-requests.index', compact('retirements'));
     }
 
-    public function create(PaymentRequest $paymentRequest): View
+    public function create(PaymentRequest $paymentRequest, Request $request): View
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
         abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
         abort_if($paymentRequest->retirementRequest()->exists(), 422, 'This advance has already been retired.');
 
@@ -49,6 +56,9 @@ class RetirementRequestsController extends Controller
 
     public function store(RetirementRequestStoreRequest $request, PaymentRequest $paymentRequest): RedirectResponse
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
         abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
         abort_if($paymentRequest->retirementRequest()->exists(), 422, 'This advance has already been retired.');
 
@@ -62,10 +72,12 @@ class RetirementRequestsController extends Controller
 
     public function show(RetirementRequest $retirementRequest, Request $request): View
     {
-        $retirementRequest = $this->repository->findWithDetails($retirementRequest->id);
-
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
+        abort_unless(in_array($retirementRequest->paymentRequest?->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
+        $retirementRequest = $this->repository->findWithDetails($retirementRequest->id);
+
         $isOwner = $user->staffProfile?->id === $retirementRequest->paymentRequest?->staff_id;
 
         $activeInstanceStage = null;
@@ -87,15 +99,16 @@ class RetirementRequestsController extends Controller
 
     public function edit(RetirementRequest $retirementRequest, Request $request): RedirectResponse|View
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($retirementRequest->paymentRequest?->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
         $retirementRequest->load('paymentRequest.currency', 'paymentRequest.staff.department', 'paymentRequest.branch', 'items.accountCode');
 
         if (! $retirementRequest->isDraft() && ! $retirementRequest->isSentBack()) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
                 ->with('error', __('flash.retirements.edit_only_sent_back'));
         }
-
-        /** @var \App\Models\Tenant\User $user */
-        $user = $request->user();
 
         if ($user->staffProfile?->id !== $retirementRequest->paymentRequest?->staff_id) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
@@ -112,15 +125,16 @@ class RetirementRequestsController extends Controller
 
     public function update(RetirementRequestUpdateRequest $request, RetirementRequest $retirementRequest): RedirectResponse
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($retirementRequest->paymentRequest?->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
         if (! $retirementRequest->isDraft() && ! $retirementRequest->isSentBack()) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
                 ->with('error', __('flash.retirements.edit_only_sent_back'));
         }
 
-        /** @var \App\Models\Tenant\User $user */
-        $user = $request->user();
-
-        if ($user->staffProfile?->id !== $retirementRequest->paymentRequest?->staff_id) {
+        if ($user->staffProfile?->id !== $retirementRequest->paymentRequest->staff_id) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
                 ->with('error', __('flash.retirements.edit_not_owner'));
         }
