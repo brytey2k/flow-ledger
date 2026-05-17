@@ -60,7 +60,7 @@ class PaymentRequestService
     public function submit(PaymentRequest $request, User|null $user = null): void
     {
         DB::transaction(function () use ($request, $user): void {
-            $template = WorkflowTemplate::where('type', $request->type)->firstOrFail();
+            $template = WorkflowTemplate::resolveForBranch($request->type, $request->branch_id);
 
             $request->update([
                 'status' => 'in_workflow',

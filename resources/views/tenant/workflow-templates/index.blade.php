@@ -50,6 +50,7 @@
                                 <tr>
                                     <th class="min-w-[200px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.name') }}</span></span></th>
                                     <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.type') }}</span></span></th>
+                                    <th class="min-w-[150px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.columns.branch') }}</span></span></th>
                                     <th class="min-w-[100px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.columns.stages') }}</span></span></th>
                                     <th class="min-w-[150px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.created') }}</span></span></th>
                                     <th class="min-w-[120px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
@@ -74,6 +75,13 @@
                                                 @else {{ ucfirst($template->type) }}
                                                 @endif
                                             </span>
+                                        </td>
+                                        <td>
+                                            @if($template->branch)
+                                                <span class="text-sm text-foreground">{{ $template->branch->name }}</span>
+                                            @else
+                                                <span class="kt-badge kt-badge-sm kt-badge-outline">{{ __('workflows.columns.master') }}</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $template->stages_count }}</span>

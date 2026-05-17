@@ -9,5 +9,6 @@ readonly class WorkflowTemplateDto
     public function __construct(
         public string $name,
         public string $type,
+        public int|null $branchId = null,
     ) {}
 }

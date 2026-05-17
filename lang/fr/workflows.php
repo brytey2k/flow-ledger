@@ -20,6 +20,9 @@ return [
         'type_expense' => 'Depense',
         'type_retirement' => 'Reddition',
         'type_hint' => 'Avance = demandes d avance - Depense = remboursements - Reddition = reddition d avance',
+        'branch' => 'Succursale',
+        'branch_master' => 'Maitre (toutes les succursales)',
+        'branch_hint' => 'Laisser vide pour utiliser ce workflow par defaut pour toutes les succursales.',
     ],
     'buttons' => [
         'create' => 'Creer le modele',
@@ -30,6 +33,8 @@ return [
     ],
     'columns' => [
         'stages' => 'Etapes',
+        'branch' => 'Succursale',
+        'master' => 'Maitre',
     ],
     'show' => [
         'parallel_groups' => 'Groupes paralleles',

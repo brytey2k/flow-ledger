@@ -64,7 +64,9 @@ class RetirementService
     public function submit(RetirementRequest $retirement, User|null $user = null): void
     {
         DB::transaction(function () use ($retirement, $user): void {
-            $template = WorkflowTemplate::where('type', 'retirement')->firstOrFail();
+            $retirement->loadMissing('paymentRequest');
+            $branchId = $retirement->paymentRequest?->branch_id;
+            $template = WorkflowTemplate::resolveForBranch('retirement', $branchId);
 
             $retirement->update([
                 'status' => 'in_workflow',

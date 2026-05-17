@@ -22,6 +22,9 @@ return [
         'type_expense' => 'Expense',
         'type_retirement' => 'Retirement',
         'type_hint' => 'Advance = payment advance requests • Expense = out-of-pocket reimbursements • Retirement = retiring an advance',
+        'branch' => 'Branch',
+        'branch_master' => 'Master (all branches)',
+        'branch_hint' => 'Leave blank to use this as the default workflow for all branches.',
     ],
 
     'buttons' => [
@@ -34,6 +37,8 @@ return [
 
     'columns' => [
         'stages' => 'Stages',
+        'branch' => 'Branch',
+        'master' => 'Master',
     ],
 
     'show' => [

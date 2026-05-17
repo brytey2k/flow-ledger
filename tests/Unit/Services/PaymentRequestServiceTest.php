@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowInstanceStage;
@@ -119,5 +120,51 @@ class PaymentRequestServiceTest extends TenantAppTestCase
             ->count();
 
         $this->assertEquals(2, $cancelledCount);
+    }
+
+    // ── submit() — branch-specific template selection ─────────────────────────
+
+    public function test_submit_uses_branch_specific_template_when_available(): void
+    {
+        $branch = Branch::factory()->create();
+        $masterTemplate = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
+        $branchTemplate = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id]);
+
+        WorkflowStage::factory()->create(['workflow_template_id' => $branchTemplate->id, 'display_order' => 1]);
+
+        $request = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'branch_id' => $branch->id,
+        ]);
+
+        $this->makeService()->submit($request, $this->user);
+
+        $instance = WorkflowInstance::where('workflowable_id', $request->id)
+            ->where('workflowable_type', PaymentRequest::class)
+            ->firstOrFail();
+
+        $this->assertEquals($branchTemplate->id, $instance->workflow_template_id);
+        $this->assertNotEquals($masterTemplate->id, $instance->workflow_template_id);
+    }
+
+    public function test_submit_falls_back_to_master_template_when_no_branch_template(): void
+    {
+        $branch = Branch::factory()->create();
+        $masterTemplate = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
+
+        WorkflowStage::factory()->create(['workflow_template_id' => $masterTemplate->id, 'display_order' => 1]);
+
+        $request = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'branch_id' => $branch->id,
+        ]);
+
+        $this->makeService()->submit($request, $this->user);
+
+        $instance = WorkflowInstance::where('workflowable_id', $request->id)
+            ->where('workflowable_type', PaymentRequest::class)
+            ->firstOrFail();
+
+        $this->assertEquals($masterTemplate->id, $instance->workflow_template_id);
     }
 }

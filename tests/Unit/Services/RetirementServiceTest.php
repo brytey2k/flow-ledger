@@ -7,6 +7,7 @@ namespace Tests\Unit\Services;
 use App\DTOs\Tenant\CreateRetirementRequestDto;
 use App\DTOs\Tenant\RetirementRequestItemDto;
 use App\Models\Tenant\AccountCode;
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowInstance;
@@ -152,5 +153,61 @@ class RetirementServiceTest extends TenantAppTestCase
         $updated = $this->makeService()->updateSentBack($retirement, $this->makeDto(300.0), $this->user);
 
         $this->assertSame('nil', $updated->difference_type);
+    }
+
+    // ── submit() — branch-specific template selection ─────────────────────────
+
+    public function test_submit_uses_branch_specific_template_when_available(): void
+    {
+        $branch = Branch::factory()->create();
+        $masterTemplate = WorkflowTemplate::factory()->retirement()->create(['branch_id' => null]);
+        $branchTemplate = WorkflowTemplate::factory()->retirement()->create(['branch_id' => $branch->id]);
+
+        WorkflowStage::factory()->create(['workflow_template_id' => $branchTemplate->id, 'display_order' => 1]);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'branch_id' => $branch->id,
+            'total_amount' => 500.0,
+        ]);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'draft',
+        ]);
+
+        $this->makeService()->submit($retirement, $this->user);
+
+        $instance = WorkflowInstance::where('workflowable_id', $retirement->id)
+            ->where('workflowable_type', RetirementRequest::class)
+            ->firstOrFail();
+
+        $this->assertEquals($branchTemplate->id, $instance->workflow_template_id);
+        $this->assertNotEquals($masterTemplate->id, $instance->workflow_template_id);
+    }
+
+    public function test_submit_falls_back_to_master_template_when_no_branch_template(): void
+    {
+        $branch = Branch::factory()->create();
+        $masterTemplate = WorkflowTemplate::factory()->retirement()->create(['branch_id' => null]);
+
+        WorkflowStage::factory()->create(['workflow_template_id' => $masterTemplate->id, 'display_order' => 1]);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'branch_id' => $branch->id,
+            'total_amount' => 500.0,
+        ]);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'draft',
+        ]);
+
+        $this->makeService()->submit($retirement, $this->user);
+
+        $instance = WorkflowInstance::where('workflowable_id', $retirement->id)
+            ->where('workflowable_type', RetirementRequest::class)
+            ->firstOrFail();
+
+        $this->assertEquals($masterTemplate->id, $instance->workflow_template_id);
     }
 }

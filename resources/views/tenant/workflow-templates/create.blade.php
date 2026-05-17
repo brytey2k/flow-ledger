@@ -57,6 +57,27 @@
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
                         </div>
+
+                        <div>
+                            <label class="kt-form-label block mb-2" for="branch_id">
+                                {{ __('workflows.fields.branch') }}
+                            </label>
+                            <select id="branch_id" name="branch_id" class="kt-select w-full"
+                                    aria-invalid="@error('branch_id') true @else false @enderror">
+                                <option value="">{{ __('workflows.fields.branch_master') }}</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="mt-1 text-xs text-muted-foreground">
+                                {{ __('workflows.fields.branch_hint') }}
+                            </div>
+                            @error('branch_id')
+                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">

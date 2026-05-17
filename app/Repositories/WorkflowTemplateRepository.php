@@ -12,6 +12,6 @@ class WorkflowTemplateRepository
     /** @return Collection<int, WorkflowTemplate> */
     public function allWithStageCount(): Collection
     {
-        return WorkflowTemplate::withCount('stages')->orderBy('name')->get();
+        return WorkflowTemplate::withCount('stages')->with('branch')->orderBy('name')->get();
     }
 }

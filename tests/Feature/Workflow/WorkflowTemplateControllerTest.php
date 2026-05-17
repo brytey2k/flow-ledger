@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Workflow;
 
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\WorkflowTemplate;
 use Tests\TenantAppTestCase;
 
@@ -87,6 +88,16 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
         $response->assertOk();
     }
 
+    public function test_create_form_passes_branches_to_view(): void
+    {
+        Branch::factory()->count(3)->create();
+
+        $response = $this->actingAs($this->user)->get(route('workflow-templates.create'));
+
+        $response->assertOk();
+        $response->assertViewHas('branches');
+    }
+
     // ── Store ─────────────────────────────────────────────────────────────────
 
     public function test_user_can_create_workflow_template(): void
@@ -147,6 +158,50 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
         $this->assertDatabaseCount('workflow_templates', 3);
     }
 
+    public function test_user_can_create_branch_specific_template(): void
+    {
+        $branch = Branch::factory()->create();
+
+        $response = $this->actingAs($this->user)->post(route('workflow-templates.store'), [
+            'name' => 'Branch Advance Approval',
+            'type' => 'advance',
+            'branch_id' => $branch->id,
+        ]);
+
+        $template = WorkflowTemplate::where('name', 'Branch Advance Approval')->firstOrFail();
+        $response->assertRedirect(route('workflow-templates.show', $template));
+        $this->assertDatabaseHas('workflow_templates', [
+            'name' => 'Branch Advance Approval',
+            'type' => 'advance',
+            'branch_id' => $branch->id,
+        ]);
+    }
+
+    public function test_store_rejects_nonexistent_branch_id(): void
+    {
+        $response = $this->actingAs($this->user)->post(route('workflow-templates.store'), [
+            'name' => 'Test Template',
+            'type' => 'advance',
+            'branch_id' => 999999,
+        ]);
+
+        $response->assertSessionHasErrors('branch_id');
+    }
+
+    public function test_store_without_branch_id_creates_master_template(): void
+    {
+        $response = $this->actingAs($this->user)->post(route('workflow-templates.store'), [
+            'name' => 'Master Advance Approval',
+            'type' => 'advance',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('workflow_templates', [
+            'name' => 'Master Advance Approval',
+            'branch_id' => null,
+        ]);
+    }
+
     // ── Show ──────────────────────────────────────────────────────────────────
 
     public function test_show_returns_ok_with_template_data(): void
@@ -170,6 +225,17 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertViewHas('workflowTemplate');
+    }
+
+    public function test_edit_form_passes_branches_to_view(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        Branch::factory()->count(2)->create();
+
+        $response = $this->actingAs($this->user)->get(route('workflow-templates.edit', $template));
+
+        $response->assertOk();
+        $response->assertViewHas('branches');
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
@@ -197,6 +263,35 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
         ]);
 
         $response->assertSessionHasErrors('type');
+    }
+
+    public function test_user_can_update_template_to_add_branch(): void
+    {
+        $branch = Branch::factory()->create();
+        $template = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
+
+        $response = $this->actingAs($this->user)->put(route('workflow-templates.update', $template), [
+            'name' => $template->name,
+            'type' => 'advance',
+            'branch_id' => $branch->id,
+        ]);
+
+        $response->assertRedirect(route('workflow-templates.show', $template));
+        $this->assertDatabaseHas('workflow_templates', ['id' => $template->id, 'branch_id' => $branch->id]);
+    }
+
+    public function test_user_can_update_template_to_remove_branch(): void
+    {
+        $branch = Branch::factory()->create();
+        $template = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id]);
+
+        $response = $this->actingAs($this->user)->put(route('workflow-templates.update', $template), [
+            'name' => $template->name,
+            'type' => 'advance',
+        ]);
+
+        $response->assertRedirect(route('workflow-templates.show', $template));
+        $this->assertDatabaseHas('workflow_templates', ['id' => $template->id, 'branch_id' => null]);
     }
 
     public function test_update_is_blocked_when_template_has_active_instances(): void
