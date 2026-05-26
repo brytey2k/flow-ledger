@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowAction;
 use App\Models\Tenant\WorkflowInstance;
@@ -21,12 +22,23 @@ class WorkflowEngineService
     public function startWorkflow(Model $subject, WorkflowTemplate $template, User|null $submitter = null): WorkflowInstance
     {
         return DB::transaction(function () use ($subject, $template, $submitter): WorkflowInstance {
+            $branchId = $subject->getAttribute('branch_id');
+
+            if ($branchId === null && $subject instanceof RetirementRequest) {
+                $subject->loadMissing('paymentRequest');
+                $branchId = $subject->paymentRequest?->branch_id;
+            }
+
+            $submitter?->loadMissing('staffProfile');
+
             $instance = WorkflowInstance::create([
                 'workflow_template_id' => $template->id,
                 'workflowable_type' => $subject::class,
                 'workflowable_id' => $subject->getKey(),
                 'status' => 'in_progress',
                 'submitter_user_id' => $submitter?->id,
+                'branch_id' => $branchId,
+                'department_id' => $submitter?->staffProfile?->department_id,
             ]);
 
             foreach ($template->stages as $stage) {
@@ -310,7 +322,7 @@ class WorkflowEngineService
         $instance = $instanceStage->instance;
 
         if ($stage->scope_to_department) {
-            $submitterDepartmentId = $instance->submitter?->staffProfile?->department_id;
+            $submitterDepartmentId = $instance->department_id;
             $approverDepartmentId = $user->staffProfile?->department_id;
 
             if ($submitterDepartmentId === null || $approverDepartmentId === null) {
@@ -322,7 +334,7 @@ class WorkflowEngineService
         }
 
         if ($stage->scope_to_branch) {
-            $requestBranchId = $instance->workflowable?->getAttribute('branch_id');
+            $requestBranchId = $instance->branch_id;
             $approverBranchId = $user->staffProfile?->branch_id;
 
             if ($requestBranchId === null || $approverBranchId === null) {
@@ -353,7 +365,7 @@ class WorkflowEngineService
         }
 
         if ($stageDef->scope_to_branch) {
-            $requestBranchId = $instance->workflowable?->getAttribute('branch_id');
+            $requestBranchId = $instance->branch_id;
             $approverBranchId = $submitter->staffProfile?->branch_id;
 
             if ($requestBranchId === null || $approverBranchId === null) {

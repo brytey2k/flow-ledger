@@ -124,4 +124,22 @@ class RetirementSettlementControllerTest extends TenantAppTestCase
             'event' => 'retirement.settled',
         ]);
     }
+
+    public function test_settlement_fails_when_insufficient_cashbook_balance_for_pay_to_staff(): void
+    {
+        $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'total_amount' => 100.00, 'branch_id' => $this->branch->id]);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $advance->id,
+            'status' => 'approved',
+            'difference_type' => 'pay_to_staff',
+            'difference_amount' => 50.00,
+        ]);
+
+        $this->actingAs($this->user)
+            ->post(route('retirement-requests.settle', $retirement))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertSame('approved', $retirement->fresh()->status);
+    }
 }

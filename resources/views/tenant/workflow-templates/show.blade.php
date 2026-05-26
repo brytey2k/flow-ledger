@@ -105,6 +105,7 @@
                                     <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.roles') }}</span></span></th>
                                     <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.parallel_group') }}</span></span></th>
                                     <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.skip_below') }}</span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.approver_scope') }}</span></span></th>
                                     <th class="min-w-[100px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
@@ -142,6 +143,19 @@
                                             @else
                                                 <span class="text-xs text-muted-foreground">—</span>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <div class="flex flex-wrap gap-1">
+                                                @if($stage->scope_to_branch)
+                                                    <span class="kt-badge kt-badge-sm kt-badge-info">{{ __('workflows.show.scope_branch') }}</span>
+                                                @endif
+                                                @if($stage->scope_to_department)
+                                                    <span class="kt-badge kt-badge-sm kt-badge-warning">{{ __('workflows.show.scope_department') }}</span>
+                                                @endif
+                                                @if(!$stage->scope_to_branch && !$stage->scope_to_department)
+                                                    <span class="text-xs text-muted-foreground">—</span>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td class="text-center">
                                             <a href="{{ route('workflow-templates.stages.edit', [$workflowTemplate, $stage]) }}"

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Approvals;
 
+use App\Models\Tenant\Branch;
+use App\Models\Tenant\Department;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\Staff;
+use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
@@ -91,6 +95,118 @@ class WorkflowApprovalsControllerTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertSee('All caught up');
+    }
+
+    public function test_index_excludes_branch_scoped_stage_when_user_branch_does_not_match(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+            'scope_to_branch' => true,
+        ]);
+        $stage->roles()->attach($this->role->id);
+
+        $otherBranch = Branch::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'branch_id' => $otherBranch->id,
+        ]);
+        app(PaymentRequestService::class)->submit($paymentRequest);
+
+        // User's staff branch differs from the request's branch
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+
+        $response = $this->actingAs($this->user)->get(route('approvals.index'));
+
+        $response->assertOk();
+        $this->assertCount(0, $response->viewData('instanceStages'));
+    }
+
+    public function test_index_includes_branch_scoped_stage_when_user_branch_matches(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+            'scope_to_branch' => true,
+        ]);
+        $stage->roles()->attach($this->role->id);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'branch_id' => $this->branch->id,
+        ]);
+        app(PaymentRequestService::class)->submit($paymentRequest);
+
+        // User's staff branch matches the request's branch
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+
+        $response = $this->actingAs($this->user)->get(route('approvals.index'));
+
+        $response->assertOk();
+        $this->assertCount(1, $response->viewData('instanceStages'));
+    }
+
+    public function test_index_excludes_department_scoped_stage_when_user_department_does_not_match(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+            'scope_to_department' => true,
+        ]);
+        $stage->roles()->attach($this->role->id);
+
+        /** @var User $submitter */
+        $submitter = User::factory()->create([
+            'branch_id' => $this->branch->id,
+            'operational_branch_id' => $this->branch->id,
+        ]);
+        $submitterDept = Department::factory()->create();
+        Staff::factory()->withUser($submitter)->create(['department_id' => $submitterDept->id]);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
+
+        // User's department differs from the submitter's department
+        $otherDept = Department::factory()->create();
+        Staff::factory()->withUser($this->user)->create(['department_id' => $otherDept->id]);
+
+        $response = $this->actingAs($this->user)->get(route('approvals.index'));
+
+        $response->assertOk();
+        $this->assertCount(0, $response->viewData('instanceStages'));
+    }
+
+    public function test_index_includes_department_scoped_stage_when_user_department_matches(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+            'scope_to_department' => true,
+        ]);
+        $stage->roles()->attach($this->role->id);
+
+        /** @var User $submitter */
+        $submitter = User::factory()->create([
+            'branch_id' => $this->branch->id,
+            'operational_branch_id' => $this->branch->id,
+        ]);
+        $dept = Department::factory()->create();
+        Staff::factory()->withUser($submitter)->create(['department_id' => $dept->id]);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
+
+        // User's department matches the submitter's department
+        Staff::factory()->withUser($this->user)->create(['department_id' => $dept->id]);
+
+        $response = $this->actingAs($this->user)->get(route('approvals.index'));
+
+        $response->assertOk();
+        $this->assertCount(1, $response->viewData('instanceStages'));
     }
 
     // ── Show ─────────────────────────────────────────────────────────────────
@@ -194,6 +310,31 @@ class WorkflowApprovalsControllerTest extends TenantAppTestCase
         ]);
 
         $response->assertSessionHasErrors(['comment']);
+    }
+
+    // ── Denormalized Context ──────────────────────────────────────────────────
+
+    public function test_start_workflow_persists_branch_and_department_on_instance(): void
+    {
+        $dept = Department::factory()->create();
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create(['department_id' => $dept->id]);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $template = WorkflowTemplate::factory()->advance()->create();
+        WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+        ]);
+
+        app(PaymentRequestService::class)->submit($paymentRequest, $this->user);
+
+        $instance = $paymentRequest->workflowInstances()->first();
+        $this->assertSame($this->branch->id, $instance->branch_id);
+        $this->assertSame($dept->id, $instance->department_id);
     }
 
     // ── Store: Validation ─────────────────────────────────────────────────────

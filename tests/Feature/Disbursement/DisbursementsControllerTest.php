@@ -160,4 +160,18 @@ class DisbursementsControllerTest extends TenantAppTestCase
             'event' => 'request.disbursed',
         ]);
     }
+
+    public function test_cannot_disburse_when_insufficient_cashbook_balance(): void
+    {
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id, 'total_amount' => 100.00]);
+
+        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+            'disbursement_method' => PaymentMethod::Cash->value,
+        ]);
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('error');
+
+        $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
+    }
 }

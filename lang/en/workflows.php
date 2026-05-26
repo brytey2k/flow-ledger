@@ -56,10 +56,13 @@ return [
             'roles' => 'Roles',
             'parallel_group' => 'Parallel Group',
             'skip_below' => 'Skip Below',
+            'approver_scope' => 'Approver Scope',
         ],
         'sequential' => 'Sequential',
         'and_label' => 'AND',
         'or_label' => 'OR',
+        'scope_branch' => 'Branch',
+        'scope_department' => 'Department',
     ],
 
     'empty' => [

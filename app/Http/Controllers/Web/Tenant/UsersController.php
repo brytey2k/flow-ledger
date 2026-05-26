@@ -70,6 +70,15 @@ class UsersController extends Controller
         ]);
     }
 
+    public function show(User $user): View
+    {
+        $user->load('staffProfile');
+
+        return view('tenant.users.show', [
+            'user' => $user,
+        ]);
+    }
+
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
         $this->service->update($user, $request->toDto(), $request->user());

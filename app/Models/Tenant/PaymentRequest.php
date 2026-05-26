@@ -133,4 +133,24 @@ class PaymentRequest extends Model
     {
         return $this->status === 'sent_back';
     }
+
+    public function isDenied(): bool
+    {
+        return $this->status === 'denied';
+    }
+
+    public function isCancelable(): bool
+    {
+        try {
+            $status = \App\Enums\Tenant\PaymentRequestStatus::tryFrom($this->status);
+            return $status?->isCancelable() ?? false;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    public function isDisbursed(): bool
+    {
+        return $this->status === 'disbursed';
+    }
 }

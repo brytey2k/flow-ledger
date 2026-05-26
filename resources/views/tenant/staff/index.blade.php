@@ -99,7 +99,7 @@
                                             <span class="kt-badge kt-badge-sm kt-badge-primary">{{ $member->id }}</span>
                                         </td>
                                         <td>
-                                            <span class="text-sm font-medium leading-none text-mono">{{ $member->full_name }}</span>
+                                            <a href="{{ route('staff.show', $member) }}" class="text-sm font-medium text-primary hover:underline">{{ $member->full_name }}</a>
                                         </td>
                                         <td>
                                             <span class="text-sm text-foreground">{{ $member->department->name }}</span>

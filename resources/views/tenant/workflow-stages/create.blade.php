@@ -90,7 +90,7 @@
                             <input type="hidden" name="scope_to_branch" value="0" />
                             <input type="checkbox" id="scope_to_branch" name="scope_to_branch" value="1"
                                    class="kt-checkbox"
-                                   {{ old('scope_to_branch') ? 'checked' : '' }} />
+                                   {{ old('scope_to_branch', '1') ? 'checked' : '' }} />
                             <span class="kt-form-label mb-0">{{ __('workflows.stages.fields.scope_to_branch') }}</span>
                         </label>
                     </div>

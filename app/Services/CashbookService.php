@@ -10,6 +10,7 @@ use App\Models\Tenant\CashbookEntry;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
+use App\Exceptions\InsufficientCashbookBalanceException;
 
 class CashbookService
 {
@@ -18,13 +19,21 @@ class CashbookService
         $branch = $request->branch;
         $currencyId = $branch->currency_id ?? $request->currency_id;
 
+        // If a cashbook already exists and its balance is insufficient, prevent disbursement.
+        $existing = Cashbook::where('branch_id', $request->branch_id)->first();
+
+        $raw = $request->getAttribute('total_amount');
+        $amount = is_numeric($raw) ? (float) $raw : 0.0;
+
+        if ($existing && $existing->balance < $amount) {
+            throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for disbursement.');
+        }
+
+        // Otherwise ensure a cashbook exists (auto-create) and proceed. Auto-created cashbooks may go negative.
         $cashbook = Cashbook::firstOrCreate(
             ['branch_id' => $request->branch_id],
             ['currency_id' => $currencyId, 'balance' => 0],
         );
-
-        $raw = $request->getAttribute('total_amount');
-        $amount = is_numeric($raw) ? (float) $raw : 0.0;
 
         CashbookEntry::create([
             'cashbook_id' => $cashbook->id,
@@ -37,6 +46,7 @@ class CashbookService
             'created_by_user_id' => $user?->id,
         ]);
 
+        // Allow disbursements to drive the cashbook balance negative when the cashbook was auto-created.
         $cashbook->decrement('balance', $amount);
 
         activity()
@@ -83,6 +93,7 @@ class CashbookService
         ]);
 
         if ($isCredit) {
+            // Allow retirement settlements that pay staff to drive the cashbook balance negative when necessary.
             $cashbook->decrement('balance', $amount);
         } else {
             $cashbook->increment('balance', $amount);

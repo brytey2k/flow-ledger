@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @property int|null $branch_id
+ * @property int|null $department_id
+ */
 class WorkflowInstance extends Model
 {
     protected $fillable = [
@@ -18,6 +22,8 @@ class WorkflowInstance extends Model
         'status',
         'sent_back_to_stage_id',
         'submitter_user_id',
+        'branch_id',
+        'department_id',
     ];
 
     /** @return MorphTo<Model, $this> */
@@ -30,6 +36,18 @@ class WorkflowInstance extends Model
     public function submitter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitter_user_id');
+    }
+
+    /** @return BelongsTo<Branch, $this> */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /** @return BelongsTo<Department, $this> */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     /** @return BelongsTo<WorkflowTemplate, $this> */

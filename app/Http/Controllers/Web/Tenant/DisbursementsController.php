@@ -9,6 +9,7 @@ use App\Http\Requests\Tenant\DisbursementStoreRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
+use App\Exceptions\InsufficientCashbookBalanceException;
 use App\Services\PaymentRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,7 +42,12 @@ class DisbursementsController extends Controller
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
 
-        $this->service->disburse($paymentRequest, $request->toDto(), $user);
+        try {
+            $this->service->disburse($paymentRequest, $request->toDto(), $user);
+        } catch (InsufficientCashbookBalanceException $e) {
+            return redirect()->route('payment-requests.show', $paymentRequest)
+                ->with('error', $e->getMessage());
+        }
 
         return redirect()->route('payment-requests.show', $paymentRequest)
             ->with('success', __('flash.requests.disbursed'));

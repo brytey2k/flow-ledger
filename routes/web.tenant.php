@@ -190,6 +190,9 @@ Route::middleware([
         Route::post('/staff', [StaffController::class, 'store'])
             ->can(PermissionKey::CreateStaff->value)
             ->name('staff.store');
+        Route::get('/staff/{staff}', [StaffController::class, 'show'])
+            ->can(PermissionKey::AccessStaff->value)
+            ->name('staff.show');
         Route::get('/staff/{staff}/edit', [StaffController::class, 'edit'])
             ->can(PermissionKey::AccessStaff->value)
             ->name('staff.edit');
@@ -230,6 +233,9 @@ Route::middleware([
         Route::post('/users', [UsersController::class, 'store'])
             ->can(PermissionKey::CreateUser->value)
             ->name('users.store');
+        Route::get('/users/{user}', [UsersController::class, 'show'])
+            ->can(PermissionKey::AccessUsers->value)
+            ->name('users.show');
         Route::get('/users/{user}/edit', [UsersController::class, 'edit'])
             ->can(PermissionKey::AccessUsers->value)
             ->name('users.edit');

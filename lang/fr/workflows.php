@@ -51,10 +51,13 @@ return [
             'roles' => 'Roles',
             'parallel_group' => 'Groupe parallele',
             'skip_below' => 'Ignorer en dessous',
+            'approver_scope' => 'Portee des approbateurs',
         ],
         'sequential' => 'Sequentiel',
         'and_label' => 'ET',
         'or_label' => 'OU',
+        'scope_branch' => 'Succursale',
+        'scope_department' => 'Departement',
     ],
     'empty' => [
         'heading' => 'Aucun modele pour le moment',

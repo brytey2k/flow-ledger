@@ -69,6 +69,13 @@ class StaffController extends Controller
         return view('tenant.staff.edit', compact('staff', 'departments', 'positions', 'branches', 'roles', 'unlinkedUsers'));
     }
 
+    public function show(Staff $staff): View
+    {
+        $staff->load('user');
+
+        return view('tenant.staff.show', compact('staff'));
+    }
+
     public function update(StaffUpdateRequest $request, Staff $staff): RedirectResponse
     {
         $this->service->update($staff, $request->toDto(), $request->user());

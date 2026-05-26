@@ -90,7 +90,7 @@
                                 @foreach($users as $user)
                                     <tr>
                                         <td>
-                                            <span class="text-sm font-medium leading-none text-mono">{{ $user->first_name }} {{ $user->last_name }}</span>
+                                            <a href="{{ route('users.show', $user) }}" class="text-sm font-medium text-primary hover:underline">{{ $user->first_name }} {{ $user->last_name }}</a>
                                         </td>
                                         <td>
                                             <span class="text-sm text-foreground">{{ $user->email }}</span>
