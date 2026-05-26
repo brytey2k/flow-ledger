@@ -44,12 +44,15 @@ class RetirementRequestsController extends Controller
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
         abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
-        abort_if($paymentRequest->retirementRequest()->exists(), 422, 'This advance has already been retired.');
+        // Disallow creating a new retirement if there is an active (non-cancelled) retirement
+        abort_if($paymentRequest->hasActiveRetirement(), 422, 'This advance has already been retired.');
 
         $departmentId = $paymentRequest->staff?->department_id;
         $costCodes = $departmentId
             ? $this->costCodeRepository->forDepartment($departmentId)
             : $this->costCodeRepository->allOrderedByCode();
+
+        $paymentRequest->load('items.costCode');
 
         return view('tenant.retirement-requests.create', compact('paymentRequest', 'costCodes'));
     }
@@ -60,7 +63,8 @@ class RetirementRequestsController extends Controller
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
         abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
-        abort_if($paymentRequest->retirementRequest()->exists(), 422, 'This advance has already been retired.');
+        // Disallow creating a new retirement if there is an active (non-cancelled) retirement
+        abort_if($paymentRequest->hasActiveRetirement(), 422, 'This advance has already been retired.');
 
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();

@@ -26,6 +26,7 @@ use App\Http\Controllers\Web\Tenant\PaymentRequestsController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestSubmitController;
 use App\Http\Controllers\Web\Tenant\PositionsController;
 use App\Http\Controllers\Web\Tenant\ReportsController;
+use App\Http\Controllers\Web\Tenant\RetirementRequestCancelController;
 use App\Http\Controllers\Web\Tenant\RetirementRequestResubmitController;
 use App\Http\Controllers\Web\Tenant\RetirementRequestsController;
 use App\Http\Controllers\Web\Tenant\RetirementRequestSubmitController;
@@ -399,6 +400,9 @@ Route::middleware([
         Route::post('/retirements/{retirementRequest}/resubmit', [RetirementRequestResubmitController::class, 'store'])
             ->can(PermissionKey::CreateRetirementRequest->value)
             ->name('retirement-requests.resubmit');
+        Route::post('/retirements/{retirementRequest}/cancel', [RetirementRequestCancelController::class, 'store'])
+            ->can(PermissionKey::AccessRetirementRequests->value)
+            ->name('retirement-requests.cancel');
         Route::post('/retirements/{retirementRequest}/settle', [RetirementSettlementController::class, 'store'])
             ->can(PermissionKey::SettleRetirements->value)
             ->name('retirement-requests.settle');
@@ -408,7 +412,6 @@ Route::middleware([
         Route::get('/attachments/{attachment}/download', [AttachmentsController::class, 'download'])
             ->name('attachments.download');
         Route::delete('/attachments/{attachment}', [AttachmentsController::class, 'destroy'])
-            ->can(PermissionKey::DeleteAttachment->value)
             ->name('attachments.destroy');
 
         // Disbursements

@@ -203,14 +203,14 @@
                                        class="kt-btn kt-btn-sm kt-btn-outline">
                                         <i class="ki-filled ki-cloud-download"></i>
                                     </a>
-                                    @can(App\Enums\Tenant\PermissionKey::DeleteAttachment->value)
+                                    @if(optional($attachment->attachable->paymentRequest->staff)->user_id === auth()->id())
                                         <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('retirements.show.confirm_delete_attachment') }}')">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline text-destructive hover:bg-destructive/10">
                                                 <i class="ki-filled ki-trash"></i>
                                             </button>
                                         </form>
-                                    @endcan
+                                    @endif
                                 </div>
                             </div>
                         @empty
@@ -317,6 +317,15 @@
                                     {{ __('retirements.buttons.submit') }}
                                 </button>
                             </form>
+                            @if($isOwner)
+                                <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                        <i class="ki-filled ki-close"></i>
+                                        {{ __('payment_requests.buttons.cancel_request') }}
+                                    </button>
+                                </form>
+                            @endif
                         @elseif($retirementRequest->status === 'in_workflow')
                             @if($canActOnActiveStage && $activeInstanceStage)
                                 <a href="{{ route('approvals.show', $activeInstanceStage) }}"
@@ -329,6 +338,15 @@
                                     <i class="ki-filled ki-time"></i>
                                     {{ __('payment_requests.status.awaiting_approval') }}
                                 </div>
+                            @endif
+                            @if($isOwner)
+                                <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                        <i class="ki-filled ki-close"></i>
+                                        {{ __('payment_requests.buttons.cancel_request') }}
+                                    </button>
+                                </form>
                             @endif
                         @elseif($retirementRequest->status === 'approved')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-sm mb-2">
@@ -374,6 +392,13 @@
                                     <button type="submit" class="kt-btn kt-btn-primary w-full">
                                         <i class="ki-filled ki-send"></i>
                                         {{ __('retirements.buttons.resubmit') }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                        <i class="ki-filled ki-close"></i>
+                                        {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
                                 </form>
                             @endif

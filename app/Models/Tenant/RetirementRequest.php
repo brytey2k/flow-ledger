@@ -33,6 +33,8 @@ class RetirementRequest extends Model
         'settled_at',
         'settled_by_user_id',
         'settlement_notes',
+        'cancelled_at',
+        'cancelled_by_user_id',
     ];
 
     protected function casts(): array
@@ -43,6 +45,7 @@ class RetirementRequest extends Model
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
             'settled_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -50,6 +53,12 @@ class RetirementRequest extends Model
     public function settledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'settled_by_user_id');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by_user_id');
     }
 
     /** @return BelongsTo<PaymentRequest, $this> */
@@ -126,5 +135,10 @@ class RetirementRequest extends Model
     public function isSentBack(): bool
     {
         return $this->status === 'sent_back';
+    }
+
+    public function isCancelable(): bool
+    {
+        return in_array($this->status, ['draft', 'in_workflow', 'approved', 'sent_back'], true);
     }
 }

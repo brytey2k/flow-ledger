@@ -47,6 +47,65 @@
                 </div>
             </div>
 
+            {{-- Payment Requirement Items --}}
+            @if($paymentRequest->items->count() > 0)
+                <div class="kt-card">
+                    <div class="kt-card-header">
+                        <h3 class="kt-card-title">{{ __('payment_requests.show.line_items') }}</h3>
+                        <span class="text-sm text-secondary-foreground">
+                            {{ $paymentRequest->items->count() }} {{ Str::plural('item', $paymentRequest->items->count()) }}
+                        </span>
+                    </div>
+                    <div class="kt-card-table">
+                        <div class="kt-scrollable-x-auto border-b border-border">
+                            <table class="kt-table kt-table-border">
+                                <thead>
+                                    <tr>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
+                                        <th class="w-[160px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($paymentRequest->items as $item)
+                                        <tr>
+                                            <td><span class="text-sm text-foreground">{{ $item->description }}</span></td>
+                                            <td>
+                                                <span class="text-sm text-mono">
+                                                    {{ $item->costCode->code ?? '—' }}
+                                                    @if($item->costCode)
+                                                        <span class="text-secondary-foreground font-normal">— {{ $item->costCode->name }}</span>
+                                                    @endif
+                                                </span>
+                                            </td>
+                                            <td><span class="text-sm text-secondary-foreground">{{ $item->receipt_number ?? '—' }}</span></td>
+                                            <td class="text-end">
+                                                <span class="text-sm font-medium text-mono">
+                                                    {{ $paymentRequest->currency->symbol ?? '' }}
+                                                    {{ number_format((float) $item->amount, 2) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td class="text-end text-sm font-medium text-secondary-foreground" colspan="3">{{ __('common.total') }}</td>
+                                        <td class="text-end">
+                                            <span class="text-base font-semibold text-mono">
+                                                {{ $paymentRequest->currency->symbol ?? '' }}
+                                                {{ number_format((float) $paymentRequest->total_amount, 2) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Expenditure Items (full width) --}}
             <div class="kt-card">
                 <div class="kt-card-header">

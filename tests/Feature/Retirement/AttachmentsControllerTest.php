@@ -64,14 +64,14 @@ class AttachmentsControllerTest extends TenantAppTestCase
             ])->assertForbidden();
     }
 
-    public function test_user_without_permission_cannot_delete(): void
+    public function test_non_owner_cannot_delete(): void
     {
-        $this->role->revokePermissionTo(PermissionKey::DeleteAttachment->value);
         $retirement = $this->draftRetirement();
+        $otherUser = \App\Models\Tenant\User::factory()->create();
         $attachment = Attachment::factory()->create([
             'attachable_type' => RetirementRequest::class,
             'attachable_id' => $retirement->id,
-            'user_id' => $this->user->id,
+            'user_id' => $otherUser->id,
             'path' => 'retirements/1/attachments/test.pdf',
         ]);
 

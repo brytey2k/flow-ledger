@@ -573,4 +573,40 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
         $this->assertDatabaseHas('retirement_requests', ['id' => $retirement->id, 'status' => 'sent_back']);
     }
+
+    public function test_cancel_allows_recreate(): void
+    {
+        $paymentRequest = $this->disbursedAdvance();
+        $items = $this->validItems();
+
+        // Create initial retirement
+        $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'notes' => 'Initial retirement',
+            'items' => $items,
+        ]);
+
+        $retirement = RetirementRequest::query()->where('payment_request_id', $paymentRequest->id)->firstOrFail();
+
+        // Cancel it
+        $response = $this->actingAs($this->user)->post(route('retirement-requests.cancel', $retirement));
+        $response->assertRedirect(route('retirement-requests.show', $retirement));
+        $response->assertSessionHas('success');
+
+        $retirement->refresh();
+        $this->assertSame('cancelled', $retirement->status);
+
+        // Attempt to create a new retirement after cancellation
+        $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'notes' => 'Recreated retirement',
+            'items' => $items,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'draft',
+        ]);
+    }
 }

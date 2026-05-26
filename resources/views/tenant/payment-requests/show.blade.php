@@ -450,14 +450,15 @@
                             @endif
                         @elseif($paymentRequest->status === 'disbursed')
                             @can(PermissionKey::CreateRetirementRequest->value)
-                                @if($isOwner && ! $paymentRequest->retirementRequest)
+                                @php $existingRetirement = $paymentRequest->activeRetirement(); @endphp
+                                @if($isOwner && (!$existingRetirement || $existingRetirement->status === 'cancelled'))
                                     <a href="{{ route('retirement-requests.create', $paymentRequest) }}"
                                        class="kt-btn kt-btn-primary w-full">
                                         <i class="ki-filled ki-file-up"></i>
                                         {{ __('payment_requests.buttons.retire') }}
                                     </a>
-                                @elseif($paymentRequest->retirementRequest)
-                                    <a href="{{ route('retirement-requests.show', $paymentRequest->retirementRequest) }}"
+                                @elseif($existingRetirement && $existingRetirement->status !== 'cancelled')
+                                    <a href="{{ route('retirement-requests.show', $existingRetirement) }}"
                                        class="kt-btn kt-btn-outline w-full">
                                         <i class="ki-filled ki-eye"></i>
                                         {{ __('payment_requests.buttons.view_retirement') }}

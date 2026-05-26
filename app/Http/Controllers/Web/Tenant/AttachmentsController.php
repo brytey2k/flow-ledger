@@ -46,6 +46,29 @@ class AttachmentsController extends Controller
 
     public function destroy(Request $request, Attachment $attachment): RedirectResponse
     {
+        /** @var User $user */
+        $user = $request->user();
+
+        // Allow deletion if the current user is the creator/owner of the related retirement request
+        $allowed = false;
+
+        if ($attachment->attachable_type === RetirementRequest::class && $attachment->attachable instanceof RetirementRequest) {
+            $paymentRequest = $attachment->attachable->paymentRequest;
+            if ($paymentRequest !== null && $paymentRequest->staff !== null) {
+                $ownerId = $paymentRequest->staff->user_id;
+                if ($ownerId === $user->id) {
+                    $allowed = true;
+                }
+            }
+        }
+
+        // Also allow the user who uploaded the attachment to delete it
+        if (!$allowed && $attachment->user_id === $user->id) {
+            $allowed = true;
+        }
+
+        abort_unless($allowed, 403);
+
         $this->service->delete($attachment);
 
         return redirect()->back()->with('success', __('flash.attachments.deleted'));

@@ -70,9 +70,6 @@ enum PermissionKey: string
     // Settlement
     case SettleRetirements = 'settle retirements';
 
-    // Attachments
-    case DeleteAttachment = 'delete attachment';
-
     // Workflow Templates
     case AccessWorkflowTemplates = 'access workflow templates';
     case CreateWorkflowTemplate = 'create workflow template';

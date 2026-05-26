@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -83,10 +82,32 @@ class PaymentRequest extends Model
         return $this->hasMany(PaymentRequestItem::class);
     }
 
-    /** @return HasOne<RetirementRequest, $this> */
-    public function retirementRequest(): HasOne
+    /** @return HasMany<RetirementRequest, $this> */
+    public function retirementRequests(): HasMany
     {
-        return $this->hasOne(RetirementRequest::class);
+        return $this->hasMany(RetirementRequest::class);
+    }
+
+    /**
+     * Return the active (non-cancelled) retirement for this payment request, if any.
+     *
+     * @return RetirementRequest|null
+     */
+    public function activeRetirement(): RetirementRequest|null
+    {
+        /** @var RetirementRequest|null $ret */
+        $ret = RetirementRequest::where('payment_request_id', $this->id)
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('created_at', 'desc')
+            ->first();
+        return $ret;
+    }
+
+    public function hasActiveRetirement(): bool
+    {
+        return RetirementRequest::where('payment_request_id', $this->id)
+            ->where('status', '!=', 'cancelled')
+            ->exists();
     }
 
     /** @return MorphMany<WorkflowInstance, $this> */

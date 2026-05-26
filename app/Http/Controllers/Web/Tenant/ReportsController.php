@@ -87,12 +87,12 @@ class ReportsController
         $branchId = $request->input('branch_id');
 
         $advances = PaymentRequest::query()
-            ->with(['staff.department', 'branch', 'currency', 'retirementRequest'])
+            ->with(['staff.department', 'branch', 'currency', 'retirementRequests'])
             ->where('type', 'advance')
             ->where('status', 'disbursed')
             ->whereIn('branch_id', $allowedBranchIds)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereDoesntHave('retirementRequest', fn($q) => $q->whereIn('status', ['approved', 'settled']))
+            ->whereDoesntHave('retirementRequests', fn($q) => $q->whereIn('status', ['approved', 'settled']))
             ->orderBy('disbursed_at')
             ->get()
             ->map(function (PaymentRequest $req) {

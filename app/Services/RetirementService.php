@@ -21,6 +21,14 @@ class RetirementService
     public function createDraft(PaymentRequest $paymentRequest, CreateRetirementRequestDto $dto, User|null $user = null): RetirementRequest
     {
         return DB::transaction(function () use ($paymentRequest, $dto, $user): RetirementRequest {
+            // Prevent race-created duplicate active retirements in-app before attempting insert.
+            if (RetirementRequest::where('payment_request_id', $paymentRequest->id)->where('status', '!=', 'cancelled')->exists()) {
+                // Use ValidationException so controllers return a 422 with errors
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'items' => ['This advance has already been retired.'],
+                ]);
+            }
+
             $totalExpended = array_sum(array_map(fn($item) => $item->amount, $dto->items));
             $rawAmount = $paymentRequest->getAttribute('total_amount');
             $advanceAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
@@ -198,14 +206,23 @@ class RetirementService
             $activeInstance = $retirement->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
+                $activeStage = $activeInstance->activeInstanceStages()->first();
+
                 $activeInstance->instanceStages()
                     ->whereIn('status', ['pending', 'active'])
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
 
-                $activeInstance->update(['status' => 'cancelled']);
+                $activeInstance->update([
+                    'status' => 'cancelled',
+                    'cancelled_at_stage_id' => $activeStage?->id,
+                ]);
             }
 
-            $retirement->update(['status' => 'cancelled']);
+            $retirement->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'cancelled_by_user_id' => $user?->id,
+            ]);
 
             activity()
                 ->performedOn($retirement)
