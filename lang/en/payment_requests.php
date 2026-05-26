@@ -43,6 +43,8 @@ return [
         'retire' => 'Retire this Advance',
         'view_retirement' => 'View Retirement',
         'review_and_approve' => 'Review & Approve',
+        'cancel_request' => 'Cancel Request',
+        'decline_request' => 'Decline Request',
     ],
 
     'show' => [
@@ -73,6 +75,7 @@ return [
         'awaiting_approval' => 'Awaiting approval',
         'approved_awaiting' => 'Fully approved — awaiting disbursement',
         'cancelled' => 'Cancelled',
+        'denied' => 'Denied',
     ],
 
     'timeline' => [
@@ -80,6 +83,7 @@ return [
         'submitted' => 'Submitted for approval',
         'fully_approved' => 'Fully approved',
         'cancelled' => 'Cancelled',
+        'denied' => 'Denied',
         'resubmitted' => 'Resubmitted for approval',
         'updated' => 'Request updated',
         'stage_approved' => 'Stage approved',
@@ -91,6 +95,8 @@ return [
 
     'confirm_delete_draft' => 'Delete this draft? This cannot be undone.',
     'confirm_disburse' => 'Mark this request as disbursed?',
+    'confirm_cancel' => 'Cancel this request? This cannot be undone.',
+    'confirm_decline' => 'Decline this request? This cannot be undone.',
 
     'empty' => [
         'heading' => 'No requests yet',

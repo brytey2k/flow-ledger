@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 /**
  * @property int|null $branch_id
  * @property int|null $department_id
+ * @property int|null $cancelled_at_stage_id
  */
 class WorkflowInstance extends Model
 {
@@ -24,6 +25,7 @@ class WorkflowInstance extends Model
         'submitter_user_id',
         'branch_id',
         'department_id',
+        'cancelled_at_stage_id',
     ];
 
     /** @return MorphTo<Model, $this> */
@@ -56,6 +58,12 @@ class WorkflowInstance extends Model
         return $this->belongsTo(WorkflowTemplate::class, 'workflow_template_id');
     }
 
+    /** @return BelongsTo<WorkflowInstanceStage, $this> */
+    public function cancelledAtStage(): BelongsTo
+    {
+        return $this->belongsTo(WorkflowInstanceStage::class, 'cancelled_at_stage_id');
+    }
+
     /** @return HasMany<WorkflowInstanceStage, $this> */
     public function instanceStages(): HasMany
     {
@@ -80,5 +88,10 @@ class WorkflowInstance extends Model
     public function isInProgress(): bool
     {
         return $this->status === 'in_progress';
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
     }
 }

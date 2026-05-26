@@ -145,11 +145,16 @@ class PaymentRequestService
             $activeInstance = $request->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
+                $activeStage = $activeInstance->activeInstanceStages()->first();
+
                 $activeInstance->instanceStages()
                     ->whereIn('status', ['pending', 'active'])
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
 
-                $activeInstance->update(['status' => 'cancelled']);
+                $activeInstance->update([
+                    'status' => 'cancelled',
+                    'cancelled_at_stage_id' => $activeStage?->id,
+                ]);
             }
 
             $request->update(['status' => 'cancelled']);
@@ -160,6 +165,31 @@ class PaymentRequestService
                 ->event('request.cancelled')
                 ->withProperties(['old_status' => $oldStatus, 'new_status' => 'cancelled'])
                 ->log('Request cancelled');
+        });
+    }
+
+    public function decline(PaymentRequest $request, User|null $user = null): void
+    {
+        DB::transaction(function () use ($request, $user): void {
+            $oldStatus = $request->status;
+            $activeInstance = $request->activeWorkflowInstance;
+
+            if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
+                $activeInstance->instanceStages()
+                    ->whereIn('status', ['pending', 'active'])
+                    ->update(['status' => 'cancelled', 'completed_at' => now()]);
+
+                $activeInstance->update(['status' => 'cancelled']);
+            }
+
+            $request->update(['status' => 'denied']);
+
+            activity()
+                ->performedOn($request)
+                ->causedBy($user)
+                ->event('request.denied')
+                ->withProperties(['old_status' => $oldStatus, 'new_status' => 'denied'])
+                ->log('Request denied');
         });
     }
 }

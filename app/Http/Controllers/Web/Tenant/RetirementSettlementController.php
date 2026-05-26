@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant;
 
+use App\Exceptions\InsufficientCashbookBalanceException;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\RetirementRequest;
 use App\Services\RetirementService;
-use App\Exceptions\InsufficientCashbookBalanceException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 

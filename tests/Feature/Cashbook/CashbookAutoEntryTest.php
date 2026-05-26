@@ -80,6 +80,13 @@ class CashbookAutoEntryTest extends TenantAppTestCase
         $currency = Currency::factory()->create();
         $branch = Branch::factory()->create(['currency_id' => $currency->id]);
 
+        // Pre-populate cashbook with sufficient balance for both disbursements
+        Cashbook::create([
+            'branch_id' => $branch->id,
+            'currency_id' => $currency->id,
+            'balance' => 500.00,
+        ]);
+
         $this->actingAs($this->user)
             ->post(route('disbursements.store', $this->approvedAdvance(200.00, $branch)), ['disbursement_method' => PaymentMethod::Cash->value]);
 
@@ -87,7 +94,7 @@ class CashbookAutoEntryTest extends TenantAppTestCase
             ->post(route('disbursements.store', $this->approvedAdvance(300.00, $branch)), ['disbursement_method' => PaymentMethod::Cash->value]);
 
         $cashbook = Cashbook::where('branch_id', $branch->id)->first();
-        $this->assertEqualsWithDelta(-500.00, (float) $cashbook->balance, 0.01);
+        $this->assertEqualsWithDelta(0.00, (float) $cashbook->balance, 0.01);
         $this->assertSame(2, $cashbook->entries()->count());
     }
 

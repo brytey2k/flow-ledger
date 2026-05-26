@@ -6,6 +6,7 @@ namespace Tests\Feature\Disbursement;
 
 use App\Enums\Tenant\PaymentMethod;
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\PaymentRequest;
 use Tests\TenantAppTestCase;
 
@@ -163,7 +164,18 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
     public function test_cannot_disburse_when_insufficient_cashbook_balance(): void
     {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id, 'total_amount' => 100.00]);
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'approved',
+            'branch_id' => $this->branch->id,
+            'total_amount' => 100.00,
+        ]);
+
+        // Pre-populate cashbook with insufficient balance
+        Cashbook::create([
+            'branch_id' => $this->branch->id,
+            'currency_id' => $paymentRequest->currency_id,
+            'balance' => 50.00,
+        ]);
 
         $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
             'disbursement_method' => PaymentMethod::Cash->value,

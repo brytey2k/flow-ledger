@@ -96,6 +96,12 @@ return [
         'no_workflow_stages' => 'Le workflow pour ce type de demande n a pas d etapes configurees. Veuillez demander a un administrateur d en ajouter avant de soumettre.',
         'disburse_only_approved' => 'Seules les demandes approuvees peuvent etre decaissees.',
         'disbursed' => 'Demande marquee comme decaissee.',
+        'cancel_not_owner' => 'Vous ne pouvez annuler que vos propres demandes.',
+        'cannot_cancel_status' => 'Cette demande ne peut pas etre annulee dans son etat actuel.',
+        'cancelled' => 'Demande annulee avec succes.',
+        'no_active_workflow' => 'Il n y a pas de workflow actif a rejeter.',
+        'cannot_decline' => 'Vous n avez pas la permission de rejeter cette demande.',
+        'declined' => 'Demande rejetee avec succes.',
     ],
     'retirements' => [
         'draft_saved' => 'Reddition enregistree en brouillon.',

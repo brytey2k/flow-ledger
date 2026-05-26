@@ -40,6 +40,8 @@ return [
         'retire' => 'Reddition de cette avance',
         'view_retirement' => 'Voir la reddition',
         'review_and_approve' => 'Examiner et approuver',
+        'cancel_request' => 'Annuler la demande',
+        'decline_request' => 'Rejeter la demande',
     ],
     'show' => [
         'title' => 'Demande #:id',
@@ -68,12 +70,15 @@ return [
         'awaiting_approval' => 'En attente d approbation',
         'approved_awaiting' => 'Approuvee - en attente de decaissement',
         'cancelled' => 'Annulee',
+        'denied' => 'Rejetee',
     ],
+
     'timeline' => [
         'created_draft' => 'Creee en brouillon',
         'submitted' => 'Soumise pour approbation',
         'fully_approved' => 'Entierement approuvee',
         'cancelled' => 'Annulee',
+        'denied' => 'Rejetee',
         'resubmitted' => 'Renvoyee pour approbation',
         'updated' => 'Demande mise a jour',
         'stage_approved' => 'Etape approuvee',
@@ -82,8 +87,11 @@ return [
         'disbursed' => 'Decaissee',
         'no_activity' => 'Aucune activite pour le moment.',
     ],
+
     'confirm_delete_draft' => 'Supprimer ce brouillon ? Cette action est irreversible.',
     'confirm_disburse' => 'Marquer cette demande comme decaissee ?',
+    'confirm_cancel' => 'Annuler cette demande ? Cette action est irreversible.',
+    'confirm_decline' => 'Rejeter cette demande ? Cette action est irreversible.',
     'empty' => [
         'heading' => 'Aucune demande pour le moment',
         'subtext' => 'Creez une nouvelle demande pour commencer',

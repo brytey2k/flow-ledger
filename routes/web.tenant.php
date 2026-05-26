@@ -19,6 +19,8 @@ use App\Http\Controllers\Web\Tenant\DisbursementsController;
 use App\Http\Controllers\Web\Tenant\DocumentationController;
 use App\Http\Controllers\Web\Tenant\LevelController;
 use App\Http\Controllers\Web\Tenant\LocaleController;
+use App\Http\Controllers\Web\Tenant\PaymentRequestCancelController;
+use App\Http\Controllers\Web\Tenant\PaymentRequestDeclineController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestResubmitController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestsController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestSubmitController;
@@ -359,6 +361,12 @@ Route::middleware([
         Route::post('/requests/{paymentRequest}/resubmit', [PaymentRequestResubmitController::class, 'store'])
             ->can(PermissionKey::CreatePaymentRequest->value)
             ->name('payment-requests.resubmit');
+        Route::post('/requests/{paymentRequest}/cancel', [PaymentRequestCancelController::class, 'store'])
+            ->can(PermissionKey::AccessPaymentRequests->value)
+            ->name('payment-requests.cancel');
+        Route::post('/requests/{paymentRequest}/decline', [PaymentRequestDeclineController::class, 'store'])
+            ->can(PermissionKey::AccessPaymentRequests->value)
+            ->name('payment-requests.decline');
         Route::post('/requests/{paymentRequest}/comments', [CommentsController::class, 'store'])
             ->can(PermissionKey::AccessPaymentRequests->value)
             ->name('payment-requests.comments.store');

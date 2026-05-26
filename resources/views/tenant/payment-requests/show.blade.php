@@ -296,7 +296,7 @@
                         <h3 class="kt-card-title">{{ __('payment_requests.show.actions') }}</h3>
                     </div>
                     <div class="kt-card-content p-5 flex flex-col gap-3">
-                        @if($paymentRequest->isDraft())
+                            @if($paymentRequest->isDraft())
                             <form method="POST" action="{{ route('payment-requests.submit', $paymentRequest) }}">
                                 @csrf
                                 <button type="submit" class="kt-btn kt-btn-primary w-full">
@@ -304,16 +304,25 @@
                                     {{ __('payment_requests.buttons.submit') }}
                                 </button>
                             </form>
+                            @if($isOwner)
+                               <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
+                                   @csrf
+                                   <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                       <i class="ki-filled ki-close"></i>
+                                       {{ __('payment_requests.buttons.cancel_request') }}
+                                   </button>
+                               </form>
+                            @endif
                             @can(PermissionKey::DeletePaymentRequest->value)
-                                <button type="button"
-                                        class="kt-btn kt-btn-danger kt-btn-outline w-full"
-                                        onclick="if(confirm('{{ __('payment_requests.confirm_delete_draft') }}')) { document.getElementById('delete-form').submit(); }">
-                                    <i class="ki-filled ki-trash"></i>
-                                    {{ __('payment_requests.buttons.delete_draft') }}
-                                </button>
-                                <form id="delete-form" method="POST" action="{{ route('payment-requests.destroy', $paymentRequest) }}" class="hidden">
-                                    @csrf @method('DELETE')
-                                </form>
+                               <button type="button"
+                                       class="kt-btn kt-btn-danger kt-btn-outline w-full"
+                                       onclick="if(confirm('{{ __('payment_requests.confirm_delete_draft') }}')) { document.getElementById('delete-form').submit(); }">
+                                   <i class="ki-filled ki-trash"></i>
+                                   {{ __('payment_requests.buttons.delete_draft') }}
+                               </button>
+                               <form id="delete-form" method="POST" action="{{ route('payment-requests.destroy', $paymentRequest) }}" class="hidden">
+                                   @csrf @method('DELETE')
+                               </form>
                             @endcan
                         @elseif($paymentRequest->status === 'in_workflow')
                             @if($canActOnActiveStage && $activeInstanceStage)
@@ -322,11 +331,28 @@
                                     <i class="ki-filled ki-check-circle"></i>
                                     {{ __('payment_requests.buttons.review_and_approve') }}
                                 </a>
+                                <form method="POST" action="{{ route('payment-requests.decline', $paymentRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full"
+                                            onclick="return confirm('{{ __('payment_requests.confirm_decline') }}')">
+                                        <i class="ki-filled ki-close-circle"></i>
+                                        {{ __('payment_requests.buttons.decline_request') }}
+                                    </button>
+                                </form>
                             @else
                                 <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
                                     <i class="ki-filled ki-time"></i>
                                     {{ __('payment_requests.status.awaiting_approval') }}
                                 </div>
+                                @if($isOwner)
+                                    <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
+                                        @csrf
+                                        <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                            <i class="ki-filled ki-close"></i>
+                                            {{ __('payment_requests.buttons.cancel_request') }}
+                                        </button>
+                                    </form>
+                                @endif
                             @endif
                         @elseif($paymentRequest->status === 'approved')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-sm mb-2">
@@ -370,6 +396,15 @@
                                     </button>
                                 </form>
                             @endcan
+                            @if($isOwner)
+                                <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                        <i class="ki-filled ki-close"></i>
+                                        {{ __('payment_requests.buttons.cancel_request') }}
+                                    </button>
+                                </form>
+                            @endif
                         @elseif($paymentRequest->status === 'sent_back')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-warning/10 text-warning text-sm mb-2">
                                 <i class="ki-filled ki-information-2"></i>
@@ -386,6 +421,13 @@
                                     <button type="submit" class="kt-btn kt-btn-primary w-full">
                                         <i class="ki-filled ki-send"></i>
                                         {{ __('payment_requests.buttons.resubmit') }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                        <i class="ki-filled ki-close"></i>
+                                        {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
                                 </form>
                             @endif

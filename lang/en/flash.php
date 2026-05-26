@@ -96,6 +96,12 @@ return [
         'no_workflow_stages' => 'The workflow for this request type has no stages configured. Please ask an administrator to add stages before submitting.',
         'disburse_only_approved' => 'Only approved requests can be disbursed.',
         'disbursed' => 'Request marked as disbursed.',
+        'cancel_not_owner' => 'You can only cancel your own requests.',
+        'cannot_cancel_status' => 'This request cannot be cancelled in its current status.',
+        'cancelled' => 'Request cancelled successfully.',
+        'no_active_workflow' => 'There is no active workflow to decline.',
+        'cannot_decline' => 'You do not have permission to decline this request.',
+        'declined' => 'Request declined successfully.',
     ],
     'retirements' => [
         'draft_saved' => 'Retirement saved as draft.',

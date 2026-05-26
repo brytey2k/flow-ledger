@@ -6,6 +6,4 @@ namespace App\Exceptions;
 
 use RuntimeException;
 
-class InsufficientCashbookBalanceException extends RuntimeException
-{
-}
+class InsufficientCashbookBalanceException extends RuntimeException {}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Retirement;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use Tests\TenantAppTestCase;
@@ -127,12 +128,24 @@ class RetirementSettlementControllerTest extends TenantAppTestCase
 
     public function test_settlement_fails_when_insufficient_cashbook_balance_for_pay_to_staff(): void
     {
-        $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'total_amount' => 100.00, 'branch_id' => $this->branch->id]);
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'total_amount' => 100.00,
+            'branch_id' => $this->branch->id,
+        ]);
         $retirement = RetirementRequest::factory()->create([
             'payment_request_id' => $advance->id,
             'status' => 'approved',
             'difference_type' => 'pay_to_staff',
             'difference_amount' => 50.00,
+        ]);
+
+        // Pre-populate cashbook with insufficient balance for paying staff
+        Cashbook::create([
+            'branch_id' => $this->branch->id,
+            'currency_id' => $advance->currency_id,
+            'balance' => 30.00,
         ]);
 
         $this->actingAs($this->user)
