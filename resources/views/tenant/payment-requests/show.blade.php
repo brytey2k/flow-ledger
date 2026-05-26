@@ -98,6 +98,23 @@
                                     <dd class="text-sm text-foreground">{{ $paymentRequest->approved_at->format('M d, Y H:i') }}</dd>
                                 </div>
                             @endif
+                            @php
+                                $cancelLog = $paymentRequest->activities->firstWhere('event', 'request.cancelled');
+                                $cancelledInstance = $paymentRequest->workflowInstances()->with('cancelledAtStage.stage')->where('status', 'cancelled')->latest()->first();
+                            @endphp
+                            @if($paymentRequest->status === 'cancelled' && ($cancelLog || $cancelledInstance))
+                                <div>
+                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.status.cancelled') }}</dt>
+                                    <dd class="text-sm text-foreground">
+                                        @if($cancelLog)
+                                            {{ $cancelLog->created_at->format('M d, Y H:i') }}
+                                        @endif
+                                        @if($cancelledInstance && $cancelledInstance->cancelledAtStage)
+                                            — {{ $cancelledInstance->cancelledAtStage->stage->name }}
+                                        @endif
+                                    </dd>
+                                </div>
+                            @endif
                             @if($paymentRequest->notes)
                                 <div class="sm:col-span-2">
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.show.notes') }}</dt>
