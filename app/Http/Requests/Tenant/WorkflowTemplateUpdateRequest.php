@@ -19,7 +19,7 @@ class WorkflowTemplateUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:150'],
-            'type' => ['required', Rule::in(['advance', 'expense', 'retirement'])],
+            'type' => ['required', Rule::in([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value, \App\Enums\Tenant\PaymentRequestType::Retirement->value])],
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
         ];
     }

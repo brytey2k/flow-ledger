@@ -44,8 +44,8 @@
                     <label class="text-xs font-medium text-secondary-foreground">Type</label>
                     <select name="type" class="kt-select kt-select-sm">
                         <option value="">All</option>
-                        <option value="advance" @selected($type === 'advance')>Advance</option>
-                        <option value="expense" @selected($type === 'expense')>Expense</option>
+                        <option value="{{ \App\Enums\Tenant\PaymentRequestType::Advance->value }}" @selected($type === \App\Enums\Tenant\PaymentRequestType::Advance->value)>Advance</option>
+                        <option value="{{ \App\Enums\Tenant\PaymentRequestType::Expense->value }}" @selected($type === \App\Enums\Tenant\PaymentRequestType::Expense->value)>Expense</option>
                     </select>
                 </div>
                 <button type="submit" class="kt-btn kt-btn-primary kt-btn-sm">Apply</button>

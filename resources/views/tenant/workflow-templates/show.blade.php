@@ -6,7 +6,7 @@
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ $workflowTemplate->name }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                @php $typeColors = ['advance' => 'kt-badge-primary', 'expense' => 'kt-badge-success', 'retirement' => 'kt-badge-warning']; @endphp
+                @php $typeColors = [\App\Enums\Tenant\PaymentRequestType::Advance->value => 'kt-badge-primary', \App\Enums\Tenant\PaymentRequestType::Expense->value => 'kt-badge-success', \App\Enums\Tenant\PaymentRequestType::Retirement->value => 'kt-badge-warning']; @endphp
                 <span class="kt-badge kt-badge-sm {{ $typeColors[$workflowTemplate->type] ?? 'kt-badge-outline' }}">
                     {{ ucfirst($workflowTemplate->type) }}
                 </span>

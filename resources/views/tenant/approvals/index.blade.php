@@ -4,9 +4,9 @@
     use App\Enums\Tenant\PermissionKey;
 
     $typeColors = [
-        'advance' => 'kt-badge-primary',
-        'expense' => 'kt-badge-warning',
-        'retirement' => 'kt-badge-success',
+        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'kt-badge-primary',
+        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'kt-badge-warning',
+        \App\Enums\Tenant\PaymentRequestType::Retirement->value => 'kt-badge-success',
     ];
 @endphp
 

@@ -46,7 +46,6 @@
                             </label>
                             <select id="type" name="type" class="kt-select w-full">
                                 <option value="advance" {{ old('type', $workflowTemplate->type) === 'advance' ? 'selected' : '' }}>{{ __('workflows.fields.type_advance') }}</option>
-                                <option value="expense" {{ old('type', $workflowTemplate->type) === 'expense' ? 'selected' : '' }}>{{ __('workflows.fields.type_expense') }}</option>
                                 <option value="retirement" {{ old('type', $workflowTemplate->type) === 'retirement' ? 'selected' : '' }}>{{ __('workflows.fields.type_retirement') }}</option>
                             </select>
                             @error('type')

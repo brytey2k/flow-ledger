@@ -39,8 +39,8 @@
                         <div>
                             <label class="kt-form-label block mb-2">{{ __('payment_requests.fields.type') }}</label>
                             <div class="kt-input w-full bg-muted/40 flex items-center gap-3 px-4 py-3 rounded-md">
-                                <span class="kt-badge kt-badge-sm {{ $paymentRequest->type === 'expense' ? 'kt-badge-warning' : 'kt-badge-primary' }}">
-                                    {{ $paymentRequest->type === 'expense'
+                                <span class="kt-badge kt-badge-sm {{ $paymentRequest->type === \\App\\Enums\\Tenant\\PaymentRequestType::Expense->value ? 'kt-badge-warning' : 'kt-badge-primary' }}">
+                                    {{ $paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value
                                         ? __('payment_requests.fields.type_expense')
                                         : __('payment_requests.fields.type_advance') }}
                                 </span>
@@ -117,7 +117,7 @@
                                 'cost_code_id' => $item->cost_code_id,
                                 'receipt_number' => $item->receipt_number,
                             ])->all();
-                            $isExpenseType = $paymentRequest->type === 'expense';
+                            $isExpenseType = $paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value;
                         @endphp
                         @foreach($editItems as $i => $item)
                             <div class="item-row p-4 rounded-lg border border-border flex flex-col gap-3" id="item-row-{{ $i }}">
@@ -224,7 +224,7 @@
 
 @push('page_js')
 <script>
-    const isExpense = {{ $paymentRequest->type === 'expense' ? 'true' : 'false' }};
+    const isExpense = @json($paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value);
     let nextIndex = {{ count($editItems) }};
 
     const costCodeOptions = `@foreach($costCodes as $code)<option value="{{ $code->id }}">{{ $code->code }} — {{ addslashes($code->name) }}</option>@endforeach`;

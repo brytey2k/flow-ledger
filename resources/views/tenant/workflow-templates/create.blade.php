@@ -47,7 +47,6 @@
                                     aria-invalid="@error('type') true @else false @enderror">
                                 <option value="">{{ __('workflows.fields.select_type') }}</option>
                                 <option value="advance" {{ old('type') === 'advance' ? 'selected' : '' }}>{{ __('workflows.fields.type_advance') }}</option>
-                                <option value="expense" {{ old('type') === 'expense' ? 'selected' : '' }}>{{ __('workflows.fields.type_expense') }}</option>
                                 <option value="retirement" {{ old('type') === 'retirement' ? 'selected' : '' }}>{{ __('workflows.fields.type_retirement') }}</option>
                             </select>
                             <div class="mt-1 text-xs text-muted-foreground">

@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\DTOs\Tenant\CreatePaymentRequestDto;
 use App\DTOs\Tenant\DisbursePaymentRequestDto;
+use App\Enums\Tenant\PaymentRequestStatus;
+use App\Enums\Tenant\PaymentRequestType;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
@@ -34,7 +36,7 @@ class PaymentRequestService
                 'type' => $dto->type,
                 'notes' => $dto->notes,
                 'total_amount' => $totalAmount,
-                'status' => 'draft',
+                'status' => PaymentRequestStatus::Draft->value,
             ]);
 
             foreach ($dto->items as $item) {
@@ -60,10 +62,27 @@ class PaymentRequestService
     public function submit(PaymentRequest $request, User|null $user = null): void
     {
         DB::transaction(function () use ($request, $user): void {
+            // Expense-type requests skip the workflow and are marked ready for retirement
+            if ($request->type === PaymentRequestType::Expense->value) {
+                $request->update([
+                    'status' => PaymentRequestStatus::ReadyForRetirement->value,
+                    'submitted_at' => now(),
+                ]);
+
+                activity()
+                    ->performedOn($request)
+                    ->causedBy($user)
+                    ->event('request.submitted')
+                    ->withProperties(['old_status' => PaymentRequestStatus::Draft->value, 'new_status' => PaymentRequestStatus::ReadyForRetirement->value])
+                    ->log('Submitted as ready for retirement');
+
+                return;
+            }
+
             $template = WorkflowTemplate::resolveForBranch($request->type, $request->branch_id);
 
             $request->update([
-                'status' => 'in_workflow',
+                'status' => PaymentRequestStatus::InWorkflow->value,
                 'submitted_at' => now(),
             ]);
 
@@ -71,7 +90,7 @@ class PaymentRequestService
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.submitted')
-                ->withProperties(['old_status' => 'draft', 'new_status' => 'in_workflow'])
+                ->withProperties(['old_status' => PaymentRequestStatus::Draft->value, 'new_status' => PaymentRequestStatus::InWorkflow->value])
                 ->log('Submitted for approval');
 
             $this->engine->startWorkflow($request, $template, $user);
@@ -82,7 +101,7 @@ class PaymentRequestService
     {
         DB::transaction(function () use ($request, $dto, $user): void {
             $request->update([
-                'status' => 'disbursed',
+                'status' => PaymentRequestStatus::Disbursed->value,
                 'disbursed_at' => now(),
                 'disbursed_by_user_id' => $user?->id,
                 'disbursement_method' => $dto->method,
@@ -95,7 +114,7 @@ class PaymentRequestService
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.disbursed')
-                ->withProperties(['old_status' => 'approved', 'new_status' => 'disbursed', 'method' => $dto->method->value])
+                ->withProperties(['old_status' => PaymentRequestStatus::Approved->value, 'new_status' => PaymentRequestStatus::Disbursed->value, 'method' => $dto->method->value])
                 ->log('Disbursed');
         });
 
@@ -131,7 +150,7 @@ class PaymentRequestService
                 ->performedOn($paymentRequest)
                 ->causedBy($user)
                 ->event('request.updated')
-                ->withProperties(['new_status' => 'sent_back'])
+                ->withProperties(['new_status' => PaymentRequestStatus::SentBack->value])
                 ->log('Request updated while sent back');
 
             return $paymentRequest->refresh();
@@ -147,9 +166,14 @@ class PaymentRequestService
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
                 $activeStage = $activeInstance->activeInstanceStages()->first();
 
+                // Only mark completed_at for stages that were active. Pending stages are cancelled without completed_at.
                 $activeInstance->instanceStages()
-                    ->whereIn('status', ['pending', 'active'])
+                    ->where('status', 'active')
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
+
+                $activeInstance->instanceStages()
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled']);
 
                 $activeInstance->update([
                     'status' => 'cancelled',
@@ -157,13 +181,13 @@ class PaymentRequestService
                 ]);
             }
 
-            $request->update(['status' => 'cancelled']);
+            $request->update(['status' => PaymentRequestStatus::Cancelled->value]);
 
             activity()
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.cancelled')
-                ->withProperties(['old_status' => $oldStatus, 'new_status' => 'cancelled'])
+                ->withProperties(['old_status' => $oldStatus, 'new_status' => PaymentRequestStatus::Cancelled->value])
                 ->log('Request cancelled');
         });
     }
@@ -175,20 +199,25 @@ class PaymentRequestService
             $activeInstance = $request->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
+                // Only mark completed_at for stages that were active. Pending stages are cancelled without completed_at.
                 $activeInstance->instanceStages()
-                    ->whereIn('status', ['pending', 'active'])
+                    ->where('status', 'active')
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
+
+                $activeInstance->instanceStages()
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled']);
 
                 $activeInstance->update(['status' => 'cancelled']);
             }
 
-            $request->update(['status' => 'denied']);
+            $request->update(['status' => PaymentRequestStatus::Denied->value]);
 
             activity()
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.denied')
-                ->withProperties(['old_status' => $oldStatus, 'new_status' => 'denied'])
+                ->withProperties(['old_status' => $oldStatus, 'new_status' => PaymentRequestStatus::Denied->value])
                 ->log('Request denied');
         });
     }

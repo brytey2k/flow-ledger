@@ -18,22 +18,22 @@ class WorkflowTemplateFactory extends Factory
     {
         return [
             'name' => fake()->words(3, true),
-            'type' => fake()->randomElement(['advance', 'expense', 'retirement']),
+            'type' => fake()->randomElement([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value, \App\Enums\Tenant\PaymentRequestType::Retirement->value]),
         ];
     }
 
     public function advance(): static
     {
-        return $this->state(['type' => 'advance']);
+        return $this->state(['type' => \App\Enums\Tenant\PaymentRequestType::Advance->value]);
     }
 
     public function expense(): static
     {
-        return $this->state(['type' => 'expense']);
+        return $this->state(['type' => \App\Enums\Tenant\PaymentRequestType::Expense->value]);
     }
 
     public function retirement(): static
     {
-        return $this->state(['type' => 'retirement']);
+        return $this->state(['type' => \App\Enums\Tenant\PaymentRequestType::Retirement->value]);
     }
 }

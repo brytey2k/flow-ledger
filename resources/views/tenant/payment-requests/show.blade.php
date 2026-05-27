@@ -14,8 +14,8 @@
         'cancelled'   => 'kt-badge-danger',
     ];
     $typeColors = [
-        'advance' => 'kt-badge-primary',
-        'expense' => 'kt-badge-warning',
+        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'kt-badge-primary',
+        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'kt-badge-warning',
     ];
 @endphp
 

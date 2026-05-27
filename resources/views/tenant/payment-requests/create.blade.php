@@ -40,10 +40,10 @@
                             <select id="type" name="type" class="kt-select w-full"
                                     aria-invalid="@error('type') true @else false @enderror">
                                 <option value="">{{ __('payment_requests.fields.select_type') }}</option>
-                                <option value="advance" {{ old('type') === 'advance' ? 'selected' : '' }}>
+                                <option value="{{ \App\Enums\Tenant\PaymentRequestType::Advance->value }}" {{ old('type') === \App\Enums\Tenant\PaymentRequestType::Advance->value ? 'selected' : '' }}>
                                     {{ __('payment_requests.fields.type_advance') }}
                                 </option>
-                                <option value="expense" {{ old('type') === 'expense' ? 'selected' : '' }}>
+                                <option value="{{ \App\Enums\Tenant\PaymentRequestType::Expense->value }}" {{ old('type') === \App\Enums\Tenant\PaymentRequestType::Expense->value ? 'selected' : '' }}>
                                     {{ __('payment_requests.fields.type_expense') }}
                                 </option>
                             </select>
@@ -165,7 +165,7 @@
                                     </div>
                                 </div>
                                 {{-- Expense-only fields --}}
-                                <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="{{ $oldType !== 'expense' ? 'display:none' : '' }}">
+                                <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="{{ $oldType !== \App\Enums\Tenant\PaymentRequestType::Expense->value ? 'display:none' : '' }}">
                                     <div>
                                         <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">{{ __('payment_requests.fields.cost_code') }} *</label>
                                         <select name="items[{{ $i }}][cost_code_id]" class="kt-select w-full"
@@ -231,7 +231,7 @@
     const costCodeOptions = `@foreach($costCodes as $code)<option value="{{ $code->id }}">{{ $code->code }} — {{ addslashes($code->name) }}</option>@endforeach`;
 
     function isExpense() {
-        return document.getElementById('type').value === 'expense';
+        return document.getElementById('type').value === '{{ \App\Enums\Tenant\PaymentRequestType::Expense->value }}';
     }
 
     function buildExpenseFields(index) {
@@ -290,7 +290,7 @@
     }
 
     document.getElementById('type').addEventListener('change', function () {
-        const show = this.value === 'expense';
+    const show = this.value === '{{ \App\Enums\Tenant\PaymentRequestType::Expense->value }}';
         document.querySelectorAll('.expense-fields').forEach(el => {
             el.style.display = show ? '' : 'none';
         });

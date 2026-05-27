@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Tenant;
 
+use App\Enums\Tenant\PaymentRequestType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,7 @@ class WorkflowTemplateStoreRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:150'],
-            'type' => ['required', Rule::in(['advance', 'expense', 'retirement'])],
+            'type' => ['required', Rule::in([PaymentRequestType::Advance->value, PaymentRequestType::Retirement->value])],
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
         ];
     }

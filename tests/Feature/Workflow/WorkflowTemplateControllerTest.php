@@ -146,7 +146,7 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
 
     public function test_store_accepts_all_valid_types(): void
     {
-        foreach (['advance', 'expense', 'retirement'] as $type) {
+        foreach ([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Retirement->value] as $type) {
             $response = $this->actingAs($this->user)->post(route('workflow-templates.store'), [
                 'name' => "Template {$type}",
                 'type' => $type,
@@ -155,7 +155,8 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
             $response->assertSessionHasNoErrors();
         }
 
-        $this->assertDatabaseCount('workflow_templates', 3);
+        // store no longer accepts 'expense' templates, so two templates are created here
+        $this->assertDatabaseCount('workflow_templates', 2);
     }
 
     public function test_user_can_create_branch_specific_template(): void
@@ -246,11 +247,11 @@ class WorkflowTemplateControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)->put(route('workflow-templates.update', $template), [
             'name' => 'New Name',
-            'type' => 'expense',
+            'type' => \App\Enums\Tenant\PaymentRequestType::Retirement->value,
         ]);
 
         $response->assertRedirect(route('workflow-templates.show', $template));
-        $this->assertDatabaseHas('workflow_templates', ['id' => $template->id, 'name' => 'New Name', 'type' => 'expense']);
+        $this->assertDatabaseHas('workflow_templates', ['id' => $template->id, 'name' => 'New Name', 'type' => 'retirement']);
     }
 
     public function test_update_requires_valid_type(): void

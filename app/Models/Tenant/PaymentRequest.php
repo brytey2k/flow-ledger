@@ -137,27 +137,27 @@ class PaymentRequest extends Model
 
     public function isAdvance(): bool
     {
-        return $this->type === 'advance';
+        return $this->type === \App\Enums\Tenant\PaymentRequestType::Advance->value;
     }
 
     public function isExpense(): bool
     {
-        return $this->type === 'expense';
+        return $this->type === \App\Enums\Tenant\PaymentRequestType::Expense->value;
     }
 
     public function isDraft(): bool
     {
-        return $this->status === 'draft';
+        return $this->status === \App\Enums\Tenant\PaymentRequestStatus::Draft->value;
     }
 
     public function isSentBack(): bool
     {
-        return $this->status === 'sent_back';
+        return $this->status === \App\Enums\Tenant\PaymentRequestStatus::SentBack->value;
     }
 
     public function isDenied(): bool
     {
-        return $this->status === 'denied';
+        return $this->status === \App\Enums\Tenant\PaymentRequestStatus::Denied->value;
     }
 
     public function isCancelable(): bool
@@ -172,6 +172,6 @@ class PaymentRequest extends Model
 
     public function isDisbursed(): bool
     {
-        return $this->status === 'disbursed';
+        return $this->status === \App\Enums\Tenant\PaymentRequestStatus::Disbursed->value;
     }
 }

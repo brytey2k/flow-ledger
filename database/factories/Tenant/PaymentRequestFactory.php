@@ -23,7 +23,7 @@ class PaymentRequestFactory extends Factory
             'staff_id' => Staff::factory(),
             'branch_id' => Branch::factory(),
             'currency_id' => Currency::factory(),
-            'type' => fake()->randomElement(['advance', 'expense']),
+            'type' => fake()->randomElement([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value]),
             'status' => 'draft',
             'total_amount' => fake()->randomFloat(2, 100, 10000),
             'notes' => null,
@@ -32,12 +32,12 @@ class PaymentRequestFactory extends Factory
 
     public function advance(): static
     {
-        return $this->state(['type' => 'advance']);
+        return $this->state(['type' => \App\Enums\Tenant\PaymentRequestType::Advance->value]);
     }
 
     public function expense(): static
     {
-        return $this->state(['type' => 'expense']);
+        return $this->state(['type' => \App\Enums\Tenant\PaymentRequestType::Expense->value]);
     }
 
     public function submitted(): static

@@ -19,7 +19,7 @@ class PaymentRequestUpdateRequest extends FormRequest
     {
         /** @var PaymentRequest|null $paymentRequest */
         $paymentRequest = $this->route('paymentRequest');
-        $isExpense = $paymentRequest instanceof PaymentRequest && $paymentRequest->type === 'expense';
+        $isExpense = $paymentRequest instanceof PaymentRequest && $paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value;
 
         return [
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],

@@ -66,7 +66,7 @@
                                         </td>
                                         <td>
                                             @php
-                                                $typeColors = ['advance' => 'kt-badge-primary', 'expense' => 'kt-badge-success', 'retirement' => 'kt-badge-warning'];
+                                                $typeColors = [\App\Enums\Tenant\PaymentRequestType::Advance->value => 'kt-badge-primary', \App\Enums\Tenant\PaymentRequestType::Expense->value => 'kt-badge-success', \App\Enums\Tenant\PaymentRequestType::Retirement->value => 'kt-badge-warning'];
                                             @endphp
                                             <span class="kt-badge kt-badge-sm {{ $typeColors[$template->type] ?? 'kt-badge-outline' }}">
                                                 @if($template->type === 'advance') {{ __('workflows.fields.type_advance') }}

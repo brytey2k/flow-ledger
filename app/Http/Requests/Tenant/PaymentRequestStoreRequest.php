@@ -22,11 +22,11 @@ class PaymentRequestStoreRequest extends FormRequest
     /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
-        $isExpense = $this->input('type') === 'expense';
+        $isExpense = $this->input('type') === \App\Enums\Tenant\PaymentRequestType::Expense->value;
 
         return [
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
-            'type' => ['required', Rule::in(['advance', 'expense'])],
+            'type' => ['required', Rule::in([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value])],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant;
 
+use App\Enums\Tenant\PaymentRequestType;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\WorkflowTemplate;
@@ -23,6 +24,17 @@ class PaymentRequestSubmitController extends Controller
                 ->with('error', __('flash.requests.submit_only_draft'));
         }
 
+        /** @var \App\Models\Tenant\User $user */
+        $user = auth()->user();
+
+        // Expense-type requests skip workflow and are marked ready for retirement
+        if ($paymentRequest->type === PaymentRequestType::Expense->value) {
+            $this->service->submit($paymentRequest, $user);
+
+            return redirect()->route('payment-requests.show', $paymentRequest)
+                ->with('success', __('flash.requests.submitted'));
+        }
+
         $template = WorkflowTemplate::where('type', $paymentRequest->type)->first();
 
         if ($template === null) {
@@ -35,8 +47,6 @@ class PaymentRequestSubmitController extends Controller
                 ->with('error', __('flash.requests.no_workflow_stages'));
         }
 
-        /** @var \App\Models\Tenant\User $user */
-        $user = auth()->user();
         $this->service->submit($paymentRequest, $user);
 
         return redirect()->route('payment-requests.show', $paymentRequest)
