@@ -43,7 +43,11 @@ class RetirementRequestsController extends Controller
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
-        abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
+        abort_unless(
+            in_array($paymentRequest->status, ['disbursed', 'ready_for_retirement'], true),
+            422,
+            'Can only retire disbursed advances or ready-for-retirement expenses.',
+        );
         // Disallow creating a new retirement if there is an active (non-cancelled) retirement
         abort_if($paymentRequest->hasActiveRetirement(), 422, 'This advance has already been retired.');
 
@@ -62,7 +66,11 @@ class RetirementRequestsController extends Controller
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
-        abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
+        abort_unless(
+            in_array($paymentRequest->status, ['disbursed', 'ready_for_retirement'], true),
+            422,
+            'Can only retire disbursed advances or ready-for-retirement expenses.',
+        );
         // Disallow creating a new retirement if there is an active (non-cancelled) retirement
         abort_if($paymentRequest->hasActiveRetirement(), 422, 'This advance has already been retired.');
 

@@ -8,9 +8,9 @@ return [
     'all' => 'All Retirements',
 
     'create' => [
-        'title' => 'Retire Advance #:id',
+        'title' => 'Retire Request #:id',
         'subtitle' => 'Record actual expenditure for :name',
-        'back' => 'Back to Advance',
+        'back' => 'Back to Request',
     ],
 
     'show' => [

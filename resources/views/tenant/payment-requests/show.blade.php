@@ -172,7 +172,9 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td class="text-end text-sm font-medium text-secondary-foreground">{{ __('common.total') }}</td>
+                                        <td colspan="{{ $paymentRequest->isExpense() ? 3 : 1 }}" class="text-end text-sm font-medium text-secondary-foreground">
+                                            {{ __('common.total') }}
+                                        </td>
                                         <td class="text-end">
                                             <span class="text-base font-semibold text-mono">
                                                 {{ $paymentRequest->currency->symbol ?? '' }}
@@ -477,6 +479,27 @@
                                     <span class="text-xs">{{ __('payment_requests.show.ref_label') }} {{ $paymentRequest->disbursement_reference }}</span>
                                 @endif
                             </div>
+                        @elseif($paymentRequest->status === 'ready_for_retirement')
+                            <div class="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-sm mb-2">
+                                <i class="ki-filled ki-check-circle"></i>
+                                {{ __('payment_requests.status.ready_for_retirement') }}
+                            </div>
+                            @can(PermissionKey::CreateRetirementRequest->value)
+                                @php $existingRetirement = $paymentRequest->activeRetirement(); @endphp
+                                @if($isOwner && (!$existingRetirement || $existingRetirement->status === 'cancelled'))
+                                    <a href="{{ route('retirement-requests.create', $paymentRequest) }}"
+                                       class="kt-btn kt-btn-primary w-full">
+                                        <i class="ki-filled ki-file-up"></i>
+                                        {{ __('payment_requests.buttons.retire') }}
+                                    </a>
+                                @elseif($existingRetirement && $existingRetirement->status !== 'cancelled')
+                                    <a href="{{ route('retirement-requests.show', $existingRetirement) }}"
+                                       class="kt-btn kt-btn-outline w-full">
+                                        <i class="ki-filled ki-eye"></i>
+                                        {{ __('payment_requests.buttons.view_retirement') }}
+                                    </a>
+                                @endif
+                            @endcan
                         @elseif($paymentRequest->status === 'cancelled')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                                 <i class="ki-filled ki-cross-circle"></i>

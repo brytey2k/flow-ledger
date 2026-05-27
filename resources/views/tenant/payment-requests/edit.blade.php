@@ -39,7 +39,7 @@
                         <div>
                             <label class="kt-form-label block mb-2">{{ __('payment_requests.fields.type') }}</label>
                             <div class="kt-input w-full bg-muted/40 flex items-center gap-3 px-4 py-3 rounded-md">
-                                <span class="kt-badge kt-badge-sm {{ $paymentRequest->type === \\App\\Enums\\Tenant\\PaymentRequestType::Expense->value ? 'kt-badge-warning' : 'kt-badge-primary' }}">
+                                <span class="kt-badge kt-badge-sm {{ $paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value ? 'kt-badge-warning' : 'kt-badge-primary' }}">
                                     {{ $paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value
                                         ? __('payment_requests.fields.type_expense')
                                         : __('payment_requests.fields.type_advance') }}

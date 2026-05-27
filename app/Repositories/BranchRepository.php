@@ -27,6 +27,19 @@ class BranchRepository
         return Branch::orderBy('name')->get();
     }
 
+    /**
+     * @param array<int, int> $branchIds
+     *
+     * @return Collection<int, Branch>
+     */
+    public function allByIdsOrderedByName(array $branchIds): Collection
+    {
+        return Branch::whereIn('id', $branchIds)
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get();
+    }
+
     /** @return Collection<int, Branch> */
     public function allExcept(int $excludeId): Collection
     {

@@ -25,6 +25,14 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         ]);
     }
 
+    private function readyForRetirementExpense(): PaymentRequest
+    {
+        return PaymentRequest::factory()->expense()->create([
+            'status' => 'ready_for_retirement',
+            'branch_id' => $this->branch->id,
+        ]);
+    }
+
     private function validItems(): array
     {
         $costCode = CostCode::factory()->create();
@@ -86,6 +94,16 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $response->assertViewIs('tenant.retirement-requests.create');
     }
 
+    public function test_create_renders_for_ready_for_retirement_expense(): void
+    {
+        $paymentRequest = $this->readyForRetirementExpense();
+
+        $response = $this->actingAs($this->user)->get(route('retirement-requests.create', $paymentRequest));
+
+        $response->assertOk();
+        $response->assertViewIs('tenant.retirement-requests.create');
+    }
+
     public function test_create_rejects_non_disbursed_advance(): void
     {
         $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
@@ -110,6 +128,25 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
     public function test_store_creates_draft_retirement(): void
     {
         $paymentRequest = $this->disbursedAdvance();
+        $items = $this->validItems();
+
+        $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'notes' => 'Field trip expenses',
+            'items' => $items,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'draft',
+        ]);
+    }
+
+    public function test_store_creates_draft_retirement_for_ready_for_retirement_expense(): void
+    {
+        $paymentRequest = $this->readyForRetirementExpense();
         $items = $this->validItems();
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
@@ -576,7 +613,13 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
     public function test_cancel_allows_recreate(): void
     {
-        $paymentRequest = $this->disbursedAdvance();
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
+            'staff_id' => $staff->id,
+        ]);
         $items = $this->validItems();
 
         // Create initial retirement

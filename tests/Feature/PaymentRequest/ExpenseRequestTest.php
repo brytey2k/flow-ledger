@@ -165,5 +165,22 @@ class ExpenseRequestTest extends TenantAppTestCase
         $response->assertOk();
         $response->assertSee('FL-001');
         $response->assertSee($costCode->code);
+        $response->assertSee('colspan="3"', false);
+    }
+
+    public function test_show_offers_retirement_action_when_ready_for_retirement(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $paymentRequest = PaymentRequest::factory()->expense()->create([
+            'status' => 'ready_for_retirement',
+            'branch_id' => $this->branch->id,
+            'staff_id' => $staff->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.show', $paymentRequest));
+
+        $response->assertOk();
+        $response->assertSee(route('retirement-requests.create', $paymentRequest), false);
+        $response->assertSee(__('payment_requests.buttons.retire'));
     }
 }
