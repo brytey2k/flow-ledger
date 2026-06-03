@@ -24,12 +24,13 @@ class RetirementServiceTest extends TenantAppTestCase
         return app(RetirementService::class);
     }
 
-    private function makeDto(float $amount = 500.0, string|null $notes = null): CreateRetirementRequestDto
+    private function makeDto(float $amount = 500.0, string|null $notes = null, bool $didNotSpendMoney = false): CreateRetirementRequestDto
     {
         $costCode = CostCode::factory()->create();
 
         return new CreateRetirementRequestDto(
             notes: $notes,
+            didNotSpendMoney: $didNotSpendMoney,
             items: [
                 new RetirementRequestItemDto(
                     description: 'Test item',
@@ -120,6 +121,29 @@ class RetirementServiceTest extends TenantAppTestCase
             'id' => $retirement->id,
             'difference_type' => 'nil',
             'difference_amount' => '0.00',
+        ]);
+    }
+
+    public function test_create_draft_can_record_a_no_spend_retirement(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(500.0);
+
+        $retirement = $this->makeService()->createDraft(
+            $paymentRequest,
+            new CreateRetirementRequestDto(
+                notes: null,
+                didNotSpendMoney: true,
+                items: [],
+            ),
+            $this->user,
+        );
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'id' => $retirement->id,
+            'no_money_spent' => 1,
+            'total_amount_expended' => '0.00',
+            'difference_amount' => '500.00',
+            'difference_type' => 'refund_to_company',
         ]);
     }
 

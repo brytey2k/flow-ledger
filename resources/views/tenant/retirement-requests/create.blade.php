@@ -112,12 +112,40 @@
                     <h3 class="kt-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
                 </div>
                 <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
+                    <div class="kt-alert kt-alert-warning mb-4">
+                        <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
+                        <div class="kt-alert-content">
+                            <div class="kt-alert-title">{{ __('retirements.fields.no_spend_warning') }}</div>
+                            <label class="mt-3 inline-flex items-center gap-2 text-sm font-medium">
+                                <input type="hidden" name="did_not_spend_money" value="0">
+                                <input
+                                    id="did-not-spend-money"
+                                    type="checkbox"
+                                    name="did_not_spend_money"
+                                    value="1"
+                                    class="kt-checkbox"
+                                    @checked(old('did_not_spend_money', false))
+                                >
+                                <span>{{ __('retirements.fields.did_not_spend_money') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
                     @error('items')
                         <p class="mb-3 text-sm text-destructive">{{ $message }}</p>
                     @enderror
 
-                    <div id="items-container" class="flex flex-col gap-4">
-                        @php $oldItems = old('items', [[]]); @endphp
+                    <div id="no-spend-note" class="hidden mb-4 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
+                        {{ __('retirements.fields.no_spend_note') }}
+                    </div>
+
+                    @php
+                        $noSpendChecked = old('did_not_spend_money', false);
+                        $oldItems = $noSpendChecked ? old('items', []) : old('items', [[]]);
+                    @endphp
+
+                    <div id="items-section">
+                        <div id="items-container" class="flex flex-col gap-4">
                         @foreach($oldItems as $index => $oldItem)
                             <div class="item-row flex flex-col lg:flex-row lg:items-start gap-3 p-4 rounded-lg border border-border">
                                 <div class="flex-1 min-w-0">
@@ -166,7 +194,7 @@
                                            value="{{ $oldItem['receipt_number'] ?? '' }}"
                                            placeholder="{{ __('common.optional') }}">
                                 </div>
-                                <div class="flex items-end justify-end shrink-0">
+                                <div class="flex items-start justify-end shrink-0 pt-7">
                                     <button type="button" class="remove-item kt-btn kt-btn-sm kt-btn-icon kt-btn-danger kt-btn-outline"
                                             title="Remove item">
                                         <i class="ki-filled ki-trash"></i>
@@ -174,13 +202,14 @@
                                 </div>
                             </div>
                         @endforeach
-                    </div>
+                        </div>
 
-                    <button type="button" id="add-item"
-                            class="mt-4 kt-btn kt-btn-sm kt-btn-outline">
-                        <i class="ki-filled ki-plus"></i>
-                        {{ __('common.add_item') }}
-                    </button>
+                        <button type="button" id="add-item"
+                                class="mt-4 kt-btn kt-btn-sm kt-btn-outline">
+                            <i class="ki-filled ki-plus"></i>
+                            {{ __('common.add_item') }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -276,14 +305,17 @@
 (function () {
     const advanceAmount = {{ (float) $paymentRequest->total_amount }};
     const symbol = '{{ $paymentRequest->currency->symbol ?? '' }}';
-    let itemIndex = {{ count(old('items', [[]])) }};
+    const noSpendCheckbox = document.getElementById('did-not-spend-money');
+    const itemsSection = document.getElementById('items-section');
+    const noSpendNote = document.getElementById('no-spend-note');
+    const addItemButton = document.getElementById('add-item');
+    let itemIndex = {{ count($oldItems) }};
 
     function updateTotals() {
-        let total = 0;
-        document.querySelectorAll('.item-amount').forEach(input => {
-            total += parseFloat(input.value) || 0;
-        });
-
+        const noSpend = noSpendCheckbox.checked;
+        const total = noSpend
+            ? 0
+            : Array.from(document.querySelectorAll('.item-amount')).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
         const diff = total - advanceAmount;
 
         document.getElementById('total-expended').textContent = symbol + ' ' + total.toFixed(2);
@@ -306,7 +338,27 @@
         }
     }
 
+    function syncNoSpendState() {
+        const disabled = noSpendCheckbox.checked;
+
+        itemsSection.classList.toggle('hidden', disabled);
+        noSpendNote.classList.toggle('hidden', !disabled);
+        addItemButton.disabled = disabled;
+        addItemButton.classList.toggle('opacity-50', disabled);
+        addItemButton.classList.toggle('cursor-not-allowed', disabled);
+
+        document.querySelectorAll('.item-row input, .item-row select, .item-row button.remove-item').forEach((element) => {
+            element.disabled = disabled;
+        });
+
+        updateTotals();
+    }
+
     document.getElementById('add-item').addEventListener('click', function () {
+        if (noSpendCheckbox.checked) {
+            return;
+        }
+
         const template = document.getElementById('item-template').innerHTML.replace(/__INDEX__/g, itemIndex++);
         const container = document.getElementById('items-container');
         const div = document.createElement('div');
@@ -328,7 +380,9 @@
         if (e.target.classList.contains('item-amount')) updateTotals();
     });
 
-    updateTotals();
+    noSpendCheckbox.addEventListener('change', syncNoSpendState);
+
+    syncNoSpendState();
 })();
 </script>
 @endsection

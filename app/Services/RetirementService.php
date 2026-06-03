@@ -47,6 +47,7 @@ class RetirementService
                 'difference_amount' => abs($diff),
                 'difference_type' => $differenceType,
                 'notes' => $dto->notes,
+                'no_money_spent' => $dto->didNotSpendMoney,
             ]);
 
             foreach ($dto->items as $item) {
@@ -132,6 +133,7 @@ class RetirementService
                 'total_amount_expended' => $totalExpended,
                 'difference_amount' => abs($diff),
                 'difference_type' => $differenceType,
+                'no_money_spent' => $dto->didNotSpendMoney,
             ]);
 
             $retirement->items()->delete();
@@ -175,6 +177,7 @@ class RetirementService
                 'total_amount_expended' => $totalExpended,
                 'difference_amount' => abs($diff),
                 'difference_type' => $differenceType,
+                'no_money_spent' => $dto->didNotSpendMoney,
             ]);
 
             $retirement->items()->delete();

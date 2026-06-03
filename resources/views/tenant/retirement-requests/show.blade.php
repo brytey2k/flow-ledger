@@ -122,6 +122,15 @@
                                 @endif
                             </div>
                         </div>
+
+                        @if($retirementRequest->no_money_spent)
+                            <div class="mt-4 kt-alert kt-alert-warning">
+                                <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
+                                <div class="kt-alert-content">
+                                    <div class="kt-alert-title">{{ __('retirements.show.no_spend_notice') }}</div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

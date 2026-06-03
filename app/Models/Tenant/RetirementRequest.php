@@ -28,6 +28,7 @@ class RetirementRequest extends Model
         'difference_amount',
         'difference_type',
         'notes',
+        'no_money_spent',
         'submitted_at',
         'approved_at',
         'settled_at',
@@ -42,6 +43,7 @@ class RetirementRequest extends Model
         return [
             'total_amount_expended' => 'decimal:2',
             'difference_amount' => 'decimal:2',
+            'no_money_spent' => 'boolean',
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
             'settled_at' => 'datetime',

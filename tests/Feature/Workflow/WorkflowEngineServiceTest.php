@@ -217,7 +217,7 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
     public function test_approve_last_stage_completes_workflow_and_marks_subject_approved(): void
     {
         ['template' => $template] = $this->makeSequentialTemplate(1);
-        $subject = $this->makePaymentRequest();
+        $subject = $this->makePaymentRequest(['type' => \App\Enums\Tenant\PaymentRequestType::Advance->value]);
         $instance = $this->engine->startWorkflow($subject, $template);
 
         $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
@@ -228,6 +228,28 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
 
         $subject->refresh();
         $this->assertEquals('approved', $subject->status);
+        $this->assertNotNull($subject->approved_at);
+    }
+
+    public function test_approve_expense_workflow_completes_and_marks_ready_for_retirement(): void
+    {
+        $template = WorkflowTemplate::factory()->expense()->create();
+        WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+        $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+        $template->stages()->first()->roles()->sync([$role->id]);
+        $this->user->roles()->sync([$role->id]);
+
+        $subject = $this->makePaymentRequest(['type' => \App\Enums\Tenant\PaymentRequestType::Expense->value]);
+        $instance = $this->engine->startWorkflow($subject, $template);
+
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+        $this->engine->approve($activeStage, $this->user);
+
+        $instance->refresh();
+        $this->assertEquals('completed', $instance->status);
+
+        $subject->refresh();
+        $this->assertEquals('ready_for_retirement', $subject->status);
         $this->assertNotNull($subject->approved_at);
     }
 
@@ -474,7 +496,7 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
     public function test_all_stages_auto_skipped_completes_workflow(): void
     {
         ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(2);
-        $subject = $this->makePaymentRequest();
+        $subject = $this->makePaymentRequest(['type' => \App\Enums\Tenant\PaymentRequestType::Advance->value]);
         $this->user->assignRole($role);
 
         $instance = $this->engine->startWorkflow($subject, $template, $this->user);

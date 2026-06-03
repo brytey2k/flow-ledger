@@ -20,7 +20,7 @@ class WorkflowTemplateStoreRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:150'],
-            'type' => ['required', Rule::in([PaymentRequestType::Advance->value, PaymentRequestType::Retirement->value])],
+            'type' => ['required', Rule::in([PaymentRequestType::Advance->value, PaymentRequestType::Expense->value, PaymentRequestType::Retirement->value])],
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
         ];
     }

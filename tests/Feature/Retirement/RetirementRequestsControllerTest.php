@@ -92,6 +92,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertViewIs('tenant.retirement-requests.create');
+        $response->assertSee(__('retirements.fields.no_spend_warning'), false);
     }
 
     public function test_create_renders_for_ready_for_retirement_expense(): void
@@ -132,6 +133,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'notes' => 'Field trip expenses',
+            'did_not_spend_money' => '0',
             'items' => $items,
         ]);
 
@@ -151,6 +153,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'notes' => 'Field trip expenses',
+            'did_not_spend_money' => '0',
             'items' => $items,
         ]);
 
@@ -174,6 +177,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $costCode = CostCode::factory()->create();
 
         $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'did_not_spend_money' => '0',
             'items' => [
                 ['description' => 'Item A', 'amount' => '600.00', 'cost_code_id' => $costCode->id, 'receipt_number' => null],
             ],
@@ -198,6 +202,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $costCode = CostCode::factory()->create();
 
         $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'did_not_spend_money' => '0',
             'items' => [
                 ['description' => 'Extra cost', 'amount' => '700.00', 'cost_code_id' => $costCode->id, 'receipt_number' => null],
             ],
@@ -214,10 +219,30 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $paymentRequest = $this->disbursedAdvance();
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'did_not_spend_money' => '0',
             'items' => [],
         ]);
 
         $response->assertSessionHasErrors('items');
+    }
+
+    public function test_store_allows_zero_items_when_no_spend_is_checked(): void
+    {
+        $paymentRequest = $this->disbursedAdvance();
+
+        $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'did_not_spend_money' => '1',
+            'items' => [],
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $retirement = RetirementRequest::query()->where('payment_request_id', $paymentRequest->id)->firstOrFail();
+        $this->assertTrue($retirement->no_money_spent);
+        $this->assertSame('0.00', $retirement->total_amount_expended);
+        $this->assertSame('refund_to_company', $retirement->difference_type);
+        $this->assertSame(0, $retirement->items()->count());
     }
 
     public function test_store_validation_requires_cost_code(): void
@@ -366,6 +391,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $response->assertOk();
         $response->assertViewIs('tenant.retirement-requests.edit');
         $response->assertViewHas(['retirementRequest', 'costCodes']);
+        $response->assertSee(__('retirements.fields.no_spend_warning'), false);
     }
 
     public function test_edit_renders_for_draft_retirement_owner(): void
@@ -430,6 +456,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
             'notes' => 'Updated retirement notes',
+            'did_not_spend_money' => '0',
             'items' => [
                 ['description' => 'Updated hotel', 'amount' => '600.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-002'],
             ],
@@ -468,6 +495,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $costCode = CostCode::factory()->create();
 
         $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
+            'did_not_spend_money' => '0',
             'items' => [
                 ['description' => 'Extra expense', 'amount' => '1200.00', 'cost_code_id' => $costCode->id, 'receipt_number' => null],
             ],
@@ -498,6 +526,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
             'notes' => 'Draft edit notes',
+            'did_not_spend_money' => '0',
             'items' => [['description' => 'Fuel', 'amount' => '150.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-D01']],
         ]);
 
@@ -526,6 +555,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $costCode = CostCode::factory()->create();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
+            'did_not_spend_money' => '0',
             'items' => [['description' => 'Item', 'amount' => '100', 'cost_code_id' => $costCode->id]],
         ]);
 
@@ -542,6 +572,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $costCode = CostCode::factory()->create();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
+            'did_not_spend_money' => '0',
             'items' => [['description' => 'Item', 'amount' => '100', 'cost_code_id' => $costCode->id]],
         ]);
 
@@ -554,10 +585,30 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $retirement = $this->sentBackRetirementWithOwner();
 
         $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
+            'did_not_spend_money' => '0',
             'items' => [],
         ]);
 
         $response->assertSessionHasErrors('items');
+    }
+
+    public function test_update_allows_zero_items_when_no_spend_is_checked(): void
+    {
+        $retirement = $this->sentBackRetirementWithOwner();
+
+        $response = $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
+            'did_not_spend_money' => '1',
+            'items' => [],
+        ]);
+
+        $response->assertRedirect(route('retirement-requests.show', $retirement));
+        $response->assertSessionHas('success');
+
+        $retirement->refresh();
+        $this->assertTrue($retirement->no_money_spent);
+        $this->assertSame('0.00', $retirement->total_amount_expended);
+        $this->assertSame('refund_to_company', $retirement->difference_type);
+        $this->assertSame(0, $retirement->items()->count());
     }
 
     // ── Resubmit ──────────────────────────────────────────────────────────────
@@ -625,6 +676,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         // Create initial retirement
         $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'notes' => 'Initial retirement',
+            'did_not_spend_money' => '0',
             'items' => $items,
         ]);
 
@@ -641,6 +693,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         // Attempt to create a new retirement after cancellation
         $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'notes' => 'Recreated retirement',
+            'did_not_spend_money' => '0',
             'items' => $items,
         ]);
 

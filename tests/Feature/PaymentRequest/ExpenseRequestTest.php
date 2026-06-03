@@ -127,7 +127,7 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     // ── Expense workflow ──────────────────────────────────────────────────────
 
-    public function test_expense_is_marked_ready_for_retirement_and_skips_workflow(): void
+    public function test_expense_goes_through_workflow_and_becomes_ready_for_retirement(): void
     {
         $template = WorkflowTemplate::factory()->expense()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
@@ -138,10 +138,10 @@ class ExpenseRequestTest extends TenantAppTestCase
 
         $this->assertDatabaseHas('payment_requests', [
             'id' => $paymentRequest->id,
-            'status' => 'ready_for_retirement',
+            'status' => 'in_workflow',
         ]);
 
-        $this->assertDatabaseMissing('workflow_instances', [
+        $this->assertDatabaseHas('workflow_instances', [
             'workflowable_type' => PaymentRequest::class,
             'workflowable_id' => $paymentRequest->id,
         ]);

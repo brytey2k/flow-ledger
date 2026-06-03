@@ -16,7 +16,9 @@
         "laravel/tinker": "^3.0",
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^6.23",
-        "stancl/tenancy": "^3.9"
+        "stancl/tenancy": "^3.9",
+        "symfony/http-client": "^8.1",
+        "symfony/mailgun-mailer": "^8.1"
     },
     "require-dev": {
         "brianium/paratest": "^7.20",

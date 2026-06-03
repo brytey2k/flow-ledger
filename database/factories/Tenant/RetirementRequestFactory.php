@@ -27,6 +27,7 @@ class RetirementRequestFactory extends Factory
             'difference_amount' => 0,
             'difference_type' => 'nil',
             'notes' => null,
+            'no_money_spent' => false,
         ];
     }
 

@@ -7,7 +7,6 @@ namespace App\Services;
 use App\DTOs\Tenant\CreatePaymentRequestDto;
 use App\DTOs\Tenant\DisbursePaymentRequestDto;
 use App\Enums\Tenant\PaymentRequestStatus;
-use App\Enums\Tenant\PaymentRequestType;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
@@ -62,23 +61,6 @@ class PaymentRequestService
     public function submit(PaymentRequest $request, User|null $user = null): void
     {
         DB::transaction(function () use ($request, $user): void {
-            // Expense-type requests skip the workflow and are marked ready for retirement
-            if ($request->type === PaymentRequestType::Expense->value) {
-                $request->update([
-                    'status' => PaymentRequestStatus::ReadyForRetirement->value,
-                    'submitted_at' => now(),
-                ]);
-
-                activity()
-                    ->performedOn($request)
-                    ->causedBy($user)
-                    ->event('request.submitted')
-                    ->withProperties(['old_status' => PaymentRequestStatus::Draft->value, 'new_status' => PaymentRequestStatus::ReadyForRetirement->value])
-                    ->log('Submitted as ready for retirement');
-
-                return;
-            }
-
             $template = WorkflowTemplate::resolveForBranch($request->type, $request->branch_id);
 
             $request->update([

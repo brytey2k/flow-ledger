@@ -9,6 +9,7 @@ readonly class CreateRetirementRequestDto
     /** @param list<RetirementRequestItemDto> $items */
     public function __construct(
         public string|null $notes,
+        public bool $didNotSpendMoney,
         public array $items,
     ) {}
 }
