@@ -19,6 +19,8 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
+        <x-cash-balance-alert-widget :branches="$lowCashBranches" />
+
         <div class="grid gap-5 lg:grid-cols-3 lg:gap-7.5">
             <div class="kt-card">
                 <div class="kt-card-content flex flex-col gap-2 p-5">

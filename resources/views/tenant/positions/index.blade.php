@@ -9,12 +9,18 @@
                 {{ __('positions.subtitle') }}
             </div>
         </div>
-        @can(App\Enums\Tenant\PermissionKey::CreatePosition->value)
-            <a class="kt-btn kt-btn-primary" href="{{ route('positions.create') }}">
-                <i class="ki-filled ki-plus"></i>
-                {{ __('positions.add_new') }}
-            </a>
-        @endcan
+        <div class="flex flex-wrap items-center gap-2.5">
+            @can(App\Enums\Tenant\PermissionKey::CreatePosition->value)
+                <a class="kt-btn kt-btn-outline" href="{{ route('positions.import') }}">
+                    <i class="ki-filled ki-file-up"></i>
+                    {{ __('positions.import') }}
+                </a>
+                <a class="kt-btn kt-btn-primary" href="{{ route('positions.create') }}">
+                    <i class="ki-filled ki-plus"></i>
+                    {{ __('positions.add_new') }}
+                </a>
+            @endcan
+        </div>
     </div>
 </div>
 
@@ -37,10 +43,16 @@
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('positions.empty.heading') }}</h3>
                         <p class="text-sm text-secondary-foreground mb-4">{{ __('positions.empty.subtext') }}</p>
                         @can(App\Enums\Tenant\PermissionKey::CreatePosition->value)
-                            <a href="{{ route('positions.create') }}" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-plus"></i>
-                                {{ __('positions.buttons.add') }}
-                            </a>
+                            <div class="flex flex-wrap items-center justify-center gap-2">
+                                <a href="{{ route('positions.import') }}" class="kt-btn kt-btn-outline">
+                                    <i class="ki-filled ki-file-up"></i>
+                                    {{ __('positions.import') }}
+                                </a>
+                                <a href="{{ route('positions.create') }}" class="kt-btn kt-btn-primary">
+                                    <i class="ki-filled ki-plus"></i>
+                                    {{ __('positions.buttons.add') }}
+                                </a>
+                            </div>
                         @endcan
                     </div>
                 </div>

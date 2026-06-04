@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Level $level
  * @property-read Currency $currency
+ * @property-read CashBalanceThreshold|null $cashBalanceThreshold
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Staff> $staff
  */
 class Branch extends Entity
@@ -58,5 +59,11 @@ class Branch extends Entity
     public function cashbook(): HasOne
     {
         return $this->hasOne(Cashbook::class);
+    }
+
+    /** @return HasOne<CashBalanceThreshold, $this> */
+    public function cashBalanceThreshold(): HasOne
+    {
+        return $this->hasOne(CashBalanceThreshold::class)->where('is_active', true);
     }
 }

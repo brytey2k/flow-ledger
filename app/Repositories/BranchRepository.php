@@ -18,7 +18,9 @@ class BranchRepository
     /** @return Collection<int, Branch> */
     public function allWithCashbook(): Collection
     {
-        return Branch::with(['level', 'currency', 'cashbook.currency'])->orderBy('position')->get();
+        return Branch::with(['level', 'currency', 'cashbook.currency', 'cashBalanceThreshold'])
+            ->orderBy('position')
+            ->get();
     }
 
     /** @return Collection<int, Branch> */

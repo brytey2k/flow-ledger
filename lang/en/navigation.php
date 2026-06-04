@@ -18,6 +18,7 @@ return [
     'users' => 'Users',
     'roles' => 'Roles',
     'currencies' => 'Currencies',
+    'cash_balance_thresholds' => 'Cash Balance Alerts',
     'workflows' => 'Workflows',
     'reports' => 'Reports',
     'activity_log' => 'Activity Log',

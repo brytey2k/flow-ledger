@@ -10,10 +10,16 @@
             </div>
         </div>
         @can(App\Enums\Tenant\PermissionKey::CreateCostCode->value)
-            <a class="kt-btn kt-btn-primary" href="{{ route('cost-codes.create') }}">
-                <i class="ki-filled ki-plus"></i>
-                {{ __('cost_codes.add_new') }}
-            </a>
+            <div class="flex items-center gap-2.5">
+                <a class="kt-btn kt-btn-outline" href="{{ route('cost-codes.import') }}">
+                    <i class="ki-filled ki-file-up"></i>
+                    {{ __('cost_codes.import') }}
+                </a>
+                <a class="kt-btn kt-btn-primary" href="{{ route('cost-codes.create') }}">
+                    <i class="ki-filled ki-plus"></i>
+                    {{ __('cost_codes.add_new') }}
+                </a>
+            </div>
         @endcan
     </div>
 </div>
@@ -37,10 +43,16 @@
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('cost_codes.empty.heading') }}</h3>
                         <p class="text-sm text-secondary-foreground mb-4">{{ __('cost_codes.empty.subtext') }}</p>
                         @can(App\Enums\Tenant\PermissionKey::CreateCostCode->value)
-                            <a href="{{ route('cost-codes.create') }}" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-plus"></i>
-                                {{ __('cost_codes.buttons.add') }}
-                            </a>
+                            <div class="flex flex-wrap items-center justify-center gap-2">
+                                <a href="{{ route('cost-codes.import') }}" class="kt-btn kt-btn-outline">
+                                    <i class="ki-filled ki-file-up"></i>
+                                    {{ __('cost_codes.import') }}
+                                </a>
+                                <a href="{{ route('cost-codes.create') }}" class="kt-btn kt-btn-primary">
+                                    <i class="ki-filled ki-plus"></i>
+                                    {{ __('cost_codes.buttons.add') }}
+                                </a>
+                            </div>
                         @endcan
                     </div>
                 </div>

@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\Tenant\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\LoginController;
 use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
+use App\Http\Controllers\Web\Tenant\CashBalanceThresholdController;
 use App\Http\Controllers\Web\Tenant\CashbookController;
 use App\Http\Controllers\Web\Tenant\CommentsController;
 use App\Http\Controllers\Web\Tenant\CostCodesController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Web\Tenant\RetirementRequestSubmitController;
 use App\Http\Controllers\Web\Tenant\RetirementSettlementController;
 use App\Http\Controllers\Web\Tenant\RolesController;
 use App\Http\Controllers\Web\Tenant\StaffController;
+use App\Http\Controllers\Web\Tenant\StaffImportController;
 use App\Http\Controllers\Web\Tenant\UsersController;
 use App\Http\Controllers\Web\Tenant\WorkflowApprovalsController;
 use App\Http\Controllers\Web\Tenant\WorkflowParallelGroupsController;
@@ -130,6 +132,15 @@ Route::middleware([
         Route::get('/departments/create', [DepartmentsController::class, 'create'])
             ->can(PermissionKey::CreateDepartment->value)
             ->name('departments.create');
+        Route::get('/departments/import', [DepartmentsController::class, 'importForm'])
+            ->can(PermissionKey::CreateDepartment->value)
+            ->name('departments.import');
+        Route::get('/departments/import/template', [DepartmentsController::class, 'downloadImportTemplate'])
+            ->can(PermissionKey::CreateDepartment->value)
+            ->name('departments.import.template');
+        Route::post('/departments/import', [DepartmentsController::class, 'import'])
+            ->can(PermissionKey::CreateDepartment->value)
+            ->name('departments.import.store');
         Route::post('/departments', [DepartmentsController::class, 'store'])
             ->can(PermissionKey::CreateDepartment->value)
             ->name('departments.store');
@@ -150,9 +161,18 @@ Route::middleware([
         Route::get('/cost-codes/create', [CostCodesController::class, 'create'])
             ->can(PermissionKey::CreateCostCode->value)
             ->name('cost-codes.create');
+        Route::get('/cost-codes/import', [CostCodesController::class, 'importForm'])
+            ->can(PermissionKey::CreateCostCode->value)
+            ->name('cost-codes.import');
+        Route::get('/cost-codes/import/template', [CostCodesController::class, 'downloadImportTemplate'])
+            ->can(PermissionKey::CreateCostCode->value)
+            ->name('cost-codes.import.template');
         Route::post('/cost-codes', [CostCodesController::class, 'store'])
             ->can(PermissionKey::CreateCostCode->value)
             ->name('cost-codes.store');
+        Route::post('/cost-codes/import', [CostCodesController::class, 'import'])
+            ->can(PermissionKey::CreateCostCode->value)
+            ->name('cost-codes.import.store');
         Route::get('/cost-codes/{cost_code}/edit', [CostCodesController::class, 'edit'])
             ->can(PermissionKey::AccessCostCodes->value)
             ->name('cost-codes.edit');
@@ -170,6 +190,15 @@ Route::middleware([
         Route::get('/positions/create', [PositionsController::class, 'create'])
             ->can(PermissionKey::CreatePosition->value)
             ->name('positions.create');
+        Route::get('/positions/import', [PositionsController::class, 'importForm'])
+            ->can(PermissionKey::CreatePosition->value)
+            ->name('positions.import');
+        Route::get('/positions/import/template', [PositionsController::class, 'downloadImportTemplate'])
+            ->can(PermissionKey::CreatePosition->value)
+            ->name('positions.import.template');
+        Route::post('/positions/import', [PositionsController::class, 'import'])
+            ->can(PermissionKey::CreatePosition->value)
+            ->name('positions.import.store');
         Route::post('/positions', [PositionsController::class, 'store'])
             ->can(PermissionKey::CreatePosition->value)
             ->name('positions.store');
@@ -190,6 +219,15 @@ Route::middleware([
         Route::get('/staff/create', [StaffController::class, 'create'])
             ->can(PermissionKey::CreateStaff->value)
             ->name('staff.create');
+        Route::get('/staff/import', [StaffImportController::class, 'importForm'])
+            ->can(PermissionKey::CreateStaff->value)
+            ->name('staff.import');
+        Route::get('/staff/import/template', [StaffImportController::class, 'downloadImportTemplate'])
+            ->can(PermissionKey::CreateStaff->value)
+            ->name('staff.import.template');
+        Route::post('/staff/import', [StaffImportController::class, 'import'])
+            ->can(PermissionKey::CreateStaff->value)
+            ->name('staff.import.store');
         Route::post('/staff', [StaffController::class, 'store'])
             ->can(PermissionKey::CreateStaff->value)
             ->name('staff.store');
@@ -469,5 +507,19 @@ Route::middleware([
         Route::delete('/branches/{branch}/cashbook/entries/{entry}', [CashbookController::class, 'destroy'])
             ->can(PermissionKey::DeleteCashbookEntry->value)
             ->name('cashbook.destroy');
+
+        // Cash Balance Thresholds
+        Route::get('/cash-balance-thresholds', [CashBalanceThresholdController::class, 'index'])
+            ->can(PermissionKey::AccessSettings->value)
+            ->name('cash-balance-thresholds.index');
+        Route::post('/cash-balance-thresholds', [CashBalanceThresholdController::class, 'store'])
+            ->can(PermissionKey::AccessSettings->value)
+            ->name('cash-balance-thresholds.store');
+        Route::put('/cash-balance-thresholds/{threshold}', [CashBalanceThresholdController::class, 'update'])
+            ->can(PermissionKey::AccessSettings->value)
+            ->name('cash-balance-thresholds.update');
+        Route::delete('/cash-balance-thresholds/{threshold}', [CashBalanceThresholdController::class, 'destroy'])
+            ->can(PermissionKey::AccessSettings->value)
+            ->name('cash-balance-thresholds.destroy');
     });
 });

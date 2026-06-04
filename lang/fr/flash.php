@@ -32,6 +32,7 @@ return [
         'updated' => 'Poste mis a jour avec succes.',
         'deleted' => 'Poste supprime.',
         'delete_blocked_staff' => 'Impossible de supprimer un poste auquel du personnel est affecte.',
+        'imported' => '{1}Poste importe avec succes.|[2,*] :count postes importes avec succes.',
     ],
     'departments' => [
         'created' => 'Departement cree avec succes.',
@@ -42,6 +43,7 @@ return [
         'created' => 'Code de coût créé avec succès.',
         'updated' => 'Code de coût mis à jour avec succès.',
         'deleted' => 'Code de coût supprimé.',
+        'imported' => '{1}Code de coût importé avec succès.|[2,*] :count codes de coût importés avec succès.',
     ],
     'branches' => [
         'created' => 'Succursale creee avec succes.',
@@ -54,6 +56,11 @@ return [
         'created' => 'Membre du personnel cree avec succes.',
         'updated' => 'Membre du personnel mis a jour avec succes.',
         'deleted' => 'Membre du personnel supprime.',
+    ],
+    'cash_balance' => [
+        'threshold_saved' => 'Le seuil de solde de caisse a ete enregistre avec succes.',
+        'threshold_updated' => 'Le seuil de solde de caisse a ete mis a jour avec succes.',
+        'threshold_deleted' => 'Le seuil de solde de caisse a ete supprime avec succes.',
     ],
     'users' => [
         'created' => 'Utilisateur cree avec succes.',

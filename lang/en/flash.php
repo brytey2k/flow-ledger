@@ -32,16 +32,19 @@ return [
         'updated' => 'Position updated successfully.',
         'deleted' => 'Position deleted.',
         'delete_blocked_staff' => 'Cannot delete a position that has staff assigned to it.',
+        'imported' => '{1}Position imported successfully.|[2,*] :count positions imported successfully.',
     ],
     'departments' => [
         'created' => 'Department created successfully.',
         'updated' => 'Department updated successfully.',
         'deleted' => 'Department deleted.',
+        'imported' => '{1}Department imported successfully.|[2,*] :count departments imported successfully.',
     ],
     'cost_codes' => [
         'created' => 'Cost code created successfully.',
         'updated' => 'Cost code updated successfully.',
         'deleted' => 'Cost code deleted.',
+        'imported' => '{1}Cost code imported successfully.|[2,*] :count cost codes imported successfully.',
     ],
     'branches' => [
         'created' => 'Branch created successfully.',
@@ -54,6 +57,11 @@ return [
         'created' => 'Staff member created successfully.',
         'updated' => 'Staff member updated successfully.',
         'deleted' => 'Staff member deleted.',
+    ],
+    'cash_balance' => [
+        'threshold_saved' => 'Cash balance threshold saved successfully.',
+        'threshold_updated' => 'Cash balance threshold updated successfully.',
+        'threshold_deleted' => 'Cash balance threshold deleted successfully.',
     ],
     'users' => [
         'created' => 'User created successfully.',

@@ -10,10 +10,16 @@
             </div>
         </div>
         @can(App\Enums\Tenant\PermissionKey::CreateStaff->value)
-            <a class="kt-btn kt-btn-primary" href="{{ route('staff.create') }}">
-                <i class="ki-filled ki-plus"></i>
-                {{ __('staff.add_new') }}
-            </a>
+            <div class="flex items-center gap-2.5">
+                <a class="kt-btn kt-btn-outline" href="{{ route('staff.import') }}">
+                    <i class="ki-filled ki-file-up"></i>
+                    {{ __('staff.buttons.import') }}
+                </a>
+                <a class="kt-btn kt-btn-primary" href="{{ route('staff.create') }}">
+                    <i class="ki-filled ki-plus"></i>
+                    {{ __('staff.add_new') }}
+                </a>
+            </div>
         @endcan
     </div>
 </div>

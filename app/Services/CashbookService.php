@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DTOs\Tenant\CashbookEntryDto;
+use App\Events\CashbookBalanceChanged;
 use App\Exceptions\InsufficientCashbookBalanceException;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\CashbookEntry;
@@ -43,7 +44,9 @@ class CashbookService
             'created_by_user_id' => $user?->id,
         ]);
 
+        $previousBalance = (float) $cashbook->getAttribute('balance');
         $cashbook->decrement('balance', $amount);
+        $newBalance = (float) $cashbook->getAttribute('balance');
 
         activity()
             ->performedOn($cashbook)
@@ -51,6 +54,8 @@ class CashbookService
             ->event('cashbook.credit')
             ->withProperties(['amount' => $amount, 'source' => 'payment_request', 'source_id' => $request->id])
             ->log('Cash debited for disbursement');
+
+        CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
     }
 
     public function recordRetirementSettlement(RetirementRequest $retirement, User|null $user = null): void
@@ -94,11 +99,15 @@ class CashbookService
             'created_by_user_id' => $user?->id,
         ]);
 
+        $previousBalance = (float) $cashbook->getAttribute('balance');
+
         if ($isCredit) {
             $cashbook->decrement('balance', $amount);
         } else {
             $cashbook->increment('balance', $amount);
         }
+
+        $newBalance = (float) $cashbook->getAttribute('balance');
 
         activity()
             ->performedOn($cashbook)
@@ -106,6 +115,8 @@ class CashbookService
             ->event($event)
             ->withProperties(['amount' => $amount, 'source' => 'retirement_request', 'source_id' => $retirement->id, 'difference_type' => $retirement->difference_type])
             ->log($isCredit ? 'Cash debited for retirement settlement' : 'Cash credited from retirement refund');
+
+        CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
     }
 
     public function recordManualReceipt(Cashbook $cashbook, CashbookEntryDto $dto, User|null $user = null): void
@@ -125,7 +136,9 @@ class CashbookService
             'created_by_user_id' => $user?->id,
         ]);
 
+        $previousBalance = (float) $cashbook->getAttribute('balance');
         $cashbook->increment('balance', $amount);
+        $newBalance = (float) $cashbook->getAttribute('balance');
 
         activity()
             ->performedOn($cashbook)
@@ -133,6 +146,8 @@ class CashbookService
             ->event('cashbook.receipt')
             ->withProperties(['amount' => $amount])
             ->log('Manual receipt recorded');
+
+        CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
     }
 
     public function deleteManualReceipt(CashbookEntry $entry): void
@@ -145,7 +160,9 @@ class CashbookService
         $amount = is_numeric($raw) ? (float) $raw : 0.0;
         $cashbook = $entry->cashbook;
 
+        $previousBalance = (float) $cashbook->getAttribute('balance');
         $cashbook->decrement('balance', $amount);
+        $newBalance = (float) $cashbook->getAttribute('balance');
         $entry->delete();
 
         activity()
@@ -153,5 +170,7 @@ class CashbookService
             ->event('cashbook.receipt_deleted')
             ->withProperties(['amount' => $amount])
             ->log('Manual receipt deleted');
+
+        CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
     }
 }

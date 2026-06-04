@@ -9,12 +9,18 @@
                 {{ __('departments.subtitle') }}
             </div>
         </div>
-        @can(App\Enums\Tenant\PermissionKey::CreateDepartment->value)
-            <a class="kt-btn kt-btn-primary" href="{{ route('departments.create') }}">
-                <i class="ki-filled ki-plus"></i>
-                {{ __('departments.add_new') }}
-            </a>
-        @endcan
+        <div class="flex flex-wrap items-center gap-2.5">
+            @can(App\Enums\Tenant\PermissionKey::CreateDepartment->value)
+                <a class="kt-btn kt-btn-outline" href="{{ route('departments.import') }}">
+                    <i class="ki-filled ki-file-up"></i>
+                    {{ __('departments.import') }}
+                </a>
+                <a class="kt-btn kt-btn-primary" href="{{ route('departments.create') }}">
+                    <i class="ki-filled ki-plus"></i>
+                    {{ __('departments.add_new') }}
+                </a>
+            @endcan
+        </div>
     </div>
 </div>
 
@@ -37,10 +43,16 @@
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('departments.empty.heading') }}</h3>
                         <p class="text-sm text-secondary-foreground mb-4">{{ __('departments.empty.subtext') }}</p>
                         @can(App\Enums\Tenant\PermissionKey::CreateDepartment->value)
-                            <a href="{{ route('departments.create') }}" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-plus"></i>
-                                {{ __('departments.buttons.add') }}
-                            </a>
+                            <div class="flex flex-wrap items-center justify-center gap-2">
+                                <a href="{{ route('departments.import') }}" class="kt-btn kt-btn-outline">
+                                    <i class="ki-filled ki-file-up"></i>
+                                    {{ __('departments.import') }}
+                                </a>
+                                <a href="{{ route('departments.create') }}" class="kt-btn kt-btn-primary">
+                                    <i class="ki-filled ki-plus"></i>
+                                    {{ __('departments.buttons.add') }}
+                                </a>
+                            </div>
                         @endcan
                     </div>
                 </div>

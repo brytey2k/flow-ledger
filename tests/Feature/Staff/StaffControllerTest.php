@@ -164,6 +164,46 @@ class StaffControllerTest extends TenantAppTestCase
         ]);
     }
 
+    public function test_store_assembles_phone_country_and_phone_number(): void
+    {
+        $department = Department::factory()->create();
+        $position = Position::factory()->create();
+
+        $this->actingAs($this->user)->post(route('staff.store'), [
+            'first_name' => 'Phone',
+            'last_name' => 'Create',
+            'department_id' => $department->id,
+            'position_id' => $position->id,
+            'phone_country' => 'GH',
+            'phone_number' => '0246227810',
+        ]);
+
+        $this->assertDatabaseHas('staff', [
+            'first_name' => 'Phone',
+            'last_name' => 'Create',
+            'phone' => '+233246227810',
+        ]);
+    }
+
+    public function test_update_assembles_phone_country_and_phone_number(): void
+    {
+        $staff = Staff::factory()->create(['phone' => null]);
+
+        $this->actingAs($this->user)->put(route('staff.update', $staff), [
+            'first_name' => $staff->first_name,
+            'last_name' => $staff->last_name,
+            'department_id' => $staff->department_id,
+            'position_id' => $staff->position_id,
+            'phone_country' => 'NG',
+            'phone_number' => '08031234567',
+        ]);
+
+        $this->assertDatabaseHas('staff', [
+            'id' => $staff->id,
+            'phone' => '+2348031234567',
+        ]);
+    }
+
     public function test_can_delete_staff(): void
     {
         $staff = Staff::factory()->create();

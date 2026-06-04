@@ -9,10 +9,14 @@ return [
     'all' => 'All Staff',
     'create_title' => 'Add Staff Member',
     'create_subtitle' => 'Add a new staff member to your organisation',
+    'import_title' => 'Import Staff Members',
+    'import_subtitle' => 'Upload an XLSX file or download the template to bulk create staff members.',
     'edit_title' => 'Edit Staff Member',
     'edit_subtitle' => 'Update staff member details',
     'back' => 'Back to Staff',
     'details_card' => 'Staff Details',
+    'import_card' => 'Import File',
+    'sample_card' => 'XLSX Template',
 
     'fields' => [
         'first_name' => 'First Name',
@@ -42,12 +46,16 @@ return [
         'user_action_link' => 'Link existing account',
         'link_user' => 'User Account',
         'select_user' => 'Select a user',
+        'file' => 'XLSX File',
+        'file_hint' => 'Upload an XLSX file with first_name, last_name, email, phone_country, phone_number, department, position, branch, and grant_login_access columns.',
     ],
 
     'buttons' => [
         'create' => 'Add Staff Member',
         'update' => 'Update Staff Member',
         'add' => 'Add Staff',
+        'import' => 'Import Staff',
+        'download_template' => 'Download Template',
         'delete' => 'Delete Staff Member',
     ],
 
@@ -57,4 +65,26 @@ return [
     ],
 
     'confirm_delete' => 'Are you sure you want to delete this staff member? This action cannot be undone.',
+    'import_notes' => 'Invalid rows are skipped. The template includes dropdowns for country, department, position, and login access.',
+    'import_success' => ':imported staff members imported. :skipped rows were skipped.',
+    'import_errors' => [
+        'title' => ':count row errors',
+        'unreadable' => 'The uploaded XLSX file could not be read.',
+        'empty' => 'The XLSX file is empty.',
+        'no_rows' => 'The XLSX must include at least one data row.',
+        'invalid_headers' => 'The XLSX headers must be first_name, last_name, email, phone_country, phone_number, department, position, branch, and grant_login_access in this order.',
+        'first_name_required' => 'Row :row: first name is required.',
+        'last_name_required' => 'Row :row: last name is required.',
+        'duplicate_staff_email_in_file' => 'Row :row: ":email" appears more than once in this file.',
+        'duplicate_staff_email_existing' => 'Row :row: ":email" already exists in staff records.',
+        'duplicate_user_email_in_file' => 'Row :row: ":email" is reused for login access in this file.',
+        'duplicate_user_email_existing' => 'Row :row: ":email" already exists in user accounts.',
+        'department_not_found' => 'Row :row: department ":department" was not found.',
+        'position_not_found' => 'Row :row: position ":position" was not found.',
+        'branch_not_found' => 'Row :row: branch ":branch" was not found.',
+        'branch_not_allowed' => 'Row :row: branch ":branch" is outside your branch scope.',
+        'phone_country_invalid' => 'Row :row: phone country ":country" is invalid.',
+        'grant_login_access_invalid' => 'Row :row: grant_login_access must be Yes/No, true/false, or 1/0.',
+        'row_failed' => 'Row :row failed: :error',
+    ],
 ];

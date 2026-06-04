@@ -18,6 +18,7 @@ return [
     'users' => 'Utilisateurs',
     'roles' => 'Roles',
     'currencies' => 'Devises',
+    'cash_balance_thresholds' => 'Alertes de solde de caisse',
     'workflows' => 'Workflows',
     'reports' => 'Rapports',
     'activity_log' => 'Journal d activite',

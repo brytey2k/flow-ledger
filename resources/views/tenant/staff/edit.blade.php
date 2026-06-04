@@ -67,15 +67,15 @@
                     </div>
 
                     <div class="col-span-1">
-                        <label class="kt-form-label block mb-2" for="phone">
-                            {{ __('staff.fields.phone') }}
-                        </label>
-                        <input id="phone" name="phone" type="text" value="{{ old('phone', $staff->phone) }}"
-                               class="kt-input w-full" placeholder="e.g. +1 234 567 8900"
-                               aria-invalid="@error('phone') true @else false @enderror" />
-                        @error('phone')
-                            <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                        @enderror
+                        @php([$phoneCountry, $phoneNumber] = \App\Support\PhoneNumberFormatter::split((string) ($staff->phone ?? '')))
+                        <x-phone-input
+                            name-country="phone_country"
+                            name-number="phone_number"
+                            :label="__('staff.fields.phone')"
+                            :value-country="$phoneCountry"
+                            :value-number="$phoneNumber"
+                            error-key="phone"
+                        />
                     </div>
 
                     <div class="col-span-1">

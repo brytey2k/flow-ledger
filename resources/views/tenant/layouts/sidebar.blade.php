@@ -258,6 +258,18 @@
                         </div>
                     @endcan
 
+                    @can(PermissionKey::AccessSettings->value)
+                        <div class="kt-menu-item {{ request()->routeIs('cash-balance-thresholds.*') ? 'active' : '' }}">
+                            <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                               href="{{ route('cash-balance-thresholds.index') }}">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
+                                    <i class="ki-filled ki-bank text-lg"></i>
+                                </span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.cash_balance_thresholds') }}</span>
+                            </a>
+                        </div>
+                    @endcan
+
                     @can(PermissionKey::AccessWorkflowTemplates->value)
                         <div class="kt-menu-item {{ request()->routeIs('workflow-templates.*') ? 'active' : '' }}">
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
