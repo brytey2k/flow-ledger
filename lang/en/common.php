@@ -8,7 +8,9 @@ return [
     'edit' => 'Edit',
     'delete' => 'Delete',
     'save' => 'Save',
+    'save_changes' => 'Save Changes',
     'back' => 'Back',
+    'lower_sort_order_first' => 'Lower numbers appear first.',
     'filter' => 'Filter',
     'clear' => 'Clear',
     'review' => 'Review',
@@ -76,4 +78,7 @@ return [
     'total' => 'Total',
     'add_comment' => 'Add Comment',
     'leave_comment' => 'Leave a comment…',
+    'all' => 'All',
+    'apply_filters' => 'Apply Filters',
+    'clear_filters' => 'Clear Filters',
 ];

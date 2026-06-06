@@ -5,12 +5,21 @@
     data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
     <div class="kt-sidebar-header relative hidden shrink-0 items-center justify-between px-3 lg:flex lg:px-6"
          id="sidebar_header">
+        @php $customLogoUrl = app(\App\Services\SettingsService::class)->getLogoUrl(); @endphp
         <a class="dark:hidden" href="{{ route('dashboard') }}">
-            <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}"/>
+            @if($customLogoUrl)
+                <img class="default-logo max-h-[22px] max-w-[136px] object-contain" src="{{ $customLogoUrl }}" alt="Logo"/>
+            @else
+                <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}"/>
+            @endif
             <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_icon_light.png') }}"/>
         </a>
         <a class="hidden dark:block" href="{{ route('dashboard') }}">
-            <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}"/>
+            @if($customLogoUrl)
+                <img class="default-logo max-h-[22px] max-w-[136px] object-contain" src="{{ $customLogoUrl }}" alt="Logo"/>
+            @else
+                <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}"/>
+            @endif
             <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_icon_dark.png') }}"/>
         </a>
         <button
@@ -215,7 +224,7 @@
                 @endcanany
 
                 {{-- Settings --}}
-                @canany([PermissionKey::AccessUsers->value, PermissionKey::AccessRoles->value, PermissionKey::AccessCurrencies->value, PermissionKey::AccessWorkflowTemplates->value, PermissionKey::AccessActivityLog->value])
+                @canany([PermissionKey::AccessUsers->value, PermissionKey::AccessRoles->value, PermissionKey::AccessCurrencies->value, PermissionKey::AccessWorkflowTemplates->value, PermissionKey::AccessActivityLog->value, PermissionKey::AccessSettings->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
                             {{ __('navigation.sections.settings') }}
@@ -266,6 +275,15 @@
                                     <i class="ki-filled ki-bank text-lg"></i>
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.cash_balance_thresholds') }}</span>
+                            </a>
+                        </div>
+                        <div class="kt-menu-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                            <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                               href="{{ route('settings.index') }}">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
+                                    <i class="ki-filled ki-setting-2 text-lg"></i>
+                                </span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.settings') }}</span>
                             </a>
                         </div>
                     @endcan

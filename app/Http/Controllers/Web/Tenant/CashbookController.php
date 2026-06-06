@@ -16,6 +16,7 @@ use App\Services\CashbookService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CashbookController extends Controller
 {
@@ -49,9 +50,10 @@ class CashbookController extends Controller
             ['currency_id' => $branch->currency_id, 'balance' => 0],
         );
 
-        $entries = $this->repository->paginatedEntriesForCashbook($cashbook);
+        $filters = $request->only(['type', 'date_from', 'date_to', 'description', 'amount_min', 'amount_max']);
+        $entries = $this->repository->paginatedEntriesForCashbook($cashbook, $filters);
 
-        return view('tenant.cashbook.index', compact('branch', 'cashbook', 'entries'));
+        return view('tenant.cashbook.index', compact('branch', 'cashbook', 'entries', 'filters'));
     }
 
     public function create(Branch $branch, Request $request): View
@@ -84,6 +86,39 @@ class CashbookController extends Controller
         return redirect()
             ->route('cashbook.index', $branch)
             ->with('success', __('flash.cashbook.receipt_recorded'));
+    }
+
+    public function export(Branch $branch, Request $request): StreamedResponse
+    {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        abort_unless(in_array($branch->id, $this->branchScope->allowedBranchIds($user), true), 403);
+
+        $cashbook = Cashbook::firstOrCreate(
+            ['branch_id' => $branch->id],
+            ['currency_id' => $branch->currency_id, 'balance' => 0],
+        );
+
+        $filters = $request->only(['type', 'date_from', 'date_to', 'description', 'amount_min', 'amount_max']);
+        $entries = $this->repository->entriesForCashbook($cashbook, $filters);
+        $symbol = $cashbook->currency->symbol;
+        $filename = 'cashbook-' . str($branch->name)->slug() . '-' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($entries, $symbol): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Date', 'Description', 'Reference', 'Type', 'Amount (' . $symbol . ')', 'Notes']);
+            foreach ($entries as $entry) {
+                fputcsv($handle, [
+                    $entry->entry_date->format('Y-m-d'),
+                    $entry->description,
+                    $entry->reference ?? '',
+                    $entry->type,
+                    number_format((float) $entry->amount, 2, '.', ''),
+                    $entry->notes ?? '',
+                ]);
+            }
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 
     public function destroy(Branch $branch, CashbookEntry $entry, Request $request): RedirectResponse

@@ -80,4 +80,12 @@ enum PermissionKey: string
     case AccessCashbook = 'access cashbook';
     case CreateCashbookEntry = 'create cashbook entry';
     case DeleteCashbookEntry = 'delete cashbook entry';
+
+    // Currency Denominations
+    case ManageCurrencyDenominations = 'manage currency denominations';
+
+    // Cash Count
+    case AccessCashCount = 'access cash count';
+    case CreateCashCount = 'create cash count';
+    case DeleteCashCount = 'delete cash count';
 }

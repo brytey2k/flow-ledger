@@ -11,15 +11,18 @@ use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
 use App\Http\Controllers\Web\Tenant\CashBalanceThresholdController;
 use App\Http\Controllers\Web\Tenant\CashbookController;
+use App\Http\Controllers\Web\Tenant\CashCountController;
 use App\Http\Controllers\Web\Tenant\CommentsController;
 use App\Http\Controllers\Web\Tenant\CostCodesController;
 use App\Http\Controllers\Web\Tenant\CurrenciesController;
+use App\Http\Controllers\Web\Tenant\CurrencyDenominationsController;
 use App\Http\Controllers\Web\Tenant\DashboardController;
 use App\Http\Controllers\Web\Tenant\DepartmentsController;
 use App\Http\Controllers\Web\Tenant\DisbursementsController;
 use App\Http\Controllers\Web\Tenant\DocumentationController;
 use App\Http\Controllers\Web\Tenant\LevelController;
 use App\Http\Controllers\Web\Tenant\LocaleController;
+use App\Http\Controllers\Web\Tenant\PaymentRequestAttachmentsController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestCancelController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestDeclineController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestResubmitController;
@@ -33,6 +36,7 @@ use App\Http\Controllers\Web\Tenant\RetirementRequestsController;
 use App\Http\Controllers\Web\Tenant\RetirementRequestSubmitController;
 use App\Http\Controllers\Web\Tenant\RetirementSettlementController;
 use App\Http\Controllers\Web\Tenant\RolesController;
+use App\Http\Controllers\Web\Tenant\SettingsController;
 use App\Http\Controllers\Web\Tenant\StaffController;
 use App\Http\Controllers\Web\Tenant\StaffImportController;
 use App\Http\Controllers\Web\Tenant\UsersController;
@@ -406,6 +410,9 @@ Route::middleware([
         Route::post('/requests/{paymentRequest}/decline', [PaymentRequestDeclineController::class, 'store'])
             ->can(PermissionKey::AccessPaymentRequests->value)
             ->name('payment-requests.decline');
+        Route::post('/requests/{paymentRequest}/attachments', [PaymentRequestAttachmentsController::class, 'store'])
+            ->can(PermissionKey::CreatePaymentRequest->value)
+            ->name('payment-requests.attachments.store');
         Route::post('/requests/{paymentRequest}/comments', [CommentsController::class, 'store'])
             ->can(PermissionKey::AccessPaymentRequests->value)
             ->name('payment-requests.comments.store');
@@ -504,9 +511,49 @@ Route::middleware([
         Route::post('/branches/{branch}/cashbook/receipts', [CashbookController::class, 'store'])
             ->can(PermissionKey::CreateCashbookEntry->value)
             ->name('cashbook.store');
+        Route::get('/branches/{branch}/cashbook/export', [CashbookController::class, 'export'])
+            ->can(PermissionKey::AccessCashbook->value)
+            ->name('cashbook.export');
         Route::delete('/branches/{branch}/cashbook/entries/{entry}', [CashbookController::class, 'destroy'])
             ->can(PermissionKey::DeleteCashbookEntry->value)
             ->name('cashbook.destroy');
+
+        // Currency Denominations
+        Route::get('/currencies/{currency}/denominations', [CurrencyDenominationsController::class, 'index'])
+            ->can(PermissionKey::ManageCurrencyDenominations->value)
+            ->name('currency.denominations.index');
+        Route::get('/currencies/{currency}/denominations/create', [CurrencyDenominationsController::class, 'create'])
+            ->can(PermissionKey::ManageCurrencyDenominations->value)
+            ->name('currency.denominations.create');
+        Route::post('/currencies/{currency}/denominations', [CurrencyDenominationsController::class, 'store'])
+            ->can(PermissionKey::ManageCurrencyDenominations->value)
+            ->name('currency.denominations.store');
+        Route::get('/currencies/{currency}/denominations/{denomination}/edit', [CurrencyDenominationsController::class, 'edit'])
+            ->can(PermissionKey::ManageCurrencyDenominations->value)
+            ->name('currency.denominations.edit');
+        Route::put('/currencies/{currency}/denominations/{denomination}', [CurrencyDenominationsController::class, 'update'])
+            ->can(PermissionKey::ManageCurrencyDenominations->value)
+            ->name('currency.denominations.update');
+        Route::delete('/currencies/{currency}/denominations/{denomination}', [CurrencyDenominationsController::class, 'destroy'])
+            ->can(PermissionKey::ManageCurrencyDenominations->value)
+            ->name('currency.denominations.destroy');
+
+        // Cash Count
+        Route::get('/branches/{branch}/cash-count', [CashCountController::class, 'index'])
+            ->can(PermissionKey::AccessCashCount->value)
+            ->name('cash-count.index');
+        Route::get('/branches/{branch}/cash-count/create', [CashCountController::class, 'create'])
+            ->can(PermissionKey::CreateCashCount->value)
+            ->name('cash-count.create');
+        Route::post('/branches/{branch}/cash-count', [CashCountController::class, 'store'])
+            ->can(PermissionKey::CreateCashCount->value)
+            ->name('cash-count.store');
+        Route::get('/branches/{branch}/cash-count/{cashCount}', [CashCountController::class, 'show'])
+            ->can(PermissionKey::AccessCashCount->value)
+            ->name('cash-count.show');
+        Route::delete('/branches/{branch}/cash-count/{cashCount}', [CashCountController::class, 'destroy'])
+            ->can(PermissionKey::DeleteCashCount->value)
+            ->name('cash-count.destroy');
 
         // Cash Balance Thresholds
         Route::get('/cash-balance-thresholds', [CashBalanceThresholdController::class, 'index'])
@@ -521,5 +568,12 @@ Route::middleware([
         Route::delete('/cash-balance-thresholds/{threshold}', [CashBalanceThresholdController::class, 'destroy'])
             ->can(PermissionKey::AccessSettings->value)
             ->name('cash-balance-thresholds.destroy');
+
+        Route::get('/settings', [SettingsController::class, 'index'])
+            ->can(PermissionKey::AccessSettings->value)
+            ->name('settings.index');
+        Route::put('/settings', [SettingsController::class, 'update'])
+            ->can(PermissionKey::AccessSettings->value)
+            ->name('settings.update');
     });
 });

@@ -65,6 +65,10 @@ return [
         'method_label' => 'Methode :',
         'ref_label' => 'Ref :',
         'sent_back_notice' => 'Cette demande a ete renvoyee pour revision',
+        'source_documents' => 'Documents justificatifs',
+        'no_attachments' => 'Aucun document justificatif joint.',
+        'confirm_delete_attachment' => 'Etes-vous sur de vouloir supprimer cette piece jointe ?',
+        'source_documents_required_warning' => 'Des documents justificatifs sont requis. Veuillez en joindre au moins un avant de soumettre.',
     ],
     'status' => [
         'awaiting_approval' => 'En attente d approbation',

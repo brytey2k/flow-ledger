@@ -11,6 +11,17 @@ return [
         'add_receipt' => 'Ajouter un recu',
         'balance_card' => 'Solde actuel',
         'entries_card' => 'Ecritures',
+        'export' => 'Exporter CSV',
+    ],
+
+    'filter' => [
+        'date_from' => 'Du',
+        'date_to' => 'Au',
+        'type' => 'Type',
+        'description' => 'Description',
+        'description_placeholder' => 'Rechercher dans la description ou les notes...',
+        'amount_min' => 'Montant min',
+        'amount_max' => 'Montant max',
     ],
     'branches' => [
         'title' => 'Caisse',

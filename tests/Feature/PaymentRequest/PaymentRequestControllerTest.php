@@ -8,6 +8,7 @@ use App\Models\Tenant\Branch;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\PaymentRequestItem;
+use App\Models\Tenant\RetirementRequestItem;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowInstanceStage;
@@ -441,5 +442,70 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $response->assertRedirect(route('payment-requests.show', $paymentRequest));
         $response->assertSessionHas('error');
         $this->assertModelExists($paymentRequest);
+    }
+
+    // ── Receipt number uniqueness ─────────────────────────────────────────────
+
+    public function test_store_rejects_duplicate_receipt_number_already_in_payment_request_items(): void
+    {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        PaymentRequestItem::factory()->create(['receipt_number' => 'RCP-DUPE']);
+        $currency = Currency::factory()->create();
+
+        $this->actingAs($this->user)->post(route('payment-requests.store'), [
+            'type' => 'advance',
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Transport', 'amount' => '100.00', 'receipt_number' => 'RCP-DUPE']],
+        ])->assertSessionHasErrors(['items.0.receipt_number']);
+    }
+
+    public function test_store_rejects_receipt_number_already_used_in_retirement_request_items(): void
+    {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        RetirementRequestItem::factory()->create(['receipt_number' => 'RCP-CROSS']);
+        $currency = Currency::factory()->create();
+
+        $this->actingAs($this->user)->post(route('payment-requests.store'), [
+            'type' => 'advance',
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Accommodation', 'amount' => '200.00', 'receipt_number' => 'RCP-CROSS']],
+        ])->assertSessionHasErrors(['items.0.receipt_number']);
+    }
+
+    public function test_store_rejects_duplicate_receipt_numbers_within_same_submission(): void
+    {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+
+        $this->actingAs($this->user)->post(route('payment-requests.store'), [
+            'type' => 'advance',
+            'currency_id' => $currency->id,
+            'items' => [
+                ['description' => 'Item A', 'amount' => '100.00', 'receipt_number' => 'RCP-SAME'],
+                ['description' => 'Item B', 'amount' => '150.00', 'receipt_number' => 'RCP-SAME'],
+            ],
+        ])->assertSessionHasErrors(['items.0.receipt_number', 'items.1.receipt_number']);
+    }
+
+    public function test_update_allows_same_receipt_numbers_for_existing_request(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'sent_back',
+            'staff_id' => $staff->id,
+            'currency_id' => $currency->id,
+            'branch_id' => $this->branch->id,
+        ]);
+        PaymentRequestItem::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'receipt_number' => 'RCP-KEEP',
+            'amount' => 100.00,
+        ]);
+
+        $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Transport', 'amount' => '100.00', 'receipt_number' => 'RCP-KEEP']],
+        ])->assertSessionHasNoErrors()->assertRedirect();
     }
 }

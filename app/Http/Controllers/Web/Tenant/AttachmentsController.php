@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\Attachment;
+use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Services\AttachmentService;
@@ -49,21 +50,21 @@ class AttachmentsController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        // Allow deletion if the current user is the creator/owner of the related retirement request
         $allowed = false;
 
         if ($attachment->attachable_type === RetirementRequest::class && $attachment->attachable instanceof RetirementRequest) {
             $paymentRequest = $attachment->attachable->paymentRequest;
             if ($paymentRequest !== null && $paymentRequest->staff !== null) {
-                $ownerId = $paymentRequest->staff->user_id;
-                if ($ownerId === $user->id) {
-                    $allowed = true;
-                }
+                $allowed = $paymentRequest->staff->user_id === $user->id;
+            }
+        } elseif ($attachment->attachable_type === PaymentRequest::class && $attachment->attachable instanceof PaymentRequest) {
+            $paymentRequest = $attachment->attachable;
+            if ($paymentRequest->staff !== null) {
+                $allowed = $paymentRequest->staff->user_id === $user->id;
             }
         }
 
-        // Also allow the user who uploaded the attachment to delete it
-        if (!$allowed && $attachment->user_id === $user->id) {
+        if (! $allowed && $attachment->user_id === $user->id) {
             $allowed = true;
         }
 

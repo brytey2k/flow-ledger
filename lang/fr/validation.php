@@ -145,6 +145,7 @@ return [
     'string' => 'Le champ :attribute doit etre une chaine.',
     'timezone' => 'Le champ :attribute doit etre un fuseau horaire valide.',
     'unique' => 'Le champ :attribute a deja ete pris.',
+    'receipt_number_taken' => 'Ce numero de recu a deja ete utilise dans le systeme.',
     'uploaded' => 'Le televersement du champ :attribute a echoue.',
     'uppercase' => 'Le champ :attribute doit etre en majuscules.',
     'url' => 'Le champ :attribute doit etre une URL valide.',

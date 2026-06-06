@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Tenant;
 
 use App\Models\Tenant\PaymentRequest;
+use App\Rules\Tenant\UniqueReceiptNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PaymentRequestUpdateRequest extends FormRequest
@@ -28,7 +29,7 @@ class PaymentRequestUpdateRequest extends FormRequest
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.amount' => ['required', 'numeric', 'min:0.01'],
             'items.*.cost_code_id' => [$isExpense ? 'required' : 'nullable', 'integer', 'exists:cost_codes,id'],
-            'items.*.receipt_number' => ['nullable', 'string', 'max:100'],
+            'items.*.receipt_number' => ['nullable', 'string', 'max:100', 'distinct:ignore_case', new UniqueReceiptNumber(excludePaymentRequestId: $paymentRequest instanceof PaymentRequest ? $paymentRequest->id : null)],
         ];
     }
 

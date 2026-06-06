@@ -6,6 +6,7 @@ namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CurrencyDenomination> $denominations
  *
  * @method static \Database\Factories\Tenant\CurrencyFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Currency newModelQuery()
@@ -49,5 +51,11 @@ class Currency extends Model
             'updated_at' => 'datetime',
             'deleted_at' => 'datetime',
         ];
+    }
+
+    /** @return HasMany<CurrencyDenomination, $this> */
+    public function denominations(): HasMany
+    {
+        return $this->hasMany(CurrencyDenomination::class)->orderBy('sort_order');
     }
 }

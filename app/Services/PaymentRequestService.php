@@ -7,6 +7,7 @@ namespace App\Services;
 use App\DTOs\Tenant\CreatePaymentRequestDto;
 use App\DTOs\Tenant\DisbursePaymentRequestDto;
 use App\Enums\Tenant\PaymentRequestStatus;
+use App\Enums\Tenant\PaymentRequestType;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
@@ -18,6 +19,7 @@ class PaymentRequestService
         private readonly WorkflowEngineService $engine,
         private readonly NotificationService $notifications,
         private readonly CashbookService $cashbook,
+        private readonly SettingsService $settingsService,
     ) {}
 
     public function createDraft(CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
@@ -38,11 +40,15 @@ class PaymentRequestService
                 'status' => PaymentRequestStatus::Draft->value,
             ]);
 
+            $defaultAdvanceCostCodeId = $dto->type === PaymentRequestType::Advance->value
+                ? $this->settingsService->getDefaultAdvanceCostCodeId()
+                : null;
+
             foreach ($dto->items as $item) {
                 $request->items()->create([
                     'description' => $item->description,
                     'amount' => $item->amount,
-                    'cost_code_id' => $item->costCodeId,
+                    'cost_code_id' => $item->costCodeId ?? $defaultAdvanceCostCodeId,
                     'receipt_number' => $item->receiptNumber,
                 ]);
             }

@@ -6,6 +6,7 @@ namespace App\Http\Requests\Tenant;
 
 use App\DTOs\Tenant\CreateRetirementRequestDto;
 use App\DTOs\Tenant\RetirementRequestItemDto;
+use App\Rules\Tenant\UniqueReceiptNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RetirementRequestStoreRequest extends FormRequest
@@ -30,7 +31,7 @@ class RetirementRequestStoreRequest extends FormRequest
             $rules['items.*.description'] = ['required', 'string', 'max:255'];
             $rules['items.*.amount'] = ['required', 'numeric', 'min:0.01'];
             $rules['items.*.cost_code_id'] = ['required', 'integer', 'exists:cost_codes,id'];
-            $rules['items.*.receipt_number'] = ['nullable', 'string', 'max:100'];
+            $rules['items.*.receipt_number'] = ['nullable', 'string', 'max:100', 'distinct:ignore_case', new UniqueReceiptNumber()];
         }
 
         return $rules;

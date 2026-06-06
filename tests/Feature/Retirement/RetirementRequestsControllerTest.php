@@ -7,7 +7,9 @@ namespace Tests\Feature\Retirement;
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\CostCode;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\PaymentRequestItem;
 use App\Models\Tenant\RetirementRequest;
+use App\Models\Tenant\RetirementRequestItem;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
@@ -697,5 +699,61 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             'payment_request_id' => $paymentRequest->id,
             'status' => 'draft',
         ]);
+    }
+
+    // ── Receipt number uniqueness ─────────────────────────────────────────────
+
+    public function test_store_rejects_duplicate_receipt_number_already_in_retirement_items(): void
+    {
+        RetirementRequestItem::factory()->create(['receipt_number' => 'RCP-DUPE']);
+        $paymentRequest = $this->disbursedAdvance();
+        $costCode = CostCode::factory()->create();
+
+        $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'did_not_spend_money' => '0',
+            'items' => [['description' => 'Hotel', 'amount' => '200.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-DUPE']],
+        ])->assertSessionHasErrors(['items.0.receipt_number']);
+    }
+
+    public function test_store_rejects_receipt_number_already_used_in_payment_request_items(): void
+    {
+        PaymentRequestItem::factory()->create(['receipt_number' => 'RCP-CROSS']);
+        $paymentRequest = $this->disbursedAdvance();
+        $costCode = CostCode::factory()->create();
+
+        $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'did_not_spend_money' => '0',
+            'items' => [['description' => 'Fuel', 'amount' => '100.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-CROSS']],
+        ])->assertSessionHasErrors(['items.0.receipt_number']);
+    }
+
+    public function test_store_rejects_duplicate_receipt_numbers_within_same_submission(): void
+    {
+        $paymentRequest = $this->disbursedAdvance();
+        $costCode = CostCode::factory()->create();
+
+        $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+            'did_not_spend_money' => '0',
+            'items' => [
+                ['description' => 'Item A', 'amount' => '100.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-SAME'],
+                ['description' => 'Item B', 'amount' => '200.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-SAME'],
+            ],
+        ])->assertSessionHasErrors(['items.0.receipt_number', 'items.1.receipt_number']);
+    }
+
+    public function test_update_allows_same_receipt_numbers_for_existing_request(): void
+    {
+        $retirement = $this->sentBackRetirementWithOwner();
+        $costCode = CostCode::factory()->create();
+        RetirementRequestItem::factory()->create([
+            'retirement_request_id' => $retirement->id,
+            'receipt_number' => 'RCP-KEEP',
+            'cost_code_id' => $costCode->id,
+        ]);
+
+        $this->actingAs($this->user)->put(route('retirement-requests.update', $retirement), [
+            'did_not_spend_money' => '0',
+            'items' => [['description' => 'Hotel', 'amount' => '500.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-KEEP']],
+        ])->assertSessionHasNoErrors()->assertRedirect();
     }
 }

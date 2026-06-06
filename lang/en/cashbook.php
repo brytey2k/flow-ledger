@@ -12,6 +12,17 @@ return [
         'add_receipt' => 'Add Receipt',
         'balance_card' => 'Current Balance',
         'entries_card' => 'Entries',
+        'export' => 'Export CSV',
+    ],
+
+    'filter' => [
+        'date_from' => 'From Date',
+        'date_to' => 'To Date',
+        'type' => 'Type',
+        'description' => 'Description',
+        'description_placeholder' => 'Search description or notes…',
+        'amount_min' => 'Min Amount',
+        'amount_max' => 'Max Amount',
     ],
 
     'branches' => [

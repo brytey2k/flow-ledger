@@ -107,6 +107,7 @@ return [
         'cancel_not_owner' => 'You can only cancel your own requests.',
         'cannot_cancel_status' => 'This request cannot be cancelled in its current status.',
         'cancelled' => 'Request cancelled successfully.',
+        'source_documents_required' => 'Please attach at least one source document before submitting this expense.',
         'no_active_workflow' => 'There is no active workflow to decline.',
         'cannot_decline' => 'You do not have permission to decline this request.',
         'declined' => 'Request declined successfully.',
@@ -125,6 +126,7 @@ return [
         'no_workflow_stages' => 'The retirement workflow has no stages configured. Please ask an administrator to add stages before submitting.',
         'settled' => 'Retirement marked as settled.',
         'settle_only_approved' => 'Only approved retirements can be settled.',
+        'source_documents_required' => 'Please attach at least one source document before submitting this retirement.',
     ],
     'approvals' => [
         'action_recorded' => 'Action recorded successfully.',
@@ -143,5 +145,19 @@ return [
     'feature_flags' => [
         'updated' => 'Feature flags updated.',
         'bulk_updated' => 'Bulk feature flag update applied.',
+    ],
+    'settings' => [
+        'updated' => 'Settings saved successfully.',
+    ],
+    'denomination' => [
+        'created' => 'Denomination added successfully.',
+        'updated' => 'Denomination updated successfully.',
+        'deleted' => 'Denomination deleted successfully.',
+        'in_use' => 'This denomination cannot be deleted because it has been used in a cash count.',
+    ],
+    'cash_count' => [
+        'created' => 'Cash count recorded successfully.',
+        'deleted' => 'Cash count deleted successfully.',
+        'no_denominations' => 'No denominations are configured for this currency. Please add denominations before performing a cash count.',
     ],
 ];

@@ -106,6 +106,12 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-2">
+                                                @can(\App\Enums\Tenant\PermissionKey::ManageCurrencyDenominations->value)
+                                                    <a href="{{ route('currency.denominations.index', $currency) }}" class="kt-btn kt-btn-sm kt-btn-light" title="{{ __('cash_count.denominations.title') }}">
+                                                        <i class="ki-filled ki-finance-calculator text-sm"></i>
+                                                        {{ __('cash_count.denominations.title') }}
+                                                    </a>
+                                                @endcan
                                                 @can(\App\Enums\Tenant\PermissionKey::AccessCurrencies->value)
                                                     <a href="{{ route('currencies.edit', $currency) }}" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost text-primary" title="{{ __('common.edit') }}">
                                                         <i class="ki-filled ki-notepad-edit text-lg"></i>

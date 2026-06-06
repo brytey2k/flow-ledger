@@ -11,6 +11,25 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
+            @can(\App\Enums\Tenant\PermissionKey::AccessCashCount->value)
+                <a class="kt-btn kt-btn-light" href="{{ route('cash-count.index', $branch) }}">
+                    <i class="ki-filled ki-time text-sm"></i>
+                    {{ __('cash_count.history_title') }}
+                </a>
+            @endcan
+            @can(\App\Enums\Tenant\PermissionKey::AccessCashbook->value)
+                <a class="kt-btn kt-btn-light"
+                   href="{{ route('cashbook.export', array_merge(['branch' => $branch->id], array_filter($filters))) }}">
+                    <i class="ki-filled ki-exit-down"></i>
+                    {{ __('cashbook.index.export') }}
+                </a>
+            @endcan
+            @can(\App\Enums\Tenant\PermissionKey::CreateCashCount->value)
+                <a class="kt-btn kt-btn-light" href="{{ route('cash-count.create', $branch) }}">
+                    <i class="ki-filled ki-finance-calculator"></i>
+                    {{ __('cash_count.buttons.count_cash') }}
+                </a>
+            @endcan
             @can(\App\Enums\Tenant\PermissionKey::CreateCashbookEntry->value)
                 <a class="kt-btn kt-btn-primary" href="{{ route('cashbook.create', $branch) }}">
                     <i class="ki-filled ki-plus"></i>
@@ -38,6 +57,53 @@
     </div>
 </div>
 <!-- End of Balance Card -->
+
+<!-- Filters -->
+<div class="kt-container-fixed mt-5">
+    <form method="GET" action="{{ route('cashbook.index', $branch) }}" class="kt-card p-5">
+        <div class="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-secondary-foreground">{{ __('cashbook.filter.date_from') }}</label>
+                <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+                       class="kt-input kt-input-sm" max="{{ today()->toDateString() }}">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-secondary-foreground">{{ __('cashbook.filter.date_to') }}</label>
+                <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
+                       class="kt-input kt-input-sm" max="{{ today()->toDateString() }}">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-secondary-foreground">{{ __('cashbook.filter.type') }}</label>
+                <select name="type" class="kt-select kt-select-sm">
+                    <option value="">{{ __('common.all') }}</option>
+                    <option value="debit"  {{ ($filters['type'] ?? '') === 'debit'  ? 'selected' : '' }}>{{ __('cashbook.entry_types.debit') }}</option>
+                    <option value="credit" {{ ($filters['type'] ?? '') === 'credit' ? 'selected' : '' }}>{{ __('cashbook.entry_types.credit') }}</option>
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-secondary-foreground">{{ __('cashbook.filter.description') }}</label>
+                <input type="text" name="description" value="{{ $filters['description'] ?? '' }}"
+                       placeholder="{{ __('cashbook.filter.description_placeholder') }}"
+                       class="kt-input kt-input-sm">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-secondary-foreground">{{ __('cashbook.filter.amount_min') }}</label>
+                <input type="number" name="amount_min" value="{{ $filters['amount_min'] ?? '' }}"
+                       min="0" step="0.01" class="kt-input kt-input-sm">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-secondary-foreground">{{ __('cashbook.filter.amount_max') }}</label>
+                <input type="number" name="amount_max" value="{{ $filters['amount_max'] ?? '' }}"
+                       min="0" step="0.01" class="kt-input kt-input-sm">
+            </div>
+        </div>
+        <div class="flex items-center gap-2 mt-4">
+            <button type="submit" class="kt-btn kt-btn-sm kt-btn-primary">{{ __('common.apply_filters') }}</button>
+            <a href="{{ route('cashbook.index', $branch) }}" class="kt-btn kt-btn-sm kt-btn-light">{{ __('common.clear_filters') }}</a>
+        </div>
+    </form>
+</div>
+<!-- End Filters -->
 
 <!-- Entries Table -->
 <div class="kt-container-fixed mt-5">

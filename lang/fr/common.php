@@ -8,6 +8,9 @@ return [
     'edit' => 'Modifier',
     'delete' => 'Supprimer',
     'save' => 'Enregistrer',
+    'save_changes' => 'Enregistrer les modifications',
+    'back' => 'Retour',
+    'lower_sort_order_first' => 'Les nombres inferieurs apparaissent en premier.',
     'filter' => 'Filtrer',
     'clear' => 'Effacer',
     'review' => 'Examiner',
@@ -75,4 +78,7 @@ return [
     'total' => 'Total',
     'add_comment' => 'Ajouter un commentaire',
     'leave_comment' => 'Laisser un commentaire...',
+    'all' => 'Tous',
+    'apply_filters' => 'Appliquer les filtres',
+    'clear_filters' => 'Effacer les filtres',
 ];

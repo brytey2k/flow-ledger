@@ -9,12 +9,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\PaymentRequestService;
+use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
 
 class PaymentRequestSubmitController extends Controller
 {
     public function __construct(
         private readonly PaymentRequestService $service,
+        private readonly SettingsService $settingsService,
     ) {}
 
     public function store(PaymentRequest $paymentRequest): RedirectResponse
@@ -27,8 +29,12 @@ class PaymentRequestSubmitController extends Controller
         /** @var \App\Models\Tenant\User $user */
         $user = auth()->user();
 
-        // Expense-type requests skip workflow and are marked ready for retirement
         if ($paymentRequest->type === PaymentRequestType::Expense->value) {
+            if ($this->settingsService->isExpenseSourceDocumentRequired() && $paymentRequest->attachments()->doesntExist()) {
+                return redirect()->route('payment-requests.show', $paymentRequest)
+                    ->with('error', __('flash.requests.source_documents_required'));
+            }
+
             $this->service->submit($paymentRequest, $user);
 
             return redirect()->route('payment-requests.show', $paymentRequest)

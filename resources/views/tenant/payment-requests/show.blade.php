@@ -188,6 +188,67 @@
                     </div>
                 </div>
 
+                {{-- Source Documents --}}
+                @if($paymentRequest->isExpense())
+                    <div class="kt-card">
+                        <div class="kt-card-header">
+                            <h3 class="kt-card-title">{{ __('payment_requests.show.source_documents') }}</h3>
+                            <span class="kt-badge kt-badge-sm kt-badge-outline">
+                                {{ $paymentRequest->attachments->count() }} {{ Str::plural('file', $paymentRequest->attachments->count()) }}
+                            </span>
+                        </div>
+                        <div class="kt-card-content p-5 flex flex-col gap-4">
+                            @if($requireSourceDocuments && $paymentRequest->attachments->isEmpty() && ($paymentRequest->isDraft() || $paymentRequest->isSentBack()))
+                                <div class="flex items-center gap-2 p-3 rounded-lg bg-warning/10 text-warning text-sm">
+                                    <i class="ki-filled ki-information-2"></i>
+                                    {{ __('payment_requests.show.source_documents_required_warning') }}
+                                </div>
+                            @endif
+
+                            @forelse($paymentRequest->attachments as $attachment)
+                                <div class="flex items-center justify-between gap-3 p-3 rounded-lg border border-border">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <i class="ki-filled ki-file text-muted-foreground shrink-0"></i>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-mono truncate">{{ $attachment->original_name }}</p>
+                                            <p class="text-xs text-secondary-foreground">{{ $attachment->formattedSize() }} &bull; {{ $attachment->created_at->format('M d, Y') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <a href="{{ route('attachments.download', $attachment) }}"
+                                           class="kt-btn kt-btn-sm kt-btn-outline">
+                                            <i class="ki-filled ki-cloud-download"></i>
+                                        </a>
+                                        @if($isOwner && ($paymentRequest->isDraft() || $paymentRequest->isSentBack()))
+                                            <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('payment_requests.show.confirm_delete_attachment') }}')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline text-destructive hover:bg-destructive/10">
+                                                    <i class="ki-filled ki-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-sm text-secondary-foreground text-center py-2">{{ __('payment_requests.show.no_attachments') }}</p>
+                            @endforelse
+
+                            @if($isOwner && ($paymentRequest->isDraft() || $paymentRequest->isSentBack()))
+                                <form method="POST" action="{{ route('payment-requests.attachments.store', $paymentRequest) }}" enctype="multipart/form-data" class="mt-2">
+                                    @csrf
+                                    <label class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                                        <i class="ki-filled ki-cloud-add text-2xl text-muted-foreground"></i>
+                                        <span class="text-sm font-medium text-foreground">{{ __('common.upload') }}</span>
+                                        <span class="text-xs text-secondary-foreground">PDF, JPG, PNG, Word, Excel &mdash; max 10MB</span>
+                                        <input type="file" name="file" class="sr-only" onchange="this.closest('form').submit()" />
+                                    </label>
+                                    @error('file') <p class="mt-1 text-xs text-destructive">{{ $message }}</p> @enderror
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Timeline: Activity + Comments --}}
                 @php
                     $activityLogs = $paymentRequest->activities->sortByDesc('created_at');
@@ -451,22 +512,24 @@
                                 </form>
                             @endif
                         @elseif($paymentRequest->status === 'disbursed')
-                            @can(PermissionKey::CreateRetirementRequest->value)
-                                @php $existingRetirement = $paymentRequest->activeRetirement(); @endphp
-                                @if($isOwner && (!$existingRetirement || $existingRetirement->status === 'cancelled'))
-                                    <a href="{{ route('retirement-requests.create', $paymentRequest) }}"
-                                       class="kt-btn kt-btn-primary w-full">
-                                        <i class="ki-filled ki-file-up"></i>
-                                        {{ __('payment_requests.buttons.retire') }}
-                                    </a>
-                                @elseif($existingRetirement && $existingRetirement->status !== 'cancelled')
-                                    <a href="{{ route('retirement-requests.show', $existingRetirement) }}"
-                                       class="kt-btn kt-btn-outline w-full">
-                                        <i class="ki-filled ki-eye"></i>
-                                        {{ __('payment_requests.buttons.view_retirement') }}
-                                    </a>
-                                @endif
-                            @endcan
+                            @if($paymentRequest->isAdvance())
+                                @can(PermissionKey::CreateRetirementRequest->value)
+                                    @php $existingRetirement = $paymentRequest->activeRetirement(); @endphp
+                                    @if($isOwner && (!$existingRetirement || $existingRetirement->status === 'cancelled'))
+                                        <a href="{{ route('retirement-requests.create', $paymentRequest) }}"
+                                           class="kt-btn kt-btn-primary w-full">
+                                            <i class="ki-filled ki-file-up"></i>
+                                            {{ __('payment_requests.buttons.retire') }}
+                                        </a>
+                                    @elseif($existingRetirement && $existingRetirement->status !== 'cancelled')
+                                        <a href="{{ route('retirement-requests.show', $existingRetirement) }}"
+                                           class="kt-btn kt-btn-outline w-full">
+                                            <i class="ki-filled ki-eye"></i>
+                                            {{ __('payment_requests.buttons.view_retirement') }}
+                                        </a>
+                                    @endif
+                                @endcan
+                            @endif
                             <div class="flex flex-col gap-2 p-3 rounded-lg bg-info/10 text-info text-sm">
                                 <div class="flex items-center gap-2">
                                     <i class="ki-filled ki-dollar"></i>

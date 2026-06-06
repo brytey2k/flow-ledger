@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Cashbook;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\CashbookEntry;
 use App\Models\Tenant\Currency;
@@ -25,9 +26,14 @@ class CashbookControllerTest extends TenantAppTestCase
         ]);
     }
 
-    private function manualEntry(Cashbook $cashbook, float $amount = 100.00): CashbookEntry
+    /**
+     * @param Cashbook $cashbook
+     * @param float $amount
+     * @param array<string, mixed> $overrides
+     */
+    private function manualEntry(Cashbook $cashbook, float $amount = 100.00, array $overrides = []): CashbookEntry
     {
-        return CashbookEntry::create([
+        return CashbookEntry::create(array_merge([
             'cashbook_id' => $cashbook->id,
             'type' => 'debit',
             'amount' => $amount,
@@ -35,7 +41,7 @@ class CashbookControllerTest extends TenantAppTestCase
             'entry_date' => today(),
             'sourceable_type' => null,
             'sourceable_id' => null,
-        ]);
+        ], $overrides));
     }
 
     private function autoEntry(Cashbook $cashbook): CashbookEntry
@@ -292,5 +298,170 @@ class CashbookControllerTest extends TenantAppTestCase
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('cashbook_entries', ['id' => $entry->id, 'deleted_at' => null]);
+    }
+
+    // ── Filters ───────────────────────────────────────────────────────────────
+
+    public function test_filter_by_type_returns_only_matching_entries(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $debit = $this->manualEntry($cashbook, 100.00, ['type' => 'debit']);
+        $credit = $this->manualEntry($cashbook, 50.00, ['type' => 'credit']);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.index', array_merge(['branch' => $this->branch->id], ['type' => 'debit'])));
+
+        $response->assertOk();
+        $entries = $response->viewData('entries');
+        $ids = $entries->pluck('id')->all();
+
+        $this->assertContains($debit->id, $ids);
+        $this->assertNotContains($credit->id, $ids);
+    }
+
+    public function test_filter_by_date_range_excludes_out_of_range_entries(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $recent = $this->manualEntry($cashbook, 100.00, ['entry_date' => today()]);
+        $old = $this->manualEntry($cashbook, 200.00, ['entry_date' => today()->subMonths(3)]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.index', [
+                'branch' => $this->branch->id,
+                'date_from' => today()->subWeek()->toDateString(),
+                'date_to' => today()->toDateString(),
+            ]));
+
+        $response->assertOk();
+        $ids = $response->viewData('entries')->pluck('id')->all();
+
+        $this->assertContains($recent->id, $ids);
+        $this->assertNotContains($old->id, $ids);
+    }
+
+    public function test_filter_by_description_matches_description_and_notes(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $match = $this->manualEntry($cashbook, 100.00, ['description' => 'Bank top-up', 'notes' => null]);
+        $noteMatch = $this->manualEntry($cashbook, 75.00, ['description' => 'Receipt', 'notes' => 'Bank top-up transfer']);
+        $noMatch = $this->manualEntry($cashbook, 50.00, ['description' => 'Petty cash', 'notes' => null]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.index', ['branch' => $this->branch->id, 'description' => 'Bank top-up']));
+
+        $response->assertOk();
+        $ids = $response->viewData('entries')->pluck('id')->all();
+
+        $this->assertContains($match->id, $ids);
+        $this->assertContains($noteMatch->id, $ids);
+        $this->assertNotContains($noMatch->id, $ids);
+    }
+
+    public function test_filter_by_amount_range_returns_entries_within_bounds(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $inRange = $this->manualEntry($cashbook, 150.00);
+        $tooSmall = $this->manualEntry($cashbook, 50.00);
+        $tooBig = $this->manualEntry($cashbook, 500.00);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.index', [
+                'branch' => $this->branch->id,
+                'amount_min' => '100',
+                'amount_max' => '200',
+            ]));
+
+        $response->assertOk();
+        $ids = $response->viewData('entries')->pluck('id')->all();
+
+        $this->assertContains($inRange->id, $ids);
+        $this->assertNotContains($tooSmall->id, $ids);
+        $this->assertNotContains($tooBig->id, $ids);
+    }
+
+    public function test_combined_filters_narrow_results(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $match = $this->manualEntry($cashbook, 200.00, ['type' => 'debit', 'entry_date' => today()]);
+        $wrongType = $this->manualEntry($cashbook, 200.00, ['type' => 'credit', 'entry_date' => today()]);
+        $wrongDate = $this->manualEntry($cashbook, 200.00, ['type' => 'debit', 'entry_date' => today()->subMonths(2)]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.index', [
+                'branch' => $this->branch->id,
+                'type' => 'debit',
+                'date_from' => today()->subWeek()->toDateString(),
+            ]));
+
+        $response->assertOk();
+        $ids = $response->viewData('entries')->pluck('id')->all();
+
+        $this->assertContains($match->id, $ids);
+        $this->assertNotContains($wrongType->id, $ids);
+        $this->assertNotContains($wrongDate->id, $ids);
+    }
+
+    // ── Export ────────────────────────────────────────────────────────────────
+
+    public function test_guest_cannot_export_cashbook(): void
+    {
+        $this->get(route('cashbook.export', $this->branch))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_user_without_access_permission_cannot_export(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::AccessCashbook->value);
+
+        $this->actingAs($this->user)
+            ->get(route('cashbook.export', $this->branch))
+            ->assertForbidden();
+    }
+
+    public function test_export_returns_csv_download(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $this->manualEntry($cashbook, 100.00);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.export', $this->branch));
+
+        $response->assertOk();
+        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type') ?? '');
+        $this->assertStringContainsString('attachment', $response->headers->get('Content-Disposition') ?? '');
+        $this->assertStringContainsString('.csv', $response->headers->get('Content-Disposition') ?? '');
+    }
+
+    public function test_export_includes_correct_column_headers(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.export', $this->branch));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Date', $content);
+        $this->assertStringContainsString('Description', $content);
+        $this->assertStringContainsString('Reference', $content);
+        $this->assertStringContainsString('Type', $content);
+        $this->assertStringContainsString('Amount', $content);
+        $this->assertStringContainsString('Notes', $content);
+    }
+
+    public function test_export_respects_type_filter(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $this->manualEntry($cashbook, 100.00, ['type' => 'debit', 'description' => 'Debit entry']);
+        $this->manualEntry($cashbook, 50.00, ['type' => 'credit', 'description' => 'Credit entry']);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.export', array_merge(['branch' => $this->branch->id], ['type' => 'debit'])));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('Debit entry', $content);
+        $this->assertStringNotContainsString('Credit entry', $content);
     }
 }

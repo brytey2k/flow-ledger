@@ -69,6 +69,10 @@ return [
         'method_label' => 'Method:',
         'ref_label' => 'Ref:',
         'sent_back_notice' => 'This request was sent back for review',
+        'source_documents' => 'Source Documents',
+        'no_attachments' => 'No source documents attached.',
+        'confirm_delete_attachment' => 'Are you sure you want to delete this attachment?',
+        'source_documents_required_warning' => 'Source documents are required. Please upload at least one before submitting.',
     ],
 
     'status' => [

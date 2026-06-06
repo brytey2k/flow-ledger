@@ -110,6 +110,12 @@ class PaymentRequest extends Model
             ->exists();
     }
 
+    /** @return MorphMany<Attachment, $this> */
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
+
     /** @return MorphMany<WorkflowInstance, $this> */
     public function workflowInstances(): MorphMany
     {

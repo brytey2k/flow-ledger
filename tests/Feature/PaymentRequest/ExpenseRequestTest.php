@@ -127,7 +127,7 @@ class ExpenseRequestTest extends TenantAppTestCase
 
     // ── Expense workflow ──────────────────────────────────────────────────────
 
-    public function test_expense_goes_through_workflow_and_becomes_ready_for_retirement(): void
+    public function test_expense_goes_through_workflow_and_becomes_approved(): void
     {
         $template = WorkflowTemplate::factory()->expense()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
@@ -168,11 +168,11 @@ class ExpenseRequestTest extends TenantAppTestCase
         $response->assertSee('colspan="3"', false);
     }
 
-    public function test_show_offers_retirement_action_when_ready_for_retirement(): void
+    public function test_show_does_not_offer_retirement_action_for_disbursed_expense(): void
     {
         $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
         $paymentRequest = PaymentRequest::factory()->expense()->create([
-            'status' => 'ready_for_retirement',
+            'status' => 'disbursed',
             'branch_id' => $this->branch->id,
             'staff_id' => $staff->id,
         ]);
@@ -180,7 +180,7 @@ class ExpenseRequestTest extends TenantAppTestCase
         $response = $this->actingAs($this->user)->get(route('payment-requests.show', $paymentRequest));
 
         $response->assertOk();
-        $response->assertSee(route('retirement-requests.create', $paymentRequest), false);
-        $response->assertSee(__('payment_requests.buttons.retire'));
+        $response->assertDontSee(route('retirement-requests.create', $paymentRequest), false);
+        $response->assertDontSee(__('payment_requests.buttons.retire'));
     }
 }

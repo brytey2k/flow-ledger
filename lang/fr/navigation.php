@@ -8,6 +8,7 @@ return [
     'retirements' => 'Reddition de comptes',
     'disbursements' => 'Decaissements',
     'cashbook' => 'Caisse',
+    'cash_count' => 'Comptage de Caisse',
     'approvals' => 'Approbations',
     'levels' => 'Niveaux',
     'branches' => 'Succursales',

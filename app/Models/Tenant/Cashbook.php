@@ -22,6 +22,7 @@ use Spatie\Activitylog\Models\Concerns\HasActivity;
  * @property-read Branch $branch
  * @property-read Currency $currency
  * @property-read \Illuminate\Database\Eloquent\Collection<int, CashbookEntry> $entries
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CashCount> $cashCounts
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Cashbook newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Cashbook newQuery()
@@ -69,5 +70,11 @@ class Cashbook extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(CashbookEntry::class);
+    }
+
+    /** @return HasMany<CashCount, $this> */
+    public function cashCounts(): HasMany
+    {
+        return $this->hasMany(CashCount::class);
     }
 }

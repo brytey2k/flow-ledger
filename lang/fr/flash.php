@@ -106,6 +106,7 @@ return [
         'cancel_not_owner' => 'Vous ne pouvez annuler que vos propres demandes.',
         'cannot_cancel_status' => 'Cette demande ne peut pas etre annulee dans son etat actuel.',
         'cancelled' => 'Demande annulee avec succes.',
+        'source_documents_required' => 'Veuillez joindre au moins un document justificatif avant de soumettre cette depense.',
         'no_active_workflow' => 'Il n y a pas de workflow actif a rejeter.',
         'cannot_decline' => 'Vous n avez pas la permission de rejeter cette demande.',
         'declined' => 'Demande rejetee avec succes.',
@@ -124,6 +125,7 @@ return [
         'no_workflow_stages' => 'Le workflow de reddition n a pas d etapes configurees. Veuillez demander a un administrateur d en ajouter avant de soumettre.',
         'settled' => 'Reddition marquee comme reglee.',
         'settle_only_approved' => 'Seules les redditions approuvees peuvent etre reglees.',
+        'source_documents_required' => 'Veuillez joindre au moins un document justificatif avant de soumettre cette reddition.',
     ],
     'approvals' => [
         'action_recorded' => 'Action enregistree avec succes.',
@@ -142,5 +144,16 @@ return [
     'feature_flags' => [
         'updated' => 'Drapeaux de fonctionnalite mis a jour.',
         'bulk_updated' => 'Mise a jour en masse des drapeaux appliquee.',
+    ],
+    'denomination' => [
+        'created' => 'Denomination ajoutee avec succes.',
+        'updated' => 'Denomination mise a jour avec succes.',
+        'deleted' => 'Denomination supprimee avec succes.',
+        'in_use' => 'Cette denomination ne peut pas etre supprimee car elle a ete utilisee dans un comptage de caisse.',
+    ],
+    'cash_count' => [
+        'created' => 'Comptage de caisse enregistre avec succes.',
+        'deleted' => 'Comptage de caisse supprime avec succes.',
+        'no_denominations' => 'Aucune denomination configuree pour cette devise. Veuillez ajouter des denominations avant de faire un comptage.',
     ],
 ];
