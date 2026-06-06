@@ -25,14 +25,6 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         ]);
     }
 
-    private function readyForRetirementExpense(): PaymentRequest
-    {
-        return PaymentRequest::factory()->expense()->create([
-            'status' => 'ready_for_retirement',
-            'branch_id' => $this->branch->id,
-        ]);
-    }
-
     private function validItems(): array
     {
         $costCode = CostCode::factory()->create();
@@ -95,14 +87,16 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $response->assertSee(__('retirements.fields.no_spend_warning'), false);
     }
 
-    public function test_create_renders_for_ready_for_retirement_expense(): void
+    public function test_create_rejects_expense_type(): void
     {
-        $paymentRequest = $this->readyForRetirementExpense();
+        $paymentRequest = PaymentRequest::factory()->expense()->create([
+            'status' => 'disbursed',
+            'branch_id' => $this->branch->id,
+        ]);
 
-        $response = $this->actingAs($this->user)->get(route('retirement-requests.create', $paymentRequest));
-
-        $response->assertOk();
-        $response->assertViewIs('tenant.retirement-requests.create');
+        $this->actingAs($this->user)
+            ->get(route('retirement-requests.create', $paymentRequest))
+            ->assertStatus(422);
     }
 
     public function test_create_rejects_non_disbursed_advance(): void
@@ -146,23 +140,22 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         ]);
     }
 
-    public function test_store_creates_draft_retirement_for_ready_for_retirement_expense(): void
+    public function test_store_rejects_expense_type(): void
     {
-        $paymentRequest = $this->readyForRetirementExpense();
+        $paymentRequest = PaymentRequest::factory()->expense()->create([
+            'status' => 'disbursed',
+            'branch_id' => $this->branch->id,
+        ]);
         $items = $this->validItems();
 
-        $response = $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+        $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
             'notes' => 'Field trip expenses',
             'did_not_spend_money' => '0',
             'items' => $items,
-        ]);
+        ])->assertStatus(422);
 
-        $response->assertRedirect();
-        $response->assertSessionHas('success');
-
-        $this->assertDatabaseHas('retirement_requests', [
+        $this->assertDatabaseMissing('retirement_requests', [
             'payment_request_id' => $paymentRequest->id,
-            'status' => 'draft',
         ]);
     }
 

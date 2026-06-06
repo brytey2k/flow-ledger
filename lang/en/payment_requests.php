@@ -74,7 +74,6 @@ return [
     'status' => [
         'awaiting_approval' => 'Awaiting approval',
         'approved_awaiting' => 'Fully approved — awaiting disbursement',
-        'ready_for_retirement' => 'Ready for retirement',
         'cancelled' => 'Cancelled',
         'denied' => 'Denied',
     ],

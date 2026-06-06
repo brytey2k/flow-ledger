@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\Tenant\PaymentRequestStatus;
-use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowAction;
@@ -406,24 +404,13 @@ class WorkflowEngineService
         /** @var Model $subject */
         $subject = $instance->workflowable;
 
-        // Expenses transition directly to ready_for_retirement after workflow approval
-        if ($subject instanceof PaymentRequest && $subject->isExpense()) {
-            $subject->update(['status' => PaymentRequestStatus::ReadyForRetirement->value, 'approved_at' => now()]);
+        $subject->update(['status' => 'approved', 'approved_at' => now()]);
 
-            activity()
-                ->performedOn($subject)
-                ->event('request.approved')
-                ->withProperties(['old_status' => 'in_workflow', 'new_status' => PaymentRequestStatus::ReadyForRetirement->value])
-                ->log('Fully approved');
-        } else {
-            $subject->update(['status' => 'approved', 'approved_at' => now()]);
-
-            activity()
-                ->performedOn($subject)
-                ->event('request.approved')
-                ->withProperties(['old_status' => 'in_workflow', 'new_status' => 'approved'])
-                ->log('Fully approved');
-        }
+        activity()
+            ->performedOn($subject)
+            ->event('request.approved')
+            ->withProperties(['old_status' => 'in_workflow', 'new_status' => 'approved'])
+            ->log('Fully approved');
 
         $this->notifications->notifyFullyApproved($subject);
     }

@@ -186,4 +186,23 @@ class DisbursementsControllerTest extends TenantAppTestCase
 
         $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
     }
+
+    public function test_authorised_user_can_disburse_approved_expense(): void
+    {
+        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+
+        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+            'disbursement_method' => PaymentMethod::BankTransfer->value,
+            'disbursement_reference' => 'TXN-EXP-001',
+        ]);
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('payment_requests', [
+            'id' => $paymentRequest->id,
+            'status' => 'disbursed',
+            'disbursement_method' => PaymentMethod::BankTransfer->value,
+        ]);
+    }
 }

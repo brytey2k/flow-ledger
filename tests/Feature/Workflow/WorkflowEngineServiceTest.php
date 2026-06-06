@@ -231,7 +231,7 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
         $this->assertNotNull($subject->approved_at);
     }
 
-    public function test_approve_expense_workflow_completes_and_marks_ready_for_retirement(): void
+    public function test_approve_expense_workflow_completes_and_marks_approved(): void
     {
         $template = WorkflowTemplate::factory()->expense()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
@@ -249,7 +249,7 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
         $this->assertEquals('completed', $instance->status);
 
         $subject->refresh();
-        $this->assertEquals('ready_for_retirement', $subject->status);
+        $this->assertEquals('approved', $subject->status);
         $this->assertNotNull($subject->approved_at);
     }
 

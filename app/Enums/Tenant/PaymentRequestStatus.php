@@ -13,7 +13,6 @@ enum PaymentRequestStatus: string
     case Cancelled = 'cancelled';
     case Denied = 'denied';
     case SentBack = 'sent_back';
-    case ReadyForRetirement = 'ready_for_retirement';
 
     public function isCancelable(): bool
     {
@@ -35,7 +34,6 @@ enum PaymentRequestStatus: string
             self::Cancelled => 'Cancelled',
             self::Denied => 'Denied',
             self::SentBack => 'Sent Back',
-            self::ReadyForRetirement => 'Ready for retirement',
         };
     }
 }
