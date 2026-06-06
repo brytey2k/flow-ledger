@@ -25,6 +25,12 @@ class SettingsUpdateRequest extends FormRequest
             'default_advance_cost_code_id' => ['nullable', 'integer', 'exists:cost_codes,id'],
             'require_expense_source_documents' => ['sometimes', 'boolean'],
             'require_retirement_source_documents' => ['sometimes', 'boolean'],
+            'retirement_reminder_grace_period_days' => ['sometimes', 'integer', 'min:1'],
+            'retirement_reminder_frequency_days' => ['sometimes', 'integer', 'min:1'],
+            'retirement_reminder_notify_submitter' => ['sometimes', 'boolean'],
+            'retirement_reminder_notify_approvers' => ['sometimes', 'boolean'],
+            'retirement_reminder_notify_role_ids' => ['sometimes', 'array'],
+            'retirement_reminder_notify_role_ids.*' => ['integer', 'exists:roles,id'],
         ];
     }
 }

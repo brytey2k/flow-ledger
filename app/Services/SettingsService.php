@@ -94,4 +94,28 @@ class SettingsService
     {
         $this->repository->set(SettingKey::RequireRetirementSourceDocuments, ['required' => $required]);
     }
+
+    /**
+     * @return array{grace_period_days: int, frequency_days: int, notify_submitter: bool, notify_approvers: bool, notify_role_ids: list<int>}
+     */
+    public function getRetirementReminderSettings(): array
+    {
+        $setting = $this->repository->get(SettingKey::RetirementReminders) ?? [];
+
+        return [
+            'grace_period_days' => isset($setting['grace_period_days']) ? (int) $setting['grace_period_days'] : 7,
+            'frequency_days' => isset($setting['frequency_days']) ? (int) $setting['frequency_days'] : 7,
+            'notify_submitter' => (bool) ($setting['notify_submitter'] ?? true),
+            'notify_approvers' => (bool) ($setting['notify_approvers'] ?? true),
+            'notify_role_ids' => isset($setting['notify_role_ids']) ? array_map('intval', (array) $setting['notify_role_ids']) : [],
+        ];
+    }
+
+    /**
+     * @param array{grace_period_days: int, frequency_days: int, notify_submitter: bool, notify_approvers: bool, notify_role_ids: list<int>} $data
+     */
+    public function setRetirementReminderSettings(array $data): void
+    {
+        $this->repository->set(SettingKey::RetirementReminders, $data);
+    }
 }
