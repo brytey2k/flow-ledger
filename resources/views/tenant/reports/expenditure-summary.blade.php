@@ -82,12 +82,21 @@
                             </thead>
                             <tbody>
                                 @foreach($rows as $row)
+                                    @php
+                                        $pct = $grandTotal > 0 ? round(($row->total / $grandTotal) * 100, 1) : 0;
+                                        $breakdownKey = match($groupBy) { 'branch' => 'branch_id', 'cost_code' => 'cost_code_id', default => 'department_id' };
+                                        $breakdownParams = array_filter(['statuses' => 'disbursed', 'date_field' => 'disbursed_at', $breakdownKey => $row->group_id, 'date_from' => $dateFrom, 'date_to' => $dateTo, 'type' => $type, 'title' => ucfirst(str_replace('_', ' ', $groupBy)).': '.$row->label], fn($v) => $v !== null && $v !== '');
+                                        $breakdownUrl = route('reports.breakdown', $breakdownParams);
+                                    @endphp
                                     <tr>
-                                        <td><span class="text-sm font-medium text-mono">{{ $row->label }}</span></td>
-                                        <td><span class="text-sm text-foreground">{{ number_format($row->count) }}</span></td>
+                                        <td>
+                                            <a href="{{ $breakdownUrl }}" class="text-sm font-medium text-mono hover:text-primary hover:underline">{{ $row->label }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{{ $breakdownUrl }}" class="text-sm font-semibold text-primary hover:underline">{{ number_format($row->count) }}</a>
+                                        </td>
                                         <td><span class="text-sm font-medium text-mono">{{ number_format((float) $row->total, 2) }}</span></td>
                                         <td>
-                                            @php $pct = $grandTotal > 0 ? round(($row->total / $grandTotal) * 100, 1) : 0; @endphp
                                             <div class="flex items-center gap-2">
                                                 <div class="h-1.5 w-24 rounded-full bg-muted overflow-hidden">
                                                     <div class="h-full bg-primary rounded-full" style="width: {{ $pct }}%"></div>

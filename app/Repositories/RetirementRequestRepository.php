@@ -52,7 +52,7 @@ class RetirementRequestRepository
     public function retirementStatuses(array $allowedBranchIds, string|null $dateFrom = null, string|null $dateTo = null): EloquentCollection
     {
         return RetirementRequest::whereHas('paymentRequest', fn(EloquentBuilder $query) => $query->whereIn('branch_id', $allowedBranchIds))
-            ->when($dateFrom !== null && $dateTo !== null, fn($q) => $q->whereBetween('created_at', [$dateFrom, $dateTo]))
+            ->when($dateFrom !== null && $dateTo !== null, fn($q) => $q->whereDate('created_at', '>=', $dateFrom)->whereDate('created_at', '<=', $dateTo))
             ->select('status', DB::raw('COUNT(*) as count, SUM(total_amount_expended) as total'))
             ->groupBy('status')
             ->orderBy('status')
@@ -80,7 +80,8 @@ class RetirementRequestRepository
             ->join('currencies', 'payment_requests.currency_id', '=', 'currencies.id')
             ->whereIn('payment_requests.branch_id', $allowedBranchIds)
             ->whereIn('retirement_requests.status', ['approved', 'settled'])
-            ->whereBetween('retirement_requests.approved_at', [$dateFrom, $dateTo])
+            ->whereDate('retirement_requests.approved_at', '>=', $dateFrom)
+            ->whereDate('retirement_requests.approved_at', '<=', $dateTo)
             ->whereNull('retirement_requests.deleted_at')
             ->when($branchId, fn(QueryBuilder $q) => $q->where('payment_requests.branch_id', $branchId))
             ->select([

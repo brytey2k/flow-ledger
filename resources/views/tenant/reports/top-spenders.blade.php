@@ -79,15 +79,24 @@
                             </thead>
                             <tbody>
                                 @foreach($rows as $i => $row)
-                                    @php $pct = $grandTotal > 0 ? round(($row->total / $grandTotal) * 100, 1) : 0; @endphp
+                                    @php
+                                        $pct = $grandTotal > 0 ? round(($row->total / $grandTotal) * 100, 1) : 0;
+                                        $breakdownKey = $groupBy === 'department' ? 'department_id' : 'staff_id';
+                                        $breakdownParams = array_filter(['statuses' => 'disbursed', 'date_field' => 'disbursed_at', $breakdownKey => $row->group_id, 'date_from' => $dateFrom, 'date_to' => $dateTo, 'type' => $type, 'title' => ($groupBy === 'department' ? 'Department' : 'Staff').': '.$row->label], fn($v) => $v !== null && $v !== '');
+                                        $breakdownUrl = route('reports.breakdown', $breakdownParams);
+                                    @endphp
                                     <tr>
                                         <td>
                                             <span class="text-sm font-bold {{ $i === 0 ? 'text-warning' : 'text-secondary-foreground' }}">
                                                 #{{ $i + 1 }}
                                             </span>
                                         </td>
-                                        <td><span class="text-sm font-medium text-mono">{{ $row->label }}</span></td>
-                                        <td><span class="text-sm text-foreground">{{ number_format($row->count) }}</span></td>
+                                        <td>
+                                            <a href="{{ $breakdownUrl }}" class="text-sm font-medium text-mono hover:text-primary hover:underline">{{ $row->label }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="{{ $breakdownUrl }}" class="text-sm font-semibold text-primary hover:underline">{{ number_format($row->count) }}</a>
+                                        </td>
                                         <td><span class="text-sm font-semibold text-mono">{{ number_format((float) $row->total, 2) }}</span></td>
                                         <td>
                                             <div class="flex items-center gap-2">

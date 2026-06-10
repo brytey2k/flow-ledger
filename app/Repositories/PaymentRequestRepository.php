@@ -76,14 +76,15 @@ class PaymentRequestRepository
             ->where('payment_requests.status', 'disbursed')
             ->whereNull('payment_requests.deleted_at')
             ->whereIn('payment_requests.branch_id', $allowedBranchIds)
-            ->whereBetween('payment_requests.disbursed_at', [$dateFrom, $dateTo])
+            ->whereDate('payment_requests.disbursed_at', '>=', $dateFrom)
+            ->whereDate('payment_requests.disbursed_at', '<=', $dateTo)
             ->when($type, fn(QueryBuilder $query) => $query->where('payment_requests.type', $type));
 
         if ($groupBy === 'branch') {
             return (clone $base)
                 ->join('branches', 'payment_requests.branch_id', '=', 'branches.id')
                 ->whereNull('branches.deleted_at')
-                ->selectRaw('branches.name as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total')
+                ->selectRaw('branches.id as group_id, branches.name as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total')
                 ->groupBy('branches.id', 'branches.name')
                 ->orderByDesc('total')
                 ->get();
@@ -96,9 +97,10 @@ class PaymentRequestRepository
                 ->where('payment_requests.status', 'disbursed')
                 ->whereNull('payment_requests.deleted_at')
                 ->whereIn('payment_requests.branch_id', $allowedBranchIds)
-                ->whereBetween('payment_requests.disbursed_at', [$dateFrom, $dateTo])
+                ->whereDate('payment_requests.disbursed_at', '>=', $dateFrom)
+                ->whereDate('payment_requests.disbursed_at', '<=', $dateTo)
                 ->when($type, fn(QueryBuilder $query) => $query->where('payment_requests.type', $type))
-                ->selectRaw('CONCAT(cost_codes.code, \' - \', cost_codes.name) as label, COUNT(DISTINCT payment_requests.id) as count, SUM(payment_request_items.amount) as total')
+                ->selectRaw('cost_codes.id as group_id, CONCAT(cost_codes.code, \' - \', cost_codes.name) as label, COUNT(DISTINCT payment_requests.id) as count, SUM(payment_request_items.amount) as total')
                 ->groupBy('cost_codes.id', 'cost_codes.code', 'cost_codes.name')
                 ->orderByDesc('total')
                 ->get();
@@ -108,7 +110,7 @@ class PaymentRequestRepository
             ->join('staff', 'payment_requests.staff_id', '=', 'staff.id')
             ->join('departments', 'staff.department_id', '=', 'departments.id')
             ->whereNull('staff.deleted_at')
-            ->selectRaw('departments.name as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total')
+            ->selectRaw('departments.id as group_id, departments.name as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total')
             ->groupBy('departments.id', 'departments.name')
             ->orderByDesc('total')
             ->get();
@@ -152,7 +154,8 @@ class PaymentRequestRepository
         return PaymentRequest::with(['staff', 'branch', 'currency', 'disbursedBy'])
             ->where('status', 'disbursed')
             ->whereIn('branch_id', $allowedBranchIds)
-            ->whereBetween('disbursed_at', [$dateFrom, $dateTo])
+            ->whereDate('disbursed_at', '>=', $dateFrom)
+            ->whereDate('disbursed_at', '<=', $dateTo)
             ->when($branchId, fn(EloquentBuilder $query) => $query->where('branch_id', $branchId))
             ->when($method, fn(EloquentBuilder $query) => $query->where('disbursement_method', $method))
             ->orderByDesc('disbursed_at')
@@ -170,7 +173,7 @@ class PaymentRequestRepository
     public function paymentStatuses(array $allowedBranchIds, string|null $dateFrom = null, string|null $dateTo = null): EloquentCollection
     {
         return PaymentRequest::whereIn('branch_id', $allowedBranchIds)
-            ->when($dateFrom !== null && $dateTo !== null, fn($q) => $q->whereBetween('created_at', [$dateFrom, $dateTo]))
+            ->when($dateFrom !== null && $dateTo !== null, fn($q) => $q->whereDate('created_at', '>=', $dateFrom)->whereDate('created_at', '<=', $dateTo))
             ->select('status', DB::raw('COUNT(*) as count, SUM(total_amount) as total'))
             ->groupBy('status')
             ->orderBy('status')
@@ -197,11 +200,12 @@ class PaymentRequestRepository
             ->join('branches', 'payment_requests.branch_id', '=', 'branches.id')
             ->whereIn('payment_requests.branch_id', $allowedBranchIds)
             ->whereIn('payment_requests.status', ['denied', 'cancelled'])
-            ->whereBetween('payment_requests.updated_at', [$dateFrom, $dateTo])
+            ->whereDate('payment_requests.updated_at', '>=', $dateFrom)
+            ->whereDate('payment_requests.updated_at', '<=', $dateTo)
             ->whereNull('payment_requests.deleted_at')
             ->when($branchId, fn(QueryBuilder $q) => $q->where('payment_requests.branch_id', $branchId))
             ->when($type, fn(QueryBuilder $q) => $q->where('payment_requests.type', $type))
-            ->selectRaw('branches.name as branch_name, payment_requests.type, payment_requests.status, COUNT(*) as count, SUM(payment_requests.total_amount) as total')
+            ->selectRaw('branches.id as branch_id, branches.name as branch_name, payment_requests.type, payment_requests.status, COUNT(*) as count, SUM(payment_requests.total_amount) as total')
             ->groupBy('branches.id', 'branches.name', 'payment_requests.type', 'payment_requests.status')
             ->orderBy('branches.name')
             ->get();
@@ -220,7 +224,8 @@ class PaymentRequestRepository
         return PaymentRequest::whereNotNull('approved_at')
             ->whereNotNull('submitted_at')
             ->whereIn('branch_id', $allowedBranchIds)
-            ->whereBetween('approved_at', [$dateFrom, $dateTo])
+            ->whereDate('approved_at', '>=', $dateFrom)
+            ->whereDate('approved_at', '<=', $dateTo)
             ->when($type, fn(EloquentBuilder $query) => $query->where('type', $type))
             ->with(['staff', 'branch', 'currency'])
             ->get();
@@ -282,9 +287,10 @@ class PaymentRequestRepository
                 ->whereNull('payment_requests.deleted_at')
                 ->whereNull('staff.deleted_at')
                 ->whereIn('payment_requests.branch_id', $allowedBranchIds)
-                ->whereBetween('payment_requests.disbursed_at', [$dateFrom, $dateTo])
+                ->whereDate('payment_requests.disbursed_at', '>=', $dateFrom)
+                ->whereDate('payment_requests.disbursed_at', '<=', $dateTo)
                 ->when($type, fn(QueryBuilder $query) => $query->where('payment_requests.type', $type))
-                ->selectRaw('departments.name as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total')
+                ->selectRaw('departments.id as group_id, departments.name as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total')
                 ->groupBy('departments.id', 'departments.name')
                 ->orderByDesc('total')
                 ->limit(20)
@@ -297,12 +303,56 @@ class PaymentRequestRepository
             ->whereNull('payment_requests.deleted_at')
             ->whereNull('staff.deleted_at')
             ->whereIn('payment_requests.branch_id', $allowedBranchIds)
-            ->whereBetween('payment_requests.disbursed_at', [$dateFrom, $dateTo])
+            ->whereDate('payment_requests.disbursed_at', '>=', $dateFrom)
+            ->whereDate('payment_requests.disbursed_at', '<=', $dateTo)
             ->when($type, fn($query) => $query->where('payment_requests.type', $type))
-            ->selectRaw("CONCAT(staff.first_name, ' ', staff.last_name) as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total")
+            ->selectRaw("staff.id as group_id, CONCAT(staff.first_name, ' ', staff.last_name) as label, COUNT(payment_requests.id) as count, SUM(payment_requests.total_amount) as total")
             ->groupBy('staff.id', 'staff.first_name', 'staff.last_name')
             ->orderByDesc('total')
             ->limit(20)
             ->get();
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param array<int, string> $statuses
+     * @param string $dateField
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @param int|string|null $branchId
+     * @param int|string|null $staffId
+     * @param int|string|null $departmentId
+     * @param int|string|null $costCodeId
+     * @param string|null $type
+     * @param int $perPage
+     *
+     * @return LengthAwarePaginator<int, PaymentRequest>
+     */
+    public function breakdown(
+        array $allowedBranchIds,
+        array $statuses,
+        string $dateField,
+        string $dateFrom,
+        string $dateTo,
+        int|string|null $branchId,
+        int|string|null $staffId,
+        int|string|null $departmentId,
+        int|string|null $costCodeId,
+        string|null $type,
+        int $perPage = 50,
+    ): LengthAwarePaginator {
+        return PaymentRequest::with(['staff.department', 'branch', 'currency'])
+            ->whereIn('branch_id', $allowedBranchIds)
+            ->whereIn('status', $statuses)
+            ->whereDate($dateField, '>=', $dateFrom)
+            ->whereDate($dateField, '<=', $dateTo)
+            ->when($branchId, fn(EloquentBuilder $q) => $q->where('branch_id', $branchId))
+            ->when($staffId, fn(EloquentBuilder $q) => $q->where('staff_id', $staffId))
+            ->when($departmentId, fn(EloquentBuilder $q) => $q->whereHas('staff', fn(EloquentBuilder $s) => $s->where('department_id', $departmentId)))
+            ->when($costCodeId, fn(EloquentBuilder $q) => $q->whereHas('items', fn(EloquentBuilder $i) => $i->where('cost_code_id', $costCodeId)))
+            ->when($type, fn(EloquentBuilder $q) => $q->where('type', $type))
+            ->orderByDesc($dateField)
+            ->paginate($perPage)
+            ->withQueryString();
     }
 }

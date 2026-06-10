@@ -98,6 +98,19 @@
                     <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
                 </a>
 
+                <a href="{{ route('reports.cash-count') }}" class="kt-card kt-card-hover p-5 flex flex-col gap-3 transition-shadow hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                            <i class="ki-filled ki-calculator text-xl text-primary"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-mono">Cash Count Report</h3>
+                    </div>
+                    <p class="text-xs text-secondary-foreground leading-relaxed">
+                        All physical cash counts for a period: book balance vs. counted total, discrepancies, and who performed each count.
+                    </p>
+                    <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
+                </a>
+
             </div>
         </div>
 

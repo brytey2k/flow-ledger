@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Reports;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Tenant\Cashbook;
+use App\Models\Tenant\CashCount;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementReminderLog;
 use App\Models\Tenant\RetirementRequest;
@@ -58,6 +60,7 @@ class ReportsControllerTest extends TenantAppTestCase
             'retirement variance' => ['reports.retirement-variance'],
             'denied cancelled' => ['reports.denied-cancelled'],
             'retirement turnaround' => ['reports.retirement-turnaround'],
+            'cash count' => ['reports.cash-count'],
         ];
     }
 
@@ -669,7 +672,7 @@ class ReportsControllerTest extends TenantAppTestCase
     public function test_cash_position_renders_with_cashbook_and_entry_data(): void
     {
         $currency = \App\Models\Tenant\Currency::factory()->create();
-        $cashbook = \App\Models\Tenant\Cashbook::create([
+        $cashbook = Cashbook::create([
             'branch_id' => $this->branch->id,
             'currency_id' => $currency->id,
             'balance' => '1000.00',
@@ -1100,5 +1103,150 @@ class ReportsControllerTest extends TenantAppTestCase
 
         $rows = $response->viewData('rows');
         $this->assertCount(0, $rows);
+    }
+
+    // ── cashCountReport ──────────────────────────────────────────────────────
+
+    public function test_cash_count_report_empty_state_returns_200(): void
+    {
+        $this->actingAs($this->user)
+            ->get(route('reports.cash-count'))
+            ->assertOk()
+            ->assertViewHas('rows')
+            ->assertViewHas('totalCounts')
+            ->assertViewHas('withDiscrepancy')
+            ->assertViewHas('netDifference');
+    }
+
+    public function test_cash_count_report_shows_counts_in_date_range(): void
+    {
+        $currency = \App\Models\Tenant\Currency::factory()->create();
+        $cashbook = Cashbook::firstOrCreate(
+            ['branch_id' => $this->branch->id],
+            ['currency_id' => $currency->id, 'balance' => 1000],
+        );
+
+        CashCount::create([
+            'cashbook_id' => $cashbook->id,
+            'counted_by_user_id' => $this->user->id,
+            'counted_at' => now(),
+            'cashbook_balance_at_count' => '1000.00',
+            'counted_total' => '1000.00',
+            'difference' => '0.00',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.cash-count', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $this->assertEquals(1, $response->viewData('totalCounts'));
+        $this->assertEquals(0, $response->viewData('withDiscrepancy'));
+        $this->assertEquals(0.0, $response->viewData('netDifference'));
+    }
+
+    public function test_cash_count_report_counts_discrepancies_correctly(): void
+    {
+        $currency = \App\Models\Tenant\Currency::factory()->create();
+        $cashbook = Cashbook::firstOrCreate(
+            ['branch_id' => $this->branch->id],
+            ['currency_id' => $currency->id, 'balance' => 1000],
+        );
+
+        // Balanced count
+        CashCount::create([
+            'cashbook_id' => $cashbook->id,
+            'counted_by_user_id' => $this->user->id,
+            'counted_at' => now(),
+            'cashbook_balance_at_count' => '500.00',
+            'counted_total' => '500.00',
+            'difference' => '0.00',
+        ]);
+
+        // Surplus count
+        CashCount::create([
+            'cashbook_id' => $cashbook->id,
+            'counted_by_user_id' => $this->user->id,
+            'counted_at' => now()->subDay(),
+            'cashbook_balance_at_count' => '500.00',
+            'counted_total' => '550.00',
+            'difference' => '50.00',
+        ]);
+
+        // Deficit count
+        CashCount::create([
+            'cashbook_id' => $cashbook->id,
+            'counted_by_user_id' => $this->user->id,
+            'counted_at' => now()->subDays(2),
+            'cashbook_balance_at_count' => '500.00',
+            'counted_total' => '480.00',
+            'difference' => '-20.00',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.cash-count', [
+                'date_from' => now()->subWeek()->toDateString(),
+                'date_to' => now()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $this->assertEquals(3, $response->viewData('totalCounts'));
+        $this->assertEquals(2, $response->viewData('withDiscrepancy'));
+        $this->assertEquals(30.0, $response->viewData('netDifference'));
+    }
+
+    public function test_cash_count_report_excludes_counts_outside_date_range(): void
+    {
+        $currency = \App\Models\Tenant\Currency::factory()->create();
+        $cashbook = Cashbook::firstOrCreate(
+            ['branch_id' => $this->branch->id],
+            ['currency_id' => $currency->id, 'balance' => 1000],
+        );
+
+        CashCount::create([
+            'cashbook_id' => $cashbook->id,
+            'counted_by_user_id' => $this->user->id,
+            'counted_at' => now()->subYears(2),
+            'cashbook_balance_at_count' => '1000.00',
+            'counted_total' => '1000.00',
+            'difference' => '0.00',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.cash-count', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $this->assertEquals(0, $response->viewData('totalCounts'));
+    }
+
+    public function test_cash_count_report_branch_filter_excludes_other_branches(): void
+    {
+        $otherBranch = \App\Models\Tenant\Branch::factory()->create();
+        $currency = \App\Models\Tenant\Currency::factory()->create();
+        $otherCashbook = Cashbook::firstOrCreate(
+            ['branch_id' => $otherBranch->id],
+            ['currency_id' => $currency->id, 'balance' => 0],
+        );
+
+        CashCount::create([
+            'cashbook_id' => $otherCashbook->id,
+            'counted_by_user_id' => $this->user->id,
+            'counted_at' => now(),
+            'cashbook_balance_at_count' => '1000.00',
+            'counted_total' => '1000.00',
+            'difference' => '0.00',
+        ]);
+
+        // User's allowed branch scope only includes $this->branch
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.cash-count'))
+            ->assertOk();
+
+        $this->assertEquals(0, $response->viewData('totalCounts'));
     }
 }

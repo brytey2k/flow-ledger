@@ -220,6 +220,50 @@ class ReportsController extends Controller
         ));
     }
 
+    public function paymentRequestBreakdown(Request $request): View
+    {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
+
+        $rawStatuses = $this->stringInput($request, 'statuses', 'disbursed');
+        $statuses = array_values(array_filter(explode(',', $rawStatuses)));
+
+        $allowedDateFields = ['disbursed_at', 'created_at', 'updated_at', 'approved_at'];
+        $dateField = $this->stringInput($request, 'date_field', 'disbursed_at');
+        if (! in_array($dateField, $allowedDateFields, true)) {
+            $dateField = 'disbursed_at';
+        }
+
+        return view('tenant.reports.breakdown', $this->reports->paymentRequestBreakdown(
+            $allowedBranchIds,
+            $statuses ?: ['disbursed'],
+            $dateField,
+            $this->dateInput($request, 'date_from', now()->startOfMonth()->toDateString()),
+            $this->dateInput($request, 'date_to', now()->toDateString()),
+            $this->nullableBranchIdInput($request),
+            $this->nullableIntInput($request, 'staff_id'),
+            $this->nullableIntInput($request, 'department_id'),
+            $this->nullableIntInput($request, 'cost_code_id'),
+            $this->nullableStringInput($request, 'type'),
+            $this->stringInput($request, 'title', 'Payment Requests'),
+        ));
+    }
+
+    public function cashCountReport(Request $request): View
+    {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
+
+        return view('tenant.reports.cash-count', $this->reports->cashCountReport(
+            $allowedBranchIds,
+            $this->dateInput($request, 'date_from', now()->startOfMonth()->toDateString()),
+            $this->dateInput($request, 'date_to', now()->toDateString()),
+            $this->nullableBranchIdInput($request),
+        ));
+    }
+
     private function dateInput(Request $request, string $key, string $default): string
     {
         return $request->string($key, $default)->toString();
@@ -246,6 +290,15 @@ class ReportsController extends Controller
         }
 
         return $request->string('branch_id')->toString();
+    }
+
+    private function nullableIntInput(Request $request, string $key): int|null
+    {
+        if (! $request->filled($key)) {
+            return null;
+        }
+
+        return (int) $request->integer($key);
     }
 
     private function integerInput(Request $request, string $key, int $default): int

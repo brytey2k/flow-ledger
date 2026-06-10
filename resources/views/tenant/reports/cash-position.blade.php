@@ -76,9 +76,9 @@
                             </div>
                         </div>
 
-                        <div class="text-xs text-secondary-foreground">
-                            {{ $row['entry_count'] }} {{ Str::plural('entry', $row['entry_count']) }} in period
-                        </div>
+                        <a href="{{ route('cashbook.index', $row['cashbook']->branch) }}?date_from={{ $dateFrom }}&date_to={{ $dateTo }}" class="text-xs text-primary hover:underline">
+                            {{ $row['entry_count'] }} {{ Str::plural('entry', $row['entry_count']) }} in period →
+                        </a>
                     </div>
                 @endforeach
             </div>

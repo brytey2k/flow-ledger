@@ -120,6 +120,12 @@ Route::middleware([
         Route::get('/reports/retirement-turnaround', [ReportsController::class, 'retirementTurnaround'])
             ->can(PermissionKey::AccessReports->value)
             ->name('reports.retirement-turnaround');
+        Route::get('/reports/cash-count', [ReportsController::class, 'cashCountReport'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.cash-count');
+        Route::get('/reports/breakdown', [ReportsController::class, 'paymentRequestBreakdown'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.breakdown');
 
         // Levels
         Route::get('/levels', [LevelController::class, 'index'])

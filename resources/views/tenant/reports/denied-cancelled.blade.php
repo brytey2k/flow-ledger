@@ -105,6 +105,9 @@
                             <tbody>
                                 @foreach($byBranch as $branchName => $branchRows)
                                     @foreach($branchRows as $i => $row)
+                                        @php
+                                            $breakdownUrl = route('reports.breakdown', array_filter(['statuses' => $row->status, 'date_field' => 'updated_at', 'branch_id' => $row->branch_id, 'type' => $row->type, 'date_from' => $dateFrom, 'date_to' => $dateTo, 'title' => $branchName.' — '.ucfirst($row->type).' '.ucfirst($row->status)]));
+                                        @endphp
                                         <tr>
                                             @if($i === 0)
                                                 <td rowspan="{{ $branchRows->count() }}" class="align-top">
@@ -119,7 +122,9 @@
                                                     {{ ucfirst($row->status) }}
                                                 </span>
                                             </td>
-                                            <td class="text-right"><span class="text-sm font-semibold text-mono">{{ number_format($row->count) }}</span></td>
+                                            <td class="text-right">
+                                                <a href="{{ $breakdownUrl }}" class="text-sm font-semibold text-primary hover:underline">{{ number_format($row->count) }}</a>
+                                            </td>
                                             <td class="text-right"><span class="text-sm font-medium text-mono">{{ number_format((float) $row->total, 2) }}</span></td>
                                         </tr>
                                     @endforeach

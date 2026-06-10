@@ -78,15 +78,20 @@
                                 </thead>
                                 <tbody>
                                     @foreach($paymentStatuses as $row)
+                                        @php
+                                            $pct = $paymentTotal > 0 ? round(($row->count / $paymentTotal) * 100, 1) : 0;
+                                            $breakdownUrl = route('reports.breakdown', array_filter(['statuses' => $row->status, 'date_field' => 'created_at', 'date_from' => $dateFrom, 'date_to' => $dateTo, 'title' => 'Payment Requests — '.ucwords(str_replace('_', ' ', $row->status))]));
+                                        @endphp
                                         <tr>
                                             <td>
                                                 <span class="kt-badge kt-badge-sm {{ $statusColors[$row->status] ?? 'kt-badge-outline' }}">
                                                     {{ ucwords(str_replace('_', ' ', $row->status)) }}
                                                 </span>
                                             </td>
-                                            <td><span class="text-sm font-semibold text-mono">{{ number_format($row->count) }}</span></td>
                                             <td>
-                                                @php $pct = $paymentTotal > 0 ? round(($row->count / $paymentTotal) * 100, 1) : 0; @endphp
+                                                <a href="{{ $breakdownUrl }}" class="text-sm font-semibold text-primary hover:underline">{{ number_format($row->count) }}</a>
+                                            </td>
+                                            <td>
                                                 <span class="text-sm text-secondary-foreground">{{ $pct }}%</span>
                                             </td>
                                             <td><span class="text-sm font-medium text-mono">{{ number_format((float) $row->total, 2) }}</span></td>

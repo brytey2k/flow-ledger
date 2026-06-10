@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Models\Tenant\Branch;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 class BranchRepository
 {
@@ -32,14 +33,14 @@ class BranchRepository
     /**
      * @param array<int, int> $branchIds
      *
-     * @return Collection<int, Branch>
+     * @return SupportCollection<int, string>
      */
-    public function allByIdsOrderedByName(array $branchIds): Collection
+    public function allByIdsOrderedByName(array $branchIds): SupportCollection
     {
         return Branch::whereIn('id', $branchIds)
             ->whereNull('deleted_at')
             ->orderBy('name')
-            ->get();
+            ->pluck('name', 'id');
     }
 
     /** @return Collection<int, Branch> */

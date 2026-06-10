@@ -11,6 +11,7 @@ use App\Models\Tenant\WorkflowAction;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\BranchRepository;
 use App\Repositories\CashbookRepository;
+use App\Repositories\CashCountRepository;
 use App\Repositories\PaymentRequestRepository;
 use App\Repositories\RetirementRequestRepository;
 use App\Repositories\WorkflowActionRepository;
@@ -24,6 +25,7 @@ class ReportService
         private readonly PaymentRequestRepository $paymentRequests,
         private readonly RetirementRequestRepository $retirementRequests,
         private readonly CashbookRepository $cashbooks,
+        private readonly CashCountRepository $cashCounts,
         private readonly WorkflowInstanceRepository $workflowInstances,
         private readonly WorkflowActionRepository $workflowActions,
         private readonly BranchRepository $branches,
@@ -494,6 +496,84 @@ class ReportService
             'dateTo' => $dateTo,
             'groupBy' => $groupBy,
             'type' => $type,
+        ];
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param array<int, string> $statuses
+     * @param string $dateField
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @param int|string|null $branchId
+     * @param int|string|null $staffId
+     * @param int|string|null $departmentId
+     * @param int|string|null $costCodeId
+     * @param string|null $type
+     * @param string $title
+     *
+     * @return array<string, mixed>
+     */
+    public function paymentRequestBreakdown(
+        array $allowedBranchIds,
+        array $statuses,
+        string $dateField,
+        string $dateFrom,
+        string $dateTo,
+        int|string|null $branchId,
+        int|string|null $staffId,
+        int|string|null $departmentId,
+        int|string|null $costCodeId,
+        string|null $type,
+        string $title,
+    ): array {
+        return [
+            'rows' => $this->paymentRequests->breakdown(
+                $allowedBranchIds,
+                $statuses,
+                $dateField,
+                $dateFrom,
+                $dateTo,
+                $branchId,
+                $staffId,
+                $departmentId,
+                $costCodeId,
+                $type,
+            ),
+            'title' => $title,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+        ];
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @param int|string|null $branchId
+     *
+     * @return array<string, mixed>
+     */
+    public function cashCountReport(
+        array $allowedBranchIds,
+        string $dateFrom,
+        string $dateTo,
+        int|string|null $branchId,
+    ): array {
+        $rows = $this->cashCounts->forReport($allowedBranchIds, $dateFrom, $dateTo, $branchId);
+
+        $withDiscrepancy = $rows->filter(fn($row) => abs((float) $row->difference) > 0.01)->count();
+        $netDifference = $rows->sum(fn($row) => (float) $row->difference);
+
+        return [
+            'rows' => $rows,
+            'totalCounts' => $rows->count(),
+            'withDiscrepancy' => $withDiscrepancy,
+            'netDifference' => round($netDifference, 2),
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
+            'branchId' => $branchId,
         ];
     }
 }

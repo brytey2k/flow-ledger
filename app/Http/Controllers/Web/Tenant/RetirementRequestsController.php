@@ -48,10 +48,7 @@ class RetirementRequestsController extends Controller
         // Disallow creating a new retirement if there is an active (non-cancelled) retirement
         abort_if($paymentRequest->hasPendingRetirement(), 422, 'This advance already has a retirement in progress.');
 
-        $departmentId = $paymentRequest->staff?->department_id;
-        $costCodes = $departmentId
-            ? $this->costCodeRepository->forDepartment($departmentId)
-            : $this->costCodeRepository->allOrderedByCode();
+        $costCodes = $this->costCodeRepository->allOrderedByCode();
 
         $paymentRequest->load('items.costCode');
 
@@ -121,10 +118,7 @@ class RetirementRequestsController extends Controller
                 ->with('error', __('flash.retirements.edit_not_owner'));
         }
 
-        $departmentId = $retirementRequest->paymentRequest?->staff?->department_id;
-        $costCodes = $departmentId
-            ? $this->costCodeRepository->forDepartment($departmentId)
-            : $this->costCodeRepository->allOrderedByCode();
+        $costCodes = $this->costCodeRepository->allOrderedByCode();
 
         return view('tenant.retirement-requests.edit', compact('retirementRequest', 'costCodes'));
     }
