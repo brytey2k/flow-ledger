@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Rules\Tenant;
 
+use App\Models\Tenant\PaymentRequestItem;
+use App\Models\Tenant\RetirementRequestItem;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
 class UniqueReceiptNumber implements ValidationRule
@@ -19,25 +20,17 @@ class UniqueReceiptNumber implements ValidationRule
     /** @param Closure(string, ?string=): PotentiallyTranslatedString $fail */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $retirementQuery = DB::table('retirement_request_items')
-            ->join('retirement_requests', 'retirement_requests.id', '=', 'retirement_request_items.retirement_request_id')
-            ->where('retirement_request_items.receipt_number', $value)
-            ->where('retirement_requests.status', '!=', 'cancelled');
+        $retirementExists = RetirementRequestItem::where('receipt_number', $value)
+            ->whereHas('retirementRequest', fn($q) => $q->where('status', '!=', 'cancelled'))
+            ->when($this->excludeRetirementRequestId !== null, fn($q) => $q->where('retirement_request_id', '!=', $this->excludeRetirementRequestId))
+            ->exists();
 
-        if ($this->excludeRetirementRequestId !== null) {
-            $retirementQuery->where('retirement_request_items.retirement_request_id', '!=', $this->excludeRetirementRequestId);
-        }
+        $paymentExists = PaymentRequestItem::where('receipt_number', $value)
+            ->whereHas('paymentRequest', fn($q) => $q->whereNotIn('status', ['cancelled', 'denied']))
+            ->when($this->excludePaymentRequestId !== null, fn($q) => $q->where('payment_request_id', '!=', $this->excludePaymentRequestId))
+            ->exists();
 
-        $paymentQuery = DB::table('payment_request_items')
-            ->join('payment_requests', 'payment_requests.id', '=', 'payment_request_items.payment_request_id')
-            ->where('payment_request_items.receipt_number', $value)
-            ->whereNull('payment_requests.deleted_at');
-
-        if ($this->excludePaymentRequestId !== null) {
-            $paymentQuery->where('payment_request_items.payment_request_id', '!=', $this->excludePaymentRequestId);
-        }
-
-        if ($retirementQuery->exists() || $paymentQuery->exists()) {
+        if ($retirementExists || $paymentExists) {
             $fail(__('validation.receipt_number_taken'));
         }
     }

@@ -110,10 +110,23 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
             ->assertStatus(422);
     }
 
-    public function test_create_rejects_already_retired_advance(): void
+    public function test_create_rejects_advance_with_pending_retirement(): void
     {
         $paymentRequest = $this->disbursedAdvance();
-        RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
+        RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id, 'status' => 'in_workflow']);
+
+        $this->actingAs($this->user)
+            ->get(route('retirement-requests.create', $paymentRequest))
+            ->assertStatus(422);
+    }
+
+    public function test_create_rejects_already_retired_advance(): void
+    {
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'retired',
+            'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
+        ]);
 
         $this->actingAs($this->user)
             ->get(route('retirement-requests.create', $paymentRequest))

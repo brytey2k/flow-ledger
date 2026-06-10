@@ -110,7 +110,7 @@ class PaymentRequestsController extends Controller
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
 
-        if ($paymentRequest->status !== 'sent_back') {
+        if (! in_array($paymentRequest->status, ['draft', 'sent_back'], true)) {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.edit_only_sent_back'));
         }
@@ -134,7 +134,7 @@ class PaymentRequestsController extends Controller
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
 
-        if ($paymentRequest->status !== 'sent_back') {
+        if (! in_array($paymentRequest->status, ['draft', 'sent_back'], true)) {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.edit_only_sent_back'));
         }
@@ -147,11 +147,13 @@ class PaymentRequestsController extends Controller
         /** @var Staff $staffProfile */
         $staffProfile = $user->staffProfile;
 
-        $this->service->updateSentBack(
-            $paymentRequest,
-            $request->toDto($staffProfile->id, (int) $staffProfile->branch_id, $paymentRequest->type),
-            $user,
-        );
+        $dto = $request->toDto($staffProfile->id, (int) $staffProfile->branch_id, $paymentRequest->type);
+
+        if ($paymentRequest->isDraft()) {
+            $this->service->updateDraft($paymentRequest, $dto, $user);
+        } else {
+            $this->service->updateSentBack($paymentRequest, $dto, $user);
+        }
 
         return redirect()->route('payment-requests.show', $paymentRequest)
             ->with('success', __('flash.requests.updated'));

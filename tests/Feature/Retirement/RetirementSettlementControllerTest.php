@@ -65,6 +65,17 @@ class RetirementSettlementControllerTest extends TenantAppTestCase
         $this->assertSame($this->user->id, $retirement->settled_by_user_id);
     }
 
+    public function test_settling_retirement_marks_payment_request_as_retired(): void
+    {
+        $retirement = $this->approvedRetirement();
+
+        $this->actingAs($this->user)
+            ->post(route('retirement-requests.settle', $retirement))
+            ->assertRedirect();
+
+        $this->assertSame('retired', $retirement->paymentRequest->fresh()->status);
+    }
+
     public function test_settlement_notes_are_optional(): void
     {
         $retirement = $this->approvedRetirement();

@@ -98,7 +98,7 @@ return [
         'submit_only_draft' => 'Only draft requests can be submitted.',
         'resubmit_only_sent_back' => 'Only sent-back requests can be resubmitted.',
         'resubmit_not_owner' => 'You can only resubmit your own requests.',
-        'edit_only_sent_back' => 'Only sent-back requests can be edited.',
+        'edit_only_sent_back' => 'Only draft or sent-back requests can be edited.',
         'edit_not_owner' => 'You can only edit your own requests.',
         'missing_workflow_template' => 'No workflow template configured for this request type. Please ask an administrator to set one up.',
         'no_workflow_stages' => 'The workflow for this request type has no stages configured. Please ask an administrator to add stages before submitting.',

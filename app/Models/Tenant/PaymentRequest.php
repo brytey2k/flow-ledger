@@ -89,7 +89,7 @@ class PaymentRequest extends Model
     }
 
     /**
-     * Return the active (non-cancelled) retirement for this payment request, if any.
+     * Return the most recent non-cancelled retirement for this payment request, if any.
      *
      * @return RetirementRequest|null
      */
@@ -103,10 +103,15 @@ class PaymentRequest extends Model
         return $ret;
     }
 
-    public function hasActiveRetirement(): bool
+    /**
+     * True when a retirement is in-progress (draft/in_workflow/approved/sent_back) but not yet settled.
+     * A settled retirement flips the payment request status to `retired`, so this only matters for blocking
+     * creation of a duplicate while one is still being processed.
+     */
+    public function hasPendingRetirement(): bool
     {
         return RetirementRequest::where('payment_request_id', $this->id)
-            ->where('status', '!=', 'cancelled')
+            ->whereIn('status', ['draft', 'in_workflow', 'approved', 'sent_back'])
             ->exists();
     }
 
@@ -179,5 +184,10 @@ class PaymentRequest extends Model
     public function isDisbursed(): bool
     {
         return $this->status === \App\Enums\Tenant\PaymentRequestStatus::Disbursed->value;
+    }
+
+    public function isRetired(): bool
+    {
+        return $this->status === \App\Enums\Tenant\PaymentRequestStatus::Retired->value;
     }
 }

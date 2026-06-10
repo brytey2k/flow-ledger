@@ -128,7 +128,7 @@ class PaymentRequestRepository
             ->where('status', 'disbursed')
             ->whereIn('branch_id', $allowedBranchIds)
             ->when($branchId, fn(EloquentBuilder $query) => $query->where('branch_id', $branchId))
-            ->whereDoesntHave('retirementRequests', fn(EloquentBuilder $query) => $query->whereIn('status', ['approved', 'settled']))
+            ->whereDoesntHave('retirementRequests', fn(EloquentBuilder $query) => $query->where('status', 'approved'))
             ->orderBy('disbursed_at')
             ->get();
     }

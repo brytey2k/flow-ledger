@@ -10,6 +10,7 @@ enum PaymentRequestStatus: string
     case InWorkflow = 'in_workflow';
     case Approved = 'approved';
     case Disbursed = 'disbursed';
+    case Retired = 'retired';
     case Cancelled = 'cancelled';
     case Denied = 'denied';
     case SentBack = 'sent_back';
@@ -31,6 +32,7 @@ enum PaymentRequestStatus: string
             self::InWorkflow => 'In Workflow',
             self::Approved => 'Approved',
             self::Disbursed => 'Disbursed',
+            self::Retired => 'Retired',
             self::Cancelled => 'Cancelled',
             self::Denied => 'Denied',
             self::SentBack => 'Sent Back',

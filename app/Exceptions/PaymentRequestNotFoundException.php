@@ -6,4 +6,4 @@ namespace App\Exceptions;
 
 use Exception;
 
-class InsufficientCashbookBalanceException extends Exception {}
+class PaymentRequestNotFoundException extends Exception {}

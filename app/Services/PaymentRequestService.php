@@ -109,6 +109,42 @@ class PaymentRequestService
         $this->notifications->notifyDisbursed($request);
     }
 
+    public function updateDraft(PaymentRequest $paymentRequest, CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
+    {
+        return DB::transaction(function () use ($paymentRequest, $dto, $user): PaymentRequest {
+            $totalAmount = array_sum(array_column(
+                array_map(fn($item) => ['amount' => $item->amount], $dto->items),
+                'amount',
+            ));
+
+            $paymentRequest->update([
+                'currency_id' => $dto->currencyId,
+                'notes' => $dto->notes,
+                'total_amount' => $totalAmount,
+            ]);
+
+            $paymentRequest->items()->delete();
+
+            foreach ($dto->items as $item) {
+                $paymentRequest->items()->create([
+                    'description' => $item->description,
+                    'amount' => $item->amount,
+                    'cost_code_id' => $item->costCodeId,
+                    'receipt_number' => $item->receiptNumber,
+                ]);
+            }
+
+            activity()
+                ->performedOn($paymentRequest)
+                ->causedBy($user)
+                ->event('request.updated')
+                ->withProperties(['new_status' => PaymentRequestStatus::Draft->value])
+                ->log('Request updated while in draft');
+
+            return $paymentRequest->refresh();
+        });
+    }
+
     public function updateSentBack(PaymentRequest $paymentRequest, CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
     {
         return DB::transaction(function () use ($paymentRequest, $dto, $user): PaymentRequest {

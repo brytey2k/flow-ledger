@@ -122,19 +122,26 @@ class WorkflowEngineService
     public function approve(WorkflowInstanceStage $instanceStage, User $user, string|null $comment = null): void
     {
         DB::transaction(function () use ($instanceStage, $user, $comment): void {
+            /** @var WorkflowInstanceStage $fresh */
+            $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
+
+            if (! $fresh->isActive()) {
+                return;
+            }
+
             WorkflowAction::create([
-                'workflow_instance_stage_id' => $instanceStage->id,
+                'workflow_instance_stage_id' => $fresh->id,
                 'user_id' => $user->id,
                 'action' => 'approve',
                 'comment' => $comment,
             ]);
 
-            $instanceStage->update(['status' => 'approved', 'completed_at' => now()]);
+            $fresh->update(['status' => 'approved', 'completed_at' => now()]);
 
             /** @var WorkflowStage $stage */
-            $stage = $instanceStage->stage;
+            $stage = $fresh->stage;
             /** @var WorkflowInstance $instance */
-            $instance = $instanceStage->instance;
+            $instance = $fresh->instance;
 
             /** @var Model $approveWorkflowable */
             $approveWorkflowable = $instance->workflowable;
@@ -151,7 +158,7 @@ class WorkflowEngineService
 
                 $siblings = $instance->instanceStages()
                     ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $stage->parallel_group_id))
-                    ->where('id', '!=', $instanceStage->id)
+                    ->where('id', '!=', $fresh->id)
                     ->get();
 
                 if ($group->require_all) {
@@ -179,17 +186,24 @@ class WorkflowEngineService
     public function reject(WorkflowInstanceStage $instanceStage, User $user, string $comment): void
     {
         $workflowable = DB::transaction(function () use ($instanceStage, $user, $comment): Model {
+            /** @var WorkflowInstanceStage $fresh */
+            $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
+
+            if (! $fresh->isActive()) {
+                return $fresh->instance->workflowable;
+            }
+
             WorkflowAction::create([
-                'workflow_instance_stage_id' => $instanceStage->id,
+                'workflow_instance_stage_id' => $fresh->id,
                 'user_id' => $user->id,
                 'action' => 'reject',
                 'comment' => $comment,
             ]);
 
-            $instanceStage->update(['status' => 'rejected', 'completed_at' => now()]);
+            $fresh->update(['status' => 'rejected', 'completed_at' => now()]);
 
             /** @var WorkflowInstance $instance */
-            $instance = $instanceStage->instance;
+            $instance = $fresh->instance;
             $instance->instanceStages()
                 ->whereIn('status', ['pending', 'active'])
                 ->update(['status' => 'cancelled', 'completed_at' => now()]);
@@ -200,7 +214,7 @@ class WorkflowEngineService
             $workflowable->update(['status' => 'cancelled']);
 
             /** @var WorkflowStage $stage */
-            $stage = $instanceStage->stage;
+            $stage = $fresh->stage;
 
             activity()
                 ->performedOn($workflowable)
@@ -223,30 +237,37 @@ class WorkflowEngineService
     public function sendBack(WorkflowInstanceStage $instanceStage, User $user, string $comment): void
     {
         $workflowable = DB::transaction(function () use ($instanceStage, $user, $comment): Model {
+            /** @var WorkflowInstanceStage $fresh */
+            $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
+
+            if (! $fresh->isActive()) {
+                return $fresh->instance->workflowable;
+            }
+
             WorkflowAction::create([
-                'workflow_instance_stage_id' => $instanceStage->id,
+                'workflow_instance_stage_id' => $fresh->id,
                 'user_id' => $user->id,
                 'action' => 'send_back',
                 'comment' => $comment,
             ]);
 
-            $instanceStage->update(['status' => 'sent_back', 'completed_at' => now()]);
+            $fresh->update(['status' => 'sent_back', 'completed_at' => now()]);
 
             /** @var WorkflowInstance $instance */
-            $instance = $instanceStage->instance;
+            $instance = $fresh->instance;
 
             /** @var WorkflowStage $stage */
-            $stage = $instanceStage->stage;
+            $stage = $fresh->stage;
 
             if ($stage->parallel_group_id !== null) {
                 $instance->instanceStages()
                     ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $stage->parallel_group_id))
-                    ->where('id', '!=', $instanceStage->id)
+                    ->where('id', '!=', $fresh->id)
                     ->whereIn('status', ['active', 'pending'])
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
             }
 
-            $instance->update(['sent_back_to_stage_id' => $instanceStage->id]);
+            $instance->update(['sent_back_to_stage_id' => $fresh->id]);
             /** @var Model $workflowable */
             $workflowable = $instance->workflowable;
             $workflowable->update(['status' => 'sent_back']);

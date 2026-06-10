@@ -226,12 +226,9 @@
                                     <select
                                         id="recipients-{{ $branch->id }}"
                                         name="notification_user_ids[]"
-                                        class="kt-select w-full"
-                                        data-kt-select="true"
-                                        data-kt-select-multiple="true"
-                                        data-kt-select-enable-search="true"
-                                        data-kt-select-placeholder="{{ __('cash_balance.recipients_placeholder') }}"
-                                        data-kt-select-config='{"optionsClass": "kt-scrollable overflow-auto max-h-[250px]"}'
+                                        multiple
+                                        data-tom-select
+                                        data-tom-select-placeholder="{{ __('cash_balance.recipients_placeholder') }}"
                                         aria-invalid="@error('notification_user_ids') true @else false @enderror"
                                     >
                                         @foreach($users as $user)

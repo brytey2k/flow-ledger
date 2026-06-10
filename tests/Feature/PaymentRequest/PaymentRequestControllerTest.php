@@ -279,11 +279,26 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $response->assertViewHas(['paymentRequest', 'currencies', 'costCodes']);
     }
 
-    public function test_edit_redirects_if_request_is_not_sent_back(): void
+    public function test_edit_renders_for_draft_request_owner(): void
     {
         $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
         $paymentRequest = PaymentRequest::factory()->advance()->create([
             'status' => 'draft',
+            'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.edit', $paymentRequest));
+
+        $response->assertOk();
+        $response->assertViewIs('tenant.payment-requests.edit');
+    }
+
+    public function test_edit_redirects_if_request_is_not_editable(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'in_workflow',
             'staff_id' => $staff->id,
             'branch_id' => $this->branch->id,
         ]);
@@ -364,12 +379,36 @@ class PaymentRequestControllerTest extends TenantAppTestCase
         $this->assertDatabaseHas('payment_request_items', ['payment_request_id' => $paymentRequest->id, 'description' => 'Brand new item']);
     }
 
-    public function test_update_rejects_non_sent_back_request(): void
+    public function test_update_saves_changes_for_draft_request(): void
     {
         $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
         $currency = Currency::factory()->create();
         $paymentRequest = PaymentRequest::factory()->advance()->create([
             'status' => 'draft',
+            'staff_id' => $staff->id,
+            'currency_id' => $currency->id,
+            'branch_id' => $this->branch->id,
+        ]);
+        PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id, 'description' => 'Old item']);
+
+        $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Updated item', 'amount' => '150']],
+        ]);
+
+        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'draft']);
+        $this->assertDatabaseMissing('payment_request_items', ['payment_request_id' => $paymentRequest->id, 'description' => 'Old item']);
+        $this->assertDatabaseHas('payment_request_items', ['payment_request_id' => $paymentRequest->id, 'description' => 'Updated item']);
+    }
+
+    public function test_update_rejects_non_editable_request(): void
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'in_workflow',
             'staff_id' => $staff->id,
             'currency_id' => $currency->id,
             'branch_id' => $this->branch->id,
@@ -507,5 +546,39 @@ class PaymentRequestControllerTest extends TenantAppTestCase
             'currency_id' => $currency->id,
             'items' => [['description' => 'Transport', 'amount' => '100.00', 'receipt_number' => 'RCP-KEEP']],
         ])->assertSessionHasNoErrors()->assertRedirect();
+    }
+
+    public function test_store_allows_receipt_number_from_cancelled_payment_request(): void
+    {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+        $cancelled = PaymentRequest::factory()->create(['status' => 'cancelled']);
+        PaymentRequestItem::factory()->create([
+            'payment_request_id' => $cancelled->id,
+            'receipt_number' => 'RCP-CANCELLED',
+        ]);
+
+        $this->actingAs($this->user)->post(route('payment-requests.store'), [
+            'type' => 'advance',
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Transport', 'amount' => '100.00', 'receipt_number' => 'RCP-CANCELLED']],
+        ])->assertSessionHasNoErrors();
+    }
+
+    public function test_store_allows_receipt_number_from_denied_payment_request(): void
+    {
+        Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $currency = Currency::factory()->create();
+        $denied = PaymentRequest::factory()->create(['status' => 'denied']);
+        PaymentRequestItem::factory()->create([
+            'payment_request_id' => $denied->id,
+            'receipt_number' => 'RCP-DENIED',
+        ]);
+
+        $this->actingAs($this->user)->post(route('payment-requests.store'), [
+            'type' => 'advance',
+            'currency_id' => $currency->id,
+            'items' => [['description' => 'Transport', 'amount' => '100.00', 'receipt_number' => 'RCP-DENIED']],
+        ])->assertSessionHasNoErrors();
     }
 }

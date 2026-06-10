@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DTOs\Tenant\CreateRetirementRequestDto;
+use App\Enums\Tenant\PaymentRequestStatus;
+use App\Exceptions\PaymentRequestNotFoundException;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
@@ -22,7 +24,7 @@ class RetirementService
     {
         return DB::transaction(function () use ($paymentRequest, $dto, $user): RetirementRequest {
             // Prevent race-created duplicate active retirements in-app before attempting insert.
-            if (RetirementRequest::where('payment_request_id', $paymentRequest->id)->where('status', '!=', 'cancelled')->exists()) {
+            if (RetirementRequest::where('payment_request_id', $paymentRequest->id)->whereNotIn('status', ['cancelled', 'settled'])->exists()) {
                 // Use ValidationException so controllers return a 422 with errors
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'items' => ['This advance has already been retired.'],
@@ -102,6 +104,15 @@ class RetirementService
                 'settled_by_user_id' => $user?->id,
                 'settlement_notes' => $notes,
             ]);
+
+            $retirement->loadMissing('paymentRequest');
+            $paymentRequest = $retirement->paymentRequest;
+
+            if (! $paymentRequest instanceof PaymentRequest) {
+                throw new PaymentRequestNotFoundException('Cannot settle retirement: associated payment request not found.');
+            }
+
+            $paymentRequest->update(['status' => PaymentRequestStatus::Retired->value]);
 
             $this->cashbook->recordRetirementSettlement($retirement, $user);
 

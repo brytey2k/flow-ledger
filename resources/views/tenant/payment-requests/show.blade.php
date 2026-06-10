@@ -139,8 +139,8 @@
                                 <thead>
                                     <tr>
                                         <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
                                         @if($paymentRequest->isExpense())
-                                            <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
                                             <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
                                         @endif
                                         <th class="w-[160px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
@@ -150,15 +150,15 @@
                                     @foreach($paymentRequest->items as $item)
                                         <tr>
                                             <td><span class="text-sm text-foreground">{{ $item->description }}</span></td>
+                                            <td>
+                                                <span class="text-sm text-mono">
+                                                    {{ $item->costCode->code ?? '—' }}
+                                                    @if($item->costCode)
+                                                        <span class="text-secondary-foreground font-normal">— {{ $item->costCode->name }}</span>
+                                                    @endif
+                                                </span>
+                                            </td>
                                             @if($paymentRequest->isExpense())
-                                                <td>
-                                                    <span class="text-sm text-mono">
-                                                        {{ $item->costCode->code ?? '—' }}
-                                                        @if($item->costCode)
-                                                            <span class="text-secondary-foreground font-normal">— {{ $item->costCode->name }}</span>
-                                                        @endif
-                                                    </span>
-                                                </td>
                                                 <td><span class="text-sm text-secondary-foreground">{{ $item->receipt_number ?? '—' }}</span></td>
                                             @endif
                                             <td class="text-end">
@@ -172,7 +172,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="{{ $paymentRequest->isExpense() ? 3 : 1 }}" class="text-end text-sm font-medium text-secondary-foreground">
+                                        <td colspan="{{ $paymentRequest->isExpense() ? 3 : 2 }}" class="text-end text-sm font-medium text-secondary-foreground">
                                             {{ __('common.total') }}
                                         </td>
                                         <td class="text-end">
@@ -377,17 +377,27 @@
                     </div>
                     <div class="kt-card-content p-5 flex flex-col gap-3">
                             @if($paymentRequest->isDraft())
-                            <form method="POST" action="{{ route('payment-requests.submit', $paymentRequest) }}">
-                                @csrf
-                                <button type="submit" class="kt-btn kt-btn-primary w-full">
-                                    <i class="ki-filled ki-send"></i>
-                                    {{ __('payment_requests.buttons.submit') }}
-                                </button>
-                            </form>
+                            @if($isOwner)
+                                <form method="POST" action="{{ route('payment-requests.submit', $paymentRequest) }}">
+                                    @csrf
+                                    <button type="submit" class="kt-btn kt-btn-primary w-full">
+                                        <i class="ki-filled ki-send"></i>
+                                        {{ __('payment_requests.buttons.submit') }}
+                                    </button>
+                                </form>
+                            @endif
+                            @if($isOwner)
+                                <a href="{{ route('payment-requests.edit', $paymentRequest) }}"
+                                   class="kt-btn kt-btn-secondary w-full">
+                                    <i class="ki-filled ki-pencil"></i>
+                                    {{ __('payment_requests.buttons.edit_request') }}
+                                </a>
+                            @endif
                             @if($isOwner)
                                <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
                                    @csrf
-                                   <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                   <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full"
+                                           onclick="return confirm('{{ __('payment_requests.confirm_cancel') }}')">
                                        <i class="ki-filled ki-close"></i>
                                        {{ __('payment_requests.buttons.cancel_request') }}
                                    </button>
@@ -427,7 +437,8 @@
                                 @if($isOwner)
                                     <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
                                         @csrf
-                                        <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                        <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full"
+                                                onclick="return confirm('{{ __('payment_requests.confirm_cancel') }}')">
                                             <i class="ki-filled ki-close"></i>
                                             {{ __('payment_requests.buttons.cancel_request') }}
                                         </button>
@@ -479,7 +490,8 @@
                             @if($isOwner)
                                 <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
                                     @csrf
-                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full"
+                                            onclick="return confirm('{{ __('payment_requests.confirm_cancel') }}')">
                                         <i class="ki-filled ki-close"></i>
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
@@ -505,7 +517,8 @@
                                 </form>
                                 <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
                                     @csrf
-                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full"
+                                            onclick="return confirm('{{ __('payment_requests.confirm_cancel') }}')">
                                         <i class="ki-filled ki-close"></i>
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
