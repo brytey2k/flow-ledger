@@ -10,7 +10,9 @@ use App\Http\Requests\Tenant\CashBalanceThresholdUpdateRequest;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\CashBalanceThreshold;
 use App\Models\Tenant\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CashBalanceThresholdController extends Controller
@@ -23,9 +25,37 @@ class CashBalanceThresholdController extends Controller
         $thresholds = CashBalanceThreshold::with(['branch.currency', 'notificationLogs'])
             ->orderBy('branch_id')
             ->get();
+
         $users = User::query()->orderBy('first_name')->orderBy('last_name')->get();
 
         return view('tenant.settings.cash-balance-thresholds', compact('branches', 'thresholds', 'users'));
+    }
+
+    public function searchUsers(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $q = $request->string('q')->toString();
+
+        $users = User::query()
+            ->when($q !== '', fn($query) => $query->where(
+                fn($sub) => $sub
+                    ->where('first_name', 'like', "%{$q}%")
+                    ->orWhere('last_name', 'like', "%{$q}%"),
+            ))
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->limit(20)
+            ->get()
+            ->map(fn($user) => [
+                'id' => $user->id,
+                'text' => $user->first_name . ' ' . $user->last_name,
+            ])
+            ->all();
+
+        return response()->json($users);
     }
 
     public function store(CashBalanceThresholdStoreRequest $request): RedirectResponse

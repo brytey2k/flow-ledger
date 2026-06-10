@@ -11,8 +11,8 @@
             </div>
             <h1 class="text-xl font-medium leading-none text-mono">Requests by Status</h1>
             <p class="text-sm text-secondary-foreground max-w-2xl">
-                Current count and total value of all requests in each status — draft, in progress, approved, disbursed, and more.
-                An executive snapshot of your entire request pipeline at a glance.
+                Count and total value of all requests in each status — draft, in progress, approved, disbursed, and more.
+                Filter by date range to see pipeline distribution for any period.
             </p>
         </div>
     </div>
@@ -20,6 +20,22 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
+
+        {{-- Filters --}}
+        <div class="kt-card p-5">
+            <form method="GET" class="flex flex-wrap gap-4 items-end">
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-foreground">From</label>
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="kt-input kt-input-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-foreground">To</label>
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="kt-input kt-input-sm" />
+                </div>
+                <button type="submit" class="kt-btn kt-btn-sm kt-btn-primary">Apply</button>
+                <a href="{{ route('reports.requests-by-status') }}" class="kt-btn kt-btn-sm kt-btn-light">Reset</a>
+            </form>
+        </div>
 
         @php
             $statusColors = [
@@ -30,6 +46,7 @@
                 'retired'     => 'kt-badge-neutral',
                 'sent_back'   => 'kt-badge-warning',
                 'cancelled'   => 'kt-badge-danger',
+                'denied'      => 'kt-badge-danger',
                 'settled'     => 'kt-badge-success',
             ];
         @endphp

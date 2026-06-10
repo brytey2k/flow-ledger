@@ -7,6 +7,8 @@ namespace App\Repositories;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\CashbookEntry;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -15,6 +17,27 @@ class CashbookRepository
     public function findByBranchId(int $branchId): Cashbook|null
     {
         return Cashbook::where('branch_id', $branchId)->first();
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param string $dateFrom
+     * @param string $dateTo
+     *
+     * @return EloquentCollection<int, Cashbook>
+     */
+    public function cashbooksForPosition(array $allowedBranchIds, string $dateFrom, string $dateTo): EloquentCollection
+    {
+        return Cashbook::with([
+            'branch',
+            'currency',
+            'entries' => fn(HasMany $query) => $query
+                ->whereBetween('entry_date', [$dateFrom, $dateTo])
+                ->whereNull('deleted_at'),
+        ])
+            ->whereIn('branch_id', $allowedBranchIds)
+            ->withCount('entries')
+            ->get();
     }
 
     /**

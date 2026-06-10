@@ -18,7 +18,7 @@
         {{-- Financial Visibility --}}
         <div>
             <h2 class="text-base font-semibold text-mono mb-4">Financial Visibility</h2>
-            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 
                 <a href="{{ route('reports.expenditure-summary') }}" class="kt-card kt-card-hover p-5 flex flex-col gap-3 transition-shadow hover:shadow-md">
                     <div class="flex items-center gap-3">
@@ -28,7 +28,7 @@
                         <h3 class="text-sm font-semibold text-mono">Expenditure Summary</h3>
                     </div>
                     <p class="text-xs text-secondary-foreground leading-relaxed">
-                        Spend by department, branch, or account code over a selected period. Filter by request type (advance vs expense).
+                        Spend by department, branch, or cost code over a selected period. Filter by request type (advance vs expense).
                     </p>
                     <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
                 </a>
@@ -68,6 +68,32 @@
                     </div>
                     <p class="text-xs text-secondary-foreground leading-relaxed">
                         All disbursed payments in a date range: amount, method, reference, recipient, and who disbursed. The auditor's first ask.
+                    </p>
+                    <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
+                </a>
+
+                <a href="{{ route('reports.retirement-reminders') }}" class="kt-card kt-card-hover p-5 flex flex-col gap-3 transition-shadow hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="flex size-10 items-center justify-center rounded-lg bg-warning/10">
+                            <i class="ki-filled ki-notification text-xl text-warning"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-mono">Retirement Reminders</h3>
+                    </div>
+                    <p class="text-xs text-secondary-foreground leading-relaxed">
+                        Advances that have triggered overdue retirement reminders. Shows reminder frequency and the last date notified.
+                    </p>
+                    <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
+                </a>
+
+                <a href="{{ route('reports.retirement-variance') }}" class="kt-card kt-card-hover p-5 flex flex-col gap-3 transition-shadow hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="flex size-10 items-center justify-center rounded-lg bg-success/10">
+                            <i class="ki-filled ki-arrows-diagonal text-xl text-success"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-mono">Retirement Variance</h3>
+                    </div>
+                    <p class="text-xs text-secondary-foreground leading-relaxed">
+                        Disbursed advance amount vs. actual spend in the approved retirement. Shows over- and under-spend per advance for reconciliation.
                     </p>
                     <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
                 </a>
@@ -125,7 +151,7 @@
         {{-- Compliance & Audit --}}
         <div>
             <h2 class="text-base font-semibold text-mono mb-4">Compliance &amp; Audit</h2>
-            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
 
                 <a href="{{ route('reports.audit-trail') }}" class="kt-card kt-card-hover p-5 flex flex-col gap-3 transition-shadow hover:shadow-md">
                     <div class="flex items-center gap-3">
@@ -148,7 +174,33 @@
                         <h3 class="text-sm font-semibold text-mono">Requests by Status</h3>
                     </div>
                     <p class="text-xs text-secondary-foreground leading-relaxed">
-                        Current count and total value of all requests in each status (draft, in progress, approved, disbursed). An executive snapshot of pipeline health.
+                        Count and total value of all requests in each status for any date range. A filterable pipeline distribution snapshot.
+                    </p>
+                    <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
+                </a>
+
+                <a href="{{ route('reports.denied-cancelled') }}" class="kt-card kt-card-hover p-5 flex flex-col gap-3 transition-shadow hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="flex size-10 items-center justify-center rounded-lg bg-danger/10">
+                            <i class="ki-filled ki-cross-circle text-xl text-danger"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-mono">Denied &amp; Cancelled</h3>
+                    </div>
+                    <p class="text-xs text-secondary-foreground leading-relaxed">
+                        Count and value of denied and cancelled requests grouped by branch and type. Surfaces which areas have the highest failure rates.
+                    </p>
+                    <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
+                </a>
+
+                <a href="{{ route('reports.retirement-turnaround') }}" class="kt-card kt-card-hover p-5 flex flex-col gap-3 transition-shadow hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                            <i class="ki-filled ki-arrows-loop text-xl text-primary"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-mono">Retirement Turnaround</h3>
+                    </div>
+                    <p class="text-xs text-secondary-foreground leading-relaxed">
+                        Average time per retirement workflow stage from submission to decision. Shows bottlenecks in the retirement approval process.
                     </p>
                     <span class="text-xs font-medium text-primary flex items-center gap-1">View report <i class="ki-filled ki-arrow-right text-xs"></i></span>
                 </a>

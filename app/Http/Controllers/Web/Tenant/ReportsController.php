@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Http\Controllers\Controller;
 use App\Services\BranchScopeService;
 use App\Services\ReportService;
+use App\Services\RetirementReminderService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -14,6 +15,7 @@ class ReportsController extends Controller
 {
     public function __construct(
         private readonly ReportService $reports,
+        private readonly RetirementReminderService $retirementReminders,
         private readonly BranchScopeService $branchScope,
     ) {}
 
@@ -117,7 +119,48 @@ class ReportsController extends Controller
         $user = $request->user();
         $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
 
-        return view('tenant.reports.requests-by-status', $this->reports->requestsByStatus($allowedBranchIds));
+        return view('tenant.reports.requests-by-status', $this->reports->requestsByStatus(
+            $allowedBranchIds,
+            $this->dateInput($request, 'date_from', now()->startOfYear()->toDateString()),
+            $this->dateInput($request, 'date_to', now()->toDateString()),
+        ));
+    }
+
+    public function retirementVariance(Request $request): View
+    {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
+
+        return view('tenant.reports.retirement-variance', $this->reports->retirementVariance(
+            $allowedBranchIds,
+            $this->dateInput($request, 'date_from', now()->startOfMonth()->toDateString()),
+            $this->dateInput($request, 'date_to', now()->toDateString()),
+            $this->nullableBranchIdInput($request),
+        ));
+    }
+
+    public function deniedCancelledAnalysis(Request $request): View
+    {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
+
+        return view('tenant.reports.denied-cancelled', $this->reports->deniedCancelledAnalysis(
+            $allowedBranchIds,
+            $this->dateInput($request, 'date_from', now()->startOfMonth()->toDateString()),
+            $this->dateInput($request, 'date_to', now()->toDateString()),
+            $this->nullableBranchIdInput($request),
+            $this->nullableStringInput($request, 'type'),
+        ));
+    }
+
+    public function retirementTurnaround(Request $request): View
+    {
+        return view('tenant.reports.retirement-turnaround', $this->reports->retirementTurnaround(
+            $this->dateInput($request, 'date_from', now()->startOfMonth()->toDateString()),
+            $this->dateInput($request, 'date_to', now()->toDateString()),
+        ));
     }
 
     public function workflowSla(Request $request): View
@@ -160,6 +203,20 @@ class ReportsController extends Controller
             $this->dateInput($request, 'date_to', now()->toDateString()),
             $this->stringInput($request, 'group_by', 'staff'),
             $this->nullableStringInput($request, 'type'),
+        ));
+    }
+
+    public function retirementReminders(Request $request): View
+    {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
+
+        return view('tenant.reports.retirement-reminders', $this->retirementReminders->getReport(
+            $allowedBranchIds,
+            $this->dateInput($request, 'date_from', now()->startOfMonth()->toDateString()),
+            $this->dateInput($request, 'date_to', now()->toDateString()),
+            $this->nullableBranchIdInput($request),
         ));
     }
 

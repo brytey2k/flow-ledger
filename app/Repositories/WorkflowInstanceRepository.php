@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class WorkflowInstanceRepository
 {
@@ -45,5 +47,54 @@ class WorkflowInstanceRepository
             ])
             ->latest('workflow_instance_stages.created_at')
             ->paginate($perPage);
+    }
+
+    /**
+     * @param string $dateFrom
+     * @param string $dateTo
+     *
+     * @return EloquentCollection<int, WorkflowInstanceStage>
+     */
+    public function approvalTurnaroundStages(string $dateFrom, string $dateTo): EloquentCollection
+    {
+        return WorkflowInstanceStage::with('stage')
+            ->whereIn('status', ['approved', 'sent_back', 'cancelled'])
+            ->whereNotNull('completed_at')
+            ->whereNotNull('started_at')
+            ->whereBetween('completed_at', [$dateFrom, $dateTo])
+            ->get();
+    }
+
+    /**
+     * @param string $dateFrom
+     * @param string $dateTo
+     *
+     * @return EloquentCollection<int, WorkflowInstanceStage>
+     */
+    public function retirementTurnaroundStages(string $dateFrom, string $dateTo): EloquentCollection
+    {
+        return WorkflowInstanceStage::with('stage')
+            ->whereHas('instance', fn($q) => $q->where('workflowable_type', RetirementRequest::class))
+            ->whereIn('status', ['approved', 'sent_back', 'cancelled'])
+            ->whereNotNull('completed_at')
+            ->whereNotNull('started_at')
+            ->whereBetween('completed_at', [$dateFrom, $dateTo])
+            ->get();
+    }
+
+    /** @return EloquentCollection<int, WorkflowInstanceStage> */
+    public function activeRequestStages(): EloquentCollection
+    {
+        return WorkflowInstanceStage::with([
+            'stage',
+            'instance.workflowable',
+            'instance.workflowable.staff',
+            'instance.workflowable.branch',
+            'instance.workflowable.currency',
+        ])
+            ->where('status', 'active')
+            ->whereNotNull('started_at')
+            ->orderBy('started_at')
+            ->get();
     }
 }

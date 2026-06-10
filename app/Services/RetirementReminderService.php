@@ -11,6 +11,8 @@ use App\Models\Tenant\RetirementReminderLog;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowAction;
 use App\Notifications\RetirementOverdueNotification;
+use App\Repositories\BranchRepository;
+use App\Repositories\RetirementReminderRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Activity;
@@ -19,6 +21,8 @@ class RetirementReminderService
 {
     public function __construct(
         private readonly SettingsService $settingsService,
+        private readonly RetirementReminderRepository $reminderRepository,
+        private readonly BranchRepository $branches,
     ) {}
 
     public function sendReminders(): int
@@ -165,5 +169,24 @@ class RetirementReminderService
         }
 
         return 'role';
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @param int|string|null $branchId
+     *
+     * @return array<string, mixed>
+     */
+    public function getReport(array $allowedBranchIds, string $dateFrom, string $dateTo, int|string|null $branchId): array
+    {
+        return [
+            'rows' => $this->reminderRepository->reportRows($allowedBranchIds, $dateFrom, $dateTo, $branchId),
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'branchId' => $branchId,
+            'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
+        ];
     }
 }

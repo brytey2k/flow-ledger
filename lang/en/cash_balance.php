@@ -17,6 +17,7 @@ return [
     'cooldown_help' => 'Repeat alerts are suppressed until the cooldown expires.',
     'notification_recipients' => 'Notification recipients',
     'recipients_help' => 'Select users who should receive alerts for this branch.',
+    'recipients_placeholder' => 'Search users...',
     'enable_notifications' => 'Enable notifications',
     'configure' => 'Configure',
     'update' => 'Update',

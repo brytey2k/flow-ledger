@@ -108,6 +108,18 @@ Route::middleware([
         Route::get('/reports/top-spenders', [ReportsController::class, 'topSpenders'])
             ->can(PermissionKey::AccessReports->value)
             ->name('reports.top-spenders');
+        Route::get('/reports/retirement-reminders', [ReportsController::class, 'retirementReminders'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.retirement-reminders');
+        Route::get('/reports/retirement-variance', [ReportsController::class, 'retirementVariance'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.retirement-variance');
+        Route::get('/reports/denied-cancelled', [ReportsController::class, 'deniedCancelledAnalysis'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.denied-cancelled');
+        Route::get('/reports/retirement-turnaround', [ReportsController::class, 'retirementTurnaround'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.retirement-turnaround');
 
         // Levels
         Route::get('/levels', [LevelController::class, 'index'])
@@ -559,6 +571,9 @@ Route::middleware([
         Route::get('/cash-balance-thresholds', [CashBalanceThresholdController::class, 'index'])
             ->can(PermissionKey::AccessSettings->value)
             ->name('cash-balance-thresholds.index');
+        Route::get('/cash-balance-thresholds/users', [CashBalanceThresholdController::class, 'searchUsers'])
+            ->can(PermissionKey::AccessSettings->value)
+            ->name('cash-balance-thresholds.users');
         Route::post('/cash-balance-thresholds', [CashBalanceThresholdController::class, 'store'])
             ->can(PermissionKey::AccessSettings->value)
             ->name('cash-balance-thresholds.store');

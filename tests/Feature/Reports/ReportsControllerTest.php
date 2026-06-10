@@ -6,6 +6,8 @@ namespace Tests\Feature\Reports;
 
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\RetirementReminderLog;
+use App\Models\Tenant\RetirementRequest;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TenantAppTestCase;
 
@@ -52,6 +54,10 @@ class ReportsControllerTest extends TenantAppTestCase
             'workflow sla' => ['reports.workflow-sla'],
             'spend trend' => ['reports.spend-trend'],
             'top spenders' => ['reports.top-spenders'],
+            'retirement reminders' => ['reports.retirement-reminders'],
+            'retirement variance' => ['reports.retirement-variance'],
+            'denied cancelled' => ['reports.denied-cancelled'],
+            'retirement turnaround' => ['reports.retirement-turnaround'],
         ];
     }
 
@@ -725,5 +731,374 @@ class ReportsControllerTest extends TenantAppTestCase
         $total = $response->viewData('total');
         $this->assertEquals(2, $total);
         $this->assertEquals(50.0, $complianceRate);
+    }
+
+    // ── retirementReminders data correctness ─────────────────────────────────
+
+    public function test_retirement_reminders_empty_state_returns_200(): void
+    {
+        $this->actingAs($this->user)
+            ->get(route('reports.retirement-reminders'))
+            ->assertOk();
+    }
+
+    public function test_retirement_reminders_shows_advance_with_reminder_logs(): void
+    {
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now()->subDays(30),
+            'branch_id' => $this->branch->id,
+        ]);
+
+        RetirementReminderLog::create([
+            'payment_request_id' => $advance->id,
+            'user_id' => $this->user->id,
+            'notified_date' => now()->subDays(2)->toDateString(),
+        ]);
+
+        RetirementReminderLog::create([
+            'payment_request_id' => $advance->id,
+            'user_id' => $this->user->id,
+            'notified_date' => now()->subDays(1)->toDateString(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.retirement-reminders', [
+                'date_from' => now()->subMonth()->toDateString(),
+                'date_to' => now()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $rows = $response->viewData('rows');
+        $this->assertCount(1, $rows);
+        $this->assertEquals(2, $rows->first()->reminder_count);
+        $this->assertEquals(now()->subDays(1)->toDateString(), $rows->first()->last_reminder_date);
+    }
+
+    // ── requestsByStatus date filter ─────────────────────────────────────────
+
+    public function test_requests_by_status_with_date_filter_returns_200(): void
+    {
+        PaymentRequest::factory()->create([
+            'status' => 'disbursed',
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.requests-by-status', [
+                'date_from' => now()->startOfYear()->toDateString(),
+                'date_to' => now()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $this->assertNotNull($response->viewData('dateFrom'));
+        $this->assertNotNull($response->viewData('dateTo'));
+    }
+
+    public function test_requests_by_status_date_filter_excludes_out_of_range_requests(): void
+    {
+        PaymentRequest::factory()->create([
+            'status' => 'approved',
+            'branch_id' => $this->branch->id,
+            'created_at' => now()->subYears(2),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.requests-by-status', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $paymentStatuses = $response->viewData('paymentStatuses');
+        $found = $paymentStatuses->firstWhere('status', 'approved');
+        $this->assertTrue($found === null || (int) $found->count === 0);
+    }
+
+    // ── retirementVariance ───────────────────────────────────────────────────
+
+    public function test_retirement_variance_empty_state_returns_200(): void
+    {
+        $this->actingAs($this->user)
+            ->get(route('reports.retirement-variance'))
+            ->assertOk()
+            ->assertViewHas('rows');
+    }
+
+    public function test_retirement_variance_shows_approved_retirement_row(): void
+    {
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now()->subDays(10),
+            'total_amount' => 500.00,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        RetirementRequest::factory()->approved()->create([
+            'payment_request_id' => $advance->id,
+            'total_amount_expended' => 420.00,
+            'difference_amount' => 80.00,
+            'difference_type' => 'refund_to_company',
+            'approved_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.retirement-variance', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->addDay()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $rows = $response->viewData('rows');
+        $this->assertCount(1, $rows);
+        $this->assertEquals($advance->id, $rows->first()->payment_request_id);
+        $this->assertEquals('420.00', $rows->first()->total_amount_expended);
+    }
+
+    public function test_retirement_variance_excludes_unapproved_retirements(): void
+    {
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now()->subDays(5),
+            'branch_id' => $this->branch->id,
+        ]);
+
+        RetirementRequest::factory()->inWorkflow()->create([
+            'payment_request_id' => $advance->id,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.retirement-variance', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->addDay()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $rows = $response->viewData('rows');
+        $this->assertCount(0, $rows);
+    }
+
+    public function test_retirement_variance_with_branch_filter(): void
+    {
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now()->subDays(5),
+            'branch_id' => $this->branch->id,
+        ]);
+
+        RetirementRequest::factory()->approved()->create([
+            'payment_request_id' => $advance->id,
+            'approved_at' => now(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->get(route('reports.retirement-variance', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->addDay()->toDateString(),
+                'branch_id' => $this->branch->id,
+            ]))
+            ->assertOk();
+    }
+
+    // ── deniedCancelledAnalysis ──────────────────────────────────────────────
+
+    public function test_denied_cancelled_empty_state_returns_200(): void
+    {
+        $this->actingAs($this->user)
+            ->get(route('reports.denied-cancelled'))
+            ->assertOk()
+            ->assertViewHas('rows')
+            ->assertViewHas('deniedCount')
+            ->assertViewHas('cancelledCount');
+    }
+
+    public function test_denied_cancelled_counts_denied_requests(): void
+    {
+        PaymentRequest::factory()->advance()->create([
+            'status' => 'denied',
+            'branch_id' => $this->branch->id,
+            'updated_at' => now(),
+        ]);
+
+        PaymentRequest::factory()->advance()->create([
+            'status' => 'denied',
+            'branch_id' => $this->branch->id,
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.denied-cancelled', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->addDay()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $this->assertEquals(2, $response->viewData('deniedCount'));
+        $this->assertEquals(0, $response->viewData('cancelledCount'));
+    }
+
+    public function test_denied_cancelled_counts_cancelled_requests(): void
+    {
+        PaymentRequest::factory()->expense()->create([
+            'status' => 'cancelled',
+            'branch_id' => $this->branch->id,
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.denied-cancelled', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->addDay()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $this->assertEquals(0, $response->viewData('deniedCount'));
+        $this->assertEquals(1, $response->viewData('cancelledCount'));
+    }
+
+    public function test_denied_cancelled_with_type_filter(): void
+    {
+        PaymentRequest::factory()->advance()->create([
+            'status' => 'denied',
+            'branch_id' => $this->branch->id,
+            'updated_at' => now(),
+        ]);
+
+        PaymentRequest::factory()->expense()->create([
+            'status' => 'denied',
+            'branch_id' => $this->branch->id,
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.denied-cancelled', [
+                'date_from' => now()->startOfMonth()->toDateString(),
+                'date_to' => now()->addDay()->toDateString(),
+                'type' => 'advance',
+            ]))
+            ->assertOk();
+
+        $this->assertEquals(1, $response->viewData('deniedCount'));
+    }
+
+    // ── retirementTurnaround ─────────────────────────────────────────────────
+
+    public function test_retirement_turnaround_empty_state_returns_200(): void
+    {
+        $this->actingAs($this->user)
+            ->get(route('reports.retirement-turnaround'))
+            ->assertOk()
+            ->assertViewHas('stages');
+    }
+
+    public function test_retirement_turnaround_with_completed_stages_returns_mapped_data(): void
+    {
+        $template = \App\Models\Tenant\WorkflowTemplate::factory()->create(['type' => 'advance']);
+        $stage = \App\Models\Tenant\WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'name' => 'Finance Retirement Review',
+        ]);
+
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now()->subDays(10),
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $retirement = RetirementRequest::factory()->inWorkflow()->create([
+            'payment_request_id' => $advance->id,
+        ]);
+
+        $instance = \App\Models\Tenant\WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => RetirementRequest::class,
+            'workflowable_id' => $retirement->id,
+            'status' => 'in_progress',
+        ]);
+
+        \App\Models\Tenant\WorkflowInstanceStage::create([
+            'workflow_instance_id' => $instance->id,
+            'workflow_stage_id' => $stage->id,
+            'status' => 'approved',
+            'started_at' => now()->subHours(4),
+            'completed_at' => now()->subHour(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.retirement-turnaround', [
+                'date_to' => now()->addDay()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $stages = $response->viewData('stages');
+        $this->assertNotEmpty($stages);
+        $this->assertEquals('Finance Retirement Review', $stages->first()['stage_name']);
+        $this->assertArrayHasKey('avg_hours', $stages->first());
+    }
+
+    public function test_retirement_turnaround_excludes_payment_request_workflow_stages(): void
+    {
+        $template = \App\Models\Tenant\WorkflowTemplate::factory()->create(['type' => 'advance']);
+        $stage = \App\Models\Tenant\WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'name' => 'Payment Approval',
+        ]);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'in_workflow',
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $instance = \App\Models\Tenant\WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $paymentRequest->id,
+            'status' => 'in_progress',
+        ]);
+
+        \App\Models\Tenant\WorkflowInstanceStage::create([
+            'workflow_instance_id' => $instance->id,
+            'workflow_stage_id' => $stage->id,
+            'status' => 'approved',
+            'started_at' => now()->subHours(2),
+            'completed_at' => now()->subHour(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.retirement-turnaround', [
+                'date_to' => now()->addDay()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $stages = $response->viewData('stages');
+        $this->assertEmpty($stages);
+    }
+
+    public function test_retirement_reminders_branch_filter_excludes_other_branches(): void
+    {
+        $otherBranch = \App\Models\Tenant\Branch::factory()->create();
+
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now()->subDays(15),
+            'branch_id' => $otherBranch->id,
+        ]);
+
+        RetirementReminderLog::create([
+            'payment_request_id' => $advance->id,
+            'user_id' => $this->user->id,
+            'notified_date' => now()->toDateString(),
+        ]);
+
+        // User's allowed branch scope only includes $this->branch
+        $response = $this->actingAs($this->user)
+            ->get(route('reports.retirement-reminders', [
+                'date_from' => now()->subMonth()->toDateString(),
+                'date_to' => now()->addDay()->toDateString(),
+            ]))
+            ->assertOk();
+
+        $rows = $response->viewData('rows');
+        $this->assertCount(0, $rows);
     }
 }

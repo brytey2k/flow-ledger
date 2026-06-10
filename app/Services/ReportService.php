@@ -10,14 +10,22 @@ use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\WorkflowAction;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\BranchRepository;
-use App\Repositories\ReportRepository;
+use App\Repositories\CashbookRepository;
+use App\Repositories\PaymentRequestRepository;
+use App\Repositories\RetirementRequestRepository;
+use App\Repositories\WorkflowActionRepository;
+use App\Repositories\WorkflowInstanceRepository;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 class ReportService
 {
     public function __construct(
-        private readonly ReportRepository $reports,
+        private readonly PaymentRequestRepository $paymentRequests,
+        private readonly RetirementRequestRepository $retirementRequests,
+        private readonly CashbookRepository $cashbooks,
+        private readonly WorkflowInstanceRepository $workflowInstances,
+        private readonly WorkflowActionRepository $workflowActions,
         private readonly BranchRepository $branches,
     ) {}
 
@@ -37,7 +45,7 @@ class ReportService
         string $groupBy,
         string|null $type,
     ): array {
-        $rows = $this->reports->expenditureSummaryRows($allowedBranchIds, $dateFrom, $dateTo, $type, $groupBy);
+        $rows = $this->paymentRequests->expenditureSummaryRows($allowedBranchIds, $dateFrom, $dateTo, $type, $groupBy);
 
         return [
             'rows' => $rows,
@@ -57,7 +65,7 @@ class ReportService
      */
     public function outstandingAdvances(array $allowedBranchIds, int|string|null $branchId): array
     {
-        $advances = $this->reports->outstandingAdvances($allowedBranchIds, $branchId)->map(function (PaymentRequest $request): array {
+        $advances = $this->paymentRequests->outstandingAdvances($allowedBranchIds, $branchId)->map(function (PaymentRequest $request): array {
             $days = $request->disbursed_at ? (int) $request->disbursed_at->diffInDays(now()) : 0;
             $bucket = match (true) {
                 $days <= 30 => '0–30 days',
@@ -89,7 +97,7 @@ class ReportService
      */
     public function cashPosition(array $allowedBranchIds, string $dateFrom, string $dateTo): array
     {
-        $cashbooks = $this->reports->cashbooksForPosition($allowedBranchIds, $dateFrom, $dateTo)->map(function (Cashbook $book): array {
+        $cashbooks = $this->cashbooks->cashbooksForPosition($allowedBranchIds, $dateFrom, $dateTo)->map(function (Cashbook $book): array {
             $entries = $book->entries;
 
             return [
@@ -125,7 +133,7 @@ class ReportService
         string|null $method,
     ): array {
         return [
-            'disbursements' => $this->reports->disbursementRegister($allowedBranchIds, $dateFrom, $dateTo, $branchId, $method),
+            'disbursements' => $this->paymentRequests->disbursementRegister($allowedBranchIds, $dateFrom, $dateTo, $branchId, $method),
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
@@ -143,7 +151,7 @@ class ReportService
      */
     public function approvalTurnaround(string $dateFrom, string $dateTo): array
     {
-        $groupedStages = $this->reports->approvalTurnaroundStages($dateFrom, $dateTo)
+        $groupedStages = $this->workflowInstances->approvalTurnaroundStages($dateFrom, $dateTo)
             ->groupBy('workflow_stage_id');
 
         /** @var Collection<int, Collection<int, WorkflowInstanceStage>> $groupedStages */
@@ -187,7 +195,7 @@ class ReportService
      */
     public function pendingRequestsAging(array $allowedBranchIds): array
     {
-        $activeStages = $this->reports->activeRequestStages()
+        $activeStages = $this->workflowInstances->activeRequestStages()
             ->filter(fn(WorkflowInstanceStage $stage) => in_array(
                 $stage->instance?->workflowable?->getAttribute('branch_id'),
                 $allowedBranchIds,
@@ -224,9 +232,9 @@ class ReportService
     public function sendBackRate(string $dateFrom, string $dateTo): array
     {
         /** @var EloquentCollection<int, WorkflowAction> $totalByUser */
-        $totalByUser = $this->reports->workflowActionTotals($dateFrom, $dateTo);
+        $totalByUser = $this->workflowActions->workflowActionTotals($dateFrom, $dateTo);
         /** @var EloquentCollection<int, WorkflowAction> $sentBackByUser */
-        $sentBackByUser = $this->reports->workflowActionSentBackTotals($dateFrom, $dateTo);
+        $sentBackByUser = $this->workflowActions->workflowActionSentBackTotals($dateFrom, $dateTo);
 
         $rows = $totalByUser->map(function (WorkflowAction $row) use ($sentBackByUser): array {
             $totalActionsRaw = $row->getAttribute('total_actions');
@@ -260,7 +268,7 @@ class ReportService
     public function auditTrail(string $dateFrom, string $dateTo, string|null $action): array
     {
         return [
-            'actions' => $this->reports->auditTrail($dateFrom, $dateTo, $action),
+            'actions' => $this->workflowActions->auditTrail($dateFrom, $dateTo, $action),
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'action' => $action,
@@ -270,19 +278,127 @@ class ReportService
 
     /**
      * @param array<int, int> $allowedBranchIds
+     * @param string $dateFrom
+     * @param string $dateTo
      *
      * @return array<string, mixed>
      */
-    public function requestsByStatus(array $allowedBranchIds): array
+    public function requestsByStatus(array $allowedBranchIds, string $dateFrom, string $dateTo): array
     {
-        $paymentStatuses = $this->reports->paymentStatuses($allowedBranchIds);
-        $retirementStatuses = $this->reports->retirementStatuses($allowedBranchIds);
+        $paymentStatuses = $this->paymentRequests->paymentStatuses($allowedBranchIds, $dateFrom, $dateTo);
+        $retirementStatuses = $this->retirementRequests->retirementStatuses($allowedBranchIds, $dateFrom, $dateTo);
 
         return [
             'paymentStatuses' => $paymentStatuses,
             'retirementStatuses' => $retirementStatuses,
             'paymentTotal' => $paymentStatuses->sum('count'),
             'retirementTotal' => $retirementStatuses->sum('count'),
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+        ];
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @param int|string|null $branchId
+     *
+     * @return array<string, mixed>
+     */
+    public function retirementVariance(
+        array $allowedBranchIds,
+        string $dateFrom,
+        string $dateTo,
+        int|string|null $branchId,
+    ): array {
+        $rows = $this->retirementRequests->varianceRows($allowedBranchIds, $dateFrom, $dateTo, $branchId);
+
+        return [
+            'rows' => $rows,
+            'totalDisbursed' => $rows->sum('disbursed_amount'),
+            'totalExpended' => $rows->sum('total_amount_expended'),
+            'totalDifference' => $rows->sum('difference_amount'),
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
+            'branchId' => $branchId,
+        ];
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @param int|string|null $branchId
+     * @param string|null $type
+     *
+     * @return array<string, mixed>
+     */
+    public function deniedCancelledAnalysis(
+        array $allowedBranchIds,
+        string $dateFrom,
+        string $dateTo,
+        int|string|null $branchId,
+        string|null $type,
+    ): array {
+        $rows = $this->paymentRequests->deniedCancelledRows($allowedBranchIds, $dateFrom, $dateTo, $branchId, $type);
+
+        return [
+            'rows' => $rows,
+            'byBranch' => $rows->groupBy('branch_name'),
+            'deniedCount' => (int) $rows->where('status', 'denied')->sum('count'),
+            'cancelledCount' => (int) $rows->where('status', 'cancelled')->sum('count'),
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
+            'branchId' => $branchId,
+            'type' => $type,
+        ];
+    }
+
+    /**
+     * @param string $dateFrom
+     * @param string $dateTo
+     *
+     * @return array<string, mixed>
+     */
+    public function retirementTurnaround(string $dateFrom, string $dateTo): array
+    {
+        $groupedStages = $this->workflowInstances->retirementTurnaroundStages($dateFrom, $dateTo)
+            ->groupBy('workflow_stage_id');
+
+        /** @var Collection<int, Collection<int, WorkflowInstanceStage>> $groupedStages */
+        $groupedStages = $groupedStages;
+
+        $stages = $groupedStages->map(function (Collection $group): array {
+            $hours = $group->map(fn(WorkflowInstanceStage $stage) => $stage->started_at->diffInMinutes($stage->completed_at) / 60);
+            $approved = $group->where('status', 'approved')->count();
+            $sentBack = $group->where('status', 'sent_back')->count();
+            $firstStage = $group->first();
+            $stageName = 'Unknown';
+
+            if ($firstStage !== null && $firstStage->stage !== null) {
+                $stageName = $firstStage->stage->name;
+            }
+
+            return [
+                'stage_name' => $stageName,
+                'count' => $group->count(),
+                'approved' => $approved,
+                'sent_back' => $sentBack,
+                'avg_hours' => (float) round($hours->avg() ?? 0, 1),
+                'min_hours' => (float) round($hours->min() ?? 0, 1),
+                'max_hours' => (float) round($hours->max() ?? 0, 1),
+            ];
+        })
+            ->sortByDesc('avg_hours')
+            ->values();
+
+        return [
+            'stages' => $stages,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
         ];
     }
 
@@ -302,7 +418,7 @@ class ReportService
         string $dateTo,
         string|null $type,
     ): array {
-        $requests = $this->reports->workflowSlaRequests($allowedBranchIds, $dateFrom, $dateTo, $type)->map(function (PaymentRequest $request) use ($slaDays): array {
+        $requests = $this->paymentRequests->workflowSlaRequests($allowedBranchIds, $dateFrom, $dateTo, $type)->map(function (PaymentRequest $request) use ($slaDays): array {
             $days = $request->submitted_at && $request->approved_at
                 ? $request->submitted_at->diffInDays($request->approved_at)
                 : 0;
@@ -341,8 +457,8 @@ class ReportService
      */
     public function spendTrend(array $allowedBranchIds, int $year, string|null $type): array
     {
-        $rows = $this->reports->spendTrendRows($allowedBranchIds, $year, $type);
-        $years = $this->reports->spendTrendYears($allowedBranchIds);
+        $rows = $this->paymentRequests->spendTrendRows($allowedBranchIds, $year, $type);
+        $years = $this->paymentRequests->spendTrendYears($allowedBranchIds);
 
         if ($years->isEmpty()) {
             $years = collect([now()->year]);
@@ -373,7 +489,7 @@ class ReportService
         string|null $type,
     ): array {
         return [
-            'rows' => $this->reports->topSpendersRows($allowedBranchIds, $dateFrom, $dateTo, $groupBy, $type),
+            'rows' => $this->paymentRequests->topSpendersRows($allowedBranchIds, $dateFrom, $dateTo, $groupBy, $type),
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'groupBy' => $groupBy,
