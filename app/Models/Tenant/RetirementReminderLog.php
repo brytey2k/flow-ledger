@@ -18,11 +18,13 @@ class RetirementReminderLog extends Model
         ];
     }
 
+    /** @return BelongsTo<PaymentRequest, $this> */
     public function paymentRequest(): BelongsTo
     {
         return $this->belongsTo(PaymentRequest::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

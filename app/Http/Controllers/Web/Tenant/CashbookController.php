@@ -50,6 +50,7 @@ class CashbookController extends Controller
             ['currency_id' => $branch->currency_id, 'balance' => 0],
         );
 
+        /** @var array{type?: string, date_from?: string, date_to?: string, description?: string, amount_min?: string, amount_max?: string} $filters */
         $filters = $request->only(['type', 'date_from', 'date_to', 'description', 'amount_min', 'amount_max']);
         $entries = $this->repository->paginatedEntriesForCashbook($cashbook, $filters);
 
@@ -99,6 +100,7 @@ class CashbookController extends Controller
             ['currency_id' => $branch->currency_id, 'balance' => 0],
         );
 
+        /** @var array{type?: string, date_from?: string, date_to?: string, description?: string, amount_min?: string, amount_max?: string} $filters */
         $filters = $request->only(['type', 'date_from', 'date_to', 'description', 'amount_min', 'amount_max']);
         $entries = $this->repository->entriesForCashbook($cashbook, $filters);
         $symbol = $cashbook->currency->symbol;
@@ -106,6 +108,7 @@ class CashbookController extends Controller
 
         return response()->streamDownload(function () use ($entries, $symbol): void {
             $handle = fopen('php://output', 'w');
+            assert($handle !== false);
             fputcsv($handle, ['Date', 'Description', 'Reference', 'Type', 'Amount (' . $symbol . ')', 'Notes']);
             foreach ($entries as $entry) {
                 fputcsv($handle, [

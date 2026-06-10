@@ -22,7 +22,9 @@ class SettingsController extends Controller
 
     public function index(): View
     {
-        $logoUrl = $this->settingsService->getLogoUrl();
+        $lightLogoUrl = $this->settingsService->getLightLogoUrl();
+        $darkLogoUrl = $this->settingsService->getDarkLogoUrl();
+        $smallLogoUrl = $this->settingsService->getSmallLogoUrl();
         $costCodes = $this->costCodeRepository->allWithDepartment();
         $defaultAdvanceCostCodeId = $this->settingsService->getDefaultAdvanceCostCodeId();
         $requireExpenseSourceDocuments = $this->settingsService->isExpenseSourceDocumentRequired();
@@ -30,31 +32,43 @@ class SettingsController extends Controller
         $retirementReminderSettings = $this->settingsService->getRetirementReminderSettings();
         $roles = $this->roleRepository->allOrderedByName();
 
-        return view('tenant.settings.index', compact('logoUrl', 'costCodes', 'defaultAdvanceCostCodeId', 'requireExpenseSourceDocuments', 'requireRetirementSourceDocuments', 'retirementReminderSettings', 'roles'));
+        return view('tenant.settings.index', compact('lightLogoUrl', 'darkLogoUrl', 'smallLogoUrl', 'costCodes', 'defaultAdvanceCostCodeId', 'requireExpenseSourceDocuments', 'requireRetirementSourceDocuments', 'retirementReminderSettings', 'roles'));
     }
 
     public function update(SettingsUpdateRequest $request): RedirectResponse
     {
-        if ($request->boolean('remove_logo')) {
-            $this->settingsService->removeLogo();
-        } elseif ($request->hasFile('logo')) {
-            $this->settingsService->storeLogo($request->file('logo'));
+        if ($request->boolean('remove_logo_light')) {
+            $this->settingsService->removeLightLogo();
+        } elseif ($request->hasFile('logo_light')) {
+            $this->settingsService->storeLightLogo($request->file('logo_light'));
+        }
+
+        if ($request->boolean('remove_logo_dark')) {
+            $this->settingsService->removeDarkLogo();
+        } elseif ($request->hasFile('logo_dark')) {
+            $this->settingsService->storeDarkLogo($request->file('logo_dark'));
+        }
+
+        if ($request->boolean('remove_logo_small')) {
+            $this->settingsService->removeSmallLogo();
+        } elseif ($request->hasFile('logo_small')) {
+            $this->settingsService->storeSmallLogo($request->file('logo_small'));
         }
 
         if ($request->has('default_advance_cost_code_id')) {
-            $costCodeId = $request->input('default_advance_cost_code_id');
-            $this->settingsService->setDefaultAdvanceCostCode($costCodeId ? (int) $costCodeId : null);
+            $rawCostCodeId = $request->integer('default_advance_cost_code_id');
+            $this->settingsService->setDefaultAdvanceCostCode($rawCostCodeId ?: null);
         }
 
         $this->settingsService->setRequireExpenseSourceDocuments($request->boolean('require_expense_source_documents'));
         $this->settingsService->setRequireRetirementSourceDocuments($request->boolean('require_retirement_source_documents'));
 
         $this->settingsService->setRetirementReminderSettings([
-            'grace_period_days' => (int) $request->input('retirement_reminder_grace_period_days', 7),
-            'frequency_days' => (int) $request->input('retirement_reminder_frequency_days', 7),
+            'grace_period_days' => $request->integer('retirement_reminder_grace_period_days', 7),
+            'frequency_days' => $request->integer('retirement_reminder_frequency_days', 7),
             'notify_submitter' => $request->boolean('retirement_reminder_notify_submitter'),
             'notify_approvers' => $request->boolean('retirement_reminder_notify_approvers'),
-            'notify_role_ids' => array_map('intval', $request->input('retirement_reminder_notify_role_ids', [])),
+            'notify_role_ids' => array_values(array_map(static fn(mixed $v): int => is_scalar($v) ? (int) $v : 0, (array) $request->input('retirement_reminder_notify_role_ids', []))),
         ]);
 
         return redirect()->route('settings.index')->with('success', __('flash.settings.updated'));

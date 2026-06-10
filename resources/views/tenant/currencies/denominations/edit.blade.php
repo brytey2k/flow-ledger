@@ -52,6 +52,22 @@
                     </div>
 
                     <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-foreground" for="type">
+                            {{ __('cash_count.denominations.labels.type') }} <span class="text-danger">*</span>
+                        </label>
+                        <select id="type" name="type" class="kt-select @error('type') border-danger @enderror">
+                            @foreach(\App\Enums\Tenant\CurrencyDenominationType::cases() as $denominationType)
+                                <option value="{{ $denominationType->value }}" {{ old('type', $denomination->type->value) === $denominationType->value ? 'selected' : '' }}>
+                                    {{ __('cash_count.denominations.types.' . $denominationType->value) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('type')
+                            <p class="text-sm text-danger">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
                         <label class="text-sm font-medium text-foreground" for="sort_order">
                             {{ __('cash_count.denominations.labels.sort_order') }}
                         </label>

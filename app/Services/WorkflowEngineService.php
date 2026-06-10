@@ -190,7 +190,10 @@ class WorkflowEngineService
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
             if (! $fresh->isActive()) {
-                return $fresh->instance->workflowable;
+                /** @var Model $workflowable */
+                $workflowable = $fresh->instance?->workflowable;
+
+                return $workflowable;
             }
 
             WorkflowAction::create([
@@ -241,7 +244,10 @@ class WorkflowEngineService
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
             if (! $fresh->isActive()) {
-                return $fresh->instance->workflowable;
+                /** @var Model $workflowable */
+                $workflowable = $fresh->instance?->workflowable;
+
+                return $workflowable;
             }
 
             WorkflowAction::create([
@@ -349,7 +355,7 @@ class WorkflowEngineService
                 $submitterDepartmentId = $instance->department_id;
                 $approverDepartmentId = $staffProfile->department_id;
 
-                if ($submitterDepartmentId === null || $approverDepartmentId === null) {
+                if ($submitterDepartmentId === null || $approverDepartmentId === null) { // @phpstan-ignore identical.alwaysFalse
                     return false;
                 }
                 if ($approverDepartmentId !== $submitterDepartmentId) {

@@ -17,7 +17,8 @@ class CurrencyDenominationService
             'currency_id' => $dto->currencyId,
             'value' => $dto->value,
             'label' => $dto->label,
-            'sort_order' => $dto->sortOrder,
+            'type' => $dto->type,
+            'sort_order' => (int) round((float) $dto->value),
         ]);
 
         $currency = Currency::findOrFail($dto->currencyId);
@@ -37,6 +38,7 @@ class CurrencyDenominationService
         $denomination->update([
             'value' => $dto->value,
             'label' => $dto->label,
+            'type' => $dto->type,
             'sort_order' => $dto->sortOrder,
         ]);
 

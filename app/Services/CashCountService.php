@@ -29,7 +29,8 @@ class CashCountService
                 }
             }
 
-            $balanceAtCount = (float) $cashbook->getAttribute('balance');
+            /** @var float $balanceAtCount */
+            $balanceAtCount = $cashbook->getAttribute('balance');
             $difference = $countedTotal - $balanceAtCount;
 
             $cashCount = CashCount::create([

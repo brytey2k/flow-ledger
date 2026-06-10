@@ -127,28 +127,43 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach($cashCount->items->sortBy('denomination_value') as $item)
-                                <tr class="{{ $item->quantity === 0 ? 'opacity-40' : '' }}">
-                                    <td>
-                                        <span class="text-sm font-medium text-mono">{{ $item->denomination_label }}</span>
-                                    </td>
-                                    <td class="text-right">
-                                        <span class="text-sm text-foreground">
-                                            {{ $cashbook->currency->symbol }} {{ number_format((float) $item->denomination_value, 2) }}
-                                        </span>
-                                    </td>
-                                    <td class="text-right">
-                                        <span class="text-sm font-medium text-foreground">{{ $item->quantity }}</span>
-                                    </td>
-                                    <td class="text-right">
-                                        <span class="text-sm font-medium {{ $item->quantity > 0 ? 'text-mono' : 'text-secondary-foreground' }}">
-                                            {{ $cashbook->currency->symbol }} {{ number_format((float) $item->subtotal, 2) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
+                        @php
+                            $itemsByType = $cashCount->items->sortBy('denomination_value')->groupBy(fn($item) => $item->denomination->type->value ?? 'note');
+                            $typeLabels = ['note' => __('cash_count.denominations.types.note'), 'coin' => __('cash_count.denominations.types.coin')];
+                        @endphp
+                        @foreach(['note', 'coin'] as $type)
+                            @if($itemsByType->has($type))
+                                <tbody>
+                                    <tr>
+                                        <td colspan="4" class="bg-muted px-4 py-2">
+                                            <span class="text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
+                                                {{ $typeLabels[$type] }}s
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @foreach($itemsByType[$type] as $item)
+                                        <tr class="{{ $item->quantity === 0 ? 'opacity-40' : '' }}">
+                                            <td>
+                                                <span class="text-sm font-medium text-mono">{{ $item->denomination_label }}</span>
+                                            </td>
+                                            <td class="text-right">
+                                                <span class="text-sm text-foreground">
+                                                    {{ $cashbook->currency->symbol }} {{ number_format((float) $item->denomination_value, 2) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-right">
+                                                <span class="text-sm font-medium text-foreground">{{ $item->quantity }}</span>
+                                            </td>
+                                            <td class="text-right">
+                                                <span class="text-sm font-medium {{ $item->quantity > 0 ? 'text-mono' : 'text-secondary-foreground' }}">
+                                                    {{ $cashbook->currency->symbol }} {{ number_format((float) $item->subtotal, 2) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            @endif
+                        @endforeach
                         <tfoot>
                             <tr class="border-t-2 border-border">
                                 <td colspan="3" class="text-right">

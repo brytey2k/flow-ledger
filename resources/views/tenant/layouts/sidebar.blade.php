@@ -5,22 +5,35 @@
     data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
     <div class="kt-sidebar-header relative hidden shrink-0 items-center justify-between px-3 lg:flex lg:px-6"
          id="sidebar_header">
-        @php $customLogoUrl = app(\App\Services\SettingsService::class)->getLogoUrl(); @endphp
+        @php
+            $service = app(\App\Services\SettingsService::class);
+            $lightLogoUrl = $service->getLightLogoUrl();
+            $darkLogoUrl = $service->getDarkLogoUrl();
+            $smallLogoUrl = $service->getSmallLogoUrl();
+        @endphp
         <a class="dark:hidden" href="{{ route('dashboard') }}">
-            @if($customLogoUrl)
-                <img class="default-logo max-h-[22px] max-w-[136px] object-contain" src="{{ $customLogoUrl }}" alt="Logo"/>
+            @if($lightLogoUrl)
+                <img class="default-logo" src="{{ $lightLogoUrl }}" alt="Logo"/>
             @else
-                <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}"/>
+                <img class="default-logo" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}"/>
             @endif
-            <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_icon_light.png') }}"/>
+            @if($smallLogoUrl)
+                <img class="small-logo" src="{{ $smallLogoUrl }}" alt="Logo"/>
+            @else
+                <img class="small-logo" src="{{ asset('assets/media/app/flowledger_icon_light.png') }}"/>
+            @endif
         </a>
         <a class="hidden dark:block" href="{{ route('dashboard') }}">
-            @if($customLogoUrl)
-                <img class="default-logo max-h-[22px] max-w-[136px] object-contain" src="{{ $customLogoUrl }}" alt="Logo"/>
+            @if($darkLogoUrl)
+                <img class="default-logo" src="{{ $darkLogoUrl }}" alt="Logo"/>
             @else
-                <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}"/>
+                <img class="default-logo" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}"/>
             @endif
-            <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_icon_dark.png') }}"/>
+            @if($smallLogoUrl)
+                <img class="small-logo" src="{{ $smallLogoUrl }}" alt="Logo"/>
+            @else
+                <img class="small-logo" src="{{ asset('assets/media/app/flowledger_icon_dark.png') }}"/>
+            @endif
         </a>
         <button
             class="kt-btn kt-btn-outline kt-btn-icon absolute start-full top-2/4 size-[30px] -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"

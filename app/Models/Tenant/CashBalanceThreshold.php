@@ -63,8 +63,12 @@ class CashBalanceThreshold extends Model
         return $this->hasMany(CashBalanceNotificationLog::class);
     }
 
-    /** @param \Illuminate\Database\Eloquent\Builder<static> $query */
-    public function scopeActive($query)
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeActive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('is_active', true);
     }

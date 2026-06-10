@@ -1,4 +1,8 @@
 import TomSelect from 'tom-select';
+import Alpine from 'alpinejs';
+
+window.Alpine = Alpine;
+Alpine.start();
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-tom-select]').forEach((el) => {

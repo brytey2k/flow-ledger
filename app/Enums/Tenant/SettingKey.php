@@ -6,7 +6,9 @@ namespace App\Enums\Tenant;
 
 enum SettingKey: string
 {
-    case Logo = 'logo';
+    case LogoLight = 'logo';
+    case LogoDark = 'logo_dark';
+    case LogoSmall = 'logo_small';
     case DefaultAdvanceCostCode = 'default_advance_cost_code';
     case RequireExpenseSourceDocuments = 'require_expense_source_documents';
     case RequireRetirementSourceDocuments = 'require_retirement_source_documents';

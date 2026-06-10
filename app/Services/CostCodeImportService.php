@@ -20,6 +20,9 @@ use ZipArchive;
 
 class CostCodeImportService
 {
+    /**
+     * @param Collection<int, Department> $departments
+     */
     public function downloadTemplate(Collection $departments): StreamedResponse
     {
         $bytes = $this->buildTemplateBytes($departments);
@@ -171,6 +174,7 @@ class CostCodeImportService
                 ->all();
 
             if ($existingCodes !== []) {
+                /** @var array<int, string> $existingCodes */
                 $existingLookup = array_fill_keys($existingCodes, true);
 
                 foreach ($records as $rowNumber => $record) {
@@ -219,6 +223,7 @@ class CostCodeImportService
         }
 
         try {
+            /** @var array<int, string> $departmentNames */
             $departmentNames = $departments->pluck('name')->all();
 
             $zip->addFromString('[Content_Types].xml', $this->contentTypesXml());
@@ -364,7 +369,7 @@ XML;
     }
 
     /**
-     * @param array $headers
+     * @param array<int, string> $headers
      * @param array<int, array<int, string>> $rows
      * @param string|null|null $dataValidationFormula
      * @param string|null|null $dataValidationRange
@@ -381,7 +386,7 @@ XML;
                     '<c r="%s%d" t="inlineStr"><is><t>%s</t></is></c>',
                     $this->columnName($columnIndex + 1),
                     $rowIndex + 1,
-                    $this->xmlEscape($value),
+                    $this->xmlEscape(strval($value)),
                 );
             }
 
@@ -462,12 +467,20 @@ XML,
 
         $strings = [];
 
-        foreach ($xpath->query('/a:sst/a:si') as $node) {
-            $text = '';
-            foreach ($xpath->query('.//a:t', $node) as $textNode) {
-                $text .= $textNode->textContent;
+        $siNodes = $xpath->query('/a:sst/a:si');
+        if ($siNodes !== false) {
+            foreach ($siNodes as $node) {
+                /** @var \DOMNode $node */
+                $text = '';
+                $tNodes = $xpath->query('.//a:t', $node);
+                if ($tNodes !== false) {
+                    foreach ($tNodes as $textNode) {
+                        /** @var \DOMNode $textNode */
+                        $text .= $textNode->textContent;
+                    }
+                }
+                $strings[] = $text;
             }
-            $strings[] = $text;
         }
 
         return $strings;
@@ -482,7 +495,8 @@ XML,
         $workbookXPath = new DOMXPath($workbook);
         $workbookXPath->registerNamespace('a', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
 
-        $sheet = $workbookXPath->query('/a:workbook/a:sheets/a:sheet')->item(0);
+        $sheetResult = $workbookXPath->query('/a:workbook/a:sheets/a:sheet');
+        $sheet = $sheetResult !== false ? $sheetResult->item(0) : null;
 
         if ($sheet === null) {
             throw ValidationException::withMessages([
@@ -502,7 +516,8 @@ XML,
         $relsXPath = new DOMXPath($rels);
         $relsXPath->registerNamespace('r', 'http://schemas.openxmlformats.org/package/2006/relationships');
 
-        $relationship = $relsXPath->query(sprintf('/r:Relationships/r:Relationship[@Id="%s"]', $relationshipId))->item(0);
+        $relResult = $relsXPath->query(sprintf('/r:Relationships/r:Relationship[@Id="%s"]', $relationshipId));
+        $relationship = $relResult !== false ? $relResult->item(0) : null;
 
         if ($relationship === null) {
             throw ValidationException::withMessages([
@@ -524,7 +539,7 @@ XML,
     /**
      * @param ZipArchive $zip
      * @param string $worksheetPath
-     * @param array $sharedStrings
+     * @param array<int, string> $sharedStrings
      *
      * @return array<int, array<int, string|null>>
      */
@@ -537,11 +552,23 @@ XML,
 
         $rows = [];
 
-        foreach ($xpath->query('/a:worksheet/a:sheetData/a:row') as $rowNode) {
+        $rowNodes = $xpath->query('/a:worksheet/a:sheetData/a:row');
+        if ($rowNodes === false) {
+            return [];
+        }
+
+        foreach ($rowNodes as $rowNode) {
+            /** @var \DOMElement $rowNode */
             $row = [];
 
-            foreach ($xpath->query('a:c', $rowNode) as $cellNode) {
-                $reference = $cellNode->attributes?->getNamedItem('r')?->nodeValue ?? '';
+            $cellNodes = $xpath->query('a:c', $rowNode);
+            if ($cellNodes === false) {
+                continue;
+            }
+
+            foreach ($cellNodes as $cellNode) {
+                /** @var \DOMElement $cellNode */
+                $reference = $cellNode->attributes->getNamedItem('r')?->nodeValue ?? ''; // @phpstan-ignore nullsafe.neverNull
                 $columnIndex = $this->columnIndexFromReference($reference);
 
                 if ($columnIndex === 0) {
@@ -565,13 +592,14 @@ XML,
      */
     private function readCellValue(DOMXPath $xpath, \DOMElement $cellNode, array $sharedStrings): string|null
     {
-        $type = $cellNode->attributes?->getNamedItem('t')?->nodeValue ?? '';
+        $type = $cellNode->attributes->getNamedItem('t')?->nodeValue ?? ''; // @phpstan-ignore nullsafe.neverNull
 
         if ($type === 'inlineStr') {
             $textNodes = $xpath->query('a:is/a:t', $cellNode);
-            if ($textNodes->length > 0) {
+            if ($textNodes !== false && $textNodes->length > 0) {
                 $value = '';
                 foreach ($textNodes as $textNode) {
+                    /** @var \DOMNode $textNode */
                     $value .= $textNode->textContent;
                 }
 
@@ -581,12 +609,14 @@ XML,
             return $cellNode->textContent;
         }
 
-        $valueNode = $xpath->query('a:v', $cellNode)->item(0);
+        $vResult = $xpath->query('a:v', $cellNode);
+        $valueNode = $vResult !== false ? $vResult->item(0) : null;
 
         if ($valueNode === null) {
             return $cellNode->textContent !== '' ? $cellNode->textContent : null;
         }
 
+        /** @var \DOMNode $valueNode */
         $value = $valueNode->textContent;
 
         if ($type === 's') {

@@ -54,7 +54,12 @@ return [
         'labels' => [
             'value' => 'Value',
             'label' => 'Label',
+            'type' => 'Type',
             'sort_order' => 'Sort Order',
+        ],
+        'types' => [
+            'note' => 'Note',
+            'coin' => 'Coin',
         ],
     ],
 ];

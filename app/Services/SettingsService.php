@@ -16,47 +16,105 @@ class SettingsService
         private readonly SettingsRepository $repository,
     ) {}
 
-    public function getLogoUrl(): string|null
+    public function getLightLogoUrl(): string|null
     {
-        $setting = $this->repository->get(SettingKey::Logo);
+        return $this->getLogoUrlFor(SettingKey::LogoLight);
+    }
+
+    public function storeLightLogo(UploadedFile $file): void
+    {
+        $this->storeLogoFor(SettingKey::LogoLight, $file);
+    }
+
+    public function removeLightLogo(): void
+    {
+        $this->removeLogoFor(SettingKey::LogoLight);
+    }
+
+    public function getDarkLogoUrl(): string|null
+    {
+        return $this->getLogoUrlFor(SettingKey::LogoDark);
+    }
+
+    public function storeDarkLogo(UploadedFile $file): void
+    {
+        $this->storeLogoFor(SettingKey::LogoDark, $file);
+    }
+
+    public function removeDarkLogo(): void
+    {
+        $this->removeLogoFor(SettingKey::LogoDark);
+    }
+
+    public function getSmallLogoUrl(): string|null
+    {
+        return $this->getLogoUrlFor(SettingKey::LogoSmall);
+    }
+
+    public function storeSmallLogo(UploadedFile $file): void
+    {
+        $this->storeLogoFor(SettingKey::LogoSmall, $file);
+    }
+
+    public function removeSmallLogo(): void
+    {
+        $this->removeLogoFor(SettingKey::LogoSmall);
+    }
+
+    private function getLogoUrlFor(SettingKey $key): string|null
+    {
+        $setting = $this->repository->get($key);
         $path = $setting['path'] ?? null;
 
         if (! $path) {
             return null;
         }
 
-        return Storage::disk('public')->url($path);
+        assert(is_string($path));
+
+        return route('stancl.tenancy.asset', $path);
     }
 
-    public function storeLogo(UploadedFile $file): void
+    private function storeLogoFor(SettingKey $key, UploadedFile $file): void
     {
-        $existing = $this->repository->get(SettingKey::Logo);
+        $existing = $this->repository->get($key);
 
         if (! empty($existing['path'])) {
-            Storage::disk('public')->delete($existing['path']);
+            /** @var string $existingPath */
+            $existingPath = $existing['path'];
+            Storage::disk('public')->delete($existingPath);
         }
 
         $path = $file->store('branding', 'public');
 
-        $this->repository->set(SettingKey::Logo, ['path' => $path]);
+        $this->repository->set($key, ['path' => $path]);
     }
 
-    public function removeLogo(): void
+    private function removeLogoFor(SettingKey $key): void
     {
-        $existing = $this->repository->get(SettingKey::Logo);
+        $existing = $this->repository->get($key);
 
         if (! empty($existing['path'])) {
-            Storage::disk('public')->delete($existing['path']);
+            /** @var string $existingPath */
+            $existingPath = $existing['path'];
+            Storage::disk('public')->delete($existingPath);
         }
 
-        $this->repository->set(SettingKey::Logo, ['path' => null]);
+        $this->repository->set($key, ['path' => null]);
     }
 
     public function getDefaultAdvanceCostCodeId(): int|null
     {
         $setting = $this->repository->get(SettingKey::DefaultAdvanceCostCode);
 
-        return isset($setting['cost_code_id']) ? (int) $setting['cost_code_id'] : null;
+        if (! isset($setting['cost_code_id'])) {
+            return null;
+        }
+
+        /** @var int $costCodeId */
+        $costCodeId = $setting['cost_code_id'];
+
+        return $costCodeId;
     }
 
     public function getDefaultAdvanceCostCode(): CostCode|null
@@ -103,11 +161,11 @@ class SettingsService
         $setting = $this->repository->get(SettingKey::RetirementReminders) ?? [];
 
         return [
-            'grace_period_days' => isset($setting['grace_period_days']) ? (int) $setting['grace_period_days'] : 7,
-            'frequency_days' => isset($setting['frequency_days']) ? (int) $setting['frequency_days'] : 7,
+            'grace_period_days' => isset($setting['grace_period_days']) && is_scalar($setting['grace_period_days']) ? (int) $setting['grace_period_days'] : 7,
+            'frequency_days' => isset($setting['frequency_days']) && is_scalar($setting['frequency_days']) ? (int) $setting['frequency_days'] : 7,
             'notify_submitter' => (bool) ($setting['notify_submitter'] ?? true),
             'notify_approvers' => (bool) ($setting['notify_approvers'] ?? true),
-            'notify_role_ids' => isset($setting['notify_role_ids']) ? array_map('intval', (array) $setting['notify_role_ids']) : [],
+            'notify_role_ids' => array_values(array_map(static fn(mixed $v): int => is_scalar($v) ? (int) $v : 0, (array) ($setting['notify_role_ids'] ?? []))),
         ];
     }
 

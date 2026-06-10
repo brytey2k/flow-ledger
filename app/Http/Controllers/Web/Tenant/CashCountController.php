@@ -47,9 +47,7 @@ class CashCountController extends Controller
         $cashbook = $this->getCashbook($branch);
         $currency = $cashbook->currency;
 
-        $denominations = $currency
-            ? $this->denominationRepository->allForCurrency($currency)
-            : collect();
+        $denominations = $this->denominationRepository->allForCurrency($currency);
 
         if ($denominations->isEmpty()) {
             return redirect()

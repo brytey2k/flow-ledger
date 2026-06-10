@@ -1,5 +1,12 @@
 @import 'tom-select/dist/css/tom-select.default.min.css';
 
+.text-success { color: var(--color-green-500); }
+.text-warning { color: var(--color-yellow-500); }
+.text-danger { color: var(--destructive); }
+
+.default-logo { max-height: 44px; max-width: 272px; width: auto; height: auto; object-fit: contain; }
+.small-logo   { max-height: 44px; max-width: 44px;  width: auto; height: auto; object-fit: contain; }
+
 /* Tom Select — styled to match KT UI inputs */
 .ts-wrapper {
     width: 100%;

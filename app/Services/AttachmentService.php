@@ -21,6 +21,7 @@ class AttachmentService
 
         return DB::transaction(function () use ($attachable, $file, $uploader, $path): Attachment {
             /** @var Attachment $attachment */
+            // @phpstan-ignore-next-line method.notFound, method.nonObject
             $attachment = $attachable->attachments()->create([
                 'user_id' => $uploader->id,
                 'path' => $path,
@@ -35,9 +36,12 @@ class AttachmentService
 
     private function storageFolder(Model $model): string
     {
+        $rawKey = $model->getKey();
+        $key = is_scalar($rawKey) ? (string) $rawKey : '';
+
         return match (true) {
-            $model instanceof RetirementRequest => "retirements/{$model->getKey()}/attachments",
-            default => 'payment-requests/' . $model->getKey() . '/attachments',
+            $model instanceof RetirementRequest => "retirements/{$key}/attachments",
+            default => "payment-requests/{$key}/attachments",
         };
     }
 

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Requests\Tenant;
 
 use App\DTOs\Tenant\CurrencyDenominationDto;
+use App\Enums\Tenant\CurrencyDenominationType;
 use App\Models\Tenant\Currency;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
 
 class CurrencyDenominationStoreRequest extends FormRequest
 {
@@ -22,16 +24,20 @@ class CurrencyDenominationStoreRequest extends FormRequest
         /** @var Currency $currency */
         $currency = $this->route('currency');
 
+        $type = (string) $this->string('type') ?: CurrencyDenominationType::Note->value;
+
         return [
             'value' => [
                 'required',
                 'numeric',
                 'min:0.001',
                 'max:999999.9999',
-                Rule::unique('currency_denominations')->where('currency_id', $currency->id),
+                Rule::unique('currency_denominations')
+                    ->where('currency_id', $currency->id)
+                    ->where('type', $type),
             ],
             'label' => ['required', 'string', 'max:100'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'type' => ['required', new Enum(CurrencyDenominationType::class)],
         ];
     }
 
@@ -42,9 +48,9 @@ class CurrencyDenominationStoreRequest extends FormRequest
 
         return new CurrencyDenominationDto(
             currencyId: $currency->id,
-            value: (string) $this->input('value'),
-            label: (string) $this->input('label'),
-            sortOrder: (int) ($this->input('sort_order') ?? 0),
+            value: (string) $this->string('value'),
+            label: (string) $this->string('label'),
+            type: CurrencyDenominationType::from((string) $this->string('type')),
         );
     }
 }

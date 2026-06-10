@@ -43,7 +43,9 @@ class RetirementReminderService
         $sent = 0;
 
         foreach ($overdueAdvances as $paymentRequest) {
-            $disbursedAt = Carbon::parse($paymentRequest->getAttribute('disbursed_at'))->startOfDay();
+            /** @var string $disbursedAtRaw */
+            $disbursedAtRaw = $paymentRequest->getAttribute('disbursed_at');
+            $disbursedAt = Carbon::parse($disbursedAtRaw)->startOfDay();
             $daysLate = (int) abs($today->diffInDays($disbursedAt)) - $gracePeriodDays;
 
             if ($daysLate < 0 || ($frequencyDays > 0 && $daysLate % $frequencyDays !== 0)) {
@@ -99,7 +101,7 @@ class RetirementReminderService
 
         if ($settings['notify_approvers']) {
             $approvers = User::query()
-                ->whereIn('id', function ($query) use ($paymentRequest): void {
+                ->whereIn('id', function (\Illuminate\Database\Query\Builder $query) use ($paymentRequest): void {
                     $query->select('wa.user_id')
                         ->from('workflow_actions as wa')
                         ->join('workflow_instance_stages as wis', 'wis.id', '=', 'wa.workflow_instance_stage_id')

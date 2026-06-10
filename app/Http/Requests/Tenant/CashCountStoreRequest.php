@@ -31,8 +31,9 @@ class CashCountStoreRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v): void {
-            $items = $this->input('items', []);
-            $hasPositive = collect($items)->contains(fn($item) => (int) ($item['quantity'] ?? 0) > 0);
+            /** @var array<int, mixed> $items */
+            $items = (array) $this->input('items', []);
+            $hasPositive = collect($items)->contains(static fn(mixed $item) => is_array($item) && (is_numeric($q = $item['quantity'] ?? 0) ? (int) $q : 0) > 0);
 
             if (! $hasPositive) {
                 $v->errors()->add('items', __('cash_count.validation.at_least_one_quantity'));
@@ -42,8 +43,10 @@ class CashCountStoreRequest extends FormRequest
 
     public function toDto(): CashCountDto
     {
+        /** @var \App\Models\Tenant\Branch $branch */
+        $branch = $this->route('branch');
         /** @var Cashbook $cashbook */
-        $cashbook = $this->route('branch')->cashbook;
+        $cashbook = $branch->cashbook;
 
         /** @var array<int, array{denomination_id: string, quantity: string}> $rawItems */
         $rawItems = $this->input('items', []);
@@ -58,7 +61,7 @@ class CashCountStoreRequest extends FormRequest
 
         return new CashCountDto(
             cashbookId: $cashbook->id,
-            notes: $this->input('notes'),
+            notes: $this->filled('notes') ? (string) $this->string('notes') : null,
             items: $items,
         );
     }

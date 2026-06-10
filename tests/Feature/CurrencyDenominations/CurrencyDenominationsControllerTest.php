@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\CurrencyDenominations;
 
+use App\Enums\Tenant\CurrencyDenominationType;
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\CurrencyDenomination;
@@ -16,12 +17,13 @@ class CurrencyDenominationsControllerTest extends TenantAppTestCase
         return Currency::factory()->create();
     }
 
-    private function denomination(Currency $currency, float $value = 5.0): CurrencyDenomination
+    private function denomination(Currency $currency, float $value = 5.0, CurrencyDenominationType $type = CurrencyDenominationType::Note): CurrencyDenomination
     {
         return CurrencyDenomination::create([
             'currency_id' => $currency->id,
             'value' => $value,
             'label' => 'GHS ' . $value,
+            'type' => $type,
             'sort_order' => 0,
         ]);
     }
@@ -97,7 +99,7 @@ class CurrencyDenominationsControllerTest extends TenantAppTestCase
             ->post(route('currency.denominations.store', $currency), [
                 'value' => '50.00',
                 'label' => 'GHS 50',
-                'sort_order' => 5,
+                'type' => 'note',
             ])
             ->assertRedirect(route('currency.denominations.index', $currency))
             ->assertSessionHas('success');
@@ -151,6 +153,20 @@ class CurrencyDenominationsControllerTest extends TenantAppTestCase
             ->assertSessionHasErrors('value');
     }
 
+    public function test_same_value_different_type_for_same_currency_is_allowed(): void
+    {
+        $currency = $this->currency();
+        $this->denomination($currency, 1.0, CurrencyDenominationType::Note);
+
+        $this->actingAs($this->user)
+            ->post(route('currency.denominations.store', $currency), [
+                'value' => '1.0000',
+                'label' => '1 Coin',
+                'type' => 'coin',
+            ])
+            ->assertRedirect(route('currency.denominations.index', $currency));
+    }
+
     public function test_same_value_for_different_currency_is_allowed(): void
     {
         $currencyA = $this->currency();
@@ -161,6 +177,7 @@ class CurrencyDenominationsControllerTest extends TenantAppTestCase
             ->post(route('currency.denominations.store', $currencyB), [
                 'value' => '20',
                 'label' => 'USD 20',
+                'type' => 'note',
             ])
             ->assertRedirect(route('currency.denominations.index', $currencyB));
     }
@@ -176,6 +193,7 @@ class CurrencyDenominationsControllerTest extends TenantAppTestCase
             ->put(route('currency.denominations.update', [$currency, $denomination]), [
                 'value' => '5.0000',
                 'label' => 'Updated Label',
+                'type' => 'note',
                 'sort_order' => 1,
             ])
             ->assertRedirect(route('currency.denominations.index', $currency))
@@ -196,6 +214,7 @@ class CurrencyDenominationsControllerTest extends TenantAppTestCase
             ->put(route('currency.denominations.update', [$currency, $denomination]), [
                 'value' => '5.0000',
                 'label' => 'Same value, new label',
+                'type' => 'note',
             ])
             ->assertRedirect(route('currency.denominations.index', $currency));
     }

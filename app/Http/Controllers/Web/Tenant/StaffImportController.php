@@ -52,9 +52,9 @@ class StaffImportController extends Controller
             'john@example.com',
             'GH',
             '246227810',
-            $departments->first()?->name ?? '',
-            $positions->first()?->name ?? '',
-            $branches->first()?->name ?? '',
+            $departments->first()->name ?? '',
+            $positions->first()->name ?? '',
+            $branches->first()->name ?? '',
             'Yes',
         ], null, 'A2');
 

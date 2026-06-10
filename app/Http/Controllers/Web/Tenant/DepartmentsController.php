@@ -44,6 +44,7 @@ class DepartmentsController extends Controller
     {
         return Response::streamDownload(function (): void {
             $output = fopen('php://output', 'wb');
+            assert($output !== false);
 
             fputcsv($output, ['name']);
             fputcsv($output, ['Finance']);

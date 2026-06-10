@@ -20,8 +20,12 @@ class SettingsUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'logo' => ['sometimes', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
-            'remove_logo' => ['sometimes', 'boolean'],
+            'logo_light' => ['sometimes', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'remove_logo_light' => ['sometimes', 'boolean'],
+            'logo_dark' => ['sometimes', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'remove_logo_dark' => ['sometimes', 'boolean'],
+            'logo_small' => ['sometimes', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'remove_logo_small' => ['sometimes', 'boolean'],
             'default_advance_cost_code_id' => ['nullable', 'integer', 'exists:cost_codes,id'],
             'require_expense_source_documents' => ['sometimes', 'boolean'],
             'require_retirement_source_documents' => ['sometimes', 'boolean'],

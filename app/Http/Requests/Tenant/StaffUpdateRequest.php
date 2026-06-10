@@ -24,10 +24,12 @@ class StaffUpdateRequest extends FormRequest
             return;
         }
 
+        $country = $this->input('phone_country');
+        $number = $this->input('phone_number');
         $this->merge([
             'phone' => PhoneNumberFormatter::assemble(
-                $this->input('phone_country'),
-                $this->input('phone_number'),
+                is_string($country) ? $country : null,
+                is_string($number) ? $number : null,
             ),
         ]);
     }

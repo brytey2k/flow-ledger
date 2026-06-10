@@ -24,13 +24,18 @@ class DashboardController extends Controller
         return view('tenant.dashboard.index', compact('lowCashBranches'));
     }
 
+    /** @return Collection<int, Branch> */
     private function getLowCashBranches(): Collection
     {
         if (! auth()->user()?->can(PermissionKey::AccessSettings->value)) {
-            return collect();
+            /** @var Collection<int, Branch> $empty */
+            $empty = collect();
+
+            return $empty;
         }
 
-        return $this->branchRepository->allWithCashbook()
+        /** @var Collection<int, Branch> $result */
+        $result = $this->branchRepository->allWithCashbook()
             ->filter(static function (Branch $branch): bool {
                 $cashbook = $branch->cashbook;
                 $threshold = $branch->cashBalanceThreshold;
@@ -39,11 +44,15 @@ class DashboardController extends Controller
                     return false;
                 }
 
-                $balance = (float) $cashbook->getAttribute('balance');
-                $thresholdAmount = (float) $threshold->getAttribute('threshold_amount');
+                /** @var float $balance */
+                $balance = $cashbook->getAttribute('balance');
+                /** @var float $thresholdAmount */
+                $thresholdAmount = $threshold->getAttribute('threshold_amount');
 
                 return $balance < $thresholdAmount;
             })
             ->values();
+
+        return $result;
     }
 }

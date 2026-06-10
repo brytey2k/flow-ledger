@@ -23,32 +23,93 @@
                 <h3 class="kt-card-title">{{ __('settings.branding_card') }}</h3>
             </div>
             <div class="kt-card-content">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {{-- Light mode logo --}}
                     <div>
-                        <label class="kt-form-label block mb-2" for="logo">
-                            {{ __('settings.fields.logo') }}
+                        <label class="kt-form-label block mb-2" for="logo_light">
+                            {{ __('settings.fields.logo_light') }}
                         </label>
 
-                        @if($logoUrl)
+                        @if($lightLogoUrl)
                             <div class="mb-3 flex items-center gap-4">
-                                <img src="{{ $logoUrl }}" alt="{{ __('settings.fields.logo_preview_alt') }}"
-                                     class="max-h-[44px] max-w-[200px] object-contain rounded border border-border p-2 bg-muted">
+                                <img src="{{ $lightLogoUrl }}" alt="{{ __('settings.fields.logo_light_preview_alt') }}"
+                                     class="default-logo rounded border border-border p-2 bg-muted">
                                 <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="remove_logo" name="remove_logo" value="1" class="form-checkbox">
-                                    <label for="remove_logo" class="kt-form-label mb-0 text-sm text-destructive">
-                                        {{ __('settings.fields.remove_logo') }}
+                                    <input type="checkbox" id="remove_logo_light" name="remove_logo_light" value="1" class="form-checkbox">
+                                    <label for="remove_logo_light" class="kt-form-label mb-0 text-sm text-destructive">
+                                        {{ __('settings.fields.remove_logo_light') }}
                                     </label>
                                 </div>
                             </div>
                         @endif
 
-                        <input id="logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp"
+                        <input id="logo_light" name="logo_light" type="file" accept="image/png,image/jpeg,image/webp"
                                class="kt-input w-full"
-                               aria-invalid="@error('logo') true @else false @enderror" />
+                               aria-invalid="@error('logo_light') true @else false @enderror" />
                         <div class="mt-1 text-xs text-muted-foreground">
-                            {{ __('settings.fields.logo_hint') }}
+                            {{ __('settings.fields.logo_light_hint') }}
                         </div>
-                        @error('logo')
+                        @error('logo_light')
+                            <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Dark mode logo --}}
+                    <div>
+                        <label class="kt-form-label block mb-2" for="logo_dark">
+                            {{ __('settings.fields.logo_dark') }}
+                        </label>
+
+                        @if($darkLogoUrl)
+                            <div class="mb-3 flex items-center gap-4">
+                                <img src="{{ $darkLogoUrl }}" alt="{{ __('settings.fields.logo_dark_preview_alt') }}"
+                                     class="default-logo rounded border border-border p-2 bg-muted">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="remove_logo_dark" name="remove_logo_dark" value="1" class="form-checkbox">
+                                    <label for="remove_logo_dark" class="kt-form-label mb-0 text-sm text-destructive">
+                                        {{ __('settings.fields.remove_logo_dark') }}
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
+
+                        <input id="logo_dark" name="logo_dark" type="file" accept="image/png,image/jpeg,image/webp"
+                               class="kt-input w-full"
+                               aria-invalid="@error('logo_dark') true @else false @enderror" />
+                        <div class="mt-1 text-xs text-muted-foreground">
+                            {{ __('settings.fields.logo_dark_hint') }}
+                        </div>
+                        @error('logo_dark')
+                            <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Small logo (collapsed sidebar icon) --}}
+                    <div>
+                        <label class="kt-form-label block mb-2" for="logo_small">
+                            {{ __('settings.fields.logo_small') }}
+                        </label>
+
+                        @if($smallLogoUrl)
+                            <div class="mb-3 flex items-center gap-4">
+                                <img src="{{ $smallLogoUrl }}" alt="{{ __('settings.fields.logo_small_preview_alt') }}"
+                                     class="small-logo rounded border border-border p-2 bg-muted">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="remove_logo_small" name="remove_logo_small" value="1" class="form-checkbox">
+                                    <label for="remove_logo_small" class="kt-form-label mb-0 text-sm text-destructive">
+                                        {{ __('settings.fields.remove_logo_small') }}
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
+
+                        <input id="logo_small" name="logo_small" type="file" accept="image/png,image/jpeg,image/webp"
+                               class="kt-input w-full"
+                               aria-invalid="@error('logo_small') true @else false @enderror" />
+                        <div class="mt-1 text-xs text-muted-foreground">
+                            {{ __('settings.fields.logo_small_hint') }}
+                        </div>
+                        @error('logo_small')
                             <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                         @enderror
                     </div>

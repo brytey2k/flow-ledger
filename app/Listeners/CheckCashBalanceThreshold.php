@@ -18,7 +18,8 @@ class CheckCashBalanceThreshold
 
     public function handle(CashbookBalanceChanged $event): void
     {
-        $branchId = (int) $event->cashbook->getAttribute('branch_id');
+        /** @var int $branchId */
+        $branchId = $event->cashbook->getAttribute('branch_id');
         $newBalance = $event->newBalance;
 
         // Check if balance has fallen below the threshold
@@ -33,7 +34,9 @@ class CheckCashBalanceThreshold
         }
 
         // Check if we can notify (cooldown enforcement)
-        if (! $this->thresholdRepository->canNotify((int) $threshold->getAttribute('id'))) {
+        /** @var int $thresholdId */
+        $thresholdId = $threshold->getKey();
+        if (! $this->thresholdRepository->canNotify($thresholdId)) {
             return;
         }
 
@@ -53,7 +56,7 @@ class CheckCashBalanceThreshold
 
         // Log the notification
         $this->thresholdRepository->logNotification(
-            (int) $threshold->getAttribute('id'),
+            $thresholdId,
             $newBalance,
         );
 

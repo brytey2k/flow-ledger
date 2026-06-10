@@ -100,6 +100,7 @@ class DepartmentImportService
                 throw ValidationException::withMessages($errors);
             }
 
+            /** @var array<int, string> $existingNames */
             $existingNames = Department::query()
                 ->whereIn('name', $rows)
                 ->pluck('name')

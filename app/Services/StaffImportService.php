@@ -66,12 +66,12 @@ class StaffImportService
 
         $normalizedDepartmentLookup = [];
         foreach ($departmentLookup as $name => $id) {
-            $normalizedDepartmentLookup[$this->normalizeLookupKey((string) $name)] = (int) $id;
+            $normalizedDepartmentLookup[$this->normalizeLookupKey((string) $name)] = is_scalar($id) ? (int) $id : 0;
         }
 
         $normalizedPositionLookup = [];
         foreach ($positionLookup as $name => $id) {
-            $normalizedPositionLookup[$this->normalizeLookupKey((string) $name)] = (int) $id;
+            $normalizedPositionLookup[$this->normalizeLookupKey((string) $name)] = is_scalar($id) ? (int) $id : 0;
         }
 
         $allowedBranchIds = $this->branchScope->allowedBranchIds($actor);
@@ -82,7 +82,7 @@ class StaffImportService
 
         $normalizedBranchLookup = [];
         foreach ($branchLookup as $name => $id) {
-            $normalizedBranchLookup[$this->normalizeLookupKey((string) $name)] = (int) $id;
+            $normalizedBranchLookup[$this->normalizeLookupKey((string) $name)] = is_scalar($id) ? (int) $id : 0;
         }
 
         $countryCodes = array_keys(PhoneNumberFormatter::dialCodeMap());
@@ -99,6 +99,7 @@ class StaffImportService
                 continue;
             }
 
+            /** @var array<int, scalar|null> $row */
             $firstName = trim((string) ($row[0] ?? ''));
             $lastName = trim((string) ($row[1] ?? ''));
             $email = mb_strtolower(trim((string) ($row[2] ?? '')));
@@ -288,10 +289,11 @@ class StaffImportService
     /**
      * @param array<int, string|null> $row
      */
+    /** @param array<mixed> $row */
     private function isEmptyRow(array $row): bool
     {
         foreach (array_slice($row, 0, 9) as $cell) {
-            if (trim((string) $cell) !== '') {
+            if (trim(is_scalar($cell) ? (string) $cell : '') !== '') {
                 return false;
             }
         }
@@ -301,7 +303,7 @@ class StaffImportService
 
     private function parseGrantLoginAccess(mixed $value): bool|null
     {
-        $normalized = mb_strtolower(trim((string) $value));
+        $normalized = mb_strtolower(trim(is_scalar($value) ? (string) $value : ''));
 
         if ($normalized === '') {
             return true;

@@ -59,14 +59,14 @@
                         <table class="kt-table kt-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[80px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('cash_count.denominations.labels.sort_order') }}</span>
-                                        </span>
-                                    </th>
                                     <th class="min-w-[200px]">
                                         <span class="kt-table-col">
                                             <span class="kt-table-col-label">{{ __('cash_count.denominations.labels.label') }}</span>
+                                        </span>
+                                    </th>
+                                    <th class="min-w-[100px]">
+                                        <span class="kt-table-col">
+                                            <span class="kt-table-col-label">{{ __('cash_count.denominations.labels.type') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[160px] text-right">
@@ -85,10 +85,12 @@
                                 @foreach($denominations as $denomination)
                                     <tr>
                                         <td>
-                                            <span class="text-sm text-secondary-foreground">{{ $denomination->sort_order }}</span>
+                                            <span class="text-sm font-medium text-mono">{{ $denomination->label }}</span>
                                         </td>
                                         <td>
-                                            <span class="text-sm font-medium text-mono">{{ $denomination->label }}</span>
+                                            <span class="badge badge-sm badge-outline">
+                                                {{ __('cash_count.denominations.types.' . $denomination->type->value) }}
+                                            </span>
                                         </td>
                                         <td class="text-right">
                                             <span class="text-sm font-medium text-foreground">

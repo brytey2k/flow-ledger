@@ -24,7 +24,8 @@ class CashBalanceThresholdRepository
             return false;
         }
 
-        $thresholdAmount = (float) $threshold->getAttribute('threshold_amount');
+        /** @var float $thresholdAmount */
+        $thresholdAmount = $threshold->getAttribute('threshold_amount');
 
         return $currentBalance < $thresholdAmount;
     }
@@ -37,7 +38,8 @@ class CashBalanceThresholdRepository
             return false;
         }
 
-        $cooldownMinutes = (int) $threshold->getAttribute('cooldown_minutes');
+        /** @var int $cooldownMinutes */
+        $cooldownMinutes = $threshold->getAttribute('cooldown_minutes');
         $lastNotification = $threshold->notificationLogs()
             ->latest('notified_at')
             ->first();
@@ -46,6 +48,7 @@ class CashBalanceThresholdRepository
             return true;
         }
 
+        /** @var \Illuminate\Support\Carbon $lastNotifiedAt */
         $lastNotifiedAt = $lastNotification->getAttribute('notified_at');
 
         return $lastNotifiedAt->addMinutes($cooldownMinutes)->isPast();
@@ -72,7 +75,9 @@ class CashBalanceThresholdRepository
             return null;
         }
 
-        return $threshold->getAttribute('notification_user_ids') ?? [];
+        $ids = $threshold->getAttribute('notification_user_ids');
+
+        return is_array($ids) ? array_map(static fn(mixed $v): int => is_scalar($v) ? (int) $v : 0, $ids) : [];
     }
 
     /**

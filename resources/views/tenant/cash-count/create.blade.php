@@ -52,47 +52,42 @@
                 </div>
             </div>
 
-            @if ($errors->any())
-                <div class="kt-alert kt-alert-danger">
-                    <ul class="list-disc list-inside text-sm">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
             <!-- Denominations Grid -->
-            <div class="kt-card">
-                <div class="kt-card-header">
-                    <h3 class="kt-card-title">{{ __('cash_count.denominations.title') }}</h3>
-                    <span class="text-sm text-secondary-foreground">{{ __('cash_count.labels.quantity') }}</span>
-                </div>
-                <div class="kt-card-content p-5 lg:p-7.5">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        @foreach($denominations as $index => $denomination)
-                            <div class="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="text-sm font-medium text-mono">{{ $denomination->label }}</span>
-                                    <span class="text-xs text-secondary-foreground">
-                                        {{ $cashbook->currency->symbol }} {{ number_format((float) $denomination->value, 2) }}
-                                    </span>
-                                </div>
-                                <input type="hidden" name="items[{{ $index }}][denomination_id]" value="{{ $denomination->id }}">
-                                <input type="number"
-                                       name="items[{{ $index }}][quantity]"
-                                       x-model.number="quantities[{{ $index }}]"
-                                       @input="updateTotal()"
-                                       value="{{ old("items.{$index}.quantity", 0) }}"
-                                       min="0"
-                                       step="1"
-                                       class="kt-input w-24 text-right @error("items.{$index}.quantity") border-danger @enderror"
-                                       placeholder="0">
+            @php $denominationsByType = $denominations->groupBy(fn($d) => $d->type->value); @endphp
+            @foreach(['note' => __('cash_count.denominations.types.note'), 'coin' => __('cash_count.denominations.types.coin')] as $type => $typeLabel)
+                @if($denominationsByType->has($type))
+                    <div class="kt-card">
+                        <div class="kt-card-header">
+                            <h3 class="kt-card-title">{{ $typeLabel }}s</h3>
+                            <span class="text-sm text-secondary-foreground">{{ __('cash_count.labels.quantity') }}</span>
+                        </div>
+                        <div class="kt-card-content p-5 lg:p-7.5">
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                @foreach($denominationsByType[$type] as $index => $denomination)
+                                    <div class="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                                        <div class="flex flex-col gap-0.5">
+                                            <span class="text-sm font-medium text-mono">{{ $denomination->label }}</span>
+                                            <span class="text-xs text-secondary-foreground">
+                                                {{ $cashbook->currency->symbol }} {{ number_format((float) $denomination->value, 2) }}
+                                            </span>
+                                        </div>
+                                        <input type="hidden" name="items[{{ $index }}][denomination_id]" value="{{ $denomination->id }}">
+                                        <input type="number"
+                                               name="items[{{ $index }}][quantity]"
+                                               x-model.number="quantities[{{ $index }}]"
+                                               @input="updateTotal()"
+                                               value="{{ old("items.{$index}.quantity", 0) }}"
+                                               min="0"
+                                               step="1"
+                                               class="kt-input w-24 text-right @error("items.{$index}.quantity") border-danger @enderror"
+                                               placeholder="0">
+                                    </div>
+                                @endforeach
                             </div>
-                        @endforeach
+                        </div>
                     </div>
-                </div>
-            </div>
+                @endif
+            @endforeach
 
             <!-- Notes -->
             <div class="kt-card">
@@ -120,11 +115,11 @@
     </div>
 </div>
 
-@push('scripts')
+@push('page_js')
 <script>
 function cashCount() {
     return {
-        quantities: @json(array_fill(0, $denominations->count(), 0)),
+        quantities: @json(collect(range(0, $denominations->count() - 1))->map(fn($i) => (int) old("items.{$i}.quantity", 0))->values()),
         values: @json($denominations->pluck('value')->map(fn($v) => (float) $v)->values()->toArray()),
         balance: {{ (float) $cashbook->balance }},
 

@@ -100,6 +100,7 @@ class PositionImportService
                 throw ValidationException::withMessages($errors);
             }
 
+            /** @var array<int, string> $existingNames */
             $existingNames = Position::query()
                 ->whereIn('name', $rows)
                 ->pluck('name')

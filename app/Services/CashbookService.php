@@ -44,9 +44,11 @@ class CashbookService
             'created_by_user_id' => $user?->id,
         ]);
 
-        $previousBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $previousBalance */
+        $previousBalance = $cashbook->getAttribute('balance');
         $cashbook->decrement('balance', $amount);
-        $newBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $newBalance */
+        $newBalance = $cashbook->getAttribute('balance');
 
         activity()
             ->performedOn($cashbook)
@@ -99,7 +101,8 @@ class CashbookService
             'created_by_user_id' => $user?->id,
         ]);
 
-        $previousBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $previousBalance */
+        $previousBalance = $cashbook->getAttribute('balance');
 
         if ($isCredit) {
             $cashbook->decrement('balance', $amount);
@@ -107,7 +110,8 @@ class CashbookService
             $cashbook->increment('balance', $amount);
         }
 
-        $newBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $newBalance */
+        $newBalance = $cashbook->getAttribute('balance');
 
         activity()
             ->performedOn($cashbook)
@@ -136,9 +140,11 @@ class CashbookService
             'created_by_user_id' => $user?->id,
         ]);
 
-        $previousBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $previousBalance */
+        $previousBalance = $cashbook->getAttribute('balance');
         $cashbook->increment('balance', $amount);
-        $newBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $newBalance */
+        $newBalance = $cashbook->getAttribute('balance');
 
         activity()
             ->performedOn($cashbook)
@@ -160,9 +166,11 @@ class CashbookService
         $amount = is_numeric($raw) ? (float) $raw : 0.0;
         $cashbook = $entry->cashbook;
 
-        $previousBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $previousBalance */
+        $previousBalance = $cashbook->getAttribute('balance');
         $cashbook->decrement('balance', $amount);
-        $newBalance = (float) $cashbook->getAttribute('balance');
+        /** @var float $newBalance */
+        $newBalance = $cashbook->getAttribute('balance');
         $entry->delete();
 
         activity()

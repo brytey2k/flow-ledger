@@ -68,6 +68,8 @@ class CashbookRepository
     /**
      * @param Cashbook $cashbook
      * @param array{type?:string,date_from?:string,date_to?:string,description?:string,amount_min?:string,amount_max?:string} $filters
+     *
+     * @return Builder<CashbookEntry>
      */
     private function buildEntriesQuery(Cashbook $cashbook, array $filters = []): Builder
     {

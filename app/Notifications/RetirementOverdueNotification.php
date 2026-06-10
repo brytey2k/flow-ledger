@@ -29,10 +29,13 @@ class RetirementOverdueNotification extends Notification implements ShouldQueue
     {
         /** @var \App\Models\Tenant\User $recipient */
         $recipient = $notifiable;
-        $id = $this->paymentRequest->getKey();
+        $rawKey = $this->paymentRequest->getKey();
+        $id = is_scalar($rawKey) ? (string) $rawKey : '';
         $currency = $this->paymentRequest->currency;
-        $symbol = is_object($currency) ? (string) ($currency->getAttribute('symbol') ?? '') : '';
-        $totalAmount = (float) ($this->paymentRequest->getAttribute('total_amount') ?? 0);
+        /** @var string $symbol */
+        $symbol = is_object($currency) ? ($currency->getAttribute('symbol') ?? '') : '';
+        $rawAmount = $this->paymentRequest->getAttribute('total_amount') ?? 0.0;
+        $totalAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
         $url = route('payment-requests.show', $this->paymentRequest);
         $formattedAmount = $symbol . ' ' . number_format($totalAmount, 2);
 

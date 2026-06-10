@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
-use App\Models\Tenant\Branch;
 use App\Models\Tenant\CashBalanceThreshold;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,12 +29,13 @@ class LowCashBalanceNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $branch = $this->threshold->branch;
-        $branchName = $branch instanceof Branch ? $branch->getAttribute('name') : 'Unknown Branch';
-        $thresholdAmount = (float) $this->threshold->getAttribute('threshold_amount');
-        $currency = $branch instanceof Branch ? $branch->currency : null;
-        $currencySymbol = $currency instanceof \Illuminate\Database\Eloquent\Model
-            ? $currency->getAttribute('symbol')
-            : '';
+        /** @var string $branchName */
+        $branchName = $branch->getAttribute('name');
+        $rawThreshold = $this->threshold->getAttribute('threshold_amount');
+        $thresholdAmount = is_numeric($rawThreshold) ? (float) $rawThreshold : 0.0;
+        $currency = $branch->currency;
+        /** @var string $currencySymbol */
+        $currencySymbol = $currency->getAttribute('symbol') ?? '';
 
         $formattedBalance = $currencySymbol . ' ' . number_format($this->currentBalance, 2);
         $formattedThreshold = $currencySymbol . ' ' . number_format($thresholdAmount, 2);
@@ -53,8 +53,10 @@ class LowCashBalanceNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): DatabaseMessage
     {
         $branch = $this->threshold->branch;
-        $branchName = $branch instanceof Branch ? $branch->getAttribute('name') : 'Unknown Branch';
-        $thresholdAmount = (float) $this->threshold->getAttribute('threshold_amount');
+        /** @var string $branchName */
+        $branchName = $branch->getAttribute('name');
+        $rawThresholdAmount = $this->threshold->getAttribute('threshold_amount');
+        $thresholdAmount = is_numeric($rawThresholdAmount) ? (float) $rawThresholdAmount : 0.0;
 
         return new DatabaseMessage([
             'type' => 'low_cash_balance',
@@ -62,7 +64,7 @@ class LowCashBalanceNotification extends Notification implements ShouldQueue
             'branch_name' => $branchName,
             'current_balance' => $this->currentBalance,
             'threshold_amount' => $thresholdAmount,
-            'message' => "Cash balance for {$branchName} is below threshold",
+            'message' => 'Cash balance for ' . $branchName . ' is below threshold',
         ]);
     }
 }
