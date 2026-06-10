@@ -39,13 +39,15 @@ class RequestDisbursedNotification extends Notification implements ShouldQueue
         $reference = $this->subject->getAttribute('disbursement_reference');
         $referenceStr = is_string($reference) ? $reference : null;
 
+        $amount = $symbol . ' ' . number_format($totalAmount, 2);
+
         return (new MailMessage())
-            ->subject("Request #{$id} Has Been Disbursed")
-            ->greeting("Hello {$recipient->first_name},")
-            ->line('Your approved request has been **disbursed**.')
-            ->line('**Amount:** ' . $symbol . ' ' . number_format($totalAmount, 2))
-            ->line('**Method:** ' . $method)
-            ->when($referenceStr !== null, fn($mail) => $mail->line('**Reference:** ' . $referenceStr))
-            ->action('View Request', $url);
+            ->subject(__('notifications.request_disbursed.subject', ['id' => $id]))
+            ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
+            ->line(__('notifications.request_disbursed.disbursed'))
+            ->line(__('notifications.request_disbursed.amount', ['amount' => $amount]))
+            ->line(__('notifications.request_disbursed.method', ['method' => $method]))
+            ->when($referenceStr !== null, fn($mail) => $mail->line(__('notifications.request_disbursed.reference', ['reference' => $referenceStr])))
+            ->action(__('notifications.request_disbursed.action'), $url);
     }
 }

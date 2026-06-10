@@ -38,13 +38,15 @@ class RequestRejectedNotification extends Notification implements ShouldQueue
         $rawAmount = $this->subject->getAttribute('total_amount');
         $totalAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
 
+        $amount = $symbol . ' ' . number_format($totalAmount, 2);
+
         return (new MailMessage())
-            ->subject("Request #{$id} Rejected")
-            ->greeting("Hello {$recipient->first_name},")
-            ->line('Unfortunately, your request has been **rejected**.')
-            ->line('**Reason:** ' . $this->comment)
-            ->line('**Amount:** ' . $symbol . ' ' . number_format($totalAmount, 2))
-            ->action('View Request', $url)
-            ->line('Please contact your approver if you have questions.');
+            ->subject(__('notifications.request_rejected.subject', ['id' => $id]))
+            ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
+            ->line(__('notifications.request_rejected.rejected'))
+            ->line(__('notifications.request_rejected.reason', ['reason' => $this->comment]))
+            ->line(__('notifications.request_rejected.amount', ['amount' => $amount]))
+            ->action(__('notifications.request_rejected.action'), $url)
+            ->line(__('notifications.request_rejected.contact'));
     }
 }

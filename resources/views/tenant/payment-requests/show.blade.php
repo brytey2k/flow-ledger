@@ -35,7 +35,7 @@
                 </span>
             </div>
             <div class="text-sm text-secondary-foreground">
-                Created {{ $paymentRequest->created_at->format('M d, Y \a\t H:i') }}
+                Created {{ $paymentRequest->created_at->format('M d, Y \a\t g:i A') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
@@ -89,13 +89,13 @@
                             @if($paymentRequest->submitted_at)
                                 <div>
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.show.submitted') }}</dt>
-                                    <dd class="text-sm text-foreground">{{ $paymentRequest->submitted_at->format('M d, Y H:i') }}</dd>
+                                    <dd class="text-sm text-foreground">{{ $paymentRequest->submitted_at->format('M d, Y g:i A') }}</dd>
                                 </div>
                             @endif
                             @if($paymentRequest->approved_at)
                                 <div>
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.show.approved') }}</dt>
-                                    <dd class="text-sm text-foreground">{{ $paymentRequest->approved_at->format('M d, Y H:i') }}</dd>
+                                    <dd class="text-sm text-foreground">{{ $paymentRequest->approved_at->format('M d, Y g:i A') }}</dd>
                                 </div>
                             @endif
                             @php
@@ -107,7 +107,7 @@
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.status.cancelled') }}</dt>
                                     <dd class="text-sm text-foreground">
                                         @if($cancelLog)
-                                            {{ $cancelLog->created_at->format('M d, Y H:i') }}
+                                            {{ $cancelLog->created_at->format('M d, Y g:i A') }}
                                         @endif
                                         @if($cancelledInstance && $cancelledInstance->cancelledAtStage)
                                             — {{ $cancelledInstance->cancelledAtStage->stage->name }}
@@ -187,6 +187,81 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Retirements --}}
+                @if($paymentRequest->retirementRequests->isNotEmpty())
+                    @php
+                        $retirementStatusColors = [
+                            'draft'       => 'kt-badge-outline',
+                            'in_workflow' => 'kt-badge-primary',
+                            'approved'    => 'kt-badge-success',
+                            'settled'     => 'kt-badge-info',
+                            'sent_back'   => 'kt-badge-warning',
+                            'cancelled'   => 'kt-badge-danger',
+                        ];
+                    @endphp
+                    <div class="kt-card">
+                        <div class="kt-card-header">
+                            <h3 class="kt-card-title">{{ __('payment_requests.show.retirements') }}</h3>
+                            <span class="kt-badge kt-badge-sm kt-badge-outline">
+                                {{ $paymentRequest->retirementRequests->count() }} {{ Str::plural('retirement', $paymentRequest->retirementRequests->count()) }}
+                            </span>
+                        </div>
+                        <div class="kt-card-table">
+                            <div class="kt-scrollable-x-auto border-b border-border">
+                                <table class="kt-table kt-table-border">
+                                    <thead>
+                                        <tr>
+                                            <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.id') }}</span></span></th>
+                                            <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.submitted') }}</span></span></th>
+                                            <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.status') }}</span></span></th>
+                                            <th class="text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('payment_requests.show.amount_expended') }}</span></span></th>
+                                            <th class="text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('payment_requests.show.difference') }}</span></span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($paymentRequest->retirementRequests->sortByDesc('created_at') as $retirement)
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ route('retirement-requests.show', $retirement) }}" class="text-sm font-medium text-primary hover:underline">
+                                                        #{{ $retirement->id }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span class="text-sm text-foreground">
+                                                        {{ $retirement->submitted_at?->format('M d, Y') ?? $retirement->created_at->format('M d, Y') }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="kt-badge kt-badge-sm {{ $retirementStatusColors[$retirement->status] ?? 'kt-badge-outline' }}">
+                                                        {{ ucwords(str_replace('_', ' ', $retirement->status)) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="text-sm font-medium text-mono">
+                                                        {{ $paymentRequest->currency->symbol ?? '' }} {{ number_format((float) $retirement->total_amount_expended, 2) }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    @if($retirement->difference_amount !== null)
+                                                        <span class="text-sm font-medium text-mono {{ $retirement->difference_type === 'refund_to_company' ? 'text-destructive' : ($retirement->difference_type === 'pay_to_staff' ? 'text-warning' : 'text-success') }}">
+                                                            {{ $paymentRequest->currency->symbol ?? '' }} {{ number_format((float) $retirement->difference_amount, 2) }}
+                                                        </span>
+                                                        @if($retirement->difference_type)
+                                                            <span class="text-xs text-secondary-foreground block">{{ ucwords(str_replace('_', ' ', $retirement->difference_type)) }}</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-sm text-secondary-foreground">—</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 {{-- Source Documents --}}
                 @if($paymentRequest->isExpense())
@@ -306,7 +381,7 @@
                                                     {{ ucwords(str_replace('_', ' ', $log->getProperty('old_status'))) }} → {{ ucwords(str_replace('_', ' ', $log->getProperty('new_status'))) }}
                                                 </span>
                                             @endif
-                                            <span class="text-xs text-secondary-foreground">{{ $log->created_at->format('M d, Y H:i') }}</span>
+                                            <span class="text-xs text-secondary-foreground">{{ $log->created_at->format('M d, Y g:i A') }}</span>
                                         </div>
                                     </div>
                                 @else
@@ -327,7 +402,7 @@
                                                 @endif
                                             </div>
                                             <p class="text-sm text-foreground whitespace-pre-line">{{ $comment->body }}</p>
-                                            <span class="text-xs text-secondary-foreground">{{ $comment->created_at->format('M d, Y H:i') }}</span>
+                                            <span class="text-xs text-secondary-foreground">{{ $comment->created_at->format('M d, Y g:i A') }}</span>
                                         </div>
                                     </div>
                                 @endif
@@ -546,7 +621,7 @@
                             <div class="flex flex-col gap-2 p-3 rounded-lg bg-info/10 text-info text-sm">
                                 <div class="flex items-center gap-2">
                                     <i class="ki-filled ki-dollar"></i>
-                                    {{ __('payment_requests.show.disbursed_on') }} {{ $paymentRequest->disbursed_at?->format('M d, Y') }}
+                                    {{ __('payment_requests.show.disbursed_on') }} {{ $paymentRequest->disbursed_at?->format('M d, Y g:i A') }}
                                 </div>
                                 @if($paymentRequest->disbursement_method)
                                     <span class="text-xs">{{ __('payment_requests.show.method_label') }} {{ $paymentRequest->disbursement_method->label() }}</span>

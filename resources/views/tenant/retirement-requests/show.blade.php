@@ -94,13 +94,13 @@
                             @if($retirementRequest->submitted_at)
                                 <div>
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('common.columns.submitted') }}</dt>
-                                    <dd class="text-sm text-foreground">{{ $retirementRequest->submitted_at->format('M d, Y H:i') }}</dd>
+                                    <dd class="text-sm text-foreground">{{ $retirementRequest->submitted_at->format('M d, Y g:i A') }}</dd>
                                 </div>
                             @endif
                             @if($retirementRequest->approved_at)
                                 <div>
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.show.approved') }}</dt>
-                                    <dd class="text-sm text-foreground">{{ $retirementRequest->approved_at->format('M d, Y H:i') }}</dd>
+                                    <dd class="text-sm text-foreground">{{ $retirementRequest->approved_at->format('M d, Y g:i A') }}</dd>
                                 </div>
                             @endif
                             @if($retirementRequest->notes)
@@ -278,7 +278,7 @@
                                         @if($log->getProperty('comment'))
                                             <span class="text-sm text-foreground italic">"{{ $log->getProperty('comment') }}"</span>
                                         @endif
-                                        <span class="text-xs text-secondary-foreground">{{ $log->created_at->format('M d, Y H:i') }}</span>
+                                        <span class="text-xs text-secondary-foreground">{{ $log->created_at->format('M d, Y g:i A') }}</span>
                                     </div>
                                 </div>
                             @else
@@ -290,7 +290,7 @@
                                     <div class="flex flex-col gap-0.5 flex-1">
                                         <span class="text-sm font-medium text-mono">{{ $comment->user->name ?? 'Unknown' }}</span>
                                         <p class="text-sm text-foreground whitespace-pre-line">{{ $comment->body }}</p>
-                                        <span class="text-xs text-secondary-foreground">{{ $comment->created_at->format('M d, Y H:i') }}</span>
+                                        <span class="text-xs text-secondary-foreground">{{ $comment->created_at->format('M d, Y g:i A') }}</span>
                                     </div>
                                 </div>
                             @endif

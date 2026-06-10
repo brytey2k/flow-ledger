@@ -79,7 +79,7 @@
 
             <div>
                 <p class="text-sm text-muted-foreground">{{ __('common.columns.created') }}</p>
-                <p class="text-sm text-foreground">{{ $user->created_at->format('M d, Y h:i A') }}</p>
+                <p class="text-sm text-foreground">{{ $user->created_at->format('M d, Y g:i A') }}</p>
             </div>
         </div>
             @can(App\Enums\Tenant\PermissionKey::DeleteUser->value)

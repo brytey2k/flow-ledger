@@ -99,7 +99,7 @@
                                                 {{ $wfAction->comment ? Str::limit($wfAction->comment, 80) : '—' }}
                                             </span>
                                         </td>
-                                        <td><span class="text-sm text-foreground">{{ $wfAction->created_at?->format('M d, Y H:i') ?? '—' }}</span></td>
+                                        <td><span class="text-sm text-foreground">{{ $wfAction->created_at?->format('M d, Y g:i A') ?? '—' }}</span></td>
                                     </tr>
                                 @endforeach
                             </tbody>

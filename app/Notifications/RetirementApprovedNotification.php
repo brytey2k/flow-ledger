@@ -42,15 +42,18 @@ class RetirementApprovedNotification extends Notification implements ShouldQueue
         $rawDifferenceAmount = $this->retirement->getAttribute('difference_amount');
         $differenceAmount = is_numeric($rawDifferenceAmount) ? (float) $rawDifferenceAmount : 0.0;
 
+        $expended = $symbol . ' ' . number_format($totalExpended, 2);
+        $settlementAmount = $symbol . ' ' . number_format($differenceAmount, 2);
+        $settlementType = ucwords(str_replace('_', ' ', $differenceType));
+
         return (new MailMessage())
-            ->subject("Retirement #{$retirementId} Approved")
-            ->greeting("Hello {$recipient->first_name},")
-            ->line("Your retirement for Advance #{$prId} has been **fully approved**.")
-            ->line('**Amount Expended:** ' . $symbol . ' ' . number_format($totalExpended, 2))
+            ->subject(__('notifications.retirement_approved.subject', ['retirement_id' => $retirementId]))
+            ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
+            ->line(__('notifications.retirement_approved.approved', ['pr_id' => $prId]))
+            ->line(__('notifications.retirement_approved.expended', ['amount' => $expended]))
             ->when($differenceType !== 'nil' && $differenceType !== '', fn($mail) => $mail->line(
-                '**Settlement:** ' . ucwords(str_replace('_', ' ', $differenceType)) .
-                ' — ' . $symbol . ' ' . number_format($differenceAmount, 2),
+                __('notifications.retirement_approved.settlement', ['type' => $settlementType, 'amount' => $settlementAmount]),
             ))
-            ->action('View Retirement', $url);
+            ->action(__('notifications.retirement_approved.action'), $url);
     }
 }

@@ -2,6 +2,7 @@
 
 @php
     $req = $instanceStage->instance->workflowable;
+    $retiredPaymentRequest = $req instanceof \App\Models\Tenant\RetirementRequest ? $req->paymentRequest : null;
 
     $statusColors = [
         'draft'       => 'kt-badge-outline',
@@ -90,7 +91,20 @@
                             @if($req->submitted_at)
                                 <div>
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.submitted_label') }}</dt>
-                                    <dd class="text-sm text-foreground">{{ $req->submitted_at->format('M d, Y H:i') }}</dd>
+                                    <dd class="text-sm text-foreground">{{ $req->submitted_at->format('M d, Y g:i A') }}</dd>
+                                </div>
+                            @endif
+                            @if($retiredPaymentRequest)
+                                <div class="sm:col-span-2">
+                                    <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.retiring_request') }}</dt>
+                                    <dd class="text-sm text-foreground">
+                                        <a href="{{ route('payment-requests.show', $retiredPaymentRequest) }}" class="text-primary hover:underline font-medium">
+                                            Request #{{ $retiredPaymentRequest->id }}
+                                        </a>
+                                        <span class="text-secondary-foreground ml-1">
+                                            — {{ $retiredPaymentRequest->currency->symbol ?? '' }} {{ number_format((float) $retiredPaymentRequest->total_amount, 2) }}
+                                        </span>
+                                    </dd>
                                 </div>
                             @endif
                             @if($req->notes)
@@ -117,6 +131,7 @@
                                 <thead>
                                     <tr>
                                         <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th class="w-[180px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
                                         <th class="w-[160px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
@@ -124,6 +139,12 @@
                                     @foreach($req->items as $item)
                                         <tr>
                                             <td><span class="text-sm text-foreground">{{ $item->description }}</span></td>
+                                            <td>
+                                                <span class="text-sm text-mono">{{ $item->costCode->code ?? '—' }}</span>
+                                                @if($item->costCode)
+                                                    <span class="text-secondary-foreground text-sm font-normal"> — {{ $item->costCode->name }}</span>
+                                                @endif
+                                            </td>
                                             <td class="text-end">
                                                 <span class="text-sm font-medium text-mono">
                                                     {{ $req->currency->symbol ?? '' }} {{ number_format((float) $item->amount, 2) }}
@@ -168,7 +189,7 @@
                                         @if($action->comment)
                                             <span class="text-sm text-foreground italic">"{{ $action->comment }}"</span>
                                         @endif
-                                        <span class="text-xs text-secondary-foreground">{{ $action->created_at->format('M d, Y H:i') }}</span>
+                                        <span class="text-xs text-secondary-foreground">{{ $action->created_at->format('M d, Y g:i A') }}</span>
                                     </div>
                                 </div>
                             @endforeach

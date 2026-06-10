@@ -120,7 +120,7 @@
                                                 {{ $differenceTypeLabels[$row->difference_type] ?? $row->difference_type }}
                                             </span>
                                         </td>
-                                        <td><span class="text-sm text-secondary-foreground">{{ \Carbon\Carbon::parse($row->approved_at)->format('d M Y') }}</span></td>
+                                        <td><span class="text-sm text-secondary-foreground">{{ \Carbon\Carbon::parse($row->approved_at)->format('M d, Y') }}</span></td>
                                     </tr>
                                 @endforeach
                             </tbody>

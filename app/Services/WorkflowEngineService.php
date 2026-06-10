@@ -342,27 +342,31 @@ class WorkflowEngineService
         /** @var WorkflowInstance $instance */
         $instance = $instanceStage->instance;
 
-        if ($stage->scope_to_department) {
-            $submitterDepartmentId = $instance->department_id;
-            $approverDepartmentId = $user->staffProfile?->department_id;
+        $staffProfile = $user->staffProfile;
 
-            if ($submitterDepartmentId === null || $approverDepartmentId === null) {
-                return false;
-            }
-            if ($approverDepartmentId !== $submitterDepartmentId) {
-                return false;
-            }
-        }
+        if ($staffProfile !== null) {
+            if ($stage->scope_to_department) {
+                $submitterDepartmentId = $instance->department_id;
+                $approverDepartmentId = $staffProfile->department_id;
 
-        if ($stage->scope_to_branch) {
-            $requestBranchId = $instance->branch_id;
-            $approverBranchId = $user->staffProfile?->branch_id;
-
-            if ($requestBranchId === null || $approverBranchId === null) {
-                return false;
+                if ($submitterDepartmentId === null || $approverDepartmentId === null) {
+                    return false;
+                }
+                if ($approverDepartmentId !== $submitterDepartmentId) {
+                    return false;
+                }
             }
-            if ($approverBranchId !== $requestBranchId) {
-                return false;
+
+            if ($stage->scope_to_branch) {
+                $requestBranchId = $instance->branch_id;
+                $approverBranchId = $staffProfile->branch_id;
+
+                if ($requestBranchId === null || $approverBranchId === null) {
+                    return false;
+                }
+                if ($approverBranchId !== $requestBranchId) {
+                    return false;
+                }
             }
         }
 

@@ -37,5 +37,6 @@ return [
         'total_amount' => 'Total Amount',
         'submitted_label' => 'Submitted',
         'notes' => 'Notes',
+        'retiring_request' => 'Retiring Request',
     ],
 ];

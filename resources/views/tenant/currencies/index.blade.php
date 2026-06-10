@@ -101,7 +101,7 @@
                                         <td>
                                             <div class="flex flex-col gap-0.5">
                                                 <span class="text-sm text-foreground">{{ $currency->created_at->format('M d, Y') }}</span>
-                                                <span class="text-2sm text-secondary-foreground">{{ $currency->created_at->format('h:i A') }}</span>
+                                                <span class="text-2sm text-secondary-foreground">{{ $currency->created_at->format('g:i A') }}</span>
                                             </div>
                                         </td>
                                         <td class="text-center">

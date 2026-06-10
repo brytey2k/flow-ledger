@@ -34,11 +34,11 @@ class RequestSentBackNotification extends Notification implements ShouldQueue
         $recipient = $notifiable;
 
         return (new MailMessage())
-            ->subject("Request #{$id} Sent Back for Revision")
-            ->greeting("Hello {$recipient->first_name},")
-            ->line('Your request has been **sent back** for revision.')
-            ->line('**Feedback:** ' . $this->comment)
-            ->action('View & Resubmit', $url)
-            ->line('Please make the requested changes and resubmit your request.');
+            ->subject(__('notifications.request_sent_back.subject', ['id' => $id]))
+            ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
+            ->line(__('notifications.request_sent_back.sent_back'))
+            ->line(__('notifications.request_sent_back.feedback', ['feedback' => $this->comment]))
+            ->action(__('notifications.request_sent_back.action'), $url)
+            ->line(__('notifications.request_sent_back.resubmit'));
     }
 }

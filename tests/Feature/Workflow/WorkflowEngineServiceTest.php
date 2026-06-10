@@ -636,10 +636,10 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
         $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
     }
 
-    public function test_department_scoped_stage_blocks_approver_with_no_staff_profile(): void
+    public function test_department_scoped_stage_allows_approver_with_no_staff_profile(): void
     {
         $submitter = $this->makeUserWithStaff(departmentId: Department::factory()->create()->id);
-        $approver = User::factory()->create(); // no Staff record
+        $approver = User::factory()->create(); // no Staff record — bypasses scope filters
 
         ['template' => $template, 'role' => $role] = $this->makeSequentialTemplate(1);
         WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
@@ -649,7 +649,7 @@ class WorkflowEngineServiceTest extends TenantAppTestCase
         $instance = $this->engine->startWorkflow($subject, $template, $submitter);
         $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
 
-        $this->assertFalse($this->engine->canUserActOnStage($activeStage, $approver));
+        $this->assertTrue($this->engine->canUserActOnStage($activeStage, $approver));
     }
 
     public function test_department_scoped_stage_blocks_when_submitter_has_no_staff_profile(): void

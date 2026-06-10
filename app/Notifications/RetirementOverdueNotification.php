@@ -36,28 +36,27 @@ class RetirementOverdueNotification extends Notification implements ShouldQueue
         $url = route('payment-requests.show', $this->paymentRequest);
         $formattedAmount = $symbol . ' ' . number_format($totalAmount, 2);
 
+        $greeting = __('notifications.greeting', ['name' => $recipient->first_name]);
+        $key = match ($this->recipientType) {
+            'submitter', 'approver' => $this->recipientType,
+            default => 'default',
+        };
+
         return match ($this->recipientType) {
             'submitter' => (new MailMessage())
-                ->subject("Action Required: Advance #{$id} is overdue for retirement")
-                ->greeting("Hello {$recipient->first_name},")
-                ->line("Your advance disbursement **#{$id}** is overdue. You are required to submit a retirement (expense report) to account for the funds.")
-                ->line("**Advance Amount:** {$formattedAmount}")
-                ->action('Submit Retirement', route('retirement-requests.create', $this->paymentRequest))
-                ->line('Please submit your retirement with receipts and cost codes for all expenditures as soon as possible.'),
-            'approver' => (new MailMessage())
-                ->subject("Overdue Retirement: Advance #{$id} you approved has not been retired")
-                ->greeting("Hello {$recipient->first_name},")
-                ->line("Advance **#{$id}** that you approved is overdue for retirement. The staff member has not yet submitted an expense report.")
-                ->line("**Advance Amount:** {$formattedAmount}")
-                ->action('View Advance', $url)
-                ->line('This is an automated reminder.'),
+                ->subject(__("notifications.retirement_overdue.{$key}.subject", ['id' => $id]))
+                ->greeting($greeting)
+                ->line(__("notifications.retirement_overdue.{$key}.line1", ['id' => $id]))
+                ->line(__("notifications.retirement_overdue.{$key}.amount", ['amount' => $formattedAmount]))
+                ->action(__("notifications.retirement_overdue.{$key}.action"), route('retirement-requests.create', $this->paymentRequest))
+                ->line(__("notifications.retirement_overdue.{$key}.reminder")),
             default => (new MailMessage())
-                ->subject("Overdue Retirement Alert: Advance #{$id} has not been retired")
-                ->greeting("Hello {$recipient->first_name},")
-                ->line("Advance **#{$id}** is overdue for retirement. No expense report has been submitted for this disbursement.")
-                ->line("**Advance Amount:** {$formattedAmount}")
-                ->action('View Advance', $url)
-                ->line('This is an automated reminder.'),
+                ->subject(__("notifications.retirement_overdue.{$key}.subject", ['id' => $id]))
+                ->greeting($greeting)
+                ->line(__("notifications.retirement_overdue.{$key}.line1", ['id' => $id]))
+                ->line(__("notifications.retirement_overdue.{$key}.amount", ['amount' => $formattedAmount]))
+                ->action(__("notifications.retirement_overdue.{$key}.action"), $url)
+                ->line(__("notifications.retirement_overdue.{$key}.reminder")),
         };
     }
 }

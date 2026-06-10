@@ -37,14 +37,17 @@ class LowCashBalanceNotification extends Notification implements ShouldQueue
             ? $currency->getAttribute('symbol')
             : '';
 
+        $formattedBalance = $currencySymbol . ' ' . number_format($this->currentBalance, 2);
+        $formattedThreshold = $currencySymbol . ' ' . number_format($thresholdAmount, 2);
+
         return (new MailMessage())
-            ->subject("⚠️ Low Cash Balance Alert: {$branchName}")
-            ->greeting('Hello,')
-            ->line("The cash balance for **{$branchName}** has fallen below the configured threshold.")
-            ->line("**Current Balance:** {$currencySymbol} " . number_format($this->currentBalance, 2))
-            ->line("**Threshold:** {$currencySymbol} " . number_format($thresholdAmount, 2))
-            ->line('Please take necessary action to replenish the cash balance.')
-            ->line('This is an automated alert. Please do not reply to this email.');
+            ->subject(__('notifications.low_cash_balance.subject', ['branch' => $branchName]))
+            ->greeting(__('notifications.low_cash_balance.greeting'))
+            ->line(__('notifications.low_cash_balance.balance_fallen', ['branch' => $branchName]))
+            ->line(__('notifications.low_cash_balance.current_balance', ['amount' => $formattedBalance]))
+            ->line(__('notifications.low_cash_balance.threshold', ['amount' => $formattedThreshold]))
+            ->line(__('notifications.low_cash_balance.take_action'))
+            ->line(__('notifications.low_cash_balance.automated'));
     }
 
     public function toDatabase(object $notifiable): DatabaseMessage

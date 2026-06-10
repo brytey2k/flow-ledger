@@ -35,12 +35,14 @@ class RequestApprovedNotification extends Notification implements ShouldQueue
         $rawAmount = $this->subject->getAttribute('total_amount');
         $totalAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
 
+        $amount = $symbol . ' ' . number_format($totalAmount, 2);
+
         return (new MailMessage())
-            ->subject("Request #{$id} Fully Approved")
-            ->greeting("Hello {$recipient->first_name},")
-            ->line('Your request has been **fully approved** and is now pending disbursement.')
-            ->line('**Amount:** ' . $symbol . ' ' . number_format($totalAmount, 2))
-            ->action('View Request', $url)
-            ->line('Finance will process the disbursement shortly.');
+            ->subject(__('notifications.request_approved.subject', ['id' => $id]))
+            ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
+            ->line(__('notifications.request_approved.approved'))
+            ->line(__('notifications.request_approved.amount', ['amount' => $amount]))
+            ->action(__('notifications.request_approved.action'), $url)
+            ->line(__('notifications.request_approved.finance'));
     }
 }

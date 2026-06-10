@@ -6,7 +6,7 @@
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cash_count.show_title') }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                {{ $branch->name }} · {{ $cashCount->counted_at->format('M d, Y h:i A') }}
+                {{ $branch->name }} · {{ $cashCount->counted_at->format('M d, Y g:i A') }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">

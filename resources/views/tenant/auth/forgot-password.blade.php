@@ -82,8 +82,8 @@
                 </a>
             </div>
         </div>
-        <div class="border-t border-border px-10 py-4">
-            <form method="POST" action="{{ route('locale.update') }}" class="flex justify-center">
+        <div class="border-t border-border px-10 py-4 flex items-center justify-between">
+            <form method="POST" action="{{ route('locale.update') }}">
                 @csrf
                 <label class="sr-only" for="tenant-forgot-locale">{{ __('navigation.language') }}</label>
                 <select
@@ -96,6 +96,10 @@
                     <option value="fr" @selected(app()->getLocale() === 'fr')>Francais</option>
                 </select>
             </form>
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-moon text-base text-muted-foreground"></i>
+                <input class="kt-switch kt-switch-sm" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true" type="checkbox" aria-label="{{ __('navigation.dark_mode') }}" />
+            </div>
         </div>
     </div>
 </div>

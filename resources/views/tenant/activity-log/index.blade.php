@@ -104,7 +104,7 @@
                                     <tr class="hover:bg-muted/30">
                                         <td class="px-5 py-3 whitespace-nowrap text-secondary-foreground">
                                             {{ $log->created_at->format('M d, Y') }}<br>
-                                            <span class="text-xs">{{ $log->created_at->format('H:i') }}</span>
+                                            <span class="text-xs">{{ $log->created_at->format('g:i A') }}</span>
                                         </td>
                                         <td class="px-5 py-3">
                                             <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $subjectLabel }}</span>

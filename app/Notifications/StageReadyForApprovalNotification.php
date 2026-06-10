@@ -43,13 +43,15 @@ class StageReadyForApprovalNotification extends Notification implements ShouldQu
         $rawAmount = $workflowable?->getAttribute('total_amount');
         $totalAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
 
+        $amount = $symbol . ' ' . number_format($totalAmount, 2);
+
         return (new MailMessage())
-            ->subject("Action Required: {$stageName} — Request #{$subjectId}")
-            ->greeting("Hello {$recipient->first_name},")
-            ->line("A request is waiting for your approval at the **{$stageName}** stage.")
-            ->line("**Request:** #{$subjectId} — " . $type)
-            ->line('**Amount:** ' . $symbol . ' ' . number_format($totalAmount, 2))
-            ->action('Review Request', $url)
-            ->line('Please log in to approve, send back, or reject this request.');
+            ->subject(__('notifications.stage_ready.subject', ['stage' => $stageName, 'id' => $subjectId]))
+            ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
+            ->line(__('notifications.stage_ready.waiting', ['stage' => $stageName]))
+            ->line(__('notifications.stage_ready.request', ['id' => $subjectId, 'type' => $type]))
+            ->line(__('notifications.stage_ready.amount', ['amount' => $amount]))
+            ->action(__('notifications.stage_ready.action'), $url)
+            ->line(__('notifications.stage_ready.login'));
     }
 }

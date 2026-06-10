@@ -16,8 +16,9 @@ class WorkflowInstanceRepository
     public function activeStagesForUser(User $user, int $perPage = 20): LengthAwarePaginator
     {
         $roleIds = $user->roles()->pluck('id');
-        $staffBranchId = $user->staffProfile?->branch_id;
-        $staffDepartmentId = $user->staffProfile?->department_id;
+        $staffProfile = $user->staffProfile;
+        $staffBranchId = $staffProfile?->branch_id;
+        $staffDepartmentId = $staffProfile?->department_id;
 
         return WorkflowInstanceStage::query()
             ->join('workflow_stages as ws', 'workflow_instance_stages.workflow_stage_id', '=', 'ws.id')
@@ -25,19 +26,23 @@ class WorkflowInstanceRepository
             ->select('workflow_instance_stages.*')
             ->where('workflow_instance_stages.status', 'active')
             ->whereHas('stage.roles', fn($q) => $q->whereIn('roles.id', $roleIds))
-            ->where(function ($q) use ($staffDepartmentId): void {
-                $q->where('ws.scope_to_department', false)
-                    ->orWhere(fn($inner) => $inner
-                        ->where('ws.scope_to_department', true)
-                        ->whereNotNull('wi.department_id')
-                        ->where('wi.department_id', $staffDepartmentId));
+            ->when($staffProfile !== null, function ($q) use ($staffDepartmentId): void {
+                $q->where(function ($q) use ($staffDepartmentId): void {
+                    $q->where('ws.scope_to_department', false)
+                        ->orWhere(fn($inner) => $inner
+                            ->where('ws.scope_to_department', true)
+                            ->whereNotNull('wi.department_id')
+                            ->where('wi.department_id', $staffDepartmentId));
+                });
             })
-            ->where(function ($q) use ($staffBranchId): void {
-                $q->where('ws.scope_to_branch', false)
-                    ->orWhere(fn($inner) => $inner
-                        ->where('ws.scope_to_branch', true)
-                        ->whereNotNull('wi.branch_id')
-                        ->where('wi.branch_id', $staffBranchId));
+            ->when($staffProfile !== null, function ($q) use ($staffBranchId): void {
+                $q->where(function ($q) use ($staffBranchId): void {
+                    $q->where('ws.scope_to_branch', false)
+                        ->orWhere(fn($inner) => $inner
+                            ->where('ws.scope_to_branch', true)
+                            ->whereNotNull('wi.branch_id')
+                            ->where('wi.branch_id', $staffBranchId));
+                });
             })
             ->with([
                 'stage',

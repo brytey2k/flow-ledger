@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -43,7 +44,7 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * @mixin \Eloquent
  */
-class User extends Authenticatable
+class User extends Authenticatable implements HasLocalePreference
 {
     /** @use HasFactory<\Database\Factories\Tenant\UserFactory> */
     use HasFactory;
@@ -100,5 +101,10 @@ class User extends Authenticatable
     public function isStaff(): bool
     {
         return $this->staffProfile()->exists();
+    }
+
+    public function preferredLocale(): string|null
+    {
+        return $this->locale;
     }
 }

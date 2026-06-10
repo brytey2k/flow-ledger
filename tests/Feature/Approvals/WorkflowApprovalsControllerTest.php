@@ -209,6 +209,57 @@ class WorkflowApprovalsControllerTest extends TenantAppTestCase
         $this->assertCount(1, $response->viewData('instanceStages'));
     }
 
+    public function test_index_includes_branch_scoped_stage_for_user_without_staff_profile(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+            'scope_to_branch' => true,
+        ]);
+        $stage->roles()->attach($this->role->id);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'branch_id' => $this->branch->id,
+        ]);
+        app(PaymentRequestService::class)->submit($paymentRequest);
+
+        // User has no staff profile — should bypass branch scope and see all scoped stages
+        $response = $this->actingAs($this->user)->get(route('approvals.index'));
+
+        $response->assertOk();
+        $this->assertCount(1, $response->viewData('instanceStages'));
+    }
+
+    public function test_index_includes_department_scoped_stage_for_user_without_staff_profile(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+            'scope_to_department' => true,
+        ]);
+        $stage->roles()->attach($this->role->id);
+
+        /** @var User $submitter */
+        $submitter = User::factory()->create([
+            'branch_id' => $this->branch->id,
+            'operational_branch_id' => $this->branch->id,
+        ]);
+        $dept = Department::factory()->create();
+        Staff::factory()->withUser($submitter)->create(['department_id' => $dept->id]);
+
+        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
+
+        // User has no staff profile — should bypass department scope and see all scoped stages
+        $response = $this->actingAs($this->user)->get(route('approvals.index'));
+
+        $response->assertOk();
+        $this->assertCount(1, $response->viewData('instanceStages'));
+    }
+
     // ── Show ─────────────────────────────────────────────────────────────────
 
     public function test_review_screen_renders_for_eligible_approver(): void

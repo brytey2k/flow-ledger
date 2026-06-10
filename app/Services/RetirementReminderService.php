@@ -36,7 +36,7 @@ class RetirementReminderService
             ->where('type', PaymentRequestType::Advance->value)
             ->where('status', PaymentRequestStatus::Disbursed->value)
             ->whereNotNull('disbursed_at')
-            ->where('disbursed_at', '<=', $today->copy()->subDays($gracePeriodDays))
+            ->whereDate('disbursed_at', '<=', $today->copy()->subDays($gracePeriodDays))
             ->whereDoesntHave('retirementRequests', fn($q) => $q->whereIn('status', ['in_workflow', 'approved', 'sent_back']))
             ->get();
 

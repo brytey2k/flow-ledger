@@ -44,8 +44,14 @@ class WorkflowApprovalsController extends Controller
             'instance.workflowable.staff',
             'instance.workflowable.branch',
             'instance.workflowable.currency',
-            'instance.workflowable.items',
+            'instance.workflowable.items.costCode',
         ]);
+
+        $workflowable = $instanceStage->instance?->workflowable;
+
+        if ($workflowable instanceof RetirementRequest) {
+            $workflowable->load('paymentRequest.currency');
+        }
 
         return view('tenant.approvals.show', compact('instanceStage'));
     }

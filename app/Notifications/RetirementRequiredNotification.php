@@ -35,12 +35,14 @@ class RetirementRequiredNotification extends Notification implements ShouldQueue
         $rawAmount = $this->subject->getAttribute('total_amount');
         $totalAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
 
+        $amount = $symbol . ' ' . number_format($totalAmount, 2);
+
         return (new MailMessage())
-            ->subject("Action Required: Retire Advance #{$id}")
-            ->greeting("Hello {$recipient->first_name},")
-            ->line('You have received an advance disbursement. Please submit your **retirement (expense report)** to account for funds spent.')
-            ->line('**Advance Amount:** ' . $symbol . ' ' . number_format($totalAmount, 2))
-            ->action('Submit Retirement', $url)
-            ->line('Please submit your retirement as soon as possible with receipts and account codes for all expenditures.');
+            ->subject(__('notifications.retirement_required.subject', ['id' => $id]))
+            ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
+            ->line(__('notifications.retirement_required.line1'))
+            ->line(__('notifications.retirement_required.amount', ['amount' => $amount]))
+            ->action(__('notifications.retirement_required.action'), $url)
+            ->line(__('notifications.retirement_required.reminder'));
     }
 }
