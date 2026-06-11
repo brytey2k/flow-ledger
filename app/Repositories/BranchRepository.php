@@ -37,10 +37,13 @@ class BranchRepository
      */
     public function allByIdsOrderedByName(array $branchIds): SupportCollection
     {
-        return Branch::whereIn('id', $branchIds)
+        /** @var SupportCollection<int, string> $result */
+        $result = Branch::whereIn('id', $branchIds)
             ->whereNull('deleted_at')
             ->orderBy('name')
             ->pluck('name', 'id');
+
+        return $result;
     }
 
     /** @return Collection<int, Branch> */

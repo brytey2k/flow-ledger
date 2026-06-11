@@ -15,6 +15,7 @@
                 Compliance-critical — unretired advances represent unaccounted money.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.outstanding-advances'])
     </div>
 </div>
 

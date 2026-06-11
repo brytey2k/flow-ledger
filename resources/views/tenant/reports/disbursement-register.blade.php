@@ -15,6 +15,7 @@
                 This is the auditor's first ask and serves as the official payment register for the period.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.disbursement-register'])
     </div>
 </div>
 

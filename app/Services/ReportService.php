@@ -6,7 +6,10 @@ namespace App\Services;
 
 use App\Enums\Tenant\PaymentMethod;
 use App\Models\Tenant\Cashbook;
+use App\Models\Tenant\CashCount;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\RetirementRequest;
+use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowAction;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\BranchRepository;
@@ -16,6 +19,7 @@ use App\Repositories\PaymentRequestRepository;
 use App\Repositories\RetirementRequestRepository;
 use App\Repositories\WorkflowActionRepository;
 use App\Repositories\WorkflowInstanceRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
@@ -36,9 +40,16 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      * @param string $groupBy
-     * @param ?string $type
+     * @param string|null $type
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: Collection<int, \stdClass>,
+     *     grandTotal: float,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     groupBy: string,
+     *     type: string|null,
+     * }
      */
     public function expenditureSummary(
         array $allowedBranchIds,
@@ -49,9 +60,12 @@ class ReportService
     ): array {
         $rows = $this->paymentRequests->expenditureSummaryRows($allowedBranchIds, $dateFrom, $dateTo, $type, $groupBy);
 
+        /** @var float|int $grandTotal */
+        $grandTotal = $rows->sum('total');
+
         return [
             'rows' => $rows,
-            'grandTotal' => $rows->sum('total'),
+            'grandTotal' => (float) $grandTotal,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'groupBy' => $groupBy,
@@ -63,10 +77,16 @@ class ReportService
      * @param array<int, int> $allowedBranchIds
      * @param int|string|null $branchId
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     advances: Collection<int, array{request: PaymentRequest, days: int, bucket: string}>,
+     *     buckets: Collection<int|string, mixed>,
+     *     branches: Collection<int, string>,
+     *     branchId: int|string|null,
+     * }
      */
     public function outstandingAdvances(array $allowedBranchIds, int|string|null $branchId): array
     {
+        /** @var Collection<int, array{request: PaymentRequest, days: int, bucket: string}> $advances */
         $advances = $this->paymentRequests->outstandingAdvances($allowedBranchIds, $branchId)->map(function (PaymentRequest $request): array {
             $days = $request->disbursed_at ? (int) $request->disbursed_at->diffInDays(now()) : 0;
             $bucket = match (true) {
@@ -82,9 +102,12 @@ class ReportService
             ];
         });
 
+        /** @var Collection<int|string, mixed> $buckets */
+        $buckets = $advances->groupBy('bucket');
+
         return [
             'advances' => $advances,
-            'buckets' => $advances->groupBy('bucket'),
+            'buckets' => $buckets,
             'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
             'branchId' => $branchId,
         ];
@@ -95,18 +118,29 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     cashbooks: Collection<int, array{cashbook: Cashbook, current_balance: float, period_debits: float, period_credits: float, entry_count: int<0, max>}>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     * }
      */
     public function cashPosition(array $allowedBranchIds, string $dateFrom, string $dateTo): array
     {
         $cashbooks = $this->cashbooks->cashbooksForPosition($allowedBranchIds, $dateFrom, $dateTo)->map(function (Cashbook $book): array {
             $entries = $book->entries;
 
+            /** @var float|int $balance */
+            $balance = $book->balance;
+            /** @var float|int $debits */
+            $debits = $entries->where('type', 'debit')->sum('amount');
+            /** @var float|int $credits */
+            $credits = $entries->where('type', 'credit')->sum('amount');
+
             return [
                 'cashbook' => $book,
-                'current_balance' => $book->balance,
-                'period_debits' => $entries->where('type', 'debit')->sum('amount'),
-                'period_credits' => $entries->where('type', 'credit')->sum('amount'),
+                'current_balance' => (float) $balance,
+                'period_debits' => (float) $debits,
+                'period_credits' => (float) $credits,
                 'entry_count' => $entries->count(),
             ];
         });
@@ -123,9 +157,18 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      * @param int|string|null $branchId
-     * @param ?string $method
+     * @param string|null $method
+     * @param int $perPage
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     disbursements: LengthAwarePaginator<int, PaymentRequest>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     branches: Collection<int, string>,
+     *     branchId: int|string|null,
+     *     method: string|null,
+     *     methods: array<int, PaymentMethod>,
+     * }
      */
     public function disbursementRegister(
         array $allowedBranchIds,
@@ -133,9 +176,10 @@ class ReportService
         string $dateTo,
         int|string|null $branchId,
         string|null $method,
+        int $perPage = 50,
     ): array {
         return [
-            'disbursements' => $this->paymentRequests->disbursementRegister($allowedBranchIds, $dateFrom, $dateTo, $branchId, $method),
+            'disbursements' => $this->paymentRequests->disbursementRegister($allowedBranchIds, $dateFrom, $dateTo, $branchId, $method, $perPage),
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
@@ -149,7 +193,11 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     stages: Collection<int, array{stage_name: string, count: int, approved: int, sent_back: int, avg_hours: float, min_hours: float, max_hours: float}>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     * }
      */
     public function approvalTurnaround(string $dateFrom, string $dateTo): array
     {
@@ -193,7 +241,10 @@ class ReportService
     /**
      * @param array<int, int> $allowedBranchIds
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     activeStages: Collection<int, array{stage: WorkflowInstanceStage, days: int, bucket: string}>,
+     *     bucketCounts: Collection<int|string, int>,
+     * }
      */
     public function pendingRequestsAging(array $allowedBranchIds): array
     {
@@ -219,9 +270,14 @@ class ReportService
                 ];
             });
 
+        /** @var Collection<int, array{stage: WorkflowInstanceStage, days: int, bucket: string}> $activeStages */
+        $activeStages = $activeStages;
+        /** @var Collection<int|string, int> $bucketCounts */
+        $bucketCounts = $activeStages->countBy('bucket');
+
         return [
             'activeStages' => $activeStages,
-            'bucketCounts' => $activeStages->countBy('bucket'),
+            'bucketCounts' => $bucketCounts,
         ];
     }
 
@@ -229,7 +285,11 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: Collection<int, array{user: User|null, total_actions: int, sent_back_count: int, rate: float}>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     * }
      */
     public function sendBackRate(string $dateFrom, string $dateTo): array
     {
@@ -263,14 +323,21 @@ class ReportService
     /**
      * @param string $dateFrom
      * @param string $dateTo
-     * @param ?string $action
+     * @param string|null $action
+     * @param int $perPage
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     actions: LengthAwarePaginator<int, WorkflowAction>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     action: string|null,
+     *     actionTypes: array<int, string>,
+     * }
      */
-    public function auditTrail(string $dateFrom, string $dateTo, string|null $action): array
+    public function auditTrail(string $dateFrom, string $dateTo, string|null $action, int $perPage = 50): array
     {
         return [
-            'actions' => $this->workflowActions->auditTrail($dateFrom, $dateTo, $action),
+            'actions' => $this->workflowActions->auditTrail($dateFrom, $dateTo, $action, $perPage),
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'action' => $action,
@@ -283,7 +350,14 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     paymentStatuses: EloquentCollection<int, PaymentRequest>,
+     *     retirementStatuses: EloquentCollection<int, RetirementRequest>,
+     *     paymentTotal: float|int,
+     *     retirementTotal: float|int,
+     *     dateFrom: string,
+     *     dateTo: string,
+     * }
      */
     public function requestsByStatus(array $allowedBranchIds, string $dateFrom, string $dateTo): array
     {
@@ -306,7 +380,16 @@ class ReportService
      * @param string $dateTo
      * @param int|string|null $branchId
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: Collection<int, \stdClass>,
+     *     totalDisbursed: float,
+     *     totalExpended: float,
+     *     totalDifference: float,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     branches: Collection<int, string>,
+     *     branchId: int|string|null,
+     * }
      */
     public function retirementVariance(
         array $allowedBranchIds,
@@ -316,11 +399,18 @@ class ReportService
     ): array {
         $rows = $this->retirementRequests->varianceRows($allowedBranchIds, $dateFrom, $dateTo, $branchId);
 
+        /** @var float|int $totalDisbursed */
+        $totalDisbursed = $rows->sum('disbursed_amount');
+        /** @var float|int $totalExpended */
+        $totalExpended = $rows->sum('total_amount_expended');
+        /** @var float|int $totalDifference */
+        $totalDifference = $rows->sum('difference_amount');
+
         return [
             'rows' => $rows,
-            'totalDisbursed' => $rows->sum('disbursed_amount'),
-            'totalExpended' => $rows->sum('total_amount_expended'),
-            'totalDifference' => $rows->sum('difference_amount'),
+            'totalDisbursed' => (float) $totalDisbursed,
+            'totalExpended' => (float) $totalExpended,
+            'totalDifference' => (float) $totalDifference,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
@@ -335,7 +425,17 @@ class ReportService
      * @param int|string|null $branchId
      * @param string|null $type
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: Collection<int, \stdClass>,
+     *     byBranch: Collection<int|string, mixed>,
+     *     deniedCount: int,
+     *     cancelledCount: int,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     branches: Collection<int, string>,
+     *     branchId: int|string|null,
+     *     type: string|null,
+     * }
      */
     public function deniedCancelledAnalysis(
         array $allowedBranchIds,
@@ -346,11 +446,18 @@ class ReportService
     ): array {
         $rows = $this->paymentRequests->deniedCancelledRows($allowedBranchIds, $dateFrom, $dateTo, $branchId, $type);
 
+        /** @var Collection<int|string, mixed> $byBranch */
+        $byBranch = $rows->groupBy('branch_name');
+        /** @var int $deniedCount */
+        $deniedCount = (int) $rows->where('status', 'denied')->sum('count');
+        /** @var int $cancelledCount */
+        $cancelledCount = (int) $rows->where('status', 'cancelled')->sum('count');
+
         return [
             'rows' => $rows,
-            'byBranch' => $rows->groupBy('branch_name'),
-            'deniedCount' => (int) $rows->where('status', 'denied')->sum('count'),
-            'cancelledCount' => (int) $rows->where('status', 'cancelled')->sum('count'),
+            'byBranch' => $byBranch,
+            'deniedCount' => $deniedCount,
+            'cancelledCount' => $cancelledCount,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),
@@ -363,7 +470,11 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     stages: Collection<int, array{stage_name: string, count: int, approved: int, sent_back: int, avg_hours: float, min_hours: float, max_hours: float}>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     * }
      */
     public function retirementTurnaround(string $dateFrom, string $dateTo): array
     {
@@ -409,9 +520,19 @@ class ReportService
      * @param int $slaDays
      * @param string $dateFrom
      * @param string $dateTo
-     * @param ?string $type
+     * @param string|null $type
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     requests: Collection<int, array{request: PaymentRequest, days: int, compliant: bool}>,
+     *     compliantCount: int,
+     *     total: int,
+     *     complianceRate: float,
+     *     avgDays: float,
+     *     slaDays: int,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     type: string|null,
+     * }
      */
     public function workflowSla(
         array $allowedBranchIds,
@@ -422,7 +543,7 @@ class ReportService
     ): array {
         $requests = $this->paymentRequests->workflowSlaRequests($allowedBranchIds, $dateFrom, $dateTo, $type)->map(function (PaymentRequest $request) use ($slaDays): array {
             $days = $request->submitted_at && $request->approved_at
-                ? $request->submitted_at->diffInDays($request->approved_at)
+                ? (int) $request->submitted_at->diffInDays($request->approved_at)
                 : 0;
 
             return [
@@ -432,8 +553,10 @@ class ReportService
             ];
         });
 
-        $compliantCount = $requests->where('compliant', true)->count();
-        $total = $requests->count();
+        /** @var int $compliantCount */
+        $compliantCount = (int) $requests->where('compliant', true)->count();
+        /** @var int $total */
+        $total = (int) $requests->count();
         $complianceRate = $total > 0 ? (float) round(($compliantCount / $total) * 100, 1) : 0.0;
         $avgDays = $total > 0 ? (float) round((float) $requests->avg('days'), 1) : 0.0;
 
@@ -453,9 +576,14 @@ class ReportService
     /**
      * @param array<int, int> $allowedBranchIds
      * @param int $year
-     * @param ?string $type
+     * @param string|null $type
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: EloquentCollection<int, PaymentRequest>,
+     *     year: int,
+     *     years: Collection<int, int>,
+     *     type: string|null,
+     * }
      */
     public function spendTrend(array $allowedBranchIds, int $year, string|null $type): array
     {
@@ -479,9 +607,15 @@ class ReportService
      * @param string $dateFrom
      * @param string $dateTo
      * @param string $groupBy
-     * @param ?string $type
+     * @param string|null $type
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: Collection<int, \stdClass>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     groupBy: string,
+     *     type: string|null,
+     * }
      */
     public function topSpenders(
         array $allowedBranchIds,
@@ -511,8 +645,14 @@ class ReportService
      * @param int|string|null $costCodeId
      * @param string|null $type
      * @param string $title
+     * @param int $perPage
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: LengthAwarePaginator<int, PaymentRequest>,
+     *     title: string,
+     *     dateFrom: string,
+     *     dateTo: string,
+     * }
      */
     public function paymentRequestBreakdown(
         array $allowedBranchIds,
@@ -526,6 +666,7 @@ class ReportService
         int|string|null $costCodeId,
         string|null $type,
         string $title,
+        int $perPage = 50,
     ): array {
         return [
             'rows' => $this->paymentRequests->breakdown(
@@ -539,6 +680,7 @@ class ReportService
                 $departmentId,
                 $costCodeId,
                 $type,
+                $perPage,
             ),
             'title' => $title,
             'dateFrom' => $dateFrom,
@@ -552,7 +694,16 @@ class ReportService
      * @param string $dateTo
      * @param int|string|null $branchId
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: EloquentCollection<int, CashCount>,
+     *     totalCounts: int,
+     *     withDiscrepancy: int,
+     *     netDifference: float,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     branches: Collection<int, string>,
+     *     branchId: int|string|null,
+     * }
      */
     public function cashCountReport(
         array $allowedBranchIds,

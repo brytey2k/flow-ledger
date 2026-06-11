@@ -30,6 +30,7 @@ use App\Http\Controllers\Web\Tenant\PaymentRequestsController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestSubmitController;
 use App\Http\Controllers\Web\Tenant\PositionsController;
 use App\Http\Controllers\Web\Tenant\ReportsController;
+use App\Http\Controllers\Web\Tenant\ReportsExportController;
 use App\Http\Controllers\Web\Tenant\RetirementRequestCancelController;
 use App\Http\Controllers\Web\Tenant\RetirementRequestResubmitController;
 use App\Http\Controllers\Web\Tenant\RetirementRequestsController;
@@ -126,6 +127,62 @@ Route::middleware([
         Route::get('/reports/breakdown', [ReportsController::class, 'paymentRequestBreakdown'])
             ->can(PermissionKey::AccessReports->value)
             ->name('reports.breakdown');
+
+        // Report exports
+        Route::get('/reports/expenditure-summary/export', [ReportsExportController::class, 'expenditureSummary'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.expenditure-summary');
+        Route::get('/reports/outstanding-advances/export', [ReportsExportController::class, 'outstandingAdvances'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.outstanding-advances');
+        Route::get('/reports/cash-position/export', [ReportsExportController::class, 'cashPosition'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.cash-position');
+        Route::get('/reports/disbursement-register/export', [ReportsExportController::class, 'disbursementRegister'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.disbursement-register');
+        Route::get('/reports/approval-turnaround/export', [ReportsExportController::class, 'approvalTurnaround'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.approval-turnaround');
+        Route::get('/reports/pending-requests-aging/export', [ReportsExportController::class, 'pendingRequestsAging'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.pending-requests-aging');
+        Route::get('/reports/send-back-rate/export', [ReportsExportController::class, 'sendBackRate'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.send-back-rate');
+        Route::get('/reports/audit-trail/export', [ReportsExportController::class, 'auditTrail'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.audit-trail');
+        Route::get('/reports/requests-by-status/export', [ReportsExportController::class, 'requestsByStatus'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.requests-by-status');
+        Route::get('/reports/workflow-sla/export', [ReportsExportController::class, 'workflowSla'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.workflow-sla');
+        Route::get('/reports/spend-trend/export', [ReportsExportController::class, 'spendTrend'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.spend-trend');
+        Route::get('/reports/top-spenders/export', [ReportsExportController::class, 'topSpenders'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.top-spenders');
+        Route::get('/reports/retirement-reminders/export', [ReportsExportController::class, 'retirementReminders'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.retirement-reminders');
+        Route::get('/reports/retirement-variance/export', [ReportsExportController::class, 'retirementVariance'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.retirement-variance');
+        Route::get('/reports/denied-cancelled/export', [ReportsExportController::class, 'deniedCancelledAnalysis'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.denied-cancelled');
+        Route::get('/reports/retirement-turnaround/export', [ReportsExportController::class, 'retirementTurnaround'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.retirement-turnaround');
+        Route::get('/reports/cash-count/export', [ReportsExportController::class, 'cashCountReport'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.cash-count');
+        Route::get('/reports/breakdown/export', [ReportsExportController::class, 'paymentRequestBreakdown'])
+            ->can(PermissionKey::AccessReports->value)
+            ->name('reports.export.breakdown');
 
         // Levels
         Route::get('/levels', [LevelController::class, 'index'])

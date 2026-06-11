@@ -179,7 +179,13 @@ class RetirementReminderService
      * @param string $dateTo
      * @param int|string|null $branchId
      *
-     * @return array<string, mixed>
+     * @return array{
+     *     rows: \Illuminate\Support\Collection<int, \stdClass>,
+     *     dateFrom: string,
+     *     dateTo: string,
+     *     branchId: int|string|null,
+     *     branches: \Illuminate\Support\Collection<int, string>,
+     * }
      */
     public function getReport(array $allowedBranchIds, string $dateFrom, string $dateTo, int|string|null $branchId): array
     {

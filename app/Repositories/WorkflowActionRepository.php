@@ -48,10 +48,11 @@ class WorkflowActionRepository
      * @param string $dateFrom
      * @param string $dateTo
      * @param ?string $action
+     * @param int $perPage
      *
      * @return LengthAwarePaginator<int, WorkflowAction>
      */
-    public function auditTrail(string $dateFrom, string $dateTo, string|null $action): LengthAwarePaginator
+    public function auditTrail(string $dateFrom, string $dateTo, string|null $action, int $perPage = 50): LengthAwarePaginator
     {
         return WorkflowAction::with([
             'user',
@@ -61,7 +62,7 @@ class WorkflowActionRepository
             ->whereBetween('created_at', [$dateFrom, $dateTo])
             ->when($action, fn($query) => $query->where('action', $action))
             ->latest('created_at')
-            ->paginate(50)
+            ->paginate($perPage)
             ->withQueryString();
     }
 }

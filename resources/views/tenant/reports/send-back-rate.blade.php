@@ -15,6 +15,7 @@
                 High rates signal training gaps or poor submission quality and are a leading indicator of workflow inefficiency.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.send-back-rate'])
     </div>
 </div>
 

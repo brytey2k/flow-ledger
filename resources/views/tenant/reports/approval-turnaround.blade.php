@@ -15,6 +15,7 @@
                 High averages clearly show where bottlenecks are forming in your approval process.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.approval-turnaround'])
     </div>
 </div>
 

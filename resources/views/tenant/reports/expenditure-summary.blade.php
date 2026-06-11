@@ -15,6 +15,7 @@
                 The #1 report every finance team needs.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.expenditure-summary'])
     </div>
 </div>
 

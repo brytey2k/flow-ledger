@@ -15,6 +15,7 @@
                 Shows where approval bottlenecks form in the retirement review process.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.retirement-turnaround'])
     </div>
 </div>
 

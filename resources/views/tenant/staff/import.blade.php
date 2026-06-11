@@ -40,23 +40,6 @@
                 <h3 class="kt-card-title">{{ __('staff.import_card') }}</h3>
             </div>
             <div class="kt-card-content">
-                @if (session('success'))
-                    <div class="mb-6 rounded-lg border border-success/30 bg-success/5 p-4 text-sm text-success">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                @if ($errors->any())
-                    <div class="mb-6 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                        <h4 class="mb-2 text-sm font-medium text-destructive">{{ __('common.fix_errors') }}</h4>
-                        <ul class="list-disc space-y-1 ps-5 text-sm text-destructive">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 @php($importErrors = session('import_errors', []))
                 @if (! empty($importErrors) && is_array($importErrors))
                     <details class="mb-6 rounded-lg border border-warning/30 bg-warning/5 p-4">

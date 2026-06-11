@@ -14,9 +14,12 @@
                 {{ $dateFrom }} — {{ $dateTo }}
             </p>
         </div>
-        <a href="javascript:history.back()" class="kt-btn kt-btn-light kt-btn-sm">
-            <i class="ki-filled ki-arrow-left text-xs"></i> Back
-        </a>
+        <div class="flex items-center gap-2">
+            @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.breakdown'])
+            <a href="javascript:history.back()" class="kt-btn kt-btn-light kt-btn-sm">
+                <i class="ki-filled ki-arrow-left text-xs"></i> Back
+            </a>
+        </div>
     </div>
 </div>
 

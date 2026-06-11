@@ -14,6 +14,7 @@
                 Disbursed advances that have triggered overdue retirement reminders — how many reminders were sent per advance and when the last one was dispatched.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.retirement-reminders'])
     </div>
 </div>
 

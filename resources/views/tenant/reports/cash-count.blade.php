@@ -14,6 +14,7 @@
                 All physical cash counts for a date range. Shows counted totals against book balances, highlights discrepancies, and identifies who performed each count.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.cash-count'])
     </div>
 </div>
 

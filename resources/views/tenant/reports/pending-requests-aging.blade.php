@@ -15,6 +15,7 @@
                 This report flags stuck approvals before they become a problem.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.pending-requests-aging'])
     </div>
 </div>
 

@@ -15,6 +15,7 @@
                 Required for internal and external audits to demonstrate a clear chain of accountability.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.audit-trail'])
     </div>
 </div>
 

@@ -15,6 +15,7 @@
                 Filter by date range to see pipeline distribution for any period.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.requests-by-status'])
     </div>
 </div>
 

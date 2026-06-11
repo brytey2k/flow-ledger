@@ -15,6 +15,7 @@
                 High failure rates in a branch or type signal a process or training gap worth investigating.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.denied-cancelled'])
     </div>
 </div>
 

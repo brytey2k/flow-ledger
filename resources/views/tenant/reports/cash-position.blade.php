@@ -15,6 +15,7 @@
                 and gives a clear picture of available funds across all branches.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.cash-position'])
     </div>
 </div>
 

@@ -15,6 +15,7 @@
                 Positive difference means a refund is owed; negative means the staff was paid extra.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.retirement-variance'])
     </div>
 </div>
 

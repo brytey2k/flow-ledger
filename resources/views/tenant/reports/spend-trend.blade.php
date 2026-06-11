@@ -15,6 +15,7 @@
                 and year-over-year changes in organisational expenditure.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.spend-trend'])
     </div>
 </div>
 

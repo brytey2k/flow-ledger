@@ -141,6 +141,7 @@ class PaymentRequestRepository
      * @param string $dateTo
      * @param int|string|null $branchId
      * @param ?string $method
+     * @param int $perPage
      *
      * @return LengthAwarePaginator<int, PaymentRequest>
      */
@@ -150,6 +151,7 @@ class PaymentRequestRepository
         string $dateTo,
         int|string|null $branchId,
         string|null $method,
+        int $perPage = 50,
     ): LengthAwarePaginator {
         return PaymentRequest::with(['staff', 'branch', 'currency', 'disbursedBy'])
             ->where('status', 'disbursed')
@@ -159,7 +161,7 @@ class PaymentRequestRepository
             ->when($branchId, fn(EloquentBuilder $query) => $query->where('branch_id', $branchId))
             ->when($method, fn(EloquentBuilder $query) => $query->where('disbursement_method', $method))
             ->orderByDesc('disbursed_at')
-            ->paginate(50)
+            ->paginate($perPage)
             ->withQueryString();
     }
 

@@ -15,6 +15,7 @@
                 Useful for budget conversations, spend reviews, and identifying where resources are being concentrated.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.top-spenders'])
     </div>
 </div>
 

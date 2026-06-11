@@ -15,6 +15,7 @@
                 A compliance KPI management can act on to hold approvers accountable and set service level expectations.
             </p>
         </div>
+        @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.workflow-sla'])
     </div>
 </div>
 
