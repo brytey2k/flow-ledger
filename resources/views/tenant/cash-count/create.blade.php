@@ -53,7 +53,7 @@
             </div>
 
             <!-- Denominations Grid -->
-            @php $denominationsByType = $denominations->groupBy(fn($d) => $d->type->value); @endphp
+            @php $denominationsByType = $denominations->groupBy(fn($d) => $d->type->value, true); @endphp
             @foreach(['note' => __('cash_count.denominations.types.note'), 'coin' => __('cash_count.denominations.types.coin')] as $type => $typeLabel)
                 @if($denominationsByType->has($type))
                     <div class="kt-card">
@@ -122,23 +122,26 @@ function cashCount() {
         quantities: @json(collect(range(0, $denominations->count() - 1))->map(fn($i) => (int) old("items.{$i}.quantity", 0))->values()),
         values: @json($denominations->pluck('value')->map(fn($v) => (float) $v)->values()->toArray()),
         balance: {{ (float) $cashbook->balance }},
+        countedTotal: 0,
 
-        updateTotal() {},
+        init() {
+            this.updateTotal();
+        },
 
-        total() {
+        updateTotal() {
             let sum = 0;
             for (let i = 0; i < this.quantities.length; i++) {
                 sum += (this.quantities[i] || 0) * this.values[i];
             }
-            return Math.round(sum * 100) / 100;
+            this.countedTotal = Math.round(sum * 100) / 100;
         },
 
         formatTotal() {
-            return this.total().toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return this.countedTotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         },
 
         diff() {
-            return Math.round((this.total() - this.balance) * 100) / 100;
+            return Math.round((this.countedTotal - this.balance) * 100) / 100;
         },
 
         diffText(symbol, balance) {
