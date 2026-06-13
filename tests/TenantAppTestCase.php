@@ -49,6 +49,8 @@ abstract class TenantAppTestCase extends BaseTestCase
 
         $this->initializeTenancy();
 
+        $this->withoutVite();
+
         $this->withoutMiddleware([
             InitializeTenancyByDomain::class,
             PreventAccessFromCentralDomains::class,
