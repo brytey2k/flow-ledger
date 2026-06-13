@@ -99,6 +99,19 @@
             <button class="kt-btn kt-btn-primary flex justify-center grow" type="submit">
                 {{ __('auth.sign_in') }}
             </button>
+
+            @if (Route::has('sso.redirect'))
+                <div class="relative flex items-center gap-3">
+                    <div class="border-t border-border grow"></div>
+                    <span class="text-xs text-muted-foreground shrink-0">{{ __('auth.or') }}</span>
+                    <div class="border-t border-border grow"></div>
+                </div>
+
+                <a class="kt-btn kt-btn-light flex justify-center grow gap-2" href="{{ url('/auth/sso/redirect') }}">
+                    <i class="ki-filled ki-shield-tick text-base"></i>
+                    {{ __('auth.sign_in_with_sso') }}
+                </a>
+            @endif
         </form>
         <div class="border-t border-border px-10 py-4 flex items-center justify-between">
             <form method="POST" action="{{ route('locale.update') }}">

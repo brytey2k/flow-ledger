@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Web\Auth\BackchannelLogoutController;
+use App\Http\Controllers\Web\Auth\SsoController;
 use App\Http\Controllers\Web\Landlord\Auth\LoginController;
 use App\Http\Controllers\Web\Landlord\DocumentationController;
 use App\Http\Controllers\Web\Landlord\TenantFeatureFlagsController;
@@ -9,6 +11,15 @@ use App\Http\Controllers\Web\Landlord\TenantsController;
 use Illuminate\Support\Facades\Route;
 
 foreach (config('tenancy.central_domains') as $domain) {
+    Route::domain($domain)->group(static function () {
+        Route::prefix('auth/sso')->name('sso.')->group(static function () {
+            Route::get('redirect', [SsoController::class, 'redirect'])->name('redirect');
+            Route::get('callback', [SsoController::class, 'callback'])->name('callback');
+            Route::post('logout', [SsoController::class, 'logout'])->name('logout');
+            Route::post('backchannel-logout', BackchannelLogoutController::class)->name('backchannel-logout');
+        });
+    });
+
     Route::domain($domain)->name('landlord.')->group(static function () {
         Route::get('landlord/sys-admin/login', [LoginController::class, 'create'])->name('login');
         Route::post('landlord/sys-admin/login', [LoginController::class, 'store'])->name('do-login');

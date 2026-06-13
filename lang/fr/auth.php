@@ -20,4 +20,6 @@ return [
     'remember_me' => 'Se souvenir de moi',
     'send_reset_link' => 'Envoyer le lien de reinitialisation',
     'back_to_sign_in' => 'Retour a la connexion',
+    'or' => 'ou',
+    'sign_in_with_sso' => 'Se connecter avec SSO',
 ];

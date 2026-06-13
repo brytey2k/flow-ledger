@@ -11,6 +11,7 @@ return [
     'expense_settings_card' => 'Expense Settings',
     'retirement_settings_card' => 'Retirement Settings',
     'retirement_reminders_card' => 'Retirement Reminders',
+    'sso_card' => 'Single Sign-On (SSO)',
 
     'fields' => [
         'logo_light' => 'Light Mode Logo',
@@ -42,5 +43,8 @@ return [
         'retirement_reminder_notify_approvers_hint' => 'Send reminders to everyone who approved the advance workflow.',
         'retirement_reminder_notify_role_ids' => 'Also notify these roles',
         'retirement_reminder_notify_role_ids_hint' => 'Members of the selected roles will also receive reminders. Duplicate recipients are automatically suppressed.',
+        'sso_default_branch' => 'Default Branch for SSO-Provisioned Users',
+        'sso_default_branch_hint' => 'New users signing in via SSO for the first time will be assigned to this branch.',
+        'no_default_branch' => '— No default —',
     ],
 ];

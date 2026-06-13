@@ -172,8 +172,30 @@ class SettingsService
     /**
      * @param array{grace_period_days: int, frequency_days: int, notify_submitter: bool, notify_approvers: bool, notify_role_ids: list<int>} $data
      */
+    /**
+     * @param array{grace_period_days: int, frequency_days: int, notify_submitter: bool, notify_approvers: bool, notify_role_ids: list<int>} $data
+     */
     public function setRetirementReminderSettings(array $data): void
     {
         $this->repository->set(SettingKey::RetirementReminders, $data);
+    }
+
+    public function getSsoDefaultBranchId(): int|null
+    {
+        $setting = $this->repository->get(SettingKey::SsoDefaultBranch);
+
+        if (! isset($setting['branch_id'])) {
+            return null;
+        }
+
+        /** @var int $branchId */
+        $branchId = $setting['branch_id'];
+
+        return $branchId;
+    }
+
+    public function setSsoDefaultBranch(int|null $branchId): void
+    {
+        $this->repository->set(SettingKey::SsoDefaultBranch, ['branch_id' => $branchId]);
     }
 }

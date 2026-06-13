@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\SettingsUpdateRequest;
+use App\Repositories\BranchRepository;
 use App\Repositories\CostCodeRepository;
 use App\Repositories\RoleRepository;
 use App\Services\SettingsService;
@@ -18,6 +19,7 @@ class SettingsController extends Controller
         private readonly SettingsService $settingsService,
         private readonly CostCodeRepository $costCodeRepository,
         private readonly RoleRepository $roleRepository,
+        private readonly BranchRepository $branchRepository,
     ) {}
 
     public function index(): View
@@ -31,8 +33,10 @@ class SettingsController extends Controller
         $requireRetirementSourceDocuments = $this->settingsService->isRetirementSourceDocumentRequired();
         $retirementReminderSettings = $this->settingsService->getRetirementReminderSettings();
         $roles = $this->roleRepository->allOrderedByName();
+        $branches = $this->branchRepository->allOrderedByName();
+        $ssoDefaultBranchId = $this->settingsService->getSsoDefaultBranchId();
 
-        return view('tenant.settings.index', compact('lightLogoUrl', 'darkLogoUrl', 'smallLogoUrl', 'costCodes', 'defaultAdvanceCostCodeId', 'requireExpenseSourceDocuments', 'requireRetirementSourceDocuments', 'retirementReminderSettings', 'roles'));
+        return view('tenant.settings.index', compact('lightLogoUrl', 'darkLogoUrl', 'smallLogoUrl', 'costCodes', 'defaultAdvanceCostCodeId', 'requireExpenseSourceDocuments', 'requireRetirementSourceDocuments', 'retirementReminderSettings', 'roles', 'branches', 'ssoDefaultBranchId'));
     }
 
     public function update(SettingsUpdateRequest $request): RedirectResponse
@@ -70,6 +74,11 @@ class SettingsController extends Controller
             'notify_approvers' => $request->boolean('retirement_reminder_notify_approvers'),
             'notify_role_ids' => array_values(array_map(static fn(mixed $v): int => is_scalar($v) ? (int) $v : 0, (array) $request->input('retirement_reminder_notify_role_ids', []))),
         ]);
+
+        if ($request->has('sso_default_branch_id')) {
+            $rawBranchId = $request->integer('sso_default_branch_id');
+            $this->settingsService->setSsoDefaultBranch($rawBranchId ?: null);
+        }
 
         return redirect()->route('settings.index')->with('success', __('flash.settings.updated'));
     }

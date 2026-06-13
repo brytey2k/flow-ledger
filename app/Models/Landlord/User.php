@@ -23,6 +23,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'oidc_sub',
+        'is_oidc_user',
         'password',
     ];
 
@@ -36,6 +38,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_oidc_user' => 'boolean',
         ];
     }
 

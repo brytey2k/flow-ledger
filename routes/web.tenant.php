@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Tenant\AttachmentsController;
 use App\Http\Controllers\Web\Tenant\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\LoginController;
 use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
+use App\Http\Controllers\Web\Tenant\Auth\SsoFinalizeController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
 use App\Http\Controllers\Web\Tenant\CashBalanceThresholdController;
 use App\Http\Controllers\Web\Tenant\CashbookController;
@@ -57,6 +58,7 @@ Route::middleware([
 ])->group(function (): void {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('do-login');
+    Route::get('/auth/sso/finalize', SsoFinalizeController::class)->name('sso.finalize');
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendLink'])->name('password.email');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');

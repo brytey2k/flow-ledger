@@ -19,6 +19,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'id',
         'name',
         'is_suspended',
+        'idp_tenant_id',
     ];
 
     /** @return HasMany<Domain, $this> */

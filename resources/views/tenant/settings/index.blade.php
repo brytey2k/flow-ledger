@@ -312,6 +312,39 @@
             </div>
         </div>
 
+        {{-- SSO Settings --}}
+        <div class="kt-card">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">{{ __('settings.sso_card') }}</h3>
+            </div>
+            <div class="kt-card-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div>
+                        <label class="kt-form-label block mb-2" for="sso_default_branch_id">
+                            {{ __('settings.fields.sso_default_branch') }}
+                        </label>
+                        <select id="sso_default_branch_id" name="sso_default_branch_id"
+                                class="kt-select w-full"
+                                aria-invalid="@error('sso_default_branch_id') true @else false @enderror">
+                            <option value="">{{ __('settings.fields.no_default_branch') }}</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}"
+                                    {{ old('sso_default_branch_id', $ssoDefaultBranchId) == $branch->id ? 'selected' : '' }}>
+                                    {{ $branch->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="mt-1 text-xs text-muted-foreground">
+                            {{ __('settings.fields.sso_default_branch_hint') }}
+                        </div>
+                        @error('sso_default_branch_id')
+                            <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="flex justify-start items-center gap-2.5">
             <button type="submit" class="kt-btn kt-btn-primary">
                 <i class="ki-filled ki-check"></i>

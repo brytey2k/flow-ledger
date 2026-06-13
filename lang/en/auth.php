@@ -20,4 +20,6 @@ return [
     'remember_me' => 'Remember me',
     'send_reset_link' => 'Send Reset Link',
     'back_to_sign_in' => 'Back to Sign In',
+    'or' => 'or',
+    'sign_in_with_sso' => 'Sign in with SSO',
 ];

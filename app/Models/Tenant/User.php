@@ -18,6 +18,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $first_name
  * @property string $last_name
  * @property string $email
+ * @property string|null $oidc_sub
+ * @property bool $is_oidc_user
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $locale
  * @property string $password
@@ -56,6 +58,8 @@ class User extends Authenticatable implements HasLocalePreference
         'first_name',
         'last_name',
         'email',
+        'oidc_sub',
+        'is_oidc_user',
         'password',
         'locale',
         'branch_id',
@@ -72,6 +76,7 @@ class User extends Authenticatable implements HasLocalePreference
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_oidc_user' => 'boolean',
         ];
     }
 

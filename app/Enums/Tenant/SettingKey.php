@@ -13,4 +13,5 @@ enum SettingKey: string
     case RequireExpenseSourceDocuments = 'require_expense_source_documents';
     case RequireRetirementSourceDocuments = 'require_retirement_source_documents';
     case RetirementReminders = 'retirement_reminders';
+    case SsoDefaultBranch = 'sso_default_branch';
 }

@@ -15,6 +15,7 @@
         "laravel/framework": "^13.7",
         "laravel/pennant": "^1.18",
         "laravel/tinker": "^3.0",
+        "lcobucci/jwt": "^5.6",
         "phpoffice/phpspreadsheet": "^5.7",
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^6.23",
@@ -68,6 +69,9 @@
         ],
         "pint-dirty": [
             "vendor/bin/pint --parallel --dirty"
+        ],
+        "pint-test": [
+            "vendor/bin/pint --parallel --test"
         ],
         "phpstan": [
             "vendor/bin/phpstan --memory-limit=512M"
