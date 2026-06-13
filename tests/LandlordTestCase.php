@@ -23,6 +23,8 @@ abstract class LandlordTestCase extends BaseTestCase
     {
         parent::setUp();
 
+        $this->withoutVite();
+
         $this->landlordUser = User::factory()->create();
 
         // Create a tenant record without triggering DB-creation events
