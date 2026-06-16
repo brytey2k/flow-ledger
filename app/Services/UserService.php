@@ -41,7 +41,7 @@ class UserService
         });
 
         if (! $user->is_oidc_user) {
-            $user->notify(new WelcomeNotification($dto->password));
+            $user->notify(new WelcomeNotification($dto->password, route('login')));
         }
 
         return $user;

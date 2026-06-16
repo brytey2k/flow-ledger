@@ -13,7 +13,10 @@ class WelcomeNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public readonly string $temporaryPassword) {}
+    public function __construct(
+        public readonly string $temporaryPassword,
+        public readonly string $loginUrl,
+    ) {}
 
     /** @return list<string> */
     public function via(object $notifiable): array
@@ -32,6 +35,6 @@ class WelcomeNotification extends Notification implements ShouldQueue
             ->line(__('notifications.welcome.line_1'))
             ->line(__('notifications.welcome.password', ['password' => $this->temporaryPassword]))
             ->line(__('notifications.welcome.line_2'))
-            ->action(__('notifications.welcome.action'), route('login'));
+            ->action(__('notifications.welcome.action'), $this->loginUrl);
     }
 }
