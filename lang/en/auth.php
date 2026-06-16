@@ -8,6 +8,8 @@ return [
     'forgot_password' => 'Forgot Password',
     'forgot_password_hint' => "Enter your email and we'll send you a reset link.",
     'reset_password' => 'Reset Password',
+    'change_password' => 'Change Password',
+    'change_password_hint' => 'You must change your password before continuing.',
     'email' => 'Email',
     'email_placeholder' => 'email@email.com',
     'password' => 'Password',

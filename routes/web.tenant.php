@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\Tenant\ActivityLogController;
 use App\Http\Controllers\Web\Tenant\AttachmentsController;
 use App\Http\Controllers\Web\Tenant\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\LoginController;
+use App\Http\Controllers\Web\Tenant\Auth\PasswordChangeController;
 use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\SsoFinalizeController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
@@ -66,8 +67,10 @@ Route::middleware([
 
     Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
-    Route::middleware(['auth'])->group(function (): void {
+    Route::middleware(['auth', 'force.password.change'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
+        Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/documentation', [DocumentationController::class, 'index'])->name('documentation');
 

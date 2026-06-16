@@ -25,8 +25,6 @@ class UserUpdateRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user)],
             'password' => ['nullable', 'string', 'confirmed', Password::defaults()],
-            'branch_id' => ['required', 'integer', 'exists:branches,id'],
-            'operational_branch_id' => ['nullable', 'integer', 'exists:branches,id'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['exists:roles,id'],
         ];
@@ -37,15 +35,11 @@ class UserUpdateRequest extends FormRequest
         /** @var list<int|string> $rawRoles */
         $rawRoles = (array) ($this->input('roles', []) ?? []);
 
-        $branchId = $this->integer('branch_id');
-
         return new \App\DTOs\Tenant\UpdateUserDto(
             firstName: $this->string('first_name')->toString(),
             lastName: $this->string('last_name')->toString(),
             email: $this->string('email')->toString(),
             password: $this->filled('password') ? $this->string('password')->toString() : null,
-            branchId: $branchId,
-            operationalBranchId: $this->filled('operational_branch_id') ? $this->integer('operational_branch_id') : $branchId,
             roles: array_map(fn(int|string $v): int => (int) $v, $rawRoles),
         );
     }

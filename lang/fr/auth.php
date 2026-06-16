@@ -8,6 +8,8 @@ return [
     'forgot_password' => 'Mot de passe oublie',
     'forgot_password_hint' => 'Saisissez votre email et nous vous enverrons un lien de reinitialisation.',
     'reset_password' => 'Reinitialiser le mot de passe',
+    'change_password' => 'Changer le mot de passe',
+    'change_password_hint' => 'Vous devez changer votre mot de passe avant de continuer.',
     'email' => 'Email',
     'email_placeholder' => 'email@exemple.com',
     'password' => 'Mot de passe',

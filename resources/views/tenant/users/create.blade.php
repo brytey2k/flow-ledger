@@ -65,6 +65,42 @@
                             @enderror
                         </div>
 
+                        <!-- Branch -->
+                        <div>
+                            <label class="kt-form-label block mb-2" for="branch_id">
+                                {{ __('users.fields.branch') }} <span class="text-destructive">*</span>
+                            </label>
+                            <select id="branch_id" name="branch_id" class="kt-select w-full" required aria-invalid="@error('branch_id') true @else false @enderror">
+                                <option value="">{{ __('users.fields.select_branch') }}</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('branch_id')
+                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Operational Branch -->
+                        <div>
+                            <label class="kt-form-label block mb-2" for="operational_branch_id">
+                                {{ __('users.fields.operational_branch') }}
+                            </label>
+                            <select id="operational_branch_id" name="operational_branch_id" class="kt-select w-full" aria-invalid="@error('operational_branch_id') true @else false @enderror">
+                                <option value="">{{ __('users.fields.select_operational_branch') }}</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" {{ old('operational_branch_id') == $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('operational_branch_id')
+                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Password -->
                         <div>
                             <label class="kt-form-label block mb-2" for="password">

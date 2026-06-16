@@ -160,4 +160,7 @@ return [
         'deleted' => 'Cash count deleted successfully.',
         'no_denominations' => 'No denominations are configured for this currency. Please add denominations before performing a cash count.',
     ],
+    'password' => [
+        'changed' => 'Your password has been changed successfully.',
+    ],
 ];

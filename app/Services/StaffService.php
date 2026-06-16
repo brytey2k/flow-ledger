@@ -49,6 +49,7 @@ class StaffService
     {
         DB::transaction(function () use ($staff, $dto, $actor): void {
             $userId = $staff->user_id;
+            $oldBranchId = $staff->branch_id;
 
             if ($userId === null) {
                 if ($dto->newUser !== null) {
@@ -69,6 +70,10 @@ class StaffService
                 'user_id' => $userId,
                 'branch_id' => $dto->branchId,
             ]);
+
+            if ($userId !== null && $oldBranchId !== $dto->branchId) {
+                $this->userService->syncBranch($userId, $dto->branchId, $oldBranchId);
+            }
 
             activity()
                 ->performedOn($staff)

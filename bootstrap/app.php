@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'tenant.active' => App\Http\Middleware\EnsureTenantIsActive::class,
+            'force.password.change' => App\Http\Middleware\ForcePasswordChange::class,
         ]);
     })
     ->withSchedule(function (Schedule $schedule): void {

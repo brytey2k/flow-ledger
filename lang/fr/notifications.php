@@ -5,6 +5,14 @@ declare(strict_types=1);
 return [
     'greeting' => 'Bonjour :name,',
 
+    'welcome' => [
+        'subject' => 'Bienvenue sur :app_name',
+        'line_1' => 'Un compte a été créé pour vous. Vous pouvez utiliser les identifiants ci-dessous pour vous connecter.',
+        'password' => '**Mot de passe temporaire :** :password',
+        'line_2' => 'Pour votre sécurité, il vous sera demandé de changer votre mot de passe après votre première connexion.',
+        'action' => 'Se connecter',
+    ],
+
     'low_cash_balance' => [
         'subject' => '⚠️ Alerte solde de caisse faible : :branch',
         'greeting' => 'Bonjour,',

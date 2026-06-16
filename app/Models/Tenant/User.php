@@ -20,6 +20,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $email
  * @property string|null $oidc_sub
  * @property bool $is_oidc_user
+ * @property bool $must_change_password
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $locale
  * @property string $password
@@ -61,6 +62,7 @@ class User extends Authenticatable implements HasLocalePreference
         'oidc_sub',
         'is_oidc_user',
         'password',
+        'must_change_password',
         'locale',
         'branch_id',
         'operational_branch_id',
@@ -77,6 +79,7 @@ class User extends Authenticatable implements HasLocalePreference
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_oidc_user' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 

@@ -156,4 +156,7 @@ return [
         'deleted' => 'Comptage de caisse supprime avec succes.',
         'no_denominations' => 'Aucune denomination configuree pour cette devise. Veuillez ajouter des denominations avant de faire un comptage.',
     ],
+    'password' => [
+        'changed' => 'Votre mot de passe a été modifié avec succès.',
+    ],
 ];

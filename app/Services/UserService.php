@@ -7,6 +7,7 @@ namespace App\Services;
 use App\DTOs\Tenant\CreateUserDto;
 use App\DTOs\Tenant\UpdateUserDto;
 use App\Models\Tenant\User;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -14,12 +15,13 @@ class UserService
 {
     public function create(CreateUserDto $dto, Model|null $actor = null): User
     {
-        return DB::transaction(function () use ($dto, $actor): User {
+        $user = DB::transaction(function () use ($dto, $actor): User {
             $user = User::create([
                 'first_name' => $dto->firstName,
                 'last_name' => $dto->lastName,
                 'email' => $dto->email,
                 'password' => $dto->password,
+                'must_change_password' => true,
                 'branch_id' => $dto->branchId,
                 'operational_branch_id' => $dto->operationalBranchId,
             ]);
@@ -37,6 +39,12 @@ class UserService
 
             return $user;
         });
+
+        if (! $user->is_oidc_user) {
+            $user->notify(new WelcomeNotification($dto->password));
+        }
+
+        return $user;
     }
 
     public function update(User $user, UpdateUserDto $dto, Model|null $actor = null): void
@@ -46,8 +54,6 @@ class UserService
                 'first_name' => $dto->firstName,
                 'last_name' => $dto->lastName,
                 'email' => $dto->email,
-                'branch_id' => $dto->branchId,
-                'operational_branch_id' => $dto->operationalBranchId,
             ];
 
             if ($dto->password !== null) {
@@ -64,6 +70,23 @@ class UserService
                 ->withProperties(['email' => $user->email])
                 ->log('User account updated');
         });
+    }
+
+    public function syncBranch(int $userId, int|null $newBranchId, int|null $oldBranchId): void
+    {
+        $user = User::find($userId);
+
+        if ($user === null) {
+            return;
+        }
+
+        $updates = ['branch_id' => $newBranchId];
+
+        if ($user->operational_branch_id === $oldBranchId) {
+            $updates['operational_branch_id'] = $newBranchId;
+        }
+
+        $user->update($updates);
     }
 
     public function delete(User $user, Model|null $actor = null): void
