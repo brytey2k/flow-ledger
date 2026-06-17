@@ -124,6 +124,64 @@ class RetirementServiceTest extends TenantAppTestCase
         ]);
     }
 
+    public function test_create_draft_sets_pay_to_staff_when_expended_exceeds_advance(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(500.0);
+
+        $retirement = $this->makeService()->createDraft($paymentRequest, $this->makeDto(600.0), $this->user);
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'id' => $retirement->id,
+            'difference_type' => 'pay_to_staff',
+            'difference_amount' => '100.00',
+        ]);
+    }
+
+    public function test_create_draft_sets_refund_to_company_when_expended_is_less_than_advance(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(500.0);
+
+        $retirement = $this->makeService()->createDraft($paymentRequest, $this->makeDto(300.0), $this->user);
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'id' => $retirement->id,
+            'difference_type' => 'refund_to_company',
+            'difference_amount' => '200.00',
+        ]);
+    }
+
+    public function test_create_draft_throws_validation_exception_when_retirement_already_exists(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(500.0);
+
+        // Create the first retirement
+        $this->makeService()->createDraft($paymentRequest, $this->makeDto(500.0), $this->user);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        // Second attempt should fail
+        $this->makeService()->createDraft($paymentRequest, $this->makeDto(500.0), $this->user);
+    }
+
+    public function test_create_draft_duplicate_check_ignores_cancelled_retirements(): void
+    {
+        $paymentRequest = $this->disbursedAdvance(500.0);
+
+        // Create and cancel a retirement
+        $existing = RetirementRequest::factory()->create([
+            'payment_request_id' => $paymentRequest->id,
+            'status' => 'cancelled',
+        ]);
+
+        // A new retirement for the same advance should be allowed
+        $retirement = $this->makeService()->createDraft($paymentRequest, $this->makeDto(500.0), $this->user);
+
+        $this->assertDatabaseHas('retirement_requests', [
+            'id' => $retirement->id,
+            'status' => 'draft',
+        ]);
+    }
+
     public function test_create_draft_can_record_a_no_spend_retirement(): void
     {
         $paymentRequest = $this->disbursedAdvance(500.0);
