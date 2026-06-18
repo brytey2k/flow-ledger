@@ -22,6 +22,12 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'idp_tenant_id',
     ];
 
+    /** @return list<string> */
+    public static function getCustomColumns(): array
+    {
+        return ['id', 'idp_tenant_id', 'is_suspended'];
+    }
+
     /** @return HasMany<Domain, $this> */
     public function domains(): HasMany
     {

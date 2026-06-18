@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Requests\Landlord;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class TenantFeatureFlagUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Auth::guard('landlord')->check();
     }
 
     /**

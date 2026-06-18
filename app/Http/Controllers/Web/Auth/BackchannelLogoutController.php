@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant;
-use App\Models\Tenant\User;
+use App\Repositories\TenantRepository;
+use App\Repositories\UserRepository;
 use App\Services\SsoClientService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,6 +25,8 @@ class BackchannelLogoutController extends Controller
 {
     public function __construct(
         private readonly SsoClientService $ssoClient,
+        private readonly TenantRepository $tenantRepository,
+        private readonly UserRepository $userRepository,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -38,11 +40,12 @@ class BackchannelLogoutController extends Controller
         try {
             [$sub, $tid] = $this->parseAndValidate($rawToken);
         } catch (RuntimeException $e) {
-            return response('Invalid logout token: ' . $e->getMessage(), 400);
+            Log::warning('Back-channel logout: token validation failed', ['error' => $e->getMessage()]);
+
+            return response('Invalid logout token', 400);
         }
 
-        /** @var Tenant|null $tenant */
-        $tenant = Tenant::query()->where('idp_tenant_id', $tid)->first();
+        $tenant = $this->tenantRepository->findByIdpTenantId($tid);
 
         if ($tenant === null) {
             Log::info('Back-channel logout: tenant not found, ignoring', ['tid' => $tid]);
@@ -53,7 +56,7 @@ class BackchannelLogoutController extends Controller
         tenancy()->initialize($tenant);
 
         try {
-            $user = User::query()->where('oidc_sub', $sub)->first();
+            $user = $this->userRepository->findByOidcSub($sub);
 
             if ($user === null) {
                 Log::info('Back-channel logout: user not found in tenant, ignoring', [
@@ -97,7 +100,7 @@ class BackchannelLogoutController extends Controller
             throw new RuntimeException('Missing logout token issuer.');
         }
 
-        $configuration->setValidationConstraints(
+        $configuration = $configuration->withValidationConstraints(
             new SignedWith($configuration->signer(), $configuration->verificationKey()),
             new IssuedBy($issuer),
         );
@@ -106,7 +109,12 @@ class BackchannelLogoutController extends Controller
             throw new RuntimeException('Logout token is empty.');
         }
 
-        $token = $configuration->parser()->parse($rawToken);
+        try {
+            $token = $configuration->parser()->parse($rawToken);
+        } catch (\Throwable $e) {
+            Log::debug('Back-channel logout: token parse failure', ['error' => $e->getMessage()]);
+            throw new RuntimeException('Malformed logout token.', previous: $e);
+        }
 
         if (! $token instanceof Plain) {
             throw new RuntimeException('Encrypted logout tokens are not supported.');

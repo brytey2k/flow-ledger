@@ -14,4 +14,9 @@ class UserRepository
     {
         return User::with('roles')->orderBy('created_at', 'desc')->get();
     }
+
+    public function findByOidcSub(string $oidcSub): User|null
+    {
+        return User::query()->where('oidc_sub', $oidcSub)->first();
+    }
 }

@@ -22,7 +22,7 @@ foreach (config('tenancy.central_domains') as $domain) {
 
     Route::domain($domain)->name('landlord.')->group(static function () {
         Route::get('landlord/sys-admin/login', [LoginController::class, 'create'])->name('login');
-        Route::post('landlord/sys-admin/login', [LoginController::class, 'store'])->name('do-login');
+        Route::post('landlord/sys-admin/login', [LoginController::class, 'store'])->name('do-login')->middleware('throttle:5,1');
 
         Route::middleware(['auth:landlord'])->group(static function () {
             Route::post('landlord/sys-admin/logout', [LoginController::class, 'logout'])->name('logout');
