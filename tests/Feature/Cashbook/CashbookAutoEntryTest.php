@@ -83,22 +83,26 @@ class CashbookAutoEntryTest extends TenantAppTestCase
     public function test_second_disbursement_on_same_branch_accumulates_balance(): void
     {
         $currency = Currency::factory()->create();
-        $branch = Branch::factory()->create(['currency_id' => $currency->id]);
 
-        // Pre-populate cashbook with sufficient balance for both disbursements
         Cashbook::create([
-            'branch_id' => $branch->id,
+            'branch_id' => $this->branch->id,
             'currency_id' => $currency->id,
             'balance' => 500.00,
         ]);
 
-        $this->actingAs($this->user)
-            ->post(route('disbursements.store', $this->approvedAdvance(200.00, $branch)), ['disbursement_method' => PaymentMethod::Cash->value]);
+        $first = $this->approvedAdvance(200.00);
+        $first->update(['currency_id' => $currency->id]);
+
+        $second = $this->approvedAdvance(300.00);
+        $second->update(['currency_id' => $currency->id]);
 
         $this->actingAs($this->user)
-            ->post(route('disbursements.store', $this->approvedAdvance(300.00, $branch)), ['disbursement_method' => PaymentMethod::Cash->value]);
+            ->post(route('disbursements.store', $first), ['disbursement_method' => PaymentMethod::Cash->value]);
 
-        $cashbook = Cashbook::where('branch_id', $branch->id)->first();
+        $this->actingAs($this->user)
+            ->post(route('disbursements.store', $second), ['disbursement_method' => PaymentMethod::Cash->value]);
+
+        $cashbook = Cashbook::where('branch_id', $this->branch->id)->first();
         $this->assertEqualsWithDelta(0.00, (float) $cashbook->balance, 0.01);
         $this->assertSame(2, $cashbook->entries()->count());
     }
