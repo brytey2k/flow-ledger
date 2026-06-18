@@ -34,19 +34,21 @@ class DisbursementsController extends Controller
 
     public function store(DisbursementStoreRequest $request, PaymentRequest $paymentRequest): RedirectResponse
     {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+
         if ($paymentRequest->status !== 'approved') {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.disburse_only_approved'));
         }
 
-        /** @var \App\Models\Tenant\User $user */
-        $user = $request->user();
-
         try {
             $this->service->disburse($paymentRequest, $request->toDto(), $user);
-        } catch (InsufficientCashbookBalanceException $e) {
+        } catch (InsufficientCashbookBalanceException) {
             return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('error', $e->getMessage());
+                ->with('error', __('flash.requests.insufficient_cashbook_balance'));
         }
 
         return redirect()->route('payment-requests.show', $paymentRequest)

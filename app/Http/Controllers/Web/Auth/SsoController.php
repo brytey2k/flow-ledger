@@ -38,7 +38,7 @@ class SsoController extends Controller
         $request->session()->put("sso_pkce:{$state}", $pkce['verifier']);
 
         $returnTo = (string) $request->query('return_to', '');
-        if ($returnTo !== '') {
+        if ($returnTo !== '' && $this->isAllowedReturnUrl($returnTo)) {
             $request->session()->put("sso_return:{$state}", $returnTo);
         }
 
@@ -162,6 +162,24 @@ class SsoController extends Controller
         $scheme = request()->isSecure() ? 'https' : 'http';
 
         return redirect()->away("{$scheme}://{$domain}{$portSuffix}/auth/sso/finalize?token={$loginToken}");
+    }
+
+    private function isAllowedReturnUrl(string $url): bool
+    {
+        $parsed = parse_url($url);
+
+        if ($parsed === false) {
+            return false;
+        }
+
+        if (empty($parsed['host'])) {
+            return isset($parsed['path']);
+        }
+
+        $centralHost = parse_url(config()->string('app.url'), PHP_URL_HOST) ?? '';
+        $host = $parsed['host'];
+
+        return $host === $centralHost || str_ends_with($host, '.' . $centralHost);
     }
 
     private function failRedirect(string $message, string $returnTo = ''): RedirectResponse

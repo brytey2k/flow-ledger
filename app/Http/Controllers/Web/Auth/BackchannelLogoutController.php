@@ -38,7 +38,9 @@ class BackchannelLogoutController extends Controller
         try {
             [$sub, $tid] = $this->parseAndValidate($rawToken);
         } catch (RuntimeException $e) {
-            return response('Invalid logout token: ' . $e->getMessage(), 400);
+            Log::warning('Back-channel logout: token validation failed', ['error' => $e->getMessage()]);
+
+            return response('Invalid logout token', 400);
         }
 
         /** @var Tenant|null $tenant */

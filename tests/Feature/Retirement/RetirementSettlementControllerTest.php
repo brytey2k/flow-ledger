@@ -14,7 +14,11 @@ class RetirementSettlementControllerTest extends TenantAppTestCase
 {
     private function approvedRetirement(): RetirementRequest
     {
-        $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
+        ]);
 
         return RetirementRequest::factory()->create([
             'payment_request_id' => $advance->id,
@@ -89,7 +93,11 @@ class RetirementSettlementControllerTest extends TenantAppTestCase
 
     public function test_nil_difference_retirement_can_also_be_settled(): void
     {
-        $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
+        ]);
         $retirement = RetirementRequest::factory()->create([
             'payment_request_id' => $advance->id,
             'status' => 'approved',
@@ -108,7 +116,11 @@ class RetirementSettlementControllerTest extends TenantAppTestCase
 
     public function test_non_approved_retirement_cannot_be_settled(): void
     {
-        $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
+        ]);
         $retirement = RetirementRequest::factory()->create([
             'payment_request_id' => $advance->id,
             'status' => 'in_workflow',
@@ -135,6 +147,24 @@ class RetirementSettlementControllerTest extends TenantAppTestCase
             'subject_id' => $retirement->id,
             'event' => 'retirement.settled',
         ]);
+    }
+
+    public function test_user_cannot_settle_retirement_from_different_branch(): void
+    {
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+        ]);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $advance->id,
+            'status' => 'approved',
+        ]);
+
+        $this->actingAs($this->user)
+            ->post(route('retirement-requests.settle', $retirement))
+            ->assertForbidden();
+
+        $this->assertSame('approved', $retirement->fresh()->status);
     }
 
     public function test_settlement_fails_when_insufficient_cashbook_balance_for_pay_to_staff(): void

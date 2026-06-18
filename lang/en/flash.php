@@ -104,6 +104,7 @@ return [
         'no_workflow_stages' => 'The workflow for this request type has no stages configured. Please ask an administrator to add stages before submitting.',
         'disburse_only_approved' => 'Only approved requests can be disbursed.',
         'disbursed' => 'Request marked as disbursed.',
+        'insufficient_cashbook_balance' => 'Insufficient cashbook balance to process this disbursement.',
         'cancel_not_owner' => 'You can only cancel your own requests.',
         'cannot_cancel_status' => 'This request cannot be cancelled in its current status.',
         'cancelled' => 'Request cancelled successfully.',
@@ -126,6 +127,7 @@ return [
         'no_workflow_stages' => 'The retirement workflow has no stages configured. Please ask an administrator to add stages before submitting.',
         'settled' => 'Retirement marked as settled.',
         'settle_only_approved' => 'Only approved retirements can be settled.',
+        'insufficient_cashbook_balance' => 'Insufficient cashbook balance to settle this retirement.',
         'source_documents_required' => 'Please attach at least one source document before submitting this retirement.',
     ],
     'approvals' => [
