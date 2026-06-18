@@ -167,4 +167,140 @@ class PaymentRequestServiceTest extends TenantAppTestCase
 
         $this->assertEquals($masterTemplate->id, $instance->workflow_template_id);
     }
+
+    // ── disburse() ────────────────────────────────────────────────────────────
+
+    public function test_disburse_sets_status_to_disbursed(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+        $dto = new \App\DTOs\Tenant\DisbursePaymentRequestDto(
+            method: \App\Enums\Tenant\PaymentMethod::Cash,
+            reference: null,
+        );
+
+        $this->makeService()->disburse($request, $dto, $this->user);
+
+        $this->assertDatabaseHas('payment_requests', [
+            'id' => $request->id,
+            'status' => 'disbursed',
+        ]);
+    }
+
+    public function test_disburse_records_disbursed_at_and_disbursed_by(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+        $dto = new \App\DTOs\Tenant\DisbursePaymentRequestDto(
+            method: \App\Enums\Tenant\PaymentMethod::Cash,
+            reference: 'REF-123',
+        );
+
+        $this->makeService()->disburse($request, $dto, $this->user);
+
+        $request->refresh();
+        $this->assertNotNull($request->disbursed_at);
+        $this->assertEquals($this->user->id, $request->disbursed_by_user_id);
+        $this->assertEquals(\App\Enums\Tenant\PaymentMethod::Cash->value, $request->disbursement_method->value);
+        $this->assertEquals('REF-123', $request->disbursement_reference);
+    }
+
+    public function test_disburse_creates_cashbook_entry(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 200.0]);
+        $dto = new \App\DTOs\Tenant\DisbursePaymentRequestDto(
+            method: \App\Enums\Tenant\PaymentMethod::Cash,
+            reference: null,
+        );
+
+        $this->makeService()->disburse($request, $dto, $this->user);
+
+        $this->assertDatabaseHas('cashbook_entries', [
+            'sourceable_type' => PaymentRequest::class,
+            'sourceable_id' => $request->id,
+            'type' => 'credit',
+        ]);
+    }
+
+    public function test_disburse_logs_activity(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+        $dto = new \App\DTOs\Tenant\DisbursePaymentRequestDto(
+            method: \App\Enums\Tenant\PaymentMethod::Cash,
+            reference: null,
+        );
+
+        $this->makeService()->disburse($request, $dto, $this->user);
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => PaymentRequest::class,
+            'subject_id' => $request->id,
+            'event' => 'request.disbursed',
+        ]);
+    }
+
+    // ── decline() ─────────────────────────────────────────────────────────────
+
+    public function test_decline_sets_status_to_denied(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+
+        $this->makeService()->decline($request, $this->user);
+
+        $this->assertDatabaseHas('payment_requests', [
+            'id' => $request->id,
+            'status' => 'denied',
+        ]);
+    }
+
+    public function test_decline_logs_activity(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+
+        $this->makeService()->decline($request, $this->user);
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => PaymentRequest::class,
+            'subject_id' => $request->id,
+            'event' => 'request.denied',
+        ]);
+    }
+
+    public function test_decline_cancels_active_workflow_stages(): void
+    {
+        $template = WorkflowTemplate::factory()->advance()->create();
+        $stageDef = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 1,
+        ]);
+
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow']);
+        $instance = WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $request->id,
+            'status' => 'in_progress',
+        ]);
+        WorkflowInstanceStage::create([
+            'workflow_instance_id' => $instance->id,
+            'workflow_stage_id' => $stageDef->id,
+            'status' => 'active',
+            'started_at' => now(),
+        ]);
+
+        $this->makeService()->decline($request, $this->user);
+
+        $this->assertDatabaseHas('workflow_instances', ['id' => $instance->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('workflow_instance_stages', [
+            'workflow_instance_id' => $instance->id,
+            'status' => 'cancelled',
+        ]);
+    }
+
+    public function test_decline_without_workflow_instance_sets_status_to_denied(): void
+    {
+        $request = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+
+        $this->makeService()->decline($request, $this->user);
+
+        $this->assertDatabaseHas('payment_requests', ['id' => $request->id, 'status' => 'denied']);
+    }
 }
