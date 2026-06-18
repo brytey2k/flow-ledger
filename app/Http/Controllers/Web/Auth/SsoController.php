@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Auth;
 use App\Data\Auth\SsoUserClaimsDto;
 use App\Exceptions\UnverifiedEmailException;
 use App\Http\Controllers\Controller;
+use App\Models\Domain;
 use App\Models\Tenant;
 use App\Services\SsoClientService;
 use App\Services\SsoUserProvisioningService;
@@ -176,10 +177,14 @@ class SsoController extends Controller
             return isset($parsed['path']);
         }
 
-        $centralHost = parse_url(config()->string('app.url'), PHP_URL_HOST) ?? '';
         $host = $parsed['host'];
+        $centralHost = parse_url(config()->string('app.url'), PHP_URL_HOST) ?? '';
 
-        return $host === $centralHost || str_ends_with($host, '.' . $centralHost);
+        if ($host === $centralHost || str_ends_with($host, '.' . $centralHost)) {
+            return true;
+        }
+
+        return Domain::where('domain', $host)->exists();
     }
 
     private function failRedirect(string $message, string $returnTo = ''): RedirectResponse
