@@ -16,18 +16,23 @@ class CashbookAutoEntryTest extends TenantAppTestCase
 {
     private function approvedAdvance(float $amount, Branch|null $branch = null): PaymentRequest
     {
-        $attrs = ['status' => 'approved', 'total_amount' => $amount];
-
-        if ($branch !== null) {
-            $attrs['branch_id'] = $branch->id;
-        }
-
-        return PaymentRequest::factory()->advance()->create($attrs);
+        return PaymentRequest::factory()->advance()->create([
+            'status' => 'approved',
+            'total_amount' => $amount,
+            'branch_id' => ($branch ?? $this->branch)->id,
+        ]);
     }
 
     private function approvedRetirement(string $differenceType, float $differenceAmount = 50.00): RetirementRequest
     {
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
+        ]);
+
         return RetirementRequest::factory()->approved()->create([
+            'payment_request_id' => $advance->id,
             'difference_type' => $differenceType,
             'difference_amount' => $differenceAmount,
         ]);
