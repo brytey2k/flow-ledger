@@ -42,4 +42,4 @@ class EnsureTenantIsActiveTest extends TenantAppTestCase
 
         $response->assertOk();
     }
-}
+}v
