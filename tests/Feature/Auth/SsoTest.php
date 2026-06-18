@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Auth;
 
 use App\Data\Auth\SsoUserClaimsDto;
+use App\Models\Tenant\Staff;
 use App\Services\SettingsService;
 use App\Services\SsoClientService;
 use App\Services\SsoUserProvisioningService;
@@ -210,5 +211,145 @@ class SsoTest extends TenantAppTestCase
 
         $this->assertSame('John', $parts['first_name']);
         $this->assertSame('Doe Smith', $parts['last_name']);
+    }
+
+    public function test_claims_dto_checks_role_membership(): void
+    {
+        $claims = new SsoUserClaimsDto('sub', 'a@b.com', 'A', true, '1', [], ['flow-ledger-staff', 'viewer']);
+        $this->assertTrue($claims->hasRole('flow-ledger-staff'));
+        $this->assertFalse($claims->hasRole('admin'));
+    }
+
+    public function test_claims_dto_round_trips_roles_via_array(): void
+    {
+        $original = new SsoUserClaimsDto('sub', 'a@b.com', 'A', true, '1', [], ['flow-ledger-staff']);
+        $restored = SsoUserClaimsDto::fromArray($original->toArray());
+
+        $this->assertSame($original->roles, $restored->roles);
+    }
+
+    // ── Staff linking ─────────────────────────────────────────────────────────
+
+    public function test_staff_role_user_links_to_existing_unlinked_staff_by_email(): void
+    {
+        app(SettingsService::class)->setSsoDefaultBranch($this->branch->id);
+        app(SettingsService::class)->setSsoStaffRoleName('flow-ledger-staff');
+
+        $staff = Staff::factory()->create(['email' => 'jane@example.com', 'user_id' => null]);
+
+        $claims = new SsoUserClaimsDto(
+            sub: 'jane-sub-001',
+            email: 'jane@example.com',
+            name: 'Jane Doe',
+            email_verified: true,
+            tenant_id: '1',
+            products: ['flow-ledger'],
+            roles: ['flow-ledger-staff'],
+        );
+
+        $user = app(SsoUserProvisioningService::class)->findOrCreateTenantUser($claims);
+
+        $this->assertDatabaseHas('staff', [
+            'id' => $staff->id,
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function test_staff_role_user_skips_linking_when_no_matching_staff_exists(): void
+    {
+        app(SettingsService::class)->setSsoDefaultBranch($this->branch->id);
+        app(SettingsService::class)->setSsoStaffRoleName('flow-ledger-staff');
+
+        $claims = new SsoUserClaimsDto(
+            sub: 'no-staff-sub',
+            email: 'nostaff@example.com',
+            name: 'No Staff',
+            email_verified: true,
+            tenant_id: '1',
+            products: ['flow-ledger'],
+            roles: ['flow-ledger-staff'],
+        );
+
+        $user = app(SsoUserProvisioningService::class)->findOrCreateTenantUser($claims);
+
+        $this->assertDatabaseHas('users', ['id' => $user->id]);
+        $this->assertDatabaseMissing('staff', ['user_id' => $user->id]);
+    }
+
+    public function test_staff_role_user_skips_linking_when_staff_already_has_user_id(): void
+    {
+        app(SettingsService::class)->setSsoDefaultBranch($this->branch->id);
+        app(SettingsService::class)->setSsoStaffRoleName('flow-ledger-staff');
+
+        $existingUser = $this->user;
+        $staff = Staff::factory()->create(['email' => 'taken@example.com', 'user_id' => $existingUser->id]);
+
+        $claims = new SsoUserClaimsDto(
+            sub: 'new-sub-for-taken',
+            email: 'taken@example.com',
+            name: 'Taken Staff',
+            email_verified: true,
+            tenant_id: '1',
+            products: ['flow-ledger'],
+            roles: ['flow-ledger-staff'],
+        );
+
+        $user = app(SsoUserProvisioningService::class)->findOrCreateTenantUser($claims);
+
+        // Staff should still point to the original user, not the new provisioned one
+        $this->assertDatabaseHas('staff', [
+            'id' => $staff->id,
+            'user_id' => $existingUser->id,
+        ]);
+    }
+
+    public function test_non_staff_role_user_does_not_trigger_staff_linking(): void
+    {
+        app(SettingsService::class)->setSsoDefaultBranch($this->branch->id);
+        app(SettingsService::class)->setSsoStaffRoleName('flow-ledger-staff');
+
+        $staff = Staff::factory()->create(['email' => 'client@example.com', 'user_id' => null]);
+
+        $claims = new SsoUserClaimsDto(
+            sub: 'client-sub-001',
+            email: 'client@example.com',
+            name: 'Client User',
+            email_verified: true,
+            tenant_id: '1',
+            products: ['flow-ledger'],
+            roles: ['viewer'],
+        );
+
+        app(SsoUserProvisioningService::class)->findOrCreateTenantUser($claims);
+
+        $this->assertDatabaseHas('staff', [
+            'id' => $staff->id,
+            'user_id' => null,
+        ]);
+    }
+
+    public function test_staff_linking_skipped_when_sso_staff_role_not_configured(): void
+    {
+        app(SettingsService::class)->setSsoDefaultBranch($this->branch->id);
+        // Deliberately NOT configuring sso_staff_role_name
+
+        $staff = Staff::factory()->create(['email' => 'unconfigured@example.com', 'user_id' => null]);
+
+        $claims = new SsoUserClaimsDto(
+            sub: 'unconfigured-sub',
+            email: 'unconfigured@example.com',
+            name: 'Unconfigured',
+            email_verified: true,
+            tenant_id: '1',
+            products: ['flow-ledger'],
+            roles: ['flow-ledger-staff'],
+        );
+
+        app(SsoUserProvisioningService::class)->findOrCreateTenantUser($claims);
+
+        $this->assertDatabaseHas('staff', [
+            'id' => $staff->id,
+            'user_id' => null,
+        ]);
     }
 }

@@ -198,4 +198,20 @@ class SettingsService
     {
         $this->repository->set(SettingKey::SsoDefaultBranch, ['branch_id' => $branchId]);
     }
+
+    public function getSsoStaffRoleName(): string|null
+    {
+        $setting = $this->repository->get(SettingKey::SsoStaffRole);
+
+        if (! isset($setting['role_name']) || ! is_string($setting['role_name'])) {
+            return null;
+        }
+
+        return $setting['role_name'] ?: null;
+    }
+
+    public function setSsoStaffRoleName(string|null $roleName): void
+    {
+        $this->repository->set(SettingKey::SsoStaffRole, ['role_name' => $roleName]);
+    }
 }

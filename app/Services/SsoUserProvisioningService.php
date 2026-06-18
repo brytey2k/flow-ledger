@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Data\Auth\SsoUserClaimsDto;
 use App\Exceptions\UnverifiedEmailException;
 use App\Models\Landlord\User as LandlordUser;
+use App\Models\Tenant\Staff;
 use App\Models\Tenant\User as TenantUser;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -28,6 +29,8 @@ class SsoUserProvisioningService
         // 1. Returning user — match by oidc_sub (most common path)
         $user = TenantUser::query()->where('oidc_sub', $claims->sub)->first();
         if ($user !== null) {
+            $this->maybeLinkStaffProfile($user, $claims);
+
             return $user;
         }
 
@@ -41,14 +44,16 @@ class SsoUserProvisioningService
             }
 
             $user->update(['oidc_sub' => $claims->sub, 'is_oidc_user' => true]);
+            $user = $user->refresh();
+            $this->maybeLinkStaffProfile($user, $claims);
 
-            return $user->refresh();
+            return $user;
         }
 
         // 3. First-time SSO user — provision in the tenant database
         $nameParts = $claims->splitName();
 
-        return TenantUser::create([
+        $user = TenantUser::create([
             'first_name' => $nameParts['first_name'],
             'last_name' => $nameParts['last_name'] ?? $nameParts['first_name'],
             'email' => $claims->email,
@@ -58,6 +63,10 @@ class SsoUserProvisioningService
             'branch_id' => $this->resolveDefaultBranchId(),
             'operational_branch_id' => $this->resolveDefaultBranchId(),
         ]);
+
+        $this->maybeLinkStaffProfile($user, $claims);
+
+        return $user;
     }
 
     /**
@@ -94,6 +103,24 @@ class SsoUserProvisioningService
             'oidc_sub' => $claims->sub,
             'is_oidc_user' => true,
         ]);
+    }
+
+    private function maybeLinkStaffProfile(TenantUser $user, SsoUserClaimsDto $claims): void
+    {
+        $staffRoleName = $this->settingsService->getSsoStaffRoleName();
+
+        if ($staffRoleName === null || ! $claims->hasRole($staffRoleName)) {
+            return;
+        }
+
+        $staff = Staff::query()
+            ->where('email', $claims->email)
+            ->whereNull('user_id')
+            ->first();
+
+        if ($staff !== null) {
+            $staff->update(['user_id' => $user->id]);
+        }
     }
 
     private function resolveDefaultBranchId(): int

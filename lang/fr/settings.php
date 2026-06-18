@@ -31,5 +31,11 @@ return [
         'require_expense_source_documents_hint' => 'Lorsque cette option est activee, les demandes de depense ne peuvent pas etre soumises sans au moins un document justificatif (recu, facture, etc.) joint.',
         'require_retirement_source_documents' => 'Exiger des documents justificatifs pour les redditions',
         'require_retirement_source_documents_hint' => 'Lorsque cette option est activee, les demandes de reddition ne peuvent pas etre soumises sans au moins un document justificatif (recu, facture, etc.) joint.',
+        'sso_default_branch' => 'Agence par defaut pour les utilisateurs provisionnes par SSO',
+        'sso_default_branch_hint' => 'Les nouveaux utilisateurs se connectant via SSO pour la premiere fois seront affectes a cette agence.',
+        'no_default_branch' => '— Aucune par defaut —',
+        'sso_staff_role_name' => 'Nom du role personnel',
+        'sso_staff_role_name_hint' => 'Le nom du role IAM identifiant les membres du personnel. Lorsqu\'un utilisateur SSO possede ce role et qu\'un enregistrement Personnel avec son e-mail existe deja, les deux sont lies automatiquement.',
+        'sso_staff_role_name_placeholder' => 'ex. flow-ledger-staff',
     ],
 ];

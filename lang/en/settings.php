@@ -46,5 +46,8 @@ return [
         'sso_default_branch' => 'Default Branch for SSO-Provisioned Users',
         'sso_default_branch_hint' => 'New users signing in via SSO for the first time will be assigned to this branch.',
         'no_default_branch' => '— No default —',
+        'sso_staff_role_name' => 'Staff Role Name',
+        'sso_staff_role_name_hint' => 'The IAM role name that identifies staff members. When an SSO user holds this role and a Staff record with their email already exists, the two are linked automatically.',
+        'sso_staff_role_name_placeholder' => 'e.g. flow-ledger-staff',
     ],
 ];

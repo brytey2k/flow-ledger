@@ -36,6 +36,7 @@ class SettingsUpdateRequest extends FormRequest
             'retirement_reminder_notify_role_ids' => ['sometimes', 'array'],
             'retirement_reminder_notify_role_ids.*' => ['integer', 'exists:roles,id'],
             'sso_default_branch_id' => ['nullable', 'integer', 'exists:branches,id'],
+            'sso_staff_role_name' => ['sometimes', 'nullable', 'string', 'max:100'],
         ];
     }
 }

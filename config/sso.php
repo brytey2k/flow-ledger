@@ -16,7 +16,7 @@ return [
 
     'redirect_uri' => env('SSO_REDIRECT_URI', 'http://flow-ledger.test/auth/sso/callback'),
 
-    'scopes' => ['openid', 'profile', 'email', 'tenant', 'products'],
+    'scopes' => ['openid', 'profile', 'email', 'tenant', 'products', 'roles'],
 
     'jwks_uri' => env('SSO_JWKS_URI', 'http://localhost/.well-known/jwks.json'),
 

@@ -13,6 +13,7 @@ class SsoUserClaimsDto
      * @param bool $email_verified
      * @param string|null $tenant_id
      * @param list<string> $products
+     * @param list<string> $roles
      */
     public function __construct(
         public readonly string $sub,
@@ -23,6 +24,8 @@ class SsoUserClaimsDto
         public readonly string|null $tenant_id,
         /** @var list<string> Product slugs the user has access to. */
         public readonly array $products,
+        /** @var list<string> IAM role names assigned to this user. */
+        public readonly array $roles = [],
     ) {}
 
     public function isLandlordUser(): bool
@@ -33,6 +36,11 @@ class SsoUserClaimsDto
     public function hasProductAccess(string $slug): bool
     {
         return in_array($slug, $this->products, true);
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->roles, true);
     }
 
     /** @return array{first_name: string, last_name: string|null} */
@@ -46,7 +54,7 @@ class SsoUserClaimsDto
         ];
     }
 
-    /** @return array{sub: string, email: string, name: string, email_verified: bool, tenant_id: string|null, products: list<string>} */
+    /** @return array{sub: string, email: string, name: string, email_verified: bool, tenant_id: string|null, products: list<string>, roles: list<string>} */
     public function toArray(): array
     {
         return [
@@ -56,6 +64,7 @@ class SsoUserClaimsDto
             'email_verified' => $this->email_verified,
             'tenant_id' => $this->tenant_id,
             'products' => $this->products,
+            'roles' => $this->roles,
         ];
     }
 
@@ -65,6 +74,9 @@ class SsoUserClaimsDto
         /** @var list<string> $products */
         $products = array_values(array_filter((array) ($data['products'] ?? []), 'is_string'));
 
+        /** @var list<string> $roles */
+        $roles = array_values(array_filter((array) ($data['roles'] ?? []), 'is_string'));
+
         return new self(
             sub: is_string($data['sub'] ?? null) ? $data['sub'] : '',
             email: is_string($data['email'] ?? null) ? $data['email'] : '',
@@ -72,6 +84,7 @@ class SsoUserClaimsDto
             email_verified: (bool) ($data['email_verified'] ?? false),
             tenant_id: isset($data['tenant_id']) && (is_string($data['tenant_id']) || is_int($data['tenant_id'])) ? (string) $data['tenant_id'] : null,
             products: $products,
+            roles: $roles,
         );
     }
 }

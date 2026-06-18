@@ -341,6 +341,22 @@
                             <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
+                    <div>
+                        <label class="kt-form-label block mb-2" for="sso_staff_role_name">
+                            {{ __('settings.fields.sso_staff_role_name') }}
+                        </label>
+                        <input type="text" id="sso_staff_role_name" name="sso_staff_role_name"
+                               class="kt-input w-full"
+                               value="{{ old('sso_staff_role_name', $ssoStaffRoleName) }}"
+                               placeholder="{{ __('settings.fields.sso_staff_role_name_placeholder') }}"
+                               aria-invalid="@error('sso_staff_role_name') true @else false @enderror" />
+                        <div class="mt-1 text-xs text-muted-foreground">
+                            {{ __('settings.fields.sso_staff_role_name_hint') }}
+                        </div>
+                        @error('sso_staff_role_name')
+                            <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
         </div>

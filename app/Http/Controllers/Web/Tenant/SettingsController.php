@@ -35,8 +35,9 @@ class SettingsController extends Controller
         $roles = $this->roleRepository->allOrderedByName();
         $branches = $this->branchRepository->allOrderedByName();
         $ssoDefaultBranchId = $this->settingsService->getSsoDefaultBranchId();
+        $ssoStaffRoleName = $this->settingsService->getSsoStaffRoleName();
 
-        return view('tenant.settings.index', compact('lightLogoUrl', 'darkLogoUrl', 'smallLogoUrl', 'costCodes', 'defaultAdvanceCostCodeId', 'requireExpenseSourceDocuments', 'requireRetirementSourceDocuments', 'retirementReminderSettings', 'roles', 'branches', 'ssoDefaultBranchId'));
+        return view('tenant.settings.index', compact('lightLogoUrl', 'darkLogoUrl', 'smallLogoUrl', 'costCodes', 'defaultAdvanceCostCodeId', 'requireExpenseSourceDocuments', 'requireRetirementSourceDocuments', 'retirementReminderSettings', 'roles', 'branches', 'ssoDefaultBranchId', 'ssoStaffRoleName'));
     }
 
     public function update(SettingsUpdateRequest $request): RedirectResponse
@@ -78,6 +79,11 @@ class SettingsController extends Controller
         if ($request->has('sso_default_branch_id')) {
             $rawBranchId = $request->integer('sso_default_branch_id');
             $this->settingsService->setSsoDefaultBranch($rawBranchId ?: null);
+        }
+
+        if ($request->has('sso_staff_role_name')) {
+            $roleName = $request->string('sso_staff_role_name')->trim()->toString();
+            $this->settingsService->setSsoStaffRoleName($roleName ?: null);
         }
 
         return redirect()->route('settings.index')->with('success', __('flash.settings.updated'));
