@@ -37,7 +37,7 @@ class TenantFeatureFlagsControllerTest extends LandlordTestCase
     {
         $this->actingAs($this->landlordUser, 'landlord')
             ->put(route('landlord.tenants.feature-flags.update', $this->tenant), [
-                'flags' => [FeatureFlag::AdvancedReporting->value],
+                'flags' => [FeatureFlag::LocalAuth->value],
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
@@ -59,7 +59,7 @@ class TenantFeatureFlagsControllerTest extends LandlordTestCase
     {
         $this->actingAs($this->landlordUser, 'landlord')
             ->post(route('landlord.feature-flags.bulk-update'), [
-                'flag' => FeatureFlag::AdvancedReporting->value,
+                'flag' => FeatureFlag::LocalAuth->value,
                 'action' => 'enable',
             ])
             ->assertRedirect()
@@ -70,7 +70,7 @@ class TenantFeatureFlagsControllerTest extends LandlordTestCase
     {
         $this->actingAs($this->landlordUser, 'landlord')
             ->post(route('landlord.feature-flags.bulk-update'), [
-                'flag' => FeatureFlag::AdvancedReporting->value,
+                'flag' => FeatureFlag::LocalAuth->value,
                 'action' => 'disable',
             ])
             ->assertRedirect()
