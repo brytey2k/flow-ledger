@@ -256,4 +256,33 @@ class RetirementReminderCommandTest extends TenantAppTestCase
 
         $this->assertStringContainsString('you approved', $mail->subject);
     }
+
+    // ── Artisan command ───────────────────────────────────────────────────────
+
+    public function test_artisan_command_exits_successfully(): void
+    {
+        $this->artisan('retirement:send-reminders')
+            ->assertSuccessful();
+
+        // Re-initialize tenancy so tearDown can roll back tenant transaction
+        tenancy()->initialize($this->tenant);
+    }
+
+    public function test_artisan_command_outputs_tenant_id_in_progress_line(): void
+    {
+        $this->artisan('retirement:send-reminders')
+            ->expectsOutputToContain($this->tenant->id)
+            ->assertSuccessful();
+
+        tenancy()->initialize($this->tenant);
+    }
+
+    public function test_artisan_command_outputs_sent_count_line(): void
+    {
+        $this->artisan('retirement:send-reminders')
+            ->expectsOutputToContain('reminder')
+            ->assertSuccessful();
+
+        tenancy()->initialize($this->tenant);
+    }
 }

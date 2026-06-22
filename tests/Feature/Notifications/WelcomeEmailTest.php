@@ -130,6 +130,7 @@ class WelcomeEmailTest extends TenantAppTestCase
 
         $this->actingAs($this->user)
             ->put(route('password.change.update'), [
+                'current_password' => 'password',
                 'password' => 'newSecurePassword1!',
                 'password_confirmation' => 'newSecurePassword1!',
             ])
@@ -147,6 +148,7 @@ class WelcomeEmailTest extends TenantAppTestCase
 
         $this->actingAs($this->user)
             ->put(route('password.change.update'), [
+                'current_password' => 'password',
                 'password' => 'newSecurePassword1!',
                 'password_confirmation' => 'differentPassword!',
             ])
@@ -159,9 +161,23 @@ class WelcomeEmailTest extends TenantAppTestCase
 
         $this->actingAs($this->user)
             ->put(route('password.change.update'), [
+                'current_password' => 'password',
                 'password' => 'short',
                 'password_confirmation' => 'short',
             ])
             ->assertSessionHasErrors('password');
+    }
+
+    public function test_password_change_fails_when_current_password_is_wrong(): void
+    {
+        $this->user->update(['must_change_password' => true]);
+
+        $this->actingAs($this->user)
+            ->put(route('password.change.update'), [
+                'current_password' => 'wrongpassword',
+                'password' => 'newSecurePassword1!',
+                'password_confirmation' => 'newSecurePassword1!',
+            ])
+            ->assertSessionHasErrors('current_password');
     }
 }

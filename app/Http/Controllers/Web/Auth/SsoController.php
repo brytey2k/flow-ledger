@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Auth;
 use App\Data\Auth\SsoUserClaimsDto;
 use App\Exceptions\UnverifiedEmailException;
 use App\Http\Controllers\Controller;
+use App\Models\Domain;
 use App\Models\Tenant;
 use App\Services\SsoClientService;
 use App\Services\SsoUserProvisioningService;
@@ -38,7 +39,7 @@ class SsoController extends Controller
         $request->session()->put("sso_pkce:{$state}", $pkce['verifier']);
 
         $returnTo = (string) $request->query('return_to', '');
-        if ($returnTo !== '') {
+        if ($returnTo !== '' && $this->isAllowedReturnUrl($returnTo)) {
             $request->session()->put("sso_return:{$state}", $returnTo);
         }
 
@@ -162,6 +163,28 @@ class SsoController extends Controller
         $scheme = request()->isSecure() ? 'https' : 'http';
 
         return redirect()->away("{$scheme}://{$domain}{$portSuffix}/auth/sso/finalize?token={$loginToken}");
+    }
+
+    private function isAllowedReturnUrl(string $url): bool
+    {
+        $parsed = parse_url($url);
+
+        if ($parsed === false) {
+            return false;
+        }
+
+        if (empty($parsed['host'])) {
+            return isset($parsed['path']);
+        }
+
+        $host = $parsed['host'];
+        $centralHost = parse_url(config()->string('app.url'), PHP_URL_HOST) ?? '';
+
+        if ($host === $centralHost || str_ends_with($host, '.' . $centralHost)) {
+            return true;
+        }
+
+        return Domain::where('domain', $host)->exists();
     }
 
     private function failRedirect(string $message, string $returnTo = ''): RedirectResponse

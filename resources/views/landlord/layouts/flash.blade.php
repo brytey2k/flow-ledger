@@ -47,7 +47,7 @@
                     <i class="ki-filled {{ $config['icon'] }} text-xl"></i>
                     <div class="flex-1">
                         <div class="font-medium">{{ $structured['title'] ?? $config['label'] }}</div>
-                        <div class="text-sm">{!! is_array($structured['message']) ? implode('<br>', $structured['message']) : e($structured['message']) !!}</div>
+                        <div class="text-sm">{!! is_array($structured['message']) ? implode('<br>', array_map('e', $structured['message'])) : e($structured['message']) !!}</div>
                     </div>
                 </div>
             </div>

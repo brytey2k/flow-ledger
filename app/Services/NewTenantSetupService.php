@@ -11,6 +11,7 @@ use App\Models\Tenant\BranchClosure;
 use App\Models\Tenant\Level;
 use App\Models\Tenant\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -58,7 +59,7 @@ class NewTenantSetupService
             'first_name' => 'Admin',
             'last_name' => 'User',
             'email' => 'admin@' . (is_scalar($tenant->getTenantKey()) ? (string) $tenant->getTenantKey() : '') . '.' . $centralDomain,
-            'password' => Hash::make('password'),
+            'password' => Hash::make(Str::random(32)),
             'branch_id' => $branch->id,
             'operational_branch_id' => $branch->id,
         ])->assignRole($adminRole);

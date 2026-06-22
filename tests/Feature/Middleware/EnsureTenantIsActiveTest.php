@@ -37,8 +37,7 @@ class EnsureTenantIsActiveTest extends TenantAppTestCase
 
     public function test_tenant_with_no_suspension_flag_allows_access(): void
     {
-        $this->tenant->update(['is_suspended' => null]);
-
+        // Column defaults to false (NOT NULL); don't set it to verify the default state allows access.
         $response = $this->actingAs($this->user)->get(route('dashboard'));
 
         $response->assertOk();

@@ -103,6 +103,7 @@ return [
         'no_workflow_stages' => 'Le workflow pour ce type de demande n a pas d etapes configurees. Veuillez demander a un administrateur d en ajouter avant de soumettre.',
         'disburse_only_approved' => 'Seules les demandes approuvees peuvent etre decaissees.',
         'disbursed' => 'Demande marquee comme decaissee.',
+        'insufficient_cashbook_balance' => 'Solde du livre de caisse insuffisant pour effectuer ce decaissement.',
         'cancel_not_owner' => 'Vous ne pouvez annuler que vos propres demandes.',
         'cannot_cancel_status' => 'Cette demande ne peut pas etre annulee dans son etat actuel.',
         'cancelled' => 'Demande annulee avec succes.',
@@ -125,6 +126,7 @@ return [
         'no_workflow_stages' => 'Le workflow de reddition n a pas d etapes configurees. Veuillez demander a un administrateur d en ajouter avant de soumettre.',
         'settled' => 'Reddition marquee comme reglee.',
         'settle_only_approved' => 'Seules les redditions approuvees peuvent etre reglees.',
+        'insufficient_cashbook_balance' => 'Solde du livre de caisse insuffisant pour regler cette reddition.',
         'source_documents_required' => 'Veuillez joindre au moins un document justificatif avant de soumettre cette reddition.',
     ],
     'approvals' => [

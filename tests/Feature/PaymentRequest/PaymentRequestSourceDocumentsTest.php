@@ -162,7 +162,12 @@ class PaymentRequestSourceDocumentsTest extends TenantAppTestCase
     {
         $this->enableRequireSourceDocuments();
 
-        $expense = PaymentRequest::factory()->expense()->create(['status' => 'draft']);
+        $staff = $this->linkUserToStaff();
+        $expense = PaymentRequest::factory()->expense()->create([
+            'status' => 'draft',
+            'branch_id' => $this->branch->id,
+            'staff_id' => $staff->id,
+        ]);
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $expense));
 
@@ -179,7 +184,12 @@ class PaymentRequestSourceDocumentsTest extends TenantAppTestCase
         $this->enableRequireSourceDocuments();
         $this->expenseTemplateWithStage();
 
-        $expense = PaymentRequest::factory()->expense()->create(['status' => 'draft']);
+        $staff = $this->linkUserToStaff();
+        $expense = PaymentRequest::factory()->expense()->create([
+            'status' => 'draft',
+            'branch_id' => $this->branch->id,
+            'staff_id' => $staff->id,
+        ]);
         Attachment::factory()->create([
             'attachable_type' => PaymentRequest::class,
             'attachable_id' => $expense->id,
@@ -197,7 +207,12 @@ class PaymentRequestSourceDocumentsTest extends TenantAppTestCase
     {
         $this->expenseTemplateWithStage();
 
-        $expense = PaymentRequest::factory()->expense()->create(['status' => 'draft']);
+        $staff = $this->linkUserToStaff();
+        $expense = PaymentRequest::factory()->expense()->create([
+            'status' => 'draft',
+            'branch_id' => $this->branch->id,
+            'staff_id' => $staff->id,
+        ]);
 
         $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $expense));
 
@@ -211,7 +226,12 @@ class PaymentRequestSourceDocumentsTest extends TenantAppTestCase
     {
         $this->enableRequireSourceDocuments();
 
-        $advance = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+        $staff = $this->linkUserToStaff();
+        $advance = PaymentRequest::factory()->advance()->create([
+            'status' => 'draft',
+            'branch_id' => $this->branch->id,
+            'staff_id' => $staff->id,
+        ]);
         $template = WorkflowTemplate::factory()->advance()->create();
         WorkflowStage::factory()->for($template, 'template')->create();
 
