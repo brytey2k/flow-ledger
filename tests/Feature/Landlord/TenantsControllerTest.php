@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Landlord;
 
+use App\Models\Tenant\User;
 use App\Services\NewTenantSetupService;
+use App\Services\TenantImpersonationService;
 use App\Services\TenantResetService;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Str;
+use Stancl\Tenancy\Database\Models\ImpersonationToken;
 use Stancl\Tenancy\Jobs\DeleteDatabase;
 use Tests\LandlordTestCase;
 
@@ -169,5 +174,92 @@ class TenantsControllerTest extends LandlordTestCase
             ->assertSessionHas('success');
 
         Bus::assertDispatched(DeleteDatabase::class);
+    }
+
+    // ── Impersonation — select-user ───────────────────────────────────────────
+
+    public function test_guest_cannot_view_select_user_page(): void
+    {
+        $this->get(route('landlord.tenants.select-user', $this->tenant))->assertRedirect();
+    }
+
+    public function test_authenticated_landlord_can_view_select_user_page(): void
+    {
+        $this->mock(TenantImpersonationService::class)
+            ->shouldReceive('getTenantUsersPaginated')
+            ->once()
+            ->andReturn(new LengthAwarePaginator([], 0, 15, 1));
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->get(route('landlord.tenants.select-user', $this->tenant))
+            ->assertOk()
+            ->assertViewIs('landlord.tenants.select-user')
+            ->assertViewHas('users');
+    }
+
+    // ── Impersonation — impersonate ───────────────────────────────────────────
+
+    public function test_guest_cannot_post_impersonate(): void
+    {
+        $this->post(route('landlord.impersonate', $this->tenant), [
+            'user_identifier' => 'admin@example.com',
+        ])->assertRedirect();
+    }
+
+    public function test_impersonate_requires_user_identifier(): void
+    {
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->post(route('landlord.impersonate', $this->tenant), [])
+            ->assertSessionHasErrors('user_identifier');
+    }
+
+    public function test_impersonate_returns_error_when_user_not_found(): void
+    {
+        $this->mock(TenantImpersonationService::class)
+            ->shouldReceive('findTenantUser')
+            ->once()
+            ->andReturn(null);
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->post(route('landlord.impersonate', $this->tenant), [
+                'user_identifier' => 'notfound@example.com',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+    }
+
+    public function test_impersonate_returns_error_when_tenant_has_no_domain(): void
+    {
+        $this->mock(TenantImpersonationService::class)
+            ->shouldReceive('findTenantUser')
+            ->once()
+            ->andReturn(new User());
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->post(route('landlord.impersonate', $this->tenant), [
+                'user_identifier' => 'admin@example.com',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+    }
+
+    public function test_impersonate_redirects_to_tenant_domain_url_with_token(): void
+    {
+        $domain = $this->tenant->domains()->create(['domain' => 'test-' . Str::random(6) . '.localhost']);
+
+        $fakeToken = new ImpersonationToken();
+        $fakeToken->token = Str::random(128);
+
+        $mock = $this->mock(TenantImpersonationService::class);
+        $mock->shouldReceive('findTenantUser')->once()->andReturn(new User());
+        $mock->shouldReceive('createImpersonationToken')->once()->andReturn($fakeToken);
+
+        $response = $this->actingAs($this->landlordUser, 'landlord')
+            ->post(route('landlord.impersonate', $this->tenant), [
+                'user_identifier' => 'admin@example.com',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertStringContainsString($domain->domain . '/impersonate/' . $fakeToken->token, $response->headers->get('Location'));
     }
 }

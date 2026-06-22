@@ -22,6 +22,7 @@ use App\Http\Controllers\Web\Tenant\DashboardController;
 use App\Http\Controllers\Web\Tenant\DepartmentsController;
 use App\Http\Controllers\Web\Tenant\DisbursementsController;
 use App\Http\Controllers\Web\Tenant\DocumentationController;
+use App\Http\Controllers\Web\Tenant\ImpersonationController;
 use App\Http\Controllers\Web\Tenant\LevelController;
 use App\Http\Controllers\Web\Tenant\LocaleController;
 use App\Http\Controllers\Web\Tenant\PaymentRequestAttachmentsController;
@@ -67,8 +68,11 @@ Route::middleware([
 
     Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
+    Route::get('/impersonate/{token}', [ImpersonationController::class, 'impersonate'])->name('impersonate');
+
     Route::middleware(['auth', 'check.force.logout', 'force.password.change'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::post('/exit-impersonation', [ImpersonationController::class, 'exit'])->name('exit-impersonation');
         Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
         Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

@@ -152,6 +152,14 @@
                                                             </a>
                                                         </div>
                                                         <div class="kt-menu-item">
+                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.select-user', $tenant) }}">
+                                                                <span class="kt-menu-icon">
+                                                                    <i class="ki-filled ki-user-tick"></i>
+                                                                </span>
+                                                                <span class="kt-menu-title">Impersonate User</span>
+                                                            </a>
+                                                        </div>
+                                                        <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="#">
                                                                 <span class="kt-menu-icon">
                                                                     <i class="ki-filled ki-setting-2"></i>

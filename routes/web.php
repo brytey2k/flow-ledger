@@ -37,6 +37,10 @@ foreach (config('tenancy.central_domains') as $domain) {
 
             Route::get('landlord/sys-admin/documentation', [DocumentationController::class, 'index'])->name('documentation');
 
+            Route::get('landlord/sys-admin/tenants/{tenant}/select-user', [TenantsController::class, 'selectUser'])->name('tenants.select-user');
+            Route::get('landlord/sys-admin/tenants/{tenant}/users', [TenantsController::class, 'users'])->name('tenants.users');
+            Route::post('landlord/sys-admin/impersonate/{tenant}', [TenantsController::class, 'impersonate'])->name('impersonate');
+
             Route::get('landlord/sys-admin/feature-flags', [TenantFeatureFlagsController::class, 'overview'])->name('feature-flags.index');
             Route::get('landlord/sys-admin/tenants/{tenant}/feature-flags', [TenantFeatureFlagsController::class, 'index'])->name('tenants.feature-flags.index');
             Route::put('landlord/sys-admin/tenants/{tenant}/feature-flags', [TenantFeatureFlagsController::class, 'update'])->name('tenants.feature-flags.update');
