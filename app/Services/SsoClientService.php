@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\Auth\SsoUserClaimsDto;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -19,6 +20,13 @@ use RuntimeException;
 
 class SsoClientService
 {
+    // ── HTTP Client ──────────────────────────────────────────────────────────
+
+    public function idpHttp(): PendingRequest
+    {
+        return config('sso.verify_ssl') ? Http::withOptions([]) : Http::withoutVerifying();
+    }
+
     // ── PKCE ─────────────────────────────────────────────────────────────────
 
     /** @return array{verifier: string, challenge: string} */
@@ -70,7 +78,7 @@ class SsoClientService
     /** @return array{access_token: string, id_token?: string, refresh_token?: string, token_type: string} */
     public function exchangeCodeForTokens(string $code, string $codeVerifier): array
     {
-        $response = Http::asForm()->post(
+        $response = $this->idpHttp()->asForm()->post(
             rtrim(config()->string('sso.idp_internal_url'), '/') . '/oauth/token',
             [
                 'grant_type' => 'authorization_code',
@@ -144,7 +152,7 @@ class SsoClientService
     /** Fetches user claims from the IDP userinfo endpoint. */
     public function fetchUserInfo(string $accessToken): SsoUserClaimsDto
     {
-        $response = Http::withToken($accessToken)
+        $response = $this->idpHttp()->withToken($accessToken)
             ->get(rtrim(config()->string('sso.idp_internal_url'), '/') . '/oauth/userinfo');
 
         if ($response->failed()) {
@@ -178,7 +186,7 @@ class SsoClientService
 
     private function fetchPemFromJwks(): string
     {
-        $response = Http::get(config()->string('sso.jwks_uri'));
+        $response = $this->idpHttp()->get(config()->string('sso.jwks_uri'));
 
         if ($response->failed()) {
             throw new RuntimeException('Failed to fetch JWKS from IDP.');

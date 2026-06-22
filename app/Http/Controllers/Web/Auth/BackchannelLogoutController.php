@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Interfaces\SessionInvalidatorInterface;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserRepository;
+use App\Services\IdpBackchannelLogoutFailureReporterService;
 use App\Services\SsoClientService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -27,6 +28,8 @@ class BackchannelLogoutController extends Controller
         private readonly SsoClientService $ssoClient,
         private readonly TenantRepository $tenantRepository,
         private readonly UserRepository $userRepository,
+        private readonly SessionInvalidatorInterface $sessionInvalidator,
+        private readonly IdpBackchannelLogoutFailureReporterService $failureReporter,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -64,7 +67,7 @@ class BackchannelLogoutController extends Controller
                     'sub' => $sub,
                 ]);
             } else {
-                DB::table('sessions')->where('user_id', $user->id)->delete();
+                $this->sessionInvalidator->invalidate($user->id);
 
                 Log::info('Back-channel logout: user sessions revoked', [
                     'tid' => $tid,
@@ -72,6 +75,18 @@ class BackchannelLogoutController extends Controller
                     'user_id' => $user->id,
                 ]);
             }
+        } catch (\Exception $e) {
+            Log::error('Back-channel logout: session revocation failed', [
+                'error' => $e->getMessage(),
+                'tid' => $tid,
+                'sub' => $sub,
+            ]);
+
+            $this->failureReporter->report([
+                'error_code' => 'DATABASE_UNAVAILABLE',
+                'sub' => $sub,
+                'tid' => $tid,
+            ]);
         } finally {
             tenancy()->end();
         }

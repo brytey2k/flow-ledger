@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Features\LocalAuth;
+use App\Features\VerifyLoginWithIdp;
 use App\Models\Tenant\User;
+use App\Services\IdpAccessVerificationService;
+use Laravel\Pennant\Feature;
 use Illuminate\Support\Facades\Hash;
 use Tests\TenantAppTestCase;
 
@@ -109,6 +113,87 @@ class LoginControllerTest extends TenantAppTestCase
 
         $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
+    }
+
+    // ── LocalAuth feature flag ────────────────────────────────────────────────
+
+    public function test_login_form_shows_form_when_local_auth_is_enabled(): void
+    {
+        Feature::for($this->tenant)->activate(LocalAuth::class);
+
+        $this->get(route('login'))->assertOk()->assertSee('sign_in_form', false);
+    }
+
+    public function test_login_form_hides_form_when_local_auth_is_disabled(): void
+    {
+        Feature::for($this->tenant)->deactivate(LocalAuth::class);
+
+        $this->get(route('login'))->assertOk()->assertDontSee('sign_in_form', false);
+    }
+
+    public function test_login_returns_403_when_local_auth_is_disabled(): void
+    {
+        Feature::for($this->tenant)->deactivate(LocalAuth::class);
+
+        $this->post(route('login'), [
+            'email' => 'user@example.com',
+            'password' => 'Password1!',
+        ])->assertForbidden();
+    }
+
+    // ── VerifyLoginWithIdp feature flag ───────────────────────────────────────
+
+    public function test_login_succeeds_when_verify_with_idp_is_enabled_and_idp_grants_access(): void
+    {
+        Feature::for($this->tenant)->activate(VerifyLoginWithIdp::class);
+
+        $this->mock(IdpAccessVerificationService::class)
+            ->shouldReceive('userHasAccess')
+            ->once()
+            ->andReturn(true);
+
+        $user = User::factory()->create(['password' => Hash::make('Password1!')]);
+
+        $this->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'Password1!',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_login_fails_when_verify_with_idp_is_enabled_and_idp_denies_access(): void
+    {
+        Feature::for($this->tenant)->activate(VerifyLoginWithIdp::class);
+
+        $this->mock(IdpAccessVerificationService::class)
+            ->shouldReceive('userHasAccess')
+            ->once()
+            ->andReturn(false);
+
+        $user = User::factory()->create(['password' => Hash::make('Password1!')]);
+
+        $this->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'Password1!',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+    }
+
+    public function test_verify_with_idp_is_not_called_when_feature_is_disabled(): void
+    {
+        Feature::for($this->tenant)->deactivate(VerifyLoginWithIdp::class);
+
+        $this->mock(IdpAccessVerificationService::class)
+            ->shouldNotReceive('userHasAccess');
+
+        $user = User::factory()->create(['password' => Hash::make('Password1!')]);
+
+        $this->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'Password1!',
+        ])->assertRedirect(route('dashboard'));
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────

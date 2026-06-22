@@ -21,4 +21,11 @@ return [
     'jwks_uri' => env('SSO_JWKS_URI', 'http://localhost/.well-known/jwks.json'),
 
     'product_slug' => env('SSO_PRODUCT_SLUG', 'flow-ledger'),
+
+    // M2M client credentials for server-to-server IdP calls
+    'm2m_client_id' => env('SSO_M2M_CLIENT_ID'),
+    'm2m_client_secret' => env('SSO_M2M_CLIENT_SECRET'),
+    'm2m_scope' => env('SSO_M2M_SCOPE', 'login:verify'),
+
+    'verify_ssl' => (bool) env('SSO_VERIFY_SSL', true),
 ];

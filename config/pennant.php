@@ -38,7 +38,7 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'connection' => null,
+            'connection' => env('PENNANT_DB_CONNECTION', 'pgsql'),
             'table' => 'features',
         ],
 

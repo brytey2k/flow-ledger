@@ -67,7 +67,7 @@ Route::middleware([
 
     Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
-    Route::middleware(['auth', 'force.password.change'])->group(function (): void {
+    Route::middleware(['auth', 'check.force.logout', 'force.password.change'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
         Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
         Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');

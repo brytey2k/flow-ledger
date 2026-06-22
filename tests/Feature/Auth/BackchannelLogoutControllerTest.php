@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Interfaces\SessionInvalidatorInterface;
+use App\Models\Tenant\User;
+use App\Services\IdpBackchannelLogoutFailureReporterService;
 use App\Services\SsoClientService;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -164,6 +167,57 @@ class BackchannelLogoutControllerTest extends TenantAppTestCase
             ->assertStatus(200);
 
         // Re-initialize tenancy so tearDown can roll back tenant transaction
+        tenancy()->initialize($this->tenant);
+    }
+
+    // ── Session invalidation ──────────────────────────────────────────────────
+
+    public function test_invalidates_user_sessions_via_session_invalidator(): void
+    {
+        $tid = 'tid-' . uniqid();
+        $sub = 'sub-' . uniqid();
+        $this->tenant->update(['idp_tenant_id' => $tid]);
+
+        $user = User::factory()->create(['oidc_sub' => $sub]);
+
+        $mockInvalidator = $this->mock(SessionInvalidatorInterface::class);
+        $mockInvalidator->shouldReceive('invalidate')
+            ->once()
+            ->with($user->id);
+
+        $token = $this->makeLogoutToken($sub, $tid);
+
+        $this->post(route('sso.backchannel-logout'), ['logout_token' => $token])
+            ->assertStatus(200);
+
+        tenancy()->initialize($this->tenant);
+    }
+
+    // ── Failure reporting ─────────────────────────────────────────────────────
+
+    public function test_reports_failure_to_idp_when_session_invalidation_throws(): void
+    {
+        $tid = 'tid-' . uniqid();
+        $sub = 'sub-' . uniqid();
+        $this->tenant->update(['idp_tenant_id' => $tid]);
+
+        User::factory()->create(['oidc_sub' => $sub]);
+
+        $this->mock(SessionInvalidatorInterface::class)
+            ->shouldReceive('invalidate')
+            ->once()
+            ->andThrow(new \RuntimeException('DB connection failed'));
+
+        $mockReporter = $this->mock(IdpBackchannelLogoutFailureReporterService::class);
+        $mockReporter->shouldReceive('report')
+            ->once()
+            ->with(\Mockery::on(fn(array $payload) => $payload['error_code'] === 'DATABASE_UNAVAILABLE'));
+
+        $token = $this->makeLogoutToken($sub, $tid);
+
+        $this->post(route('sso.backchannel-logout'), ['logout_token' => $token])
+            ->assertStatus(200);
+
         tenancy()->initialize($this->tenant);
     }
 }

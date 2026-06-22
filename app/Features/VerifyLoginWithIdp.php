@@ -6,12 +6,12 @@ namespace App\Features;
 
 use App\Enums\FeatureFlag;
 
-class LocalAuth
+class VerifyLoginWithIdp
 {
-    public string $name = FeatureFlag::LocalAuth->value;
+    public string $name = FeatureFlag::VerifyLoginWithIdp->value;
 
     public function resolve(mixed $scope): mixed
     {
-        return true;
+        return false;
     }
 }

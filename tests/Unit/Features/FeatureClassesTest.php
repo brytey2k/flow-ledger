@@ -8,8 +8,10 @@ use App\Enums\FeatureFlag;
 use App\Features\AdvancedReporting;
 use App\Features\ApiAccess;
 use App\Features\BulkExport;
+use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
 use App\Features\MultiCurrency;
+use App\Features\VerifyLoginWithIdp;
 use PHPUnit\Framework\TestCase;
 
 class FeatureClassesTest extends TestCase
@@ -38,9 +40,21 @@ class FeatureClassesTest extends TestCase
         $this->assertFalse($feature->resolve(null));
     }
 
-    public function test_local_auth_resolve_returns_false(): void
+    public function test_local_auth_resolve_returns_true(): void
     {
         $feature = new LocalAuth();
+        $this->assertTrue($feature->resolve(null));
+    }
+
+    public function test_verify_login_with_idp_resolve_returns_false(): void
+    {
+        $feature = new VerifyLoginWithIdp();
+        $this->assertFalse($feature->resolve(null));
+    }
+
+    public function test_delegate_identity_to_idp_resolve_returns_false(): void
+    {
+        $feature = new DelegateIdentityToIdp();
         $this->assertFalse($feature->resolve(null));
     }
 
@@ -66,5 +80,23 @@ class FeatureClassesTest extends TestCase
     {
         $feature = new ApiAccess();
         $this->assertSame(FeatureFlag::ApiAccess->value, $feature->name);
+    }
+
+    public function test_local_auth_name_matches_enum(): void
+    {
+        $feature = new LocalAuth();
+        $this->assertSame(FeatureFlag::LocalAuth->value, $feature->name);
+    }
+
+    public function test_verify_login_with_idp_name_matches_enum(): void
+    {
+        $feature = new VerifyLoginWithIdp();
+        $this->assertSame(FeatureFlag::VerifyLoginWithIdp->value, $feature->name);
+    }
+
+    public function test_delegate_identity_to_idp_name_matches_enum(): void
+    {
+        $feature = new DelegateIdentityToIdp();
+        $this->assertSame(FeatureFlag::DelegateIdentityToIdp->value, $feature->name);
     }
 }

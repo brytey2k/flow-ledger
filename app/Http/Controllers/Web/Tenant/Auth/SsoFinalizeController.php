@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web\Tenant\Auth;
 
 use App\Data\Auth\SsoUserClaimsDto;
 use App\Http\Controllers\Controller;
+use App\Interfaces\SessionInvalidatorInterface;
 use App\Services\SsoUserProvisioningService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class SsoFinalizeController extends Controller
 {
     public function __construct(
         private readonly SsoUserProvisioningService $provisioner,
+        private readonly SessionInvalidatorInterface $sessionInvalidator,
     ) {}
 
     /**
@@ -46,6 +48,8 @@ class SsoFinalizeController extends Controller
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
+
+        $this->sessionInvalidator->track($user->id, $request->session()->getId());
 
         return redirect()->intended(route('dashboard'));
     }

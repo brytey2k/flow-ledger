@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Middleware;
 
+use App\Features\DelegateIdentityToIdp;
+use Laravel\Pennant\Feature;
 use Tests\TenantAppTestCase;
 
 class ForcePasswordChangeTest extends TenantAppTestCase
@@ -65,5 +67,27 @@ class ForcePasswordChangeTest extends TenantAppTestCase
         $response = $this->get(route('dashboard'));
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_delegate_identity_to_idp_bypasses_force_password_change(): void
+    {
+        $this->user->update(['must_change_password' => true]);
+
+        Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+
+        $response = $this->actingAs($this->user)->get(route('dashboard'));
+
+        $response->assertOk();
+    }
+
+    public function test_force_password_change_still_applies_without_delegate_identity_flag(): void
+    {
+        $this->user->update(['must_change_password' => true]);
+
+        Feature::for($this->tenant)->deactivate(DelegateIdentityToIdp::class);
+
+        $response = $this->actingAs($this->user)->get(route('dashboard'));
+
+        $response->assertRedirect(route('password.change'));
     }
 }
