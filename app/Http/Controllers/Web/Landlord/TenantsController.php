@@ -9,6 +9,7 @@ use App\Http\Requests\Landlord\PostImpersonateTenantRequest;
 use App\Http\Requests\Landlord\TenantCreateRequest;
 use App\Http\Requests\Landlord\TenantDeleteRequest;
 use App\Http\Requests\Landlord\TenantResetRequest;
+use App\Models\Domain;
 use App\Models\Tenant;
 use App\Services\NewTenantSetupService;
 use App\Services\TenantImpersonationService;
@@ -152,6 +153,7 @@ class TenantsController extends Controller
             return back()->withInput()->with('error', 'User not found in this tenant.');
         }
 
+        /** @var Domain|null $domain */
         $domain = $tenant->domains->first();
 
         if ($domain === null) {

@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 
 class SettingKeyTest extends TestCase
 {
-    public function test_cases_returns_eight_keys(): void
+    public function test_cases_returns_nine_keys(): void
     {
-        $this->assertCount(8, SettingKey::cases());
+        $this->assertCount(9, SettingKey::cases());
     }
 
     public function test_logo_light_value(): void
@@ -52,6 +52,11 @@ class SettingKeyTest extends TestCase
     public function test_sso_default_branch_value(): void
     {
         $this->assertSame('sso_default_branch', SettingKey::SsoDefaultBranch->value);
+    }
+
+    public function test_sso_staff_role_value(): void
+    {
+        $this->assertSame('sso_staff_role', SettingKey::SsoStaffRole->value);
     }
 
     public function test_can_create_from_string(): void

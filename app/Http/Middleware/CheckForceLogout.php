@@ -26,6 +26,9 @@ class CheckForceLogout
             return redirect()->route('login');
         }
 
-        return $next($request);
+        /** @var Response $response */
+        $response = $next($request);
+
+        return $response;
     }
 }
