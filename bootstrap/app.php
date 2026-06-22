@@ -7,6 +7,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command(SendRetirementReminders::class)->dailyAt('08:00');
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
+    ->withExceptions(static function (Exceptions $exceptions): void {
+        Integration::handles($exceptions);
+
+        $exceptions->dontReport([
+            Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException::class,
+        ]);
     })->create();

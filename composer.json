@@ -17,6 +17,7 @@
         "laravel/tinker": "^3.0",
         "lcobucci/jwt": "^5.6",
         "phpoffice/phpspreadsheet": "^5.7",
+        "sentry/sentry-laravel": "^4.26",
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^6.23",
         "stancl/tenancy": "^3.9",
