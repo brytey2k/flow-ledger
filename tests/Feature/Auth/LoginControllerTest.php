@@ -8,8 +8,8 @@ use App\Features\LocalAuth;
 use App\Features\VerifyLoginWithIdp;
 use App\Models\Tenant\User;
 use App\Services\IdpAccessVerificationService;
-use Laravel\Pennant\Feature;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Pennant\Feature;
 use Tests\TenantAppTestCase;
 
 class LoginControllerTest extends TenantAppTestCase

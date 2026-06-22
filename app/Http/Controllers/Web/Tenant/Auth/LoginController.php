@@ -12,8 +12,8 @@ use App\Services\IdpAccessVerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Pennant\Feature;
 use Illuminate\View\View;
+use Laravel\Pennant\Feature;
 
 class LoginController extends Controller
 {
