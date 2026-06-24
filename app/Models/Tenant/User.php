@@ -116,4 +116,11 @@ class User extends Authenticatable implements HasLocalePreference
         return $this->locale;
     }
 
+    // Pins Spatie Permission to 'web' so role lookups always hit the right guard_name
+    // regardless of which guard is currently active (e.g. 'iam_jwt' for API requests).
+    public function guardName(): string
+    {
+        return 'web';
+    }
+
 }

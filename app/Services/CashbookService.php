@@ -123,11 +123,11 @@ class CashbookService
         CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
     }
 
-    public function recordManualReceipt(Cashbook $cashbook, CashbookEntryDto $dto, User|null $user = null): void
+    public function recordManualReceipt(Cashbook $cashbook, CashbookEntryDto $dto, User|null $user = null): CashbookEntry
     {
         $amount = is_numeric($dto->amount) ? (float) $dto->amount : 0.0;
 
-        CashbookEntry::create([
+        $entry = CashbookEntry::create([
             'cashbook_id' => $cashbook->id,
             'type' => 'debit',
             'amount' => $amount,
@@ -154,6 +154,8 @@ class CashbookService
             ->log('Manual receipt recorded');
 
         CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
+
+        return $entry;
     }
 
     public function deleteManualReceipt(CashbookEntry $entry): void

@@ -13,3 +13,4 @@ declare(strict_types=1);
 */
 
 require 'web.tenant.php';
+require 'api.tenant.php';

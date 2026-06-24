@@ -16,3 +16,5 @@ parameters:
           path: app/Models/Tenant/Branch.php
         - identifier: argument.type
           path: app/Providers/TenancyServiceProvider.php
+        - identifier: ternary.alwaysTrue
+          path: app/Http/Controllers/Api/Tenant/MeController.php

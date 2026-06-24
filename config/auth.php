@@ -19,6 +19,11 @@ return [
             'driver' => 'session',
             'provider' => 'landlord_users',
         ],
+
+        'iam_jwt' => [
+            'driver' => 'iam_jwt',
+            'provider' => 'users',
+        ],
     ],
 
     'providers' => [
