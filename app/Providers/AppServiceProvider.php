@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(CashbookBalanceChanged::class, CheckCashBalanceThreshold::class);
 
         Auth::extend('iam_jwt', fn(Application $app, string $name, array $config) => new IamJwtGuard(
+            Auth::createUserProvider(is_string($config['provider'] ?? null) ? $config['provider'] : null),
             $app->make(Request::class),
             $app->make(SsoClientService::class),
             $app->make(UserRepository::class),

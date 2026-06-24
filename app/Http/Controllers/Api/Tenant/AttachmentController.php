@@ -33,6 +33,11 @@ class AttachmentController extends BaseApiController
         $request->validate(['file' => ['required', 'file', 'max:10240']]);
 
         $user = $this->apiUser();
+        $branchIds = $this->resolveAllowedBranchIds($user);
+        $paymentBranchId = $retirementRequest->paymentRequest?->branch_id;
+        abort_unless($paymentBranchId !== null && in_array($paymentBranchId, $branchIds, true), 403);
+        abort_unless($retirementRequest->paymentRequest->staff?->user_id === $user->id, 403, 'You do not own this request.');
+
         $attachment = $this->service->store($retirementRequest, $request->file('file'), $user);
 
         return response()->json(['data' => $attachment], 201);

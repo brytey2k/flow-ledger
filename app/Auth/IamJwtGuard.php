@@ -8,6 +8,7 @@ use App\Repositories\UserRepository;
 use App\Services\SsoClientService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
+use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -24,7 +25,8 @@ class IamJwtGuard implements Guard
 
     private bool $userResolved = false;
 
-    public function __construct(
+    public function __construct(// @phpstan-ignore constructor.unusedParameter
+        UserProvider|null $provider,
         private readonly Request $request,
         private readonly SsoClientService $ssoClient,
         private readonly UserRepository $userRepository,

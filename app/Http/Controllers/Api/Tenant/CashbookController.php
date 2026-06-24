@@ -23,6 +23,8 @@ class CashbookController extends BaseApiController
         $user = $this->apiUser();
         $this->authorize(PermissionKey::AccessCashbook->value);
 
+        abort_if(! $user->staffProfile()->exists(), 422, 'No staff profile found for your account.');
+
         $branchId = $user->operational_branch_id;
 
         $cashbook = $this->repository->findByBranchId($branchId);
