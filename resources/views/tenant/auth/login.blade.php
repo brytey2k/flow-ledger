@@ -113,7 +113,7 @@
                     </div>
                 @endif
 
-                <a class="kt-btn kt-btn-light flex justify-center grow gap-2" href="{{ url('/auth/sso/redirect') }}">
+                <a class="kt-btn kt-btn-light flex justify-center grow gap-2" href="{{ route('sso.redirect') }}">
                     <i class="ki-filled ki-shield-tick text-base"></i>
                     {{ __('auth.sign_in_with_sso') }}
                 </a>

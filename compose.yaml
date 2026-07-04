@@ -1,12 +1,19 @@
 services:
     nginx:
         image: 'nginx:alpine'
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
         ports:
             - '${APP_PORT:-80}:80'
             - '${APP_SSL_PORT:-443}:443'
         environment:
             APP_SSL_PORT: '${APP_SSL_PORT:-443}'
-            NGINX_ENVSUBST_FILTER: 'APP_SSL_PORT'
+            APP_PORT: '${APP_PORT:-80}'
+            # Restrict envsubst to only APP_SSL_PORT/APP_PORT so nginx $variables are left intact
+            NGINX_ENVSUBST_FILTER: 'APP_SSL_PORT|APP_PORT'
         volumes:
             - './docker/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro'
             - './docker/certs:/etc/nginx/certs:ro'
@@ -17,9 +24,15 @@ services:
             - laravel.test
     laravel.test:
         image: 'ghcr.io/brytey2k/sail-php:8.5-node24'
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
         extra_hosts:
             - 'host.docker.internal:host-gateway'
-            - '*.flow-ledger.test:host-gateway'
+            - 'main.flow-ledger.test:host-gateway'
+            - 'iam.test:host-gateway'
         ports:
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
         environment:
@@ -40,6 +53,11 @@ services:
             - redis
     pgsql:
         image: 'postgres:16-alpine'
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
         platform: linux/amd64
         ports:
             - '${FORWARD_DB_PORT:-5432}:5432'
@@ -66,6 +84,11 @@ services:
             timeout: 5s
     redis:
         image: 'redis:alpine'
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
         ports:
             - '${FORWARD_REDIS_PORT:-6379}:6379'
         volumes:
@@ -81,6 +104,11 @@ services:
             timeout: 5s
     queue:
         image: 'ghcr.io/brytey2k/sail-php:8.5-node24'
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
         depends_on:
             - pgsql
             - redis
@@ -101,6 +129,11 @@ services:
         command: php artisan queue:listen --tries=3 --sleep=1 --queue=default
     scheduler:
         image: 'ghcr.io/brytey2k/sail-php:8.5-node24'
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
         depends_on:
             - pgsql
             - redis

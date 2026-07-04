@@ -36,7 +36,7 @@ class SsoFinalizeController extends Controller
         }
 
         /** @var array{sub: string, email: string, name: string, email_verified: bool, tenant_id: string|null, products: list<string>}|null $raw */
-        $raw = Cache::pull("sso_login:{$token}");
+        $raw = Cache::store(config()->string('cache.default'))->pull("sso_login:{$token}");
 
         if ($raw === null) {
             abort(403, 'SSO login token is invalid or has expired. Please sign in again.');

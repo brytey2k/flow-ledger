@@ -14,9 +14,20 @@ use Tests\TenantAppTestCase;
 
 class SsoFinalizeControllerTest extends TenantAppTestCase
 {
+    /**
+     * Mirrors SsoController::routeToTenant(), which writes this token on the
+     * central domain via the explicit store name — bypassing Stancl's
+     * tenant cache tagging, since the finalize request that reads it back
+     * arrives on a tenant subdomain where tenancy has already tagged the
+     * Cache facade.
+     *
+     * @param string $token
+     * @param SsoUserClaimsDto $claims
+     */
     private function storeSsoToken(string $token, SsoUserClaimsDto $claims): void
     {
-        Cache::put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
+        Cache::store(config()->string('cache.default'))
+            ->put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
     }
 
     private function makeClaims(User|null $user = null): SsoUserClaimsDto
@@ -42,6 +53,14 @@ class SsoFinalizeControllerTest extends TenantAppTestCase
     public function test_finalize_returns_403_when_token_is_invalid_or_expired(): void
     {
         $this->get(route('sso.finalize', ['token' => 'invalid-token']))->assertForbidden();
+    }
+
+    public function test_finalize_cannot_read_a_token_written_through_the_tenant_tagged_cache(): void
+    {
+        $token = 'tenant-tagged-token-' . uniqid();
+        Cache::put("sso_login:{$token}", $this->makeClaims()->toArray(), now()->addSeconds(30));
+
+        $this->get(route('sso.finalize', ['token' => $token]))->assertForbidden();
     }
 
     public function test_finalize_logs_in_user_and_redirects_to_dashboard(): void

@@ -9,11 +9,29 @@ use App\Models\Tenant\Staff;
 use App\Services\SettingsService;
 use App\Services\SsoClientService;
 use App\Services\SsoUserProvisioningService;
+use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Tests\TenantAppTestCase;
 
 class SsoTest extends TenantAppTestCase
 {
+    /**
+     * Mirrors SsoController::routeToTenant(), which writes this token on the
+     * central domain via the explicit store name — bypassing Stancl's
+     * tenant cache tagging, since the finalize request that reads it back
+     * arrives on a tenant subdomain where tenancy has already tagged the
+     * Cache facade.
+     *
+     * @param string $token
+     * @param SsoUserClaimsDto $claims
+     */
+    private function storeSsoToken(string $token, SsoUserClaimsDto $claims): void
+    {
+        Cache::store(config()->string('cache.default'))
+            ->put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
+    }
+
     // ── SsoFinalizeController ─────────────────────────────────────────────────
 
     public function test_finalize_returns_403_when_token_is_missing(): void
@@ -42,7 +60,7 @@ class SsoTest extends TenantAppTestCase
         );
 
         $token = 'test-login-token-' . uniqid();
-        Cache::put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
+        $this->storeSsoToken($token, $claims);
 
         $this->get(route('sso.finalize', ['token' => $token]))
             ->assertRedirect(route('dashboard'));
@@ -64,7 +82,7 @@ class SsoTest extends TenantAppTestCase
         );
 
         $token = 'test-login-token-' . uniqid();
-        Cache::put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
+        $this->storeSsoToken($token, $claims);
 
         $this->get(route('sso.finalize', ['token' => $token]))
             ->assertRedirect(route('dashboard'));
@@ -91,7 +109,7 @@ class SsoTest extends TenantAppTestCase
         );
 
         $token = 'test-login-token-' . uniqid();
-        Cache::put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
+        $this->storeSsoToken($token, $claims);
 
         $this->get(route('sso.finalize', ['token' => $token]))
             ->assertRedirect(route('dashboard'));
@@ -115,7 +133,7 @@ class SsoTest extends TenantAppTestCase
         );
 
         $token = 'one-time-token-' . uniqid();
-        Cache::put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
+        $this->storeSsoToken($token, $claims);
 
         $this->get(route('sso.finalize', ['token' => $token]))->assertRedirect();
 
@@ -168,6 +186,56 @@ class SsoTest extends TenantAppTestCase
     {
         $service = app(SsoClientService::class);
         $this->assertFalse($service->validateAndConsumeState('unknown-state'));
+    }
+
+    // ── Resource Indicator (RFC 8707) ─────────────────────────────────────────
+
+    public function test_authorization_url_includes_resource_indicator(): void
+    {
+        config([
+            'sso.idp_url' => 'https://idp.test',
+            'sso.client_id' => 'test-client',
+            'sso.redirect_uri' => 'https://app.test/auth/sso/callback',
+            'sso.scopes' => ['openid', 'email', 'profile'],
+            'sso.product_slug' => 'flow-ledger',
+        ]);
+
+        $url = app(SsoClientService::class)->buildAuthorizationUrl('the-state', 'the-challenge');
+
+        $this->assertStringContainsString('resource=flow-ledger', $url);
+
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $params);
+        $this->assertSame('flow-ledger', $params['resource'] ?? null);
+    }
+
+    public function test_token_exchange_sends_resource_indicator_in_body(): void
+    {
+        config([
+            'sso.idp_internal_url' => 'https://idp-internal.test',
+            'sso.client_id' => 'test-client',
+            'sso.client_secret' => 'test-secret',
+            'sso.redirect_uri' => 'https://app.test/auth/sso/callback',
+            'sso.product_slug' => 'flow-ledger',
+            'sso.verify_ssl' => false,
+        ]);
+
+        Http::fake([
+            'https://idp-internal.test/oauth/token' => Http::response([
+                'access_token' => 'fake-access-token',
+                'token_type' => 'Bearer',
+            ]),
+        ]);
+
+        $tokens = app(SsoClientService::class)->exchangeCodeForTokens('the-code', 'the-verifier');
+
+        $this->assertSame('fake-access-token', $tokens['access_token']);
+
+        Http::assertSent(function (ClientRequest $request): bool {
+            return $request->url() === 'https://idp-internal.test/oauth/token'
+                && $request['resource'] === 'flow-ledger'
+                && $request['grant_type'] === 'authorization_code'
+                && $request['code'] === 'the-code';
+        });
     }
 
     // ── SsoUserClaimsDto ─────────────────────────────────────────────────────

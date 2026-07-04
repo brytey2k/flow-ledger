@@ -36,16 +36,22 @@ class SsoController extends Controller
         $pkce = $this->ssoClient->generatePkce();
         $state = $this->ssoClient->generateState();
 
-        $request->session()->put("sso_pkce:{$state}", $pkce['verifier']);
+        Cache::put("sso_pkce:{$state}", $pkce['verifier'], now()->addMinutes(5));
 
         $returnTo = (string) $request->query('return_to', '');
         if ($returnTo !== '' && $this->isAllowedReturnUrl($returnTo)) {
-            $request->session()->put("sso_return:{$state}", $returnTo);
+            Cache::put("sso_return:{$state}", $returnTo, now()->addMinutes(5));
         }
 
         return redirect()->away(
             $this->ssoClient->buildAuthorizationUrl($state, $pkce['challenge']),
-        );
+        )->withCookie(cookie(
+            name: 'sso_state',
+            value: $state,
+            minutes: 5,
+            secure: parse_url(config()->string('sso.redirect_uri'), PHP_URL_SCHEME) === 'https',
+            sameSite: 'lax',
+        ));
     }
 
     /**
@@ -67,10 +73,14 @@ class SsoController extends Controller
             return $this->failRedirect('Invalid or expired SSO state. Please try again.');
         }
 
-        $pulledReturn = $request->session()->pull("sso_return:{$state}");
+        if ($request->cookie('sso_state') !== $state) {
+            return $this->failRedirect('This sign-in attempt could not be verified. Please try again.');
+        }
+
+        $pulledReturn = Cache::pull("sso_return:{$state}");
         $returnTo = is_string($pulledReturn) ? $pulledReturn : '';
 
-        $pulled = $request->session()->pull("sso_pkce:{$state}");
+        $pulled = Cache::pull("sso_pkce:{$state}");
         $verifier = is_string($pulled) ? $pulled : '';
         if ($verifier === '') {
             return $this->failRedirect('PKCE code verifier is missing. Please try again.', $returnTo);
@@ -156,10 +166,14 @@ class SsoController extends Controller
         }
 
         $loginToken = Str::random(64);
-        Cache::put("sso_login:{$loginToken}", $claims->toArray(), now()->addSeconds(30));
+        // Explicit store name bypasses Stancl's tenant cache tagging, since this
+        // token is written on the central domain but read on a tenant subdomain
+        // where InitializeTenancyByDomain has already tagged the Cache facade.
+        Cache::store(config()->string('cache.default'))
+            ->put("sso_login:{$loginToken}", $claims->toArray(), now()->addSeconds(30));
 
-        $port = parse_url(config()->string('app.url'), PHP_URL_PORT);
-        $portSuffix = $port ? ":{$port}" : '';
+        $port = request()->getPort();
+        $portSuffix = in_array($port, [80, 443], true) ? '' : ":{$port}";
         $scheme = request()->isSecure() ? 'https' : 'http';
 
         return redirect()->away("{$scheme}://{$domain}{$portSuffix}/auth/sso/finalize?token={$loginToken}");

@@ -7,6 +7,7 @@ namespace Tests\Feature\Auth;
 use App\Data\Auth\SsoUserClaimsDto;
 use App\Services\SsoClientService;
 use App\Services\SsoUserProvisioningService;
+use Illuminate\Support\Facades\Cache;
 use Tests\LandlordTestCase;
 
 class SsoControllerTest extends LandlordTestCase
@@ -35,7 +36,7 @@ class SsoControllerTest extends LandlordTestCase
         $response->assertRedirectContains('client_id=test-client');
     }
 
-    public function test_redirect_stores_pkce_verifier_in_session(): void
+    public function test_redirect_stores_pkce_verifier_in_cache(): void
     {
         $response = $this->get(route('sso.redirect'));
 
@@ -45,10 +46,10 @@ class SsoControllerTest extends LandlordTestCase
         $state = $params['state'] ?? '';
 
         $this->assertNotEmpty($state);
-        $this->assertTrue($response->baseResponse->getSession()->has("sso_pkce:{$state}"));
+        $this->assertTrue(Cache::has("sso_pkce:{$state}"));
     }
 
-    public function test_redirect_stores_valid_return_to_url_in_session(): void
+    public function test_redirect_stores_valid_return_to_url_in_cache(): void
     {
         $returnTo = route('landlord.tenants.index');
 
@@ -59,7 +60,20 @@ class SsoControllerTest extends LandlordTestCase
         parse_str((string) parse_url($location, PHP_URL_QUERY), $params);
         $state = $params['state'] ?? '';
 
-        $this->assertTrue($response->baseResponse->getSession()->has("sso_return:{$state}"));
+        $this->assertTrue(Cache::has("sso_return:{$state}"));
+    }
+
+    public function test_redirect_sets_sso_state_cookie(): void
+    {
+        $response = $this->get(route('sso.redirect'));
+
+        $response->assertRedirect();
+        $location = $response->headers->get('Location', '');
+        parse_str((string) parse_url($location, PHP_URL_QUERY), $params);
+        $state = $params['state'] ?? '';
+
+        $this->assertNotEmpty($state);
+        $response->assertCookie('sso_state', $state);
     }
 
     public function test_redirect_does_not_store_external_return_to_url(): void
@@ -71,7 +85,7 @@ class SsoControllerTest extends LandlordTestCase
         parse_str((string) parse_url($location, PHP_URL_QUERY), $params);
         $state = $params['state'] ?? '';
 
-        $this->assertFalse($response->baseResponse->getSession()->has("sso_return:{$state}"));
+        $this->assertFalse(Cache::has("sso_return:{$state}"));
     }
 
     // ── callback ──────────────────────────────────────────────────────────────
@@ -109,6 +123,21 @@ class SsoControllerTest extends LandlordTestCase
         $response->assertForbidden();
     }
 
+    public function test_callback_aborts_when_sso_state_cookie_does_not_match_state(): void
+    {
+        $state = 'test-state-' . uniqid();
+
+        $client = $this->mock(SsoClientService::class);
+        $client->shouldReceive('validateAndConsumeState')->andReturn(true);
+
+        Cache::put("sso_pkce:{$state}", 'test-verifier', now()->addMinutes(5));
+
+        $response = $this->withCookie('sso_state', 'a-different-state')
+            ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']));
+
+        $response->assertForbidden();
+    }
+
     public function test_callback_redirects_with_error_when_token_exchange_fails(): void
     {
         $state = 'test-state-' . uniqid();
@@ -117,7 +146,8 @@ class SsoControllerTest extends LandlordTestCase
         $client->shouldReceive('validateAndConsumeState')->andReturn(true);
         $client->shouldReceive('exchangeCodeForTokens')->andThrow(new \RuntimeException('Exchange failed'));
 
-        $response = $this->withSession(["sso_pkce:{$state}" => 'test-verifier'])
+        Cache::put("sso_pkce:{$state}", 'test-verifier', now()->addMinutes(5));
+        $response = $this->withCookie('sso_state', $state)
             ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']));
 
         $response->assertForbidden();
@@ -132,7 +162,8 @@ class SsoControllerTest extends LandlordTestCase
         $client->shouldReceive('exchangeCodeForTokens')->andReturn(['access_token' => 'tok']);
         $client->shouldReceive('fetchUserInfo')->andThrow(new \RuntimeException('Userinfo failed'));
 
-        $response = $this->withSession(["sso_pkce:{$state}" => 'test-verifier'])
+        Cache::put("sso_pkce:{$state}", 'test-verifier', now()->addMinutes(5));
+        $response = $this->withCookie('sso_state', $state)
             ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']));
 
         $response->assertForbidden();
@@ -149,7 +180,8 @@ class SsoControllerTest extends LandlordTestCase
         $client->shouldReceive('exchangeCodeForTokens')->andReturn(['access_token' => 'tok']);
         $client->shouldReceive('fetchUserInfo')->andReturn($claims);
 
-        $response = $this->withSession(["sso_pkce:{$state}" => 'test-verifier'])
+        Cache::put("sso_pkce:{$state}", 'test-verifier', now()->addMinutes(5));
+        $response = $this->withCookie('sso_state', $state)
             ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']));
 
         $response->assertForbidden();
@@ -173,7 +205,8 @@ class SsoControllerTest extends LandlordTestCase
             ->with($claims)
             ->andReturn($this->landlordUser);
 
-        $response = $this->withSession(["sso_pkce:{$state}" => 'verifier'])
+        Cache::put("sso_pkce:{$state}", 'verifier', now()->addMinutes(5));
+        $response = $this->withCookie('sso_state', $state)
             ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']));
 
         $response->assertRedirect(route('landlord.tenants.index'));
@@ -195,7 +228,8 @@ class SsoControllerTest extends LandlordTestCase
         $client->shouldReceive('exchangeCodeForTokens')->andReturn(['access_token' => 'tok']);
         $client->shouldReceive('fetchUserInfo')->andReturn($claims);
 
-        $response = $this->withSession(["sso_pkce:{$state}" => 'verifier'])
+        Cache::put("sso_pkce:{$state}", 'verifier', now()->addMinutes(5));
+        $response = $this->withCookie('sso_state', $state)
             ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']));
 
         $response->assertRedirect();
@@ -216,7 +250,8 @@ class SsoControllerTest extends LandlordTestCase
         $client->shouldReceive('exchangeCodeForTokens')->andReturn(['access_token' => 'tok']);
         $client->shouldReceive('fetchUserInfo')->andReturn($claims);
 
-        $this->withSession(["sso_pkce:{$state}" => 'verifier'])
+        Cache::put("sso_pkce:{$state}", 'verifier', now()->addMinutes(5));
+        $this->withCookie('sso_state', $state)
             ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']))
             ->assertForbidden();
     }

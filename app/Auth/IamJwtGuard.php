@@ -159,6 +159,17 @@ class IamJwtGuard implements Guard
             throw new RuntimeException('Access token has expired.');
         }
 
+        $audience = config('sso.audience');
+
+        if (is_string($audience) && $audience !== '') {
+            /** @var list<string> $aud */
+            $aud = (array) $token->claims()->get('aud', []);
+
+            if (! in_array($audience, $aud, true)) {
+                throw new RuntimeException('Token audience does not match this resource server.');
+            }
+        }
+
         /** @var list<string> $products */
         $products = (array) $token->claims()->get('products', []);
 

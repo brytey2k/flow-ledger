@@ -68,6 +68,9 @@ class SsoClientService
             'state' => $state,
             'code_challenge' => $codeChallenge,
             'code_challenge_method' => 'S256',
+            // Resource Indicator (RFC 8707): scope the resulting access token's
+            // `aud` to this product so it cannot be replayed against a sibling app.
+            'resource' => config()->string('sso.product_slug'),
         ]);
 
         return rtrim(config()->string('sso.idp_url'), '/') . '/oauth/authorize?' . $params;
@@ -87,6 +90,9 @@ class SsoClientService
                 'redirect_uri' => config()->string('sso.redirect_uri'),
                 'code' => $code,
                 'code_verifier' => $codeVerifier,
+                // Resource Indicator (RFC 8707): must match the value sent on the
+                // authorization request so the IDP narrows `aud` to this product.
+                'resource' => config()->string('sso.product_slug'),
             ],
         );
 
@@ -161,11 +167,18 @@ class SsoClientService
 
         $raw = $response->json();
 
-        /** @var array{sub?: string, email?: string, name?: string, email_verified?: bool, tenant_id?: int|string, products?: list<string>} $data */
+        /** @var array{sub?: string, email?: string, name?: string, email_verified?: bool, tenant_id?: int|string, products?: list<string|array{slug?: string}>} $data */
         $data = is_array($raw) ? $raw : [];
 
         /** @var list<string> $products */
-        $products = array_values(array_filter((array) ($data['products'] ?? []), 'is_string'));
+        $products = array_values(array_filter(array_map(
+            fn(mixed $product): string => match (true) {
+                is_string($product) => $product,
+                is_string($product['slug'] ?? null) => $product['slug'],
+                default => '',
+            },
+            (array) ($data['products'] ?? []),
+        ), fn(string $slug): bool => $slug !== ''));
 
         return new SsoUserClaimsDto(
             sub: $data['sub'] ?? '',

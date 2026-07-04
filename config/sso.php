@@ -22,6 +22,12 @@ return [
 
     'product_slug' => env('SSO_PRODUCT_SLUG', 'flow-ledger'),
 
+    // Expected `aud` value on API bearer tokens. The IAM includes every accessible
+    // product slug in the access token's `aud`, so set this to this app's product
+    // slug (e.g. "flow-ledger") to assert the token was intended for this resource
+    // server. Only enforced when set.
+    'audience' => env('SSO_AUDIENCE'),
+
     // M2M client credentials for server-to-server IdP calls
     'm2m_client_id' => env('SSO_M2M_CLIENT_ID'),
     'm2m_client_secret' => env('SSO_M2M_CLIENT_SECRET'),
