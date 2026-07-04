@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Tenant\CurrencyController;
 use App\Http\Controllers\Api\Tenant\DashboardController;
 use App\Http\Controllers\Api\Tenant\DepartmentController;
 use App\Http\Controllers\Api\Tenant\DisbursementController;
+use App\Http\Controllers\Api\Tenant\LogoutController;
 use App\Http\Controllers\Api\Tenant\MeController;
 use App\Http\Controllers\Api\Tenant\PaymentRequestActionController;
 use App\Http\Controllers\Api\Tenant\PaymentRequestController;
@@ -33,6 +34,7 @@ Route::prefix('api')
     ->group(function (): void {
         // Profile & Dashboard
         Route::get('/me', MeController::class)->name('api.me');
+        Route::post('/logout', LogoutController::class)->name('api.logout');
         Route::get('/dashboard', DashboardController::class)->name('api.dashboard');
 
         // Payment Requests

@@ -1,0 +1,1885 @@
+openapi: 3.1.0
+info:
+  title: Flow Ledger Tenant API
+  version: 1.0.0
+  description: |
+    JSON API for the Flow Ledger tenant application.
+
+    ## Hosting model
+    The API is served **per tenant** on that tenant's own domain. Tenancy is
+    initialized by domain (`InitializeTenancyByDomain`), central domains are
+    rejected (`PreventAccessFromCentralDomains`), and the tenant must be active
+    (`tenant.active` middleware). Every request therefore resolves against the
+    tenant identified by the `Host` header.
+
+    ## Authentication
+    All endpoints require a Bearer JWT issued by a **separate IAM / OAuth
+    server** and are guarded by the `auth:iam_jwt` guard. Tokens are scoped to
+    the tenant API audience via the RFC 8707 `resource` indicator, so a token is
+    only valid against the tenant domain it was issued for. Send it as
+    `Authorization: Bearer <jwt>`.
+
+    ## Conventions
+    - **List endpoints** return an envelope: `{ "data": [ ...models ], "meta": { current_page, last_page, per_page, total } }`.
+    - **Single-resource endpoints** return `{ "data": { ...model } }`.
+    - `store` actions return `201`; `destroy` actions return `204` with no body.
+    - Responses are **raw Eloquent models** (no API Resource transformation
+      layer), so field names match the underlying database columns plus any
+      eager-loaded relations. Which relations are present depends on the
+      endpoint (documented per operation).
+    - Authorization failures raise `403`; unauthenticated requests `401`;
+      missing route-model bindings `404`; validation failures `422`.
+
+servers:
+  - url: https://{tenantDomain}/api
+    description: Tenant API served on the tenant's own domain.
+    variables:
+      tenantDomain:
+        default: tenant.example.com
+        description: The fully-qualified domain of the tenant.
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Profile
+  - name: Dashboard
+  - name: Payment Requests
+  - name: Retirement Requests
+  - name: Approvals
+  - name: Disbursements
+  - name: Cashbook
+  - name: Attachments
+  - name: Comments
+  - name: Reference Data
+
+paths:
+  /me:
+    get:
+      tags: [Profile]
+      summary: Get the authenticated user's profile
+      description: Returns the authenticated user with branch, operational branch, staff profile (with department), roles and permissions.
+      operationId: getMe
+      responses:
+        '200':
+          description: Authenticated user profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard counts summary
+      description: |
+        Returns count summaries scoped to the caller's allowed branches and
+        staff profile. `low_cash_branches` is only populated for users with the
+        settings-access permission; otherwise it is an empty array.
+      operationId: getDashboard
+      responses:
+        '200':
+          description: Dashboard summary.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DashboardData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /payment-requests:
+    get:
+      tags: [Payment Requests]
+      summary: List payment requests
+      description: Paginated list scoped to the caller's allowed branches. Each item eager-loads `staff`, `branch`, and `currency`.
+      operationId: listPaymentRequests
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPageCapped50'
+      responses:
+        '200':
+          description: Paginated payment requests.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PaymentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Payment Requests]
+      summary: Create a payment request (draft)
+      operationId: createPaymentRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequestStoreInput'
+      responses:
+        '201':
+          description: Created payment request, with `items`, `branch`, `currency`, `staff` loaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaymentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payment-requests/{paymentRequest}:
+    parameters:
+      - $ref: '#/components/parameters/PaymentRequestId'
+    get:
+      tags: [Payment Requests]
+      summary: Show a payment request
+      description: |
+        Returns the payment request with `staff`, `branch`, `currency`,
+        `items.costCode`, `activeWorkflowInstance.instanceStages.stage.roles`,
+        `activities.causer`, and `comments.user` eager-loaded.
+      operationId: showPaymentRequest
+      responses:
+        '200':
+          description: Payment request detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaymentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Payment Requests]
+      summary: Update a payment request
+      description: Only `draft` or `sent_back` requests owned by the caller can be updated.
+      operationId: updatePaymentRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequestUpdateInput'
+      responses:
+        '200':
+          description: Updated payment request, with `items`, `branch`, `currency`, `staff` loaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaymentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Payment Requests]
+      summary: Delete a payment request
+      description: Only `draft` requests can be deleted.
+      operationId: deletePaymentRequest
+      responses:
+        '204':
+          description: Deleted.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payment-requests/{paymentRequest}/submit:
+    parameters:
+      - $ref: '#/components/parameters/PaymentRequestId'
+    post:
+      tags: [Payment Requests]
+      summary: Submit a draft payment request into its workflow
+      operationId: submitPaymentRequest
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentRequestData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/MessageError'
+
+  /payment-requests/{paymentRequest}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PaymentRequestId'
+    post:
+      tags: [Payment Requests]
+      summary: Cancel a payment request
+      operationId: cancelPaymentRequest
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentRequestData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/MessageError'
+
+  /payment-requests/{paymentRequest}/resubmit:
+    parameters:
+      - $ref: '#/components/parameters/PaymentRequestId'
+    post:
+      tags: [Payment Requests]
+      summary: Resubmit a sent-back payment request
+      operationId: resubmitPaymentRequest
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentRequestData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/MessageError'
+
+  /payment-requests/{paymentRequest}/attachments:
+    parameters:
+      - $ref: '#/components/parameters/PaymentRequestId'
+    post:
+      tags: [Attachments]
+      summary: Upload an attachment to a payment request
+      operationId: addPaymentRequestAttachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileUploadInput'
+      responses:
+        '201':
+          description: Created attachment.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payment-requests/{paymentRequest}/comments:
+    parameters:
+      - $ref: '#/components/parameters/PaymentRequestId'
+    post:
+      tags: [Comments]
+      summary: Add a comment to a payment request
+      operationId: addPaymentRequestComment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentStoreInput'
+      responses:
+        '201':
+          description: Created comment, with `user` loaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Comment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /retirement-requests:
+    get:
+      tags: [Retirement Requests]
+      summary: List retirement requests
+      description: Paginated list scoped to the caller's allowed branches (via the linked payment request). Each item eager-loads `paymentRequest.staff` and `paymentRequest.currency`.
+      operationId: listRetirementRequests
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPageCapped50'
+      responses:
+        '200':
+          description: Paginated retirement requests.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RetirementRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Retirement Requests]
+      summary: Create a retirement request (draft)
+      description: The referenced advance payment request must be `disbursed`, of type `advance`, and owned by the caller.
+      operationId: createRetirementRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetirementRequestStoreInput'
+      responses:
+        '201':
+          description: Created retirement request, with `items` and `paymentRequest` loaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RetirementRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /retirement-requests/{retirementRequest}:
+    parameters:
+      - $ref: '#/components/parameters/RetirementRequestId'
+    get:
+      tags: [Retirement Requests]
+      summary: Show a retirement request
+      description: |
+        Returns the retirement request with `items`, `paymentRequest.currency`,
+        `paymentRequest.staff`, `activeWorkflowInstance.instanceStages.stage`,
+        and `comments.user` eager-loaded.
+      operationId: showRetirementRequest
+      responses:
+        '200':
+          description: Retirement request detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RetirementRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Retirement Requests]
+      summary: Update a retirement request
+      description: Only `draft` or `sent_back` retirements owned by the caller can be updated.
+      operationId: updateRetirementRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetirementRequestUpdateInput'
+      responses:
+        '200':
+          description: Updated retirement request, with `items` and `paymentRequest` loaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RetirementRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /retirement-requests/{retirementRequest}/submit:
+    parameters:
+      - $ref: '#/components/parameters/RetirementRequestId'
+    post:
+      tags: [Retirement Requests]
+      summary: Submit a draft retirement request into its workflow
+      operationId: submitRetirementRequest
+      responses:
+        '200':
+          $ref: '#/components/responses/RetirementRequestData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/MessageError'
+
+  /retirement-requests/{retirementRequest}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/RetirementRequestId'
+    post:
+      tags: [Retirement Requests]
+      summary: Cancel a retirement request
+      operationId: cancelRetirementRequest
+      responses:
+        '200':
+          $ref: '#/components/responses/RetirementRequestData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/MessageError'
+
+  /retirement-requests/{retirementRequest}/resubmit:
+    parameters:
+      - $ref: '#/components/parameters/RetirementRequestId'
+    post:
+      tags: [Retirement Requests]
+      summary: Resubmit a sent-back retirement request
+      operationId: resubmitRetirementRequest
+      responses:
+        '200':
+          $ref: '#/components/responses/RetirementRequestData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/MessageError'
+
+  /retirement-requests/{retirementRequest}/attachments:
+    parameters:
+      - $ref: '#/components/parameters/RetirementRequestId'
+    post:
+      tags: [Attachments]
+      summary: Upload an attachment to a retirement request
+      operationId: addRetirementRequestAttachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileUploadInput'
+      responses:
+        '201':
+          description: Created attachment.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /retirement-requests/{retirementRequest}/comments:
+    parameters:
+      - $ref: '#/components/parameters/RetirementRequestId'
+    post:
+      tags: [Comments]
+      summary: Add a comment to a retirement request
+      operationId: addRetirementRequestComment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentStoreInput'
+      responses:
+        '201':
+          description: Created comment, with `user` loaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Comment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /approvals:
+    get:
+      tags: [Approvals]
+      summary: List workflow stages awaiting the caller's approval
+      description: |
+        Returns `active` workflow instance stages whose stage is assigned to one
+        of the caller's roles. Each item eager-loads
+        `instance.workflowable` (the polymorphic payment or retirement request)
+        and `stage.roles`.
+      operationId: listApprovals
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPageCapped50'
+      responses:
+        '200':
+          description: Paginated approval stages.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WorkflowInstanceStage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /approvals/{workflowInstanceStage}:
+    parameters:
+      - $ref: '#/components/parameters/WorkflowInstanceStageId'
+    get:
+      tags: [Approvals]
+      summary: Show a workflow instance stage
+      description: Eager-loads `instance.workflowable`, `stage.roles`, and `actions.user`.
+      operationId: showApproval
+      responses:
+        '200':
+          description: Approval stage detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WorkflowInstanceStage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /approvals/{workflowInstanceStage}/approve:
+    parameters:
+      - $ref: '#/components/parameters/WorkflowInstanceStageId'
+    post:
+      tags: [Approvals]
+      summary: Approve a workflow stage
+      operationId: approveStage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalActionInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkflowInstanceStageData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /approvals/{workflowInstanceStage}/reject:
+    parameters:
+      - $ref: '#/components/parameters/WorkflowInstanceStageId'
+    post:
+      tags: [Approvals]
+      summary: Reject a workflow stage
+      description: A `comment` is required when rejecting.
+      operationId: rejectStage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalActionInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkflowInstanceStageData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /approvals/{workflowInstanceStage}/send-back:
+    parameters:
+      - $ref: '#/components/parameters/WorkflowInstanceStageId'
+    post:
+      tags: [Approvals]
+      summary: Send a workflow stage back for corrections
+      description: A `comment` is required when sending back.
+      operationId: sendBackStage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalActionInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkflowInstanceStageData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /disbursements:
+    get:
+      tags: [Disbursements]
+      summary: List payment requests awaiting disbursement
+      description: Paginated list of `approved` payment requests in the caller's allowed branches. Eager-loads `staff`, `currency`, `branch`.
+      operationId: listDisbursements
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPageCapped50'
+      responses:
+        '200':
+          description: Paginated approved payment requests.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PaymentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /disbursements/{paymentRequest}:
+    parameters:
+      - $ref: '#/components/parameters/PaymentRequestId'
+    post:
+      tags: [Disbursements]
+      summary: Disburse an approved payment request
+      description: Only `approved` requests can be disbursed.
+      operationId: disbursePaymentRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisbursementStoreInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentRequestData'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /cashbook:
+    get:
+      tags: [Cashbook]
+      summary: Get the caller's branch cashbook and its entries
+      description: |
+        Returns the cashbook for the caller's operational branch (with
+        `currency` loaded) alongside a paginated list of its entries. Requires
+        the caller to have a staff profile and the branch to have a cashbook.
+      operationId: getCashbook
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPageCapped50'
+      responses:
+        '200':
+          description: Cashbook and paginated entries.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      cashbook:
+                        $ref: '#/components/schemas/Cashbook'
+                      entries:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CashbookEntry'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/MessageError'
+
+  /cashbook/entries:
+    post:
+      tags: [Cashbook]
+      summary: Record a manual cashbook receipt (credit entry)
+      operationId: createCashbookEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashbookEntryStoreInput'
+      responses:
+        '201':
+          description: Created cashbook entry.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CashbookEntry'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /attachments/{attachment}:
+    parameters:
+      - name: attachment
+        in: path
+        required: true
+        description: Attachment ID.
+        schema:
+          type: integer
+    delete:
+      tags: [Attachments]
+      summary: Delete an attachment
+      description: Callers may only delete their own attachments.
+      operationId: deleteAttachment
+      responses:
+        '204':
+          description: Deleted.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /branches:
+    get:
+      tags: [Reference Data]
+      summary: List branches the caller may access
+      description: Returns only `id` and `name`, ordered by name, scoped to the caller's allowed branches.
+      operationId: listBranches
+      responses:
+        '200':
+          description: Branch list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BranchRef'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /currencies:
+    get:
+      tags: [Reference Data]
+      summary: List currencies
+      description: All currencies ordered by name.
+      operationId: listCurrencies
+      responses:
+        '200':
+          description: Currency list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Currency'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /cost-codes:
+    get:
+      tags: [Reference Data]
+      summary: List cost codes
+      description: All cost codes ordered by code.
+      operationId: listCostCodes
+      responses:
+        '200':
+          description: Cost code list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CostCode'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /departments:
+    get:
+      tags: [Reference Data]
+      summary: List departments
+      description: All departments ordered by name.
+      operationId: listDepartments
+      responses:
+        '200':
+          description: Department list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Department'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bearer JWT issued by the external IAM / OAuth server. The token must be
+        scoped (RFC 8707 `resource` indicator) to this tenant's API audience.
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Page number (Laravel pagination).
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPageCapped50:
+      name: per_page
+      in: query
+      required: false
+      description: Items per page. Defaults to 20 and is capped at 50.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+    PaymentRequestId:
+      name: paymentRequest
+      in: path
+      required: true
+      description: Payment request ID.
+      schema:
+        type: integer
+    RetirementRequestId:
+      name: retirementRequest
+      in: path
+      required: true
+      description: Retirement request ID.
+      schema:
+        type: integer
+    WorkflowInstanceStageId:
+      name: workflowInstanceStage
+      in: path
+      required: true
+      description: Workflow instance stage ID.
+      schema:
+        type: integer
+
+  responses:
+    Unauthenticated:
+      description: Missing or invalid bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The caller lacks permission or ownership for this resource/action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: The request failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+    MessageError:
+      description: The action is not allowed in the resource's current state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    PaymentRequestData:
+      description: The (refreshed) payment request.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/PaymentRequest'
+    RetirementRequestData:
+      description: The (refreshed) retirement request.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/RetirementRequest'
+    WorkflowInstanceStageData:
+      description: The (refreshed) workflow instance stage, with `instance.workflowable` loaded.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/WorkflowInstanceStage'
+
+  schemas:
+    PaginationMeta:
+      type: object
+      description: Laravel length-aware paginator metadata.
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+      required: [current_page, last_page, per_page, total]
+
+    PaginationEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+      required: [data, meta]
+
+    Error:
+      type: object
+      description: Standard Laravel error payload.
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    ValidationError:
+      type: object
+      description: Laravel 422 validation error payload.
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required: [message, errors]
+
+    PaymentRequest:
+      type: object
+      description: |
+        A payment request. Field set reflects the `payment_requests` table.
+        Relations (`staff`, `branch`, `currency`, `items`, `activeWorkflowInstance`,
+        `activities`, `comments`) are only present when eager-loaded by the
+        endpoint that returned it.
+      properties:
+        id:
+          type: integer
+        staff_id:
+          type: integer
+        branch_id:
+          type: integer
+        currency_id:
+          type: integer
+        type:
+          type: string
+          enum: [advance, expense]
+        status:
+          type: string
+          description: 'Values include: draft, in_workflow, approved, disbursed, cancelled, sent_back.'
+        total_amount:
+          type: string
+          description: Decimal(15,2) serialized as a string.
+        notes:
+          type: [string, 'null']
+        submitted_at:
+          type: [string, 'null']
+          format: date-time
+        approved_at:
+          type: [string, 'null']
+          format: date-time
+        disbursed_at:
+          type: [string, 'null']
+          format: date-time
+        disbursed_by_user_id:
+          type: [integer, 'null']
+        disbursement_method:
+          type: [string, 'null']
+          description: One of the PaymentMethod values (cash, bank_transfer, mobile_money, cheque).
+        disbursement_reference:
+          type: [string, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentRequestItem'
+        staff:
+          $ref: '#/components/schemas/Staff'
+        branch:
+          $ref: '#/components/schemas/Branch'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        active_workflow_instance:
+          oneOf:
+            - $ref: '#/components/schemas/WorkflowInstance'
+            - type: 'null'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        activities:
+          type: array
+          description: Spatie activity-log records (causer eager-loaded on show). Shape not strictly modeled here.
+          items:
+            type: object
+            additionalProperties: true
+
+    PaymentRequestItem:
+      type: object
+      description: A line item of a payment request (`payment_request_items` table).
+      properties:
+        id:
+          type: integer
+        payment_request_id:
+          type: integer
+        description:
+          type: string
+        amount:
+          type: string
+          description: Decimal(15,2) serialized as a string.
+        account_code_id:
+          type: [integer, 'null']
+          description: FK to cost_codes (column named account_code_id). Required for expense-type requests.
+        receipt_number:
+          type: [string, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        cost_code:
+          oneOf:
+            - $ref: '#/components/schemas/CostCode'
+            - type: 'null'
+          description: Present when loaded via `items.costCode` (payment request show).
+
+    RetirementRequest:
+      type: object
+      description: |
+        A retirement (settlement) of a disbursed advance. Field set reflects the
+        `retirement_requests` table plus later migrations. Relations
+        (`paymentRequest`, `items`, `activeWorkflowInstance`, `comments`) are
+        only present when eager-loaded.
+      properties:
+        id:
+          type: integer
+        payment_request_id:
+          type: integer
+        status:
+          type: string
+          description: 'Values include: draft, in_workflow, approved, sent_back, cancelled (mirrors the request lifecycle).'
+        total_amount_expended:
+          type: string
+          description: Decimal(15,2) serialized as a string.
+        difference_amount:
+          type: string
+          description: Decimal(15,2) serialized as a string.
+        difference_type:
+          type: [string, 'null']
+          description: 'One of: refund_to_company, pay_to_staff, or null/nil.'
+        notes:
+          type: [string, 'null']
+        no_money_spent:
+          type: boolean
+          description: Set when the retirement declares that no money was spent.
+        submitted_at:
+          type: [string, 'null']
+          format: date-time
+        approved_at:
+          type: [string, 'null']
+          format: date-time
+        cancelled_at:
+          type: [string, 'null']
+          format: date-time
+        cancelled_by_user_id:
+          type: [integer, 'null']
+        settled_at:
+          type: [string, 'null']
+          format: date-time
+        settled_by_user_id:
+          type: [integer, 'null']
+        settlement_notes:
+          type: [string, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RetirementRequestItem'
+        payment_request:
+          $ref: '#/components/schemas/PaymentRequest'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    RetirementRequestItem:
+      type: object
+      description: A line item of a retirement request (`retirement_request_items` table).
+      properties:
+        id:
+          type: integer
+        retirement_request_id:
+          type: integer
+        account_code_id:
+          type: integer
+          description: FK to cost_codes (column named account_code_id).
+        description:
+          type: string
+        amount:
+          type: string
+          description: Decimal(15,2) serialized as a string.
+        receipt_number:
+          type: [string, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+
+    WorkflowInstanceStage:
+      type: object
+      description: |
+        A single stage of a workflow instance (`workflow_instance_stages` table).
+        Relations (`instance`, `stage`, `actions`) present when eager-loaded.
+      properties:
+        id:
+          type: integer
+        workflow_instance_id:
+          type: integer
+        workflow_stage_id:
+          type: integer
+        status:
+          type: string
+          enum: [pending, active, approved, rejected, sent_back, skipped, cancelled]
+        started_at:
+          type: [string, 'null']
+          format: date-time
+        completed_at:
+          type: [string, 'null']
+          format: date-time
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        instance:
+          $ref: '#/components/schemas/WorkflowInstance'
+        stage:
+          type: object
+          description: The workflow stage definition (`workflow_stages`), with `roles` when loaded.
+          additionalProperties: true
+        actions:
+          type: array
+          description: Workflow actions taken on this stage, with `user` when loaded (`workflow_actions`).
+          items:
+            type: object
+            additionalProperties: true
+
+    WorkflowInstance:
+      type: object
+      description: A workflow instance (`workflow_instances` table). `workflowable` is the polymorphic parent (a PaymentRequest or RetirementRequest) when loaded.
+      properties:
+        id:
+          type: integer
+        workflow_template_id:
+          type: integer
+        workflowable_type:
+          type: string
+        workflowable_id:
+          type: integer
+        status:
+          type: string
+          enum: [in_progress, completed, cancelled]
+        sent_back_to_stage_id:
+          type: [integer, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        workflowable:
+          description: Polymorphic parent - a PaymentRequest or RetirementRequest.
+          oneOf:
+            - $ref: '#/components/schemas/PaymentRequest'
+            - $ref: '#/components/schemas/RetirementRequest'
+        instance_stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowInstanceStage'
+
+    UserProfile:
+      type: object
+      description: The authenticated user profile as assembled by MeController (not a raw model dump).
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        locale:
+          type: [string, 'null']
+        branch:
+          oneOf:
+            - type: object
+              properties:
+                id: { type: integer }
+                name: { type: string }
+            - type: 'null'
+        operational_branch:
+          oneOf:
+            - type: object
+              properties:
+                id: { type: integer }
+                name: { type: string }
+            - type: 'null'
+        staff_profile:
+          oneOf:
+            - type: object
+              properties:
+                id: { type: integer }
+                department_id: { type: [integer, 'null'] }
+                department:
+                  oneOf:
+                    - type: object
+                      properties:
+                        id: { type: integer }
+                        name: { type: string }
+                    - type: 'null'
+            - type: 'null'
+        roles:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    DashboardData:
+      type: object
+      properties:
+        pending_approvals:
+          type: integer
+        my_draft_requests:
+          type: integer
+        my_in_workflow_requests:
+          type: integer
+        my_draft_retirements:
+          type: integer
+        pending_disbursements:
+          type: integer
+        low_cash_branches:
+          type: array
+          description: Populated only for users with settings-access permission; otherwise empty.
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              name: { type: string }
+              balance: { type: number }
+              threshold: { type: number }
+              currency: { type: string }
+
+    Cashbook:
+      type: object
+      description: A branch cashbook (`cashbooks` table). `currency` loaded on the cashbook endpoint.
+      properties:
+        id:
+          type: integer
+        branch_id:
+          type: integer
+        currency_id:
+          type: integer
+        balance:
+          type: string
+          description: Decimal(15,2) serialized as a string.
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+        currency:
+          $ref: '#/components/schemas/Currency'
+
+    CashbookEntry:
+      type: object
+      description: A cashbook entry (`cashbook_entries` table).
+      properties:
+        id:
+          type: integer
+        cashbook_id:
+          type: integer
+        type:
+          type: string
+          enum: [debit, credit]
+        amount:
+          type: string
+          description: Decimal(15,2) serialized as a string.
+        description:
+          type: string
+        entry_date:
+          type: string
+          format: date
+        reference:
+          type: [string, 'null']
+        notes:
+          type: [string, 'null']
+        sourceable_type:
+          type: [string, 'null']
+        sourceable_id:
+          type: [integer, 'null']
+        created_by_user_id:
+          type: [integer, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+
+    Branch:
+      type: object
+      description: A branch (`branches` table).
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: [string, 'null']
+        level_id:
+          type: integer
+        currency_id:
+          type: [integer, 'null']
+        parent_id:
+          type: [integer, 'null']
+        position:
+          type: integer
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+
+    BranchRef:
+      type: object
+      description: Minimal branch reference returned by the /branches endpoint (only id and name selected).
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    Currency:
+      type: object
+      description: A currency (`currencies` table).
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        short_name:
+          type: string
+        symbol:
+          type: string
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+
+    CostCode:
+      type: object
+      description: A cost code (the `account_codes` table, renamed to `cost_codes`).
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        department_id:
+          type: integer
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+
+    Department:
+      type: object
+      description: A department (`departments` table).
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+
+    Staff:
+      type: object
+      description: A staff member (`staff` table).
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: [string, 'null']
+        phone:
+          type: [string, 'null']
+        department_id:
+          type: integer
+        position_id:
+          type: integer
+        user_id:
+          type: [integer, 'null']
+        branch_id:
+          type: [integer, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+
+    Attachment:
+      type: object
+      description: A file attachment (`attachments` table).
+      properties:
+        id:
+          type: integer
+        attachable_type:
+          type: string
+        attachable_id:
+          type: integer
+        user_id:
+          type: integer
+        path:
+          type: string
+        original_name:
+          type: string
+        mime_type:
+          type: string
+        size:
+          type: integer
+          description: File size in bytes.
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+
+    Comment:
+      type: object
+      description: A comment (`comments` table). `user` loaded when returned from the comment endpoints.
+      properties:
+        id:
+          type: integer
+        commentable_type:
+          type: string
+        commentable_id:
+          type: integer
+        user_id:
+          type: integer
+        body:
+          type: string
+        workflow_instance_stage_id:
+          type: [integer, 'null']
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+        deleted_at:
+          type: [string, 'null']
+          format: date-time
+        user:
+          type: object
+          description: The comment author (User model) when loaded.
+          additionalProperties: true
+
+    # ---- Request input schemas ----
+
+    PaymentRequestItemInput:
+      type: object
+      properties:
+        description:
+          type: string
+          maxLength: 255
+        amount:
+          type: number
+          minimum: 0.01
+        cost_code_id:
+          type: [integer, 'null']
+          description: Required when the request `type` is `expense`; optional (nullable) for `advance`. Must exist in cost_codes.
+        receipt_number:
+          type: [string, 'null']
+          maxLength: 100
+          description: Must be unique across receipt numbers (case-insensitive) and distinct within the items array.
+      required: [description, amount]
+
+    PaymentRequestStoreInput:
+      type: object
+      properties:
+        currency_id:
+          type: integer
+          description: Must exist in currencies.
+        type:
+          type: string
+          enum: [advance, expense]
+        notes:
+          type: [string, 'null']
+          maxLength: 2000
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PaymentRequestItemInput'
+      required: [currency_id, type, items]
+
+    PaymentRequestUpdateInput:
+      type: object
+      description: The `type` cannot be changed on update; `cost_code_id` requirement is derived from the existing request type.
+      properties:
+        currency_id:
+          type: integer
+          description: Must exist in currencies.
+        notes:
+          type: [string, 'null']
+          maxLength: 2000
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PaymentRequestItemInput'
+      required: [currency_id, items]
+
+    RetirementRequestItemInput:
+      type: object
+      properties:
+        description:
+          type: string
+          maxLength: 255
+        amount:
+          type: number
+          minimum: 0.01
+        cost_code_id:
+          type: integer
+          description: Required. Must exist in cost_codes.
+        receipt_number:
+          type: [string, 'null']
+          maxLength: 100
+          description: Must be unique (case-insensitive) and distinct within the items array.
+      required: [description, amount, cost_code_id]
+
+    RetirementRequestStoreInput:
+      type: object
+      description: |
+        Creates a retirement for a disbursed advance. `payment_request_id` is
+        read by the controller (must reference a disbursed, advance payment
+        request owned by the caller). When `did_not_spend_money` is true,
+        `items` may be omitted; otherwise at least one item is required.
+      properties:
+        payment_request_id:
+          type: integer
+          description: ID of the disbursed advance payment request being retired.
+        did_not_spend_money:
+          type: boolean
+        notes:
+          type: [string, 'null']
+          maxLength: 2000
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RetirementRequestItemInput'
+      required: [payment_request_id, did_not_spend_money]
+
+    RetirementRequestUpdateInput:
+      type: object
+      description: When `did_not_spend_money` is true, `items` may be omitted; otherwise at least one item is required.
+      properties:
+        did_not_spend_money:
+          type: boolean
+        notes:
+          type: [string, 'null']
+          maxLength: 2000
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RetirementRequestItemInput'
+      required: [did_not_spend_money]
+
+    DisbursementStoreInput:
+      type: object
+      properties:
+        disbursement_method:
+          type: string
+          enum: [cash, bank_transfer, mobile_money, cheque]
+        disbursement_reference:
+          type: [string, 'null']
+          maxLength: 255
+      required: [disbursement_method]
+
+    ApprovalActionInput:
+      type: object
+      description: |
+        Body validated by ApprovalActionRequest for approve / reject / send-back.
+        `action` is a required field in the validator; `comment` is required
+        when `action` is `reject` or `send_back`, otherwise optional. Note the
+        endpoint itself (approve/reject/send-back) determines the effective
+        action; only `comment` is consumed by the controller.
+      properties:
+        action:
+          type: string
+          enum: [approve, reject, send_back]
+        comment:
+          type: [string, 'null']
+          maxLength: 1000
+      required: [action]
+
+    CommentStoreInput:
+      type: object
+      properties:
+        body:
+          type: string
+          maxLength: 2000
+      required: [body]
+
+    CashbookEntryStoreInput:
+      type: object
+      description: Manual receipt recorded via ManualReceiptStoreRequest (recorded as a credit entry).
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+          maximum: 999999999.99
+        entry_date:
+          type: string
+          format: date
+          description: Must be on or before today.
+        reference:
+          type: [string, 'null']
+          maxLength: 100
+        notes:
+          type: [string, 'null']
+          maxLength: 5000
+      required: [amount, entry_date]
+
+    FileUploadInput:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: The uploaded file. Required, max 10240 KB (10 MB).
+      required: [file]
