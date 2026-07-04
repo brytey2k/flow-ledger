@@ -230,12 +230,10 @@ class SsoTest extends TenantAppTestCase
 
         $this->assertSame('fake-access-token', $tokens['access_token']);
 
-        Http::assertSent(function (ClientRequest $request): bool {
-            return $request->url() === 'https://idp-internal.test/oauth/token'
+        Http::assertSent(fn(ClientRequest $request): bool => $request->url() === 'https://idp-internal.test/oauth/token'
                 && $request['resource'] === 'flow-ledger'
                 && $request['grant_type'] === 'authorization_code'
-                && $request['code'] === 'the-code';
-        });
+                && $request['code'] === 'the-code');
     }
 
     // ── SsoUserClaimsDto ─────────────────────────────────────────────────────

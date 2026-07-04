@@ -107,7 +107,12 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
+     * @param string|null|null $issuer
+     * @param string|null|null $audience
      * @param list<string> $products
+     * @param string $subject
+     * @param DateTimeImmutable|null|null $issuedAt
+     * @param DateTimeImmutable|null|null $expiresAt
      */
     private function mintToken(
         string|null $issuer = null,
