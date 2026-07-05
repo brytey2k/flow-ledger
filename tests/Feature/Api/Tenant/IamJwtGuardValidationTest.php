@@ -107,7 +107,7 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
-     * @param string|null|null $issuer
+     * @param string|null $issuer
      * @param string|null|null $audience
      * @param list<string> $products
      * @param string $subject
@@ -122,7 +122,7 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
         DateTimeImmutable|null $issuedAt = null,
         DateTimeImmutable|null $expiresAt = null,
     ): string {
-        $now = new DateTimeImmutable('2026-07-04T12:00:00+00:00');
+        $now = new DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
         $configuration = Configuration::forAsymmetricSigner(
             new Sha256(),

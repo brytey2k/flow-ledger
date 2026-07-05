@@ -16,6 +16,10 @@
 @section('content')
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
     <div class="kt-card max-w-[370px] w-full">
+        <div class="flex justify-center" style="padding-top: 3.5rem; padding-bottom: 1.25rem;">
+            <img class="dark:hidden h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}" alt="{{ config('app.name') }}" />
+            <img class="hidden dark:block h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}" alt="{{ config('app.name') }}" />
+        </div>
         <form action="{{ route('landlord.do-login') }}" class="kt-card-content flex flex-col gap-5 p-10" id="sign_in_form" method="POST">
             @csrf
 
