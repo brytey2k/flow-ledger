@@ -60,35 +60,37 @@
                 </div>
 
                 {{-- Requests --}}
-                @can(PermissionKey::AccessPaymentRequests->value)
+                @canany([PermissionKey::AccessPaymentRequests->value, PermissionKey::AccessRetirementRequests->value])
                     <div class="kt-menu-item pt-2.25 pb-px">
                         <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
                             {{ __('navigation.sections.requests') }}
                         </span>
                     </div>
 
-                    <div class="kt-menu-item {{ request()->routeIs('payment-requests.*') ? 'active' : '' }}">
-                        <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
-                           href="{{ route('payment-requests.index') }}">
-                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                <i class="ki-filled ki-wallet text-lg"></i>
-                            </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.payment_requests') }}</span>
-                        </a>
-                    </div>
-                @endcan
+                    @can(PermissionKey::AccessPaymentRequests->value)
+                        <div class="kt-menu-item {{ request()->routeIs('payment-requests.*') ? 'active' : '' }}">
+                            <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                               href="{{ route('payment-requests.index') }}">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
+                                    <i class="ki-filled ki-wallet text-lg"></i>
+                                </span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.payment_requests') }}</span>
+                            </a>
+                        </div>
+                    @endcan
 
-                @can(PermissionKey::AccessRetirementRequests->value)
-                    <div class="kt-menu-item {{ request()->routeIs('retirement-requests.*') ? 'active' : '' }}">
-                        <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
-                           href="{{ route('retirement-requests.index') }}">
-                            <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                <i class="ki-filled ki-file-up text-lg"></i>
-                            </span>
-                            <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.retirements') }}</span>
-                        </a>
-                    </div>
-                @endcan
+                    @can(PermissionKey::AccessRetirementRequests->value)
+                        <div class="kt-menu-item {{ request()->routeIs('retirement-requests.*') ? 'active' : '' }}">
+                            <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
+                               href="{{ route('retirement-requests.index') }}">
+                                <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
+                                    <i class="ki-filled ki-file-up text-lg"></i>
+                                </span>
+                                <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.retirements') }}</span>
+                            </a>
+                        </div>
+                    @endcan
+                @endcanany
 
                 {{-- Finance --}}
                 @canany([PermissionKey::DisburseRequests->value, PermissionKey::AccessCashbook->value])
