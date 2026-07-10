@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant\Auth;
 
+use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
 use App\Features\VerifyLoginWithIdp;
 use App\Http\Controllers\Controller;
@@ -22,8 +23,9 @@ class LoginController extends Controller
     public function showLoginForm(): View
     {
         $localAuthEnabled = Feature::for(tenant())->active(LocalAuth::class);
+        $identityDelegated = Feature::for(tenant())->active(DelegateIdentityToIdp::class);
 
-        return view('tenant.auth.login', compact('localAuthEnabled'));
+        return view('tenant.auth.login', compact('localAuthEnabled', 'identityDelegated'));
     }
 
     public function login(Request $request): RedirectResponse

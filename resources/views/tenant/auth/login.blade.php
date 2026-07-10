@@ -69,9 +69,11 @@
                             <label class="kt-form-label font-normal text-mono" for="password">
                                 {{ __('auth.password') }}
                             </label>
-                            <a class="text-sm kt-link shrink-0" href="{{ route('password.request') }}">
-                                {{ __('auth.forgot_password_link') }}
-                            </a>
+                            @if (! $identityDelegated)
+                                <a class="text-sm kt-link shrink-0" href="{{ route('password.request') }}">
+                                    {{ __('auth.forgot_password_link') }}
+                                </a>
+                            @endif
                         </div>
                         <div class="kt-input" data-kt-toggle-password="true" aria-invalid="@error('password') true @else false @enderror">
                             <input

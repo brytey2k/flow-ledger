@@ -7,6 +7,7 @@ return [
     'sign_in_heading' => 'Sign in',
     'forgot_password' => 'Forgot Password',
     'forgot_password_hint' => "Enter your email and we'll send you a reset link.",
+    'password_managed_by_idp' => 'Your password is managed by your identity provider. Please sign in and update it there.',
     'reset_password' => 'Reset Password',
     'change_password' => 'Change Password',
     'change_password_hint' => 'You must change your password before continuing.',

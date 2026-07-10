@@ -7,6 +7,7 @@ return [
     'sign_in_heading' => 'Se connecter',
     'forgot_password' => 'Mot de passe oublie',
     'forgot_password_hint' => 'Saisissez votre email et nous vous enverrons un lien de reinitialisation.',
+    'password_managed_by_idp' => 'Votre mot de passe est gere par votre fournisseur d\'identite. Veuillez vous connecter et le mettre a jour la-bas.',
     'reset_password' => 'Reinitialiser le mot de passe',
     'change_password' => 'Changer le mot de passe',
     'change_password_hint' => 'Vous devez changer votre mot de passe avant de continuer.',

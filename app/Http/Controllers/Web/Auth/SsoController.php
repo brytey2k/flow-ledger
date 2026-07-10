@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -89,6 +90,8 @@ class SsoController extends Controller
         try {
             $tokens = $this->ssoClient->exchangeCodeForTokens($code, $verifier);
         } catch (RuntimeException $e) {
+            Log::warning('SSO token exchange failed', ['error' => $e->getMessage()]);
+
             return $this->failRedirect('Could not complete sign-in. Please try again.', $returnTo);
         }
 
@@ -96,6 +99,8 @@ class SsoController extends Controller
             try {
                 $this->ssoClient->validateIdToken($tokens['id_token']);
             } catch (RuntimeException $e) {
+                Log::warning('SSO ID token validation failed', ['error' => $e->getMessage()]);
+
                 return $this->failRedirect('Identity token validation failed. Please try again.', $returnTo);
             }
         }
@@ -103,6 +108,8 @@ class SsoController extends Controller
         try {
             $claims = $this->ssoClient->fetchUserInfo($tokens['access_token']);
         } catch (RuntimeException $e) {
+            Log::warning('SSO userinfo fetch failed', ['error' => $e->getMessage()]);
+
             return $this->failRedirect('Could not retrieve your account information from the identity provider.', $returnTo);
         }
 

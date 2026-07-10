@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant\Auth;
 
+use App\Features\DelegateIdentityToIdp;
+use App\Features\LocalAuth;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\User;
 use Illuminate\Auth\Events\PasswordReset;
@@ -15,11 +17,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Laravel\Pennant\Feature;
 
 class ResetPasswordController extends Controller
 {
-    public function showForm(Request $request, string $token): View
+    public function showForm(Request $request, string $token): RedirectResponse|View
     {
+        if (Feature::for(tenant())->active(DelegateIdentityToIdp::class)) {
+            return redirect()->route('login')->with('status', __('auth.password_managed_by_idp'));
+        }
+
         return view('tenant.auth.reset-password', [
             'token' => $token,
             'email' => $request->query('email', ''),
@@ -28,6 +35,12 @@ class ResetPasswordController extends Controller
 
     public function reset(Request $request): RedirectResponse
     {
+        abort_unless(Feature::for(tenant())->active(LocalAuth::class), 403);
+
+        if (Feature::for(tenant())->active(DelegateIdentityToIdp::class)) {
+            return back()->with('status', __('auth.password_managed_by_idp'))->withInput($request->only('email'));
+        }
+
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
