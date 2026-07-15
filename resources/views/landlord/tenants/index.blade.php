@@ -79,6 +79,11 @@
                                             <span class="kt-table-col-label">Status</span>
                                         </span>
                                     </th>
+                                    <th class="min-w-[110px]">
+                                        <span class="kt-table-col">
+                                            <span class="kt-table-col-label">IDP Linked</span>
+                                        </span>
+                                    </th>
                                     <th class="min-w-[100px] text-center">
                                         <span class="kt-table-col">
                                             <span class="kt-table-col-label">Actions</span>
@@ -128,6 +133,13 @@
                                                 <span class="badge badge-sm badge-success">Active</span>
                                             @endif
                                         </td>
+                                        <td>
+                                            @if(filled($tenant->idp_tenant_id))
+                                                <span class="badge badge-sm badge-success">Yes</span>
+                                            @else
+                                                <span class="badge badge-sm badge-outline">No</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             <div class="kt-menu" data-kt-menu="true">
                                                 <div class="kt-menu-item" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="click" data-kt-menu-item-placement="bottom-end">
@@ -160,11 +172,11 @@
                                                             </a>
                                                         </div>
                                                         <div class="kt-menu-item">
-                                                            <a class="kt-menu-link" href="#">
+                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.edit', $tenant) }}">
                                                                 <span class="kt-menu-icon">
                                                                     <i class="ki-filled ki-setting-2"></i>
                                                                 </span>
-                                                                <span class="kt-menu-title">Manage</span>
+                                                                <span class="kt-menu-title">Edit Tenant</span>
                                                             </a>
                                                         </div>
                                                         <div class="kt-menu-item">

@@ -95,9 +95,9 @@ class NewTenantSetupService
         }
     }
 
-    public function createTenant(string $subdomain, string $name, string $adminEmail, string $adminPassword): Tenant
+    public function createTenant(string $subdomain, string $name, string $adminEmail, string $adminPassword, string|null $idpTenantId = null): Tenant
     {
-        $tenant = Tenant::create(['id' => $subdomain, 'name' => $name]);
+        $tenant = Tenant::create(['id' => $subdomain, 'name' => $name, 'idp_tenant_id' => $idpTenantId]);
         $tenant->domains()->create([
             'domain' => $subdomain . '.' . parse_url(config()->string('app.url'), PHP_URL_HOST),
         ]);

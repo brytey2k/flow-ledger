@@ -30,6 +30,8 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::get('landlord/sys-admin/tenants', [TenantsController::class, 'index'])->name('tenants.index');
             Route::get('landlord/sys-admin/tenants/create', [TenantsController::class, 'create'])->name('tenants.create');
             Route::post('landlord/sys-admin/tenants', [TenantsController::class, 'store'])->name('tenants.store');
+            Route::get('landlord/sys-admin/tenants/{tenant}/edit', [TenantsController::class, 'edit'])->name('tenants.edit');
+            Route::put('landlord/sys-admin/tenants/{tenant}', [TenantsController::class, 'update'])->name('tenants.update');
             Route::post('landlord/sys-admin/tenants/{tenant}/suspend', [TenantsController::class, 'suspend'])->name('tenants.suspend');
             Route::post('landlord/sys-admin/tenants/{tenant}/unsuspend', [TenantsController::class, 'unsuspend'])->name('tenants.unsuspend');
             Route::post('landlord/sys-admin/tenants/{tenant}/reset', [TenantsController::class, 'reset'])->name('tenants.reset');

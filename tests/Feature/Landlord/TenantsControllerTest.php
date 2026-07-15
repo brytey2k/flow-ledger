@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Landlord;
 
+use App\Models\Tenant;
 use App\Models\Tenant\User;
+use App\Services\IdpTenantService;
 use App\Services\NewTenantSetupService;
 use App\Services\TenantImpersonationService;
 use App\Services\TenantResetService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Stancl\Tenancy\Database\Models\ImpersonationToken;
 use Stancl\Tenancy\Jobs\DeleteDatabase;
 use Tests\LandlordTestCase;
@@ -43,9 +46,28 @@ class TenantsControllerTest extends LandlordTestCase
 
     public function test_authenticated_user_can_view_create_form(): void
     {
+        $this->mock(IdpTenantService::class)
+            ->shouldReceive('listTenants')
+            ->once()
+            ->andReturn([['id' => 1, 'name' => 'Idp Tenant', 'slug' => 'idp-tenant']]);
+
         $this->actingAs($this->landlordUser, 'landlord')
             ->get(route('landlord.tenants.create'))
-            ->assertOk();
+            ->assertOk()
+            ->assertViewHas('idpTenants', [['id' => 1, 'name' => 'Idp Tenant', 'slug' => 'idp-tenant']]);
+    }
+
+    public function test_create_form_degrades_to_empty_list_when_idp_call_fails(): void
+    {
+        $this->mock(IdpTenantService::class)
+            ->shouldReceive('listTenants')
+            ->once()
+            ->andThrow(new RuntimeException('IDP unreachable'));
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->get(route('landlord.tenants.create'))
+            ->assertOk()
+            ->assertViewHas('idpTenants', []);
     }
 
     // ── Suspend / Unsuspend ───────────────────────────────────────────────────
@@ -105,7 +127,8 @@ class TenantsControllerTest extends LandlordTestCase
     {
         $this->mock(NewTenantSetupService::class)
             ->shouldReceive('createTenant')
-            ->once();
+            ->once()
+            ->with('new-test-tenant', 'New Test Tenant', 'admin@newtest.com', 'secret123', null);
 
         $this->actingAs($this->landlordUser, 'landlord')
             ->post(route('landlord.tenants.store'), [
@@ -113,6 +136,138 @@ class TenantsControllerTest extends LandlordTestCase
                 'name' => 'New Test Tenant',
                 'admin_email' => 'admin@newtest.com',
                 'admin_password' => 'secret123',
+            ])
+            ->assertRedirect(route('landlord.tenants.index'))
+            ->assertSessionHas('success');
+    }
+
+    public function test_store_passes_idp_tenant_id_through_to_service(): void
+    {
+        $this->mock(NewTenantSetupService::class)
+            ->shouldReceive('createTenant')
+            ->once()
+            ->with('new-test-tenant', 'New Test Tenant', 'admin@newtest.com', 'secret123', '42');
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->post(route('landlord.tenants.store'), [
+                'id' => 'new-test-tenant',
+                'name' => 'New Test Tenant',
+                'admin_email' => 'admin@newtest.com',
+                'admin_password' => 'secret123',
+                'idp_tenant_id' => '42',
+            ])
+            ->assertRedirect(route('landlord.tenants.index'))
+            ->assertSessionHas('success');
+    }
+
+    public function test_store_rejects_duplicate_idp_tenant_id(): void
+    {
+        $this->tenant->update(['idp_tenant_id' => '99']);
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->post(route('landlord.tenants.store'), [
+                'id' => 'new-test-tenant',
+                'name' => 'New Test Tenant',
+                'admin_email' => 'admin@newtest.com',
+                'admin_password' => 'secret123',
+                'idp_tenant_id' => '99',
+            ])
+            ->assertSessionHasErrors('idp_tenant_id');
+    }
+
+    // ── Edit / Update ─────────────────────────────────────────────────────────
+
+    public function test_guest_is_redirected_from_edit(): void
+    {
+        $this->get(route('landlord.tenants.edit', $this->tenant))->assertRedirect();
+    }
+
+    public function test_authenticated_user_can_view_edit_form(): void
+    {
+        $this->mock(IdpTenantService::class)
+            ->shouldReceive('listTenants')
+            ->once()
+            ->andReturn([['id' => 1, 'name' => 'Idp Tenant', 'slug' => 'idp-tenant']]);
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->get(route('landlord.tenants.edit', $this->tenant))
+            ->assertOk()
+            ->assertViewHas('tenant', fn($tenant) => $tenant->is($this->tenant))
+            ->assertViewHas('idpTenants', [['id' => 1, 'name' => 'Idp Tenant', 'slug' => 'idp-tenant']]);
+    }
+
+    public function test_edit_form_degrades_to_empty_list_when_idp_call_fails(): void
+    {
+        $this->mock(IdpTenantService::class)
+            ->shouldReceive('listTenants')
+            ->once()
+            ->andThrow(new RuntimeException('IDP unreachable'));
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->get(route('landlord.tenants.edit', $this->tenant))
+            ->assertOk()
+            ->assertViewHas('idpTenants', []);
+    }
+
+    public function test_update_saves_tenant_details(): void
+    {
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->put(route('landlord.tenants.update', $this->tenant), [
+                'name' => 'Renamed Tenant',
+                'idp_tenant_id' => '7',
+            ])
+            ->assertRedirect(route('landlord.tenants.index'))
+            ->assertSessionHas('success');
+
+        $this->tenant->refresh();
+        $this->assertSame('Renamed Tenant', $this->tenant->name);
+        $this->assertSame('7', $this->tenant->idp_tenant_id);
+    }
+
+    public function test_update_allows_clearing_idp_tenant_id(): void
+    {
+        $this->tenant->update(['idp_tenant_id' => '7']);
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->put(route('landlord.tenants.update', $this->tenant), [
+                'name' => 'Renamed Tenant',
+            ])
+            ->assertRedirect(route('landlord.tenants.index'))
+            ->assertSessionHas('success');
+
+        $this->assertNull($this->tenant->refresh()->idp_tenant_id);
+    }
+
+    public function test_update_requires_name(): void
+    {
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->put(route('landlord.tenants.update', $this->tenant), [
+                'name' => '',
+            ])
+            ->assertSessionHasErrors('name');
+    }
+
+    public function test_update_rejects_idp_tenant_id_already_used_by_another_tenant(): void
+    {
+        $otherTenant = new Tenant(['id' => 'other-tenant', 'name' => 'Other Tenant', 'idp_tenant_id' => '55']);
+        $otherTenant->saveQuietly();
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->put(route('landlord.tenants.update', $this->tenant), [
+                'name' => 'Renamed Tenant',
+                'idp_tenant_id' => '55',
+            ])
+            ->assertSessionHasErrors('idp_tenant_id');
+    }
+
+    public function test_update_allows_keeping_own_idp_tenant_id(): void
+    {
+        $this->tenant->update(['idp_tenant_id' => '7']);
+
+        $this->actingAs($this->landlordUser, 'landlord')
+            ->put(route('landlord.tenants.update', $this->tenant), [
+                'name' => 'Renamed Tenant',
+                'idp_tenant_id' => '7',
             ])
             ->assertRedirect(route('landlord.tenants.index'))
             ->assertSessionHas('success');
@@ -149,7 +304,7 @@ class TenantsControllerTest extends LandlordTestCase
         $this->mock(TenantResetService::class)
             ->shouldReceive('reset')
             ->once()
-            ->andThrow(new \RuntimeException('Reset failed'));
+            ->andThrow(new RuntimeException('Reset failed'));
 
         $this->actingAs($this->landlordUser, 'landlord')
             ->post(route('landlord.tenants.reset', $this->tenant), [

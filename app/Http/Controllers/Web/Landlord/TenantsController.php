@@ -9,8 +9,10 @@ use App\Http\Requests\Landlord\PostImpersonateTenantRequest;
 use App\Http\Requests\Landlord\TenantCreateRequest;
 use App\Http\Requests\Landlord\TenantDeleteRequest;
 use App\Http\Requests\Landlord\TenantResetRequest;
+use App\Http\Requests\Landlord\TenantUpdateRequest;
 use App\Models\Domain;
 use App\Models\Tenant;
+use App\Services\IdpTenantService;
 use App\Services\NewTenantSetupService;
 use App\Services\TenantImpersonationService;
 use App\Services\TenantResetService;
@@ -19,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Stancl\Tenancy\Jobs\DeleteDatabase;
+use Throwable;
 
 class TenantsController extends Controller
 {
@@ -29,14 +32,14 @@ class TenantsController extends Controller
         return view('landlord.tenants.index', compact('tenants'));
     }
 
-    public function create(): View
+    public function create(IdpTenantService $idpTenantService): View
     {
-        return view('landlord.tenants.create');
+        return view('landlord.tenants.create', ['idpTenants' => $this->fetchIdpTenants($idpTenantService)]);
     }
 
     public function store(TenantCreateRequest $request, NewTenantSetupService $service): RedirectResponse
     {
-        /** @var array{id: string, name: string, admin_email: string, admin_password: string} $data */
+        /** @var array{id: string, name: string, admin_email: string, admin_password: string, idp_tenant_id?: string|null} $data */
         $data = $request->validated();
 
         $service->createTenant(
@@ -44,11 +47,45 @@ class TenantsController extends Controller
             $data['name'],
             $data['admin_email'],
             $data['admin_password'],
+            $data['idp_tenant_id'] ?? null,
         );
 
         return redirect()
             ->route('landlord.tenants.index')
             ->with('success', __('flash.tenants.created'));
+    }
+
+    public function edit(Tenant $tenant, IdpTenantService $idpTenantService): View
+    {
+        return view('landlord.tenants.edit', [
+            'tenant' => $tenant,
+            'idpTenants' => $this->fetchIdpTenants($idpTenantService),
+        ]);
+    }
+
+    public function update(TenantUpdateRequest $request, Tenant $tenant): RedirectResponse
+    {
+        /** @var array{name: string, idp_tenant_id?: string|null} $data */
+        $data = $request->validated();
+
+        $tenant->update([
+            'name' => $data['name'],
+            'idp_tenant_id' => $data['idp_tenant_id'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('landlord.tenants.index')
+            ->with('success', __('flash.tenants.updated'));
+    }
+
+    /** @return list<array{id: int|string, name: string, slug: string}> */
+    private function fetchIdpTenants(IdpTenantService $idpTenantService): array
+    {
+        try {
+            return $idpTenantService->listTenants();
+        } catch (Throwable) {
+            return [];
+        }
     }
 
     public function suspend(Tenant $tenant): RedirectResponse
@@ -78,7 +115,7 @@ class TenantsController extends Controller
 
         try {
             $tenantResetService->reset($tenant);
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
 
             return redirect()
@@ -108,7 +145,7 @@ class TenantsController extends Controller
             }
 
             $tenant->delete();
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
 
             return redirect()

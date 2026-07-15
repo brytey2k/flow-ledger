@@ -143,6 +143,7 @@ return [
         'delete_failed' => 'Failed to delete tenant.',
         'delete_confirm_mismatch' => 'Tenant deletion canceled: confirmation name does not match.',
         'deleted' => 'Tenant deleted successfully.',
+        'updated' => 'Tenant updated successfully.',
     ],
     'feature_flags' => [
         'updated' => 'Feature flags updated.',
