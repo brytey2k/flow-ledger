@@ -38,6 +38,7 @@ return [
         'created' => 'Departement cree avec succes.',
         'updated' => 'Departement mis a jour avec succes.',
         'deleted' => 'Departement supprime.',
+        'imported' => '{1}Departement importe avec succes.|[2,*] :count departements importes avec succes.',
     ],
     'cost_codes' => [
         'created' => 'Code de coût créé avec succès.',
@@ -142,10 +143,14 @@ return [
         'delete_failed' => 'Echec de la suppression du locataire.',
         'delete_confirm_mismatch' => 'Suppression du locataire annulee : le nom de confirmation ne correspond pas.',
         'deleted' => 'Locataire supprime avec succes.',
+        'updated' => 'Locataire mis a jour avec succes.',
     ],
     'feature_flags' => [
         'updated' => 'Drapeaux de fonctionnalite mis a jour.',
         'bulk_updated' => 'Mise a jour en masse des drapeaux appliquee.',
+    ],
+    'settings' => [
+        'updated' => 'Parametres enregistres avec succes.',
     ],
     'denomination' => [
         'created' => 'Denomination ajoutee avec succes.',
