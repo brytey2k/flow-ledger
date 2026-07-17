@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Auth;
 
 use App\Data\Auth\SsoUserClaimsDto;
+use App\Exceptions\UnverifiedEmailException;
 use App\Interfaces\SessionInvalidatorInterface;
 use App\Models\Tenant\User;
 use App\Services\SsoUserProvisioningService;
@@ -98,6 +99,25 @@ class SsoFinalizeControllerTest extends TenantAppTestCase
         // Second request with same token should fail
         Auth::logout();
         $this->get(route('sso.finalize', ['token' => $token]))->assertForbidden();
+    }
+
+    public function test_finalize_redirects_to_login_with_specific_error_when_email_is_unverified(): void
+    {
+        $token = 'unverified-token-' . uniqid();
+        $claims = $this->makeClaims();
+
+        $this->storeSsoToken($token, $claims);
+
+        $this->mock(SsoUserProvisioningService::class)
+            ->shouldReceive('findOrCreateTenantUser')
+            ->once()
+            ->andThrow(new UnverifiedEmailException());
+
+        $response = $this->get(route('sso.finalize', ['token' => $token]));
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 
     public function test_finalize_calls_session_invalidator_track(): void

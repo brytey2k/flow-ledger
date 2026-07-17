@@ -27,7 +27,7 @@
                 </h3>
             </div>
 
-            @if ($errors->any())
+            @if ($errors->any() || request()->filled('sso_error'))
                 <div class="kt-alert kt-alert-light kt-alert-destructive">
                     <span class="kt-alert-icon"><i class="ki-filled ki-information-2 text-xl"></i></span>
                     <div class="kt-alert-content">
@@ -35,6 +35,9 @@
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
+                            @if (request()->filled('sso_error'))
+                                <li>{{ request()->query('sso_error') }}</li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -119,7 +122,13 @@
                     </div>
                 @endif
 
-                <a class="kt-btn kt-btn-light flex justify-center grow gap-2" href="{{ route('sso.redirect') }}">
+                @php
+                    $ssoScheme = request()->getScheme();
+                    $ssoPort = request()->getPort();
+                    $ssoPortSuffix = in_array($ssoPort, [80, 443], true) ? '' : ":{$ssoPort}";
+                    $ssoUrl = "{$ssoScheme}://" . config('app.central_url') . $ssoPortSuffix . '/auth/sso/redirect?return_to=' . urlencode(route('login'));
+                @endphp
+                <a class="kt-btn kt-btn-light flex justify-center grow gap-2" href="{{ $ssoUrl }}">
                     <i class="ki-filled ki-shield-tick text-base"></i>
                     {{ __('auth.sign_in_with_sso') }}
                 </a>

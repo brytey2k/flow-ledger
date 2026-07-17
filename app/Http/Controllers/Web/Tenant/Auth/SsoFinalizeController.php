@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant\Auth;
 
 use App\Data\Auth\SsoUserClaimsDto;
+use App\Exceptions\UnverifiedEmailException;
 use App\Http\Controllers\Controller;
 use App\Interfaces\SessionInvalidatorInterface;
 use App\Services\SsoUserProvisioningService;
@@ -44,7 +45,11 @@ class SsoFinalizeController extends Controller
 
         $claims = SsoUserClaimsDto::fromArray($raw);
 
-        $user = $this->provisioner->findOrCreateTenantUser($claims);
+        try {
+            $user = $this->provisioner->findOrCreateTenantUser($claims);
+        } catch (UnverifiedEmailException $e) {
+            return redirect()->route('login')->withErrors(['email' => $e->getMessage()]);
+        }
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();

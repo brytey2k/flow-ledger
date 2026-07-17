@@ -26,9 +26,15 @@ class SsoUserProvisioningService
      */
     public function findOrCreateTenantUser(SsoUserClaimsDto $claims): TenantUser
     {
-        // 1. Returning user — match by oidc_sub (most common path)
+        // 1. Returning user — match by oidc_sub (most common path).
+        // Revalidate email_verified on every login: the IDP's view of the
+        // account can change after the initial link (e.g. flagged/unverified).
         $user = TenantUser::query()->where('oidc_sub', $claims->sub)->first();
         if ($user !== null) {
+            if (! $claims->email_verified) {
+                throw new UnverifiedEmailException();
+            }
+
             $this->maybeLinkStaffProfile($user, $claims);
 
             return $user;
@@ -77,9 +83,14 @@ class SsoUserProvisioningService
      */
     public function findOrCreateLandlordUser(SsoUserClaimsDto $claims): LandlordUser
     {
-        // 1. Returning landlord user
+        // 1. Returning landlord user — revalidate email_verified on every
+        // login for the same reason as the tenant path above.
         $user = LandlordUser::query()->where('oidc_sub', $claims->sub)->first();
         if ($user !== null) {
+            if (! $claims->email_verified) {
+                throw new UnverifiedEmailException();
+            }
+
             return $user;
         }
 
