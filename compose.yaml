@@ -32,7 +32,6 @@ services:
         extra_hosts:
             - 'host.docker.internal:host-gateway'
             - 'main.flow-ledger.test:host-gateway'
-            - 'iam.test:host-gateway'
         ports:
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
         environment:
