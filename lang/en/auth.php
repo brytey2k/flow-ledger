@@ -11,6 +11,7 @@ return [
     'reset_password' => 'Reset Password',
     'change_password' => 'Change Password',
     'change_password_hint' => 'You must change your password before continuing.',
+    'sign_out_later' => 'Sign out and come back later',
     'email' => 'Email',
     'email_placeholder' => 'email@email.com',
     'password' => 'Password',

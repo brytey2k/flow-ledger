@@ -121,6 +121,14 @@
                 <input class="kt-switch kt-switch-sm" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true" type="checkbox" aria-label="{{ __('navigation.dark_mode') }}" />
             </div>
         </div>
+        <div class="text-center py-4">
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="text-sm text-muted-foreground hover:text-foreground underline">
+                    {{ __('auth.sign_out_later') }}
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

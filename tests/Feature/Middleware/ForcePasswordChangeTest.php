@@ -90,4 +90,14 @@ class ForcePasswordChangeTest extends TenantAppTestCase
 
         $response->assertRedirect(route('password.change'));
     }
+
+    public function test_password_change_page_shows_sign_out_later_option(): void
+    {
+        $this->user->update(['must_change_password' => true]);
+
+        $response = $this->actingAs($this->user)->get(route('password.change'));
+
+        $response->assertOk();
+        $response->assertSee(route('logout'), false);
+    }
 }

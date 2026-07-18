@@ -11,6 +11,7 @@ return [
     'reset_password' => 'Reinitialiser le mot de passe',
     'change_password' => 'Changer le mot de passe',
     'change_password_hint' => 'Vous devez changer votre mot de passe avant de continuer.',
+    'sign_out_later' => 'Se deconnecter et revenir plus tard',
     'email' => 'Email',
     'email_placeholder' => 'email@exemple.com',
     'password' => 'Mot de passe',
