@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature\ActivityLog;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Role;
+use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TenantAppTestCase;
 
 class ActivityLogControllerTest extends TenantAppTestCase
@@ -111,5 +114,48 @@ class ActivityLogControllerTest extends TenantAppTestCase
         $this->assertArrayHasKey('Staff', $subjectLabels);
         $this->assertArrayHasKey('PaymentRequest', $subjectLabels);
         $this->assertArrayHasKey('RetirementRequest', $subjectLabels);
+        $this->assertArrayHasKey('Role', $subjectLabels);
+        $this->assertArrayHasKey('Branch', $subjectLabels);
+    }
+
+    // ── Show ──────────────────────────────────────────────────────────────────
+
+    public function test_guest_is_redirected_from_activity_log_show(): void
+    {
+        $role = Role::create(['name' => 'show-guest-' . Str::uuid(), 'guard_name' => 'web']);
+        $log = activity()->performedOn($role)->event('role.created')->log('Role created');
+
+        $this->get(route('activity-log.show', $log))->assertRedirect(route('login'));
+    }
+
+    public function test_user_without_permission_cannot_view_activity_log_show(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::AccessActivityLog->value);
+        $role = Role::create(['name' => 'show-forbidden-' . Str::uuid(), 'guard_name' => 'web']);
+        $log = activity()->performedOn($role)->event('role.created')->log('Role created');
+
+        $this->actingAs($this->user)
+            ->get(route('activity-log.show', $log))
+            ->assertForbidden();
+    }
+
+    public function test_authorized_user_can_view_activity_log_show(): void
+    {
+        $role = Role::create(['name' => 'show-ok-' . Str::uuid(), 'guard_name' => 'web']);
+        $log = activity()->performedOn($role)->causedBy($this->user)->event('role.created')->log('Role created');
+
+        $this->actingAs($this->user)
+            ->get(route('activity-log.show', $log))
+            ->assertOk()
+            ->assertViewHas('log');
+    }
+
+    public function test_activity_log_show_returns_404_for_missing_entry(): void
+    {
+        $missingId = (Activity::query()->max('id') ?? 0) + 1;
+
+        $this->actingAs($this->user)
+            ->get(route('activity-log.show', $missingId))
+            ->assertNotFound();
     }
 }

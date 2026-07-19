@@ -378,6 +378,9 @@ Route::middleware([
         Route::get('/activity-log', [ActivityLogController::class, 'index'])
             ->can(PermissionKey::AccessActivityLog->value)
             ->name('activity-log.index');
+        Route::get('/activity-log/{activityLog}', [ActivityLogController::class, 'show'])
+            ->can(PermissionKey::AccessActivityLog->value)
+            ->name('activity-log.show');
 
         Route::get('/users/{user}/permissions', [UsersController::class, 'editPermissions'])
             ->can(PermissionKey::AccessUsers->value)

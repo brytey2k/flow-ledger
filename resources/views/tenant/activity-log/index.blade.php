@@ -1,6 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
+@php $activityLogRepository = app(\App\Repositories\ActivityLogRepository::class); @endphp
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
@@ -30,6 +31,8 @@
                             <option value="staff" {{ request('subject_type') === 'staff' ? 'selected' : '' }}>{{ __('activity_log.filters.staff') }}</option>
                             <option value="payment_request" {{ request('subject_type') === 'payment_request' ? 'selected' : '' }}>{{ __('activity_log.filters.payment_request') }}</option>
                             <option value="retirement_request" {{ request('subject_type') === 'retirement_request' ? 'selected' : '' }}>{{ __('activity_log.filters.retirement_request') }}</option>
+                            <option value="role" {{ request('subject_type') === 'role' ? 'selected' : '' }}>{{ __('activity_log.filters.role') }}</option>
+                            <option value="branch" {{ request('subject_type') === 'branch' ? 'selected' : '' }}>{{ __('activity_log.filters.branch') }}</option>
                         </select>
                     </div>
 
@@ -82,17 +85,13 @@
                                     <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.columns.description') }}</th>
                                     <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.performed_by') }}</th>
                                     <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.details') }}</th>
+                                    <th class="text-left px-5 py-3 font-medium text-secondary-foreground"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
                                 @foreach($logs as $log)
                                     @php
-                                        $subjectName = class_basename($log->subject_type ?? '');
-                                        $subjectLabel = match($subjectName) {
-                                            'PaymentRequest'    => 'Payment Request',
-                                            'RetirementRequest' => 'Retirement Request',
-                                            default             => $subjectName,
-                                        };
+                                        $subjectLabel = $activityLogRepository->subjectLabel($log->subject_type);
                                         $eventColor = match(true) {
                                             str_ends_with($log->event ?? '', '.created') => 'text-success',
                                             str_ends_with($log->event ?? '', '.deleted') || str_ends_with($log->event ?? '', '.cancelled') => 'text-destructive',
@@ -149,6 +148,11 @@
                                                     {{ is_string($value) ? $value : json_encode($value) }}
                                                 </div>
                                             @endforeach
+                                        </td>
+                                        <td class="px-5 py-3 text-right whitespace-nowrap">
+                                            <a href="{{ route('activity-log.show', $log) }}" class="kt-btn kt-btn-sm kt-btn-outline">
+                                                {{ __('common.view') }}
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach

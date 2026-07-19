@@ -112,6 +112,18 @@ class RolesControllerTest extends TenantAppTestCase
         $this->assertDatabaseHas('roles', ['name' => $roleName]);
     }
 
+    public function test_storing_a_role_logs_activity(): void
+    {
+        $roleName = 'Manager-' . Str::uuid();
+
+        $this->actingAs($this->user)->post(route('roles.store'), ['name' => $roleName]);
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'role',
+            'event' => 'role.created',
+        ]);
+    }
+
     public function test_store_fails_validation_when_name_is_missing(): void
     {
         $response = $this->actingAs($this->user)->post(route('roles.store'), ['name' => '']);
@@ -146,6 +158,19 @@ class RolesControllerTest extends TenantAppTestCase
         $this->assertDatabaseHas('roles', ['id' => $role->id, 'name' => $newName]);
     }
 
+    public function test_updating_a_role_logs_activity(): void
+    {
+        $role = Role::create(['name' => 'update-log-' . Str::uuid(), 'guard_name' => 'web']);
+
+        $this->actingAs($this->user)->put(route('roles.update', $role), ['name' => 'Renamed-' . Str::uuid()]);
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'role',
+            'subject_id' => $role->id,
+            'event' => 'role.updated',
+        ]);
+    }
+
     // ── Destroy ───────────────────────────────────────────────────────────────
 
     public function test_authorised_user_can_destroy_role_with_no_users(): void
@@ -156,6 +181,19 @@ class RolesControllerTest extends TenantAppTestCase
 
         $response->assertRedirect(route('roles.index'));
         $this->assertDatabaseMissing('roles', ['id' => $role->id]);
+    }
+
+    public function test_destroying_a_role_logs_activity(): void
+    {
+        $role = Role::create(['name' => 'destroy-log-' . Str::uuid(), 'guard_name' => 'web']);
+
+        $this->actingAs($this->user)->delete(route('roles.destroy', $role));
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'role',
+            'subject_id' => $role->id,
+            'event' => 'role.deleted',
+        ]);
     }
 
     public function test_destroy_is_blocked_when_role_has_users(): void
@@ -210,5 +248,21 @@ class RolesControllerTest extends TenantAppTestCase
 
         $response->assertRedirect(route('roles.edit', $role));
         $this->assertFalse($role->fresh()->hasPermissionTo($permission->name));
+    }
+
+    public function test_permissions_update_logs_activity(): void
+    {
+        $role = Role::create(['name' => 'sync-log-' . Str::uuid(), 'guard_name' => 'web']);
+        $permission = Permission::findOrCreate(PermissionKey::AccessCostCodes->value, 'web');
+
+        $this->actingAs($this->user)->put(route('roles.permissions.update', $role), [
+            'permissions' => [$permission->id],
+        ]);
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'role',
+            'subject_id' => $role->id,
+            'event' => 'role.permissions_synced',
+        ]);
     }
 }

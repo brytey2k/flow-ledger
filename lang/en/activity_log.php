@@ -14,6 +14,8 @@ return [
         'staff' => 'Staff',
         'payment_request' => 'Payment Request',
         'retirement_request' => 'Retirement Request',
+        'role' => 'Role',
+        'branch' => 'Branch',
         'event' => 'Event',
         'event_placeholder' => 'e.g. user.created',
         'performed_by' => 'Performed By',
@@ -23,4 +25,11 @@ return [
     'entries_heading' => 'Entries',
     'total' => 'total',
     'no_entries' => 'No activity log entries found.',
+
+    'show' => [
+        'title' => 'Activity Log Entry',
+        'details_card' => 'Details',
+        'properties' => 'Properties',
+        'no_properties' => 'No additional properties recorded.',
+    ],
 ];

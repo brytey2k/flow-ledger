@@ -164,6 +164,34 @@ class SettingsServiceTest extends TenantAppTestCase
         $this->assertNull($result);
     }
 
+    // ── Activity logging ──────────────────────────────────────────────────────
+
+    public function test_changing_default_advance_cost_code_logs_activity(): void
+    {
+        $this->actingAs($this->user);
+        $costCode = CostCode::factory()->create();
+
+        $this->service->setDefaultAdvanceCostCode($costCode->id);
+
+        $this->assertDatabaseHas('activity_log', [
+            'event' => 'settings.updated',
+            'causer_id' => $this->user->id,
+        ]);
+    }
+
+    public function test_setting_the_same_value_twice_does_not_duplicate_activity_log(): void
+    {
+        $costCode = CostCode::factory()->create();
+
+        $this->service->setDefaultAdvanceCostCode($costCode->id);
+        $countAfterFirst = \Spatie\Activitylog\Models\Activity::where('event', 'settings.updated')->count();
+
+        $this->service->setDefaultAdvanceCostCode($costCode->id);
+        $countAfterSecond = \Spatie\Activitylog\Models\Activity::where('event', 'settings.updated')->count();
+
+        $this->assertSame($countAfterFirst, $countAfterSecond);
+    }
+
     // ── Expense Source Documents ──────────────────────────────────────────────
 
     public function test_expense_source_document_required_defaults_to_false(): void

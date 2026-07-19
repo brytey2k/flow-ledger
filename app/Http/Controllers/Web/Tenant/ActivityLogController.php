@@ -30,4 +30,11 @@ class ActivityLogController extends Controller
 
         return view('tenant.activity-log.index', compact('logs', 'subjectLabels'));
     }
+
+    public function show(int $activityLog): View
+    {
+        $log = $this->repository->find($activityLog);
+
+        return view('tenant.activity-log.show', compact('log'));
+    }
 }

@@ -244,4 +244,20 @@ class UsersControllerTest extends TenantAppTestCase
         $response->assertRedirect(route('users.edit', $user));
         $this->assertFalse($user->fresh()->hasPermissionTo($permission->name));
     }
+
+    public function test_permissions_update_logs_activity(): void
+    {
+        $user = User::factory()->create();
+        $permission = Permission::findOrCreate(PermissionKey::AccessCostCodes->value, 'web');
+
+        $this->actingAs($this->user)->put(route('users.permissions.update', $user), [
+            'permissions' => [$permission->id],
+        ]);
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'user',
+            'subject_id' => $user->id,
+            'event' => 'user.permissions_synced',
+        ]);
+    }
 }

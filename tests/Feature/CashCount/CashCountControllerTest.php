@@ -198,7 +198,7 @@ class CashCountControllerTest extends TenantAppTestCase
 
         $cashCount = CashCount::where('cashbook_id', $cashbook->id)->latest()->first();
         $this->assertDatabaseHas('activity_log', [
-            'subject_type' => CashCount::class,
+            'subject_type' => 'cash_count',
             'subject_id' => $cashCount->id,
             'event' => 'cash_count.created',
         ]);
@@ -352,7 +352,7 @@ class CashCountControllerTest extends TenantAppTestCase
             ->delete(route('cash-count.destroy', [$this->branch, $cashCount]));
 
         $this->assertDatabaseHas('activity_log', [
-            'subject_type' => CashCount::class,
+            'subject_type' => 'cash_count',
             'subject_id' => $cashCount->id,
             'event' => 'cash_count.deleted',
         ]);

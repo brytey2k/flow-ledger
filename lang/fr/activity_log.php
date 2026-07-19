@@ -14,6 +14,8 @@ return [
         'staff' => 'Personnel',
         'payment_request' => 'Demande de paiement',
         'retirement_request' => 'Demande de reddition',
+        'role' => 'Role',
+        'branch' => 'Agence',
         'event' => 'Evenement',
         'event_placeholder' => 'ex. user.created',
         'performed_by' => 'Effectue par',
@@ -23,4 +25,11 @@ return [
     'entries_heading' => 'Entrees',
     'total' => 'total',
     'no_entries' => 'Aucune entree du journal d activite.',
+
+    'show' => [
+        'title' => 'Entree du journal d activite',
+        'details_card' => 'Details',
+        'properties' => 'Proprietes',
+        'no_properties' => 'Aucune propriete supplementaire enregistree.',
+    ],
 ];

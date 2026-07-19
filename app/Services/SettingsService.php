@@ -78,29 +78,44 @@ class SettingsService
     private function storeLogoFor(SettingKey $key, UploadedFile $file): void
     {
         $existing = $this->repository->get($key);
+        $oldPath = is_string($existing['path'] ?? null) ? $existing['path'] : null;
 
-        if (! empty($existing['path'])) {
-            /** @var string $existingPath */
-            $existingPath = $existing['path'];
-            Storage::disk('public')->delete($existingPath);
+        if ($oldPath !== null) {
+            Storage::disk('public')->delete($oldPath);
         }
 
         $path = $file->store('branding', 'public');
 
         $this->repository->set($key, ['path' => $path]);
+
+        $this->logSettingChange($key, $oldPath, $path);
     }
 
     private function removeLogoFor(SettingKey $key): void
     {
         $existing = $this->repository->get($key);
+        $oldPath = is_string($existing['path'] ?? null) ? $existing['path'] : null;
 
-        if (! empty($existing['path'])) {
-            /** @var string $existingPath */
-            $existingPath = $existing['path'];
-            Storage::disk('public')->delete($existingPath);
+        if ($oldPath !== null) {
+            Storage::disk('public')->delete($oldPath);
         }
 
         $this->repository->set($key, ['path' => null]);
+
+        $this->logSettingChange($key, $oldPath, null);
+    }
+
+    private function logSettingChange(SettingKey $key, mixed $oldValue, mixed $newValue): void
+    {
+        if ($oldValue === $newValue) {
+            return;
+        }
+
+        activity()
+            ->causedBy(auth()->user())
+            ->event('settings.updated')
+            ->withProperties(['key' => $key->value, 'old' => $oldValue, 'new' => $newValue])
+            ->log("Setting '{$key->value}' updated");
     }
 
     public function getDefaultAdvanceCostCodeId(): int|null
@@ -126,7 +141,11 @@ class SettingsService
 
     public function setDefaultAdvanceCostCode(int|null $costCodeId): void
     {
+        $oldCostCodeId = $this->getDefaultAdvanceCostCodeId();
+
         $this->repository->set(SettingKey::DefaultAdvanceCostCode, ['cost_code_id' => $costCodeId]);
+
+        $this->logSettingChange(SettingKey::DefaultAdvanceCostCode, $oldCostCodeId, $costCodeId);
     }
 
     public function isExpenseSourceDocumentRequired(): bool
@@ -138,7 +157,11 @@ class SettingsService
 
     public function setRequireExpenseSourceDocuments(bool $required): void
     {
+        $oldRequired = $this->isExpenseSourceDocumentRequired();
+
         $this->repository->set(SettingKey::RequireExpenseSourceDocuments, ['required' => $required]);
+
+        $this->logSettingChange(SettingKey::RequireExpenseSourceDocuments, $oldRequired, $required);
     }
 
     public function isRetirementSourceDocumentRequired(): bool
@@ -150,7 +173,11 @@ class SettingsService
 
     public function setRequireRetirementSourceDocuments(bool $required): void
     {
+        $oldRequired = $this->isRetirementSourceDocumentRequired();
+
         $this->repository->set(SettingKey::RequireRetirementSourceDocuments, ['required' => $required]);
+
+        $this->logSettingChange(SettingKey::RequireRetirementSourceDocuments, $oldRequired, $required);
     }
 
     /**
@@ -177,7 +204,11 @@ class SettingsService
      */
     public function setRetirementReminderSettings(array $data): void
     {
+        $oldSettings = $this->getRetirementReminderSettings();
+
         $this->repository->set(SettingKey::RetirementReminders, $data);
+
+        $this->logSettingChange(SettingKey::RetirementReminders, $oldSettings, $this->getRetirementReminderSettings());
     }
 
     public function getSsoDefaultBranchId(): int|null
@@ -196,7 +227,11 @@ class SettingsService
 
     public function setSsoDefaultBranch(int|null $branchId): void
     {
+        $oldBranchId = $this->getSsoDefaultBranchId();
+
         $this->repository->set(SettingKey::SsoDefaultBranch, ['branch_id' => $branchId]);
+
+        $this->logSettingChange(SettingKey::SsoDefaultBranch, $oldBranchId, $branchId);
     }
 
     public function getSsoStaffRoleName(): string|null
@@ -212,6 +247,10 @@ class SettingsService
 
     public function setSsoStaffRoleName(string|null $roleName): void
     {
+        $oldRoleName = $this->getSsoStaffRoleName();
+
         $this->repository->set(SettingKey::SsoStaffRole, ['role_name' => $roleName]);
+
+        $this->logSettingChange(SettingKey::SsoStaffRole, $oldRoleName, $this->getSsoStaffRoleName());
     }
 }

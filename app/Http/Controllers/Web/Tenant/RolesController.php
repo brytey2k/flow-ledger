@@ -39,10 +39,18 @@ class RolesController extends Controller
     public function store(RoleStoreRequest $request): RedirectResponse
     {
         $dto = $request->toDto();
-        Role::create([
+        /** @var Role $role */
+        $role = Role::create([
             'name' => $dto->name,
             'guard_name' => $dto->guardName,
         ]);
+
+        activity()
+            ->performedOn($role)
+            ->causedBy($request->user())
+            ->event('role.created')
+            ->withProperties(['name' => $role->name])
+            ->log('Role created');
 
         return redirect()
             ->route('roles.index')
@@ -63,6 +71,13 @@ class RolesController extends Controller
             'name' => $dto->name,
         ]);
 
+        activity()
+            ->performedOn($role)
+            ->causedBy($request->user())
+            ->event('role.updated')
+            ->withProperties(['name' => $role->name])
+            ->log('Role updated');
+
         return redirect()
             ->route('roles.index')
             ->with('success', __('flash.roles.updated'));
@@ -75,6 +90,13 @@ class RolesController extends Controller
                 ->route('roles.index')
                 ->with('error', __('flash.roles.delete_blocked_users'));
         }
+
+        activity()
+            ->performedOn($role)
+            ->causedBy(auth()->user())
+            ->event('role.deleted')
+            ->withProperties(['name' => $role->name])
+            ->log('Role deleted');
 
         $role->delete();
 
@@ -106,6 +128,13 @@ class RolesController extends Controller
                 $role->syncPermissions([]);
             }
         });
+
+        activity()
+            ->performedOn($role)
+            ->causedBy($request->user())
+            ->event('role.permissions_synced')
+            ->withProperties(['permissions' => $role->permissions()->pluck('name')->all()])
+            ->log('Role permissions updated');
 
         return redirect()
             ->route('roles.edit', $role)

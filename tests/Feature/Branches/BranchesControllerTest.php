@@ -104,6 +104,19 @@ class BranchesControllerTest extends TenantAppTestCase
         $this->assertDatabaseHas('branches', ['name' => 'Test Branch', 'level_id' => $level->id]);
     }
 
+    public function test_storing_a_branch_logs_activity(): void
+    {
+        $level = Level::factory()->create();
+        $currency = Currency::factory()->create();
+
+        $this->actingAs($this->user)->post(route('branches.store'), $this->validBranchPayload($level, $currency));
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'branch',
+            'event' => 'branch.created',
+        ]);
+    }
+
     public function test_store_fails_validation_when_name_is_missing(): void
     {
         $level = Level::factory()->create();
@@ -144,6 +157,24 @@ class BranchesControllerTest extends TenantAppTestCase
         $this->assertDatabaseHas('branches', ['id' => $branch->id, 'name' => 'Updated Branch Name']);
     }
 
+    public function test_updating_a_branch_logs_activity(): void
+    {
+        $level = Level::factory()->create();
+        $currency = Currency::factory()->create();
+        $branch = Branch::factory()->create(['level_id' => $level->id, 'currency_id' => $currency->id]);
+
+        $payload = $this->validBranchPayload($level, $currency);
+        $payload['name'] = 'Logged Branch Name';
+
+        $this->actingAs($this->user)->put(route('branches.update', $branch), $payload);
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'branch',
+            'subject_id' => $branch->id,
+            'event' => 'branch.updated',
+        ]);
+    }
+
     // ── Destroy ───────────────────────────────────────────────────────────────
 
     public function test_authorized_user_can_delete_branch_with_no_staff_and_no_children(): void
@@ -155,6 +186,19 @@ class BranchesControllerTest extends TenantAppTestCase
             ->assertRedirect(route('branches.index'));
 
         $this->assertSoftDeleted('branches', ['id' => $branch->id]);
+    }
+
+    public function test_destroying_a_branch_logs_activity(): void
+    {
+        $branch = Branch::factory()->create();
+
+        $this->actingAs($this->user)->delete(route('branches.destroy', $branch));
+
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => 'branch',
+            'subject_id' => $branch->id,
+            'event' => 'branch.deleted',
+        ]);
     }
 
     public function test_cannot_delete_branch_that_has_staff(): void

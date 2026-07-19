@@ -58,6 +58,13 @@ class BranchesController extends Controller
             $branch->save();
         }
 
+        activity()
+            ->performedOn($branch)
+            ->causedBy($request->user())
+            ->event('branch.created')
+            ->withProperties(['name' => $branch->name, 'code' => $branch->code])
+            ->log('Branch created');
+
         return redirect()->route('branches.index')->with('success', __('flash.branches.created'));
     }
 
@@ -93,6 +100,13 @@ class BranchesController extends Controller
             $branch->save();
         }
 
+        activity()
+            ->performedOn($branch)
+            ->causedBy($request->user())
+            ->event('branch.updated')
+            ->withProperties(['name' => $branch->name, 'code' => $branch->code])
+            ->log('Branch updated');
+
         return redirect()->route('branches.index')->with('success', __('flash.branches.updated'));
     }
 
@@ -105,6 +119,13 @@ class BranchesController extends Controller
         if ($branch->descendants()->exists()) {
             return back()->with('error', __('flash.branches.delete_blocked_children'));
         }
+
+        activity()
+            ->performedOn($branch)
+            ->causedBy(auth()->user())
+            ->event('branch.deleted')
+            ->withProperties(['name' => $branch->name, 'code' => $branch->code])
+            ->log('Branch deleted');
 
         $branch->delete();
 

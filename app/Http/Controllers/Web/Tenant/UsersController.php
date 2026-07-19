@@ -121,6 +121,13 @@ class UsersController extends Controller
             }
         });
 
+        activity()
+            ->performedOn($user)
+            ->causedBy($request->user())
+            ->event('user.permissions_synced')
+            ->withProperties(['permissions' => $user->permissions()->pluck('name')->all()])
+            ->log('User permissions updated');
+
         return redirect()
             ->route('users.edit', $user)
             ->with('success', __('flash.users.permissions_updated'));
