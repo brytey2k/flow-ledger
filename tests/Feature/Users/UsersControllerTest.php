@@ -6,6 +6,7 @@ namespace Tests\Feature\Users;
 
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Tenant\User;
 use Illuminate\Support\Str;
 use Tests\TenantAppTestCase;
@@ -259,5 +260,134 @@ class UsersControllerTest extends TenantAppTestCase
             'subject_id' => $user->id,
             'event' => 'user.permissions_synced',
         ]);
+    }
+
+    // ── Permission Escalation Guard ───────────────────────────────────────────
+
+    public function test_store_rejects_role_that_grants_permission_actor_lacks(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $adminRole = Role::create(['name' => 'escalation-role-' . Str::uuid(), 'guard_name' => 'web']);
+        $adminRole->givePermissionTo(PermissionKey::AccessSettings->value);
+
+        $email = 'escalate-store-' . Str::uuid() . '@example.com';
+
+        $response = $this->actingAs($this->user)->post(route('users.store'), [
+            'first_name' => 'Escalate',
+            'last_name' => 'Attempt',
+            'email' => $email,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'branch_id' => $this->branch->id,
+            'roles' => [$adminRole->id],
+        ]);
+
+        $response->assertRedirect(route('users.create'));
+        $response->assertSessionHas('error', __('flash.users.permission_grant_denied', [
+            'permissions' => PermissionKey::AccessSettings->value,
+        ]));
+        $this->assertDatabaseMissing('users', ['email' => $email]);
+    }
+
+    public function test_update_rejects_role_that_grants_permission_actor_lacks(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $user = User::factory()->create();
+        $adminRole = Role::create(['name' => 'escalation-role-' . Str::uuid(), 'guard_name' => 'web']);
+        $adminRole->givePermissionTo(PermissionKey::AccessSettings->value);
+
+        $response = $this->actingAs($this->user)->put(route('users.update', $user), [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'roles' => [$adminRole->id],
+        ]);
+
+        $response->assertRedirect(route('users.edit', $user));
+        $response->assertSessionHas('error', __('flash.users.permission_grant_denied', [
+            'permissions' => PermissionKey::AccessSettings->value,
+        ]));
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->assertFalse($user->fresh()->hasRole($adminRole));
+    }
+
+    public function test_update_allows_resubmitting_a_role_the_actor_could_not_have_granted(): void
+    {
+        $user = User::factory()->create();
+        $preExistingRole = Role::create(['name' => 'pre-existing-role-' . Str::uuid(), 'guard_name' => 'web']);
+        $preExistingRole->givePermissionTo(PermissionKey::AccessSettings->value);
+        $user->assignRole($preExistingRole);
+
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // Resubmitting the target's pre-existing role (as the edit form would,
+        // since it pre-checks the target's current roles) must not be blocked
+        // even though the actor could never have granted AccessSettings.
+        $response = $this->actingAs($this->user)->put(route('users.update', $user), [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'roles' => [$preExistingRole->id],
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->assertTrue($user->fresh()->hasRole($preExistingRole));
+    }
+
+    public function test_update_permissions_rejects_permission_actor_lacks(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $user = User::factory()->create();
+        $permission = Permission::findOrCreate(PermissionKey::AccessSettings->value, 'web');
+
+        $response = $this->actingAs($this->user)->put(route('users.permissions.update', $user), [
+            'permissions' => [$permission->id],
+        ]);
+
+        $response->assertRedirect(route('users.permissions.edit', $user));
+        $response->assertSessionHas('error', __('flash.users.permission_grant_denied', [
+            'permissions' => PermissionKey::AccessSettings->value,
+        ]));
+        $this->assertFalse($user->fresh()->hasPermissionTo($permission));
+    }
+
+    public function test_update_permissions_allows_resubmitting_a_permission_the_actor_could_not_have_granted(): void
+    {
+        $user = User::factory()->create();
+        $permission = Permission::findOrCreate(PermissionKey::AccessSettings->value, 'web');
+        $user->givePermissionTo($permission);
+
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $response = $this->actingAs($this->user)->put(route('users.permissions.update', $user), [
+            'permissions' => [$permission->id],
+        ]);
+
+        $response->assertRedirect(route('users.edit', $user));
+        $this->assertTrue($user->fresh()->hasPermissionTo($permission));
+    }
+
+    public function test_update_permissions_allows_removing_a_permission_the_actor_could_not_have_granted(): void
+    {
+        $user = User::factory()->create();
+        $permission = Permission::findOrCreate(PermissionKey::AccessSettings->value, 'web');
+        $user->givePermissionTo($permission);
+
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $response = $this->actingAs($this->user)->put(route('users.permissions.update', $user), []);
+
+        $response->assertRedirect(route('users.edit', $user));
+        $this->assertFalse($user->fresh()->hasPermissionTo($permission));
     }
 }

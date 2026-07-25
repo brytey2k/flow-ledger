@@ -9,8 +9,10 @@ use App\Http\Requests\Tenant\PermissionsSyncRequest;
 use App\Http\Requests\Tenant\RoleStoreRequest;
 use App\Http\Requests\Tenant\RoleUpdateRequest;
 use App\Models\Role;
+use App\Models\Tenant\User;
 use App\Repositories\PermissionRepository;
 use App\Repositories\RoleRepository;
+use App\Services\PermissionEscalationGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -20,7 +22,24 @@ class RolesController extends Controller
     public function __construct(
         private readonly RoleRepository $repository,
         private readonly PermissionRepository $permissionRepository,
+        private readonly PermissionEscalationGuard $permissionEscalationGuard,
     ) {}
+
+    /**
+     * @param array<int, string> $deniedPermissionNames
+     */
+    private function permissionGrantDeniedMessage(array $deniedPermissionNames): string
+    {
+        $shownNames = array_slice($deniedPermissionNames, 0, 5);
+        $remaining = count($deniedPermissionNames) - count($shownNames);
+
+        $permissionsText = implode(', ', $shownNames);
+        if ($remaining > 0) {
+            $permissionsText .= ' ' . __('flash.and_more_count', ['count' => $remaining]);
+        }
+
+        return __('flash.roles.permission_grant_denied', ['permissions' => $permissionsText]);
+    }
 
     public function index(): View
     {
@@ -119,6 +138,24 @@ class RolesController extends Controller
     public function updatePermissions(PermissionsSyncRequest $request, Role $role): RedirectResponse
     {
         $dto = $request->toDto();
+
+        /** @var User $actor */
+        $actor = $request->user();
+
+        /** @var array<int, int> $currentPermissionIds */
+        $currentPermissionIds = $role->permissions()->pluck('permissions.id')->map(function ($id) {
+            /** @var int|string $rawId */
+            $rawId = $id;
+
+            return intval($rawId);
+        })->all();
+
+        $deniedPermissionNames = $this->permissionEscalationGuard->deniedPermissionNames($actor, $dto->permissionIds, $currentPermissionIds);
+        if ($deniedPermissionNames !== []) {
+            return redirect()
+                ->route('roles.permissions.edit', $role)
+                ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
+        }
 
         DB::transaction(function () use ($dto, $role): void {
             if (! empty($dto->permissionIds)) {

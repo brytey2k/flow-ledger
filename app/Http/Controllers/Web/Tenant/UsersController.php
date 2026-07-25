@@ -13,6 +13,7 @@ use App\Repositories\BranchRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
+use App\Services\PermissionEscalationGuard;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +27,24 @@ class UsersController extends Controller
         private readonly RoleRepository $roleRepository,
         private readonly PermissionRepository $permissionRepository,
         private readonly BranchRepository $branchRepository,
+        private readonly PermissionEscalationGuard $permissionEscalationGuard,
     ) {}
+
+    /**
+     * @param array<int, string> $deniedPermissionNames
+     */
+    private function permissionGrantDeniedMessage(array $deniedPermissionNames): string
+    {
+        $shownNames = array_slice($deniedPermissionNames, 0, 5);
+        $remaining = count($deniedPermissionNames) - count($shownNames);
+
+        $permissionsText = implode(', ', $shownNames);
+        if ($remaining > 0) {
+            $permissionsText .= ' ' . __('flash.and_more_count', ['count' => $remaining]);
+        }
+
+        return __('flash.users.permission_grant_denied', ['permissions' => $permissionsText]);
+    }
 
     public function index(): View
     {
@@ -50,7 +68,24 @@ class UsersController extends Controller
 
     public function store(UserStoreRequest $request): RedirectResponse
     {
-        $this->service->create($request->toDto(), $request->user());
+        $dto = $request->toDto();
+
+        /** @var User $actor */
+        $actor = $request->user();
+
+        // A brand-new account has no existing roles, so every requested role is
+        // "newly granted" — this is what stops a CreateUser-only attacker from
+        // spinning up an account pre-assigned to an admin role they couldn't
+        // otherwise reach.
+        $deniedPermissionNames = $this->permissionEscalationGuard->deniedPermissionNamesForRoles($actor, $dto->roles, []);
+        if ($deniedPermissionNames !== []) {
+            return redirect()
+                ->route('users.create')
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
+        }
+
+        $this->service->create($dto, $actor);
 
         return redirect()
             ->route('users.index')
@@ -81,7 +116,28 @@ class UsersController extends Controller
 
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
-        $this->service->update($user, $request->toDto(), $request->user());
+        $dto = $request->toDto();
+
+        /** @var User $actor */
+        $actor = $request->user();
+
+        /** @var array<int, int> $currentRoleIds */
+        $currentRoleIds = $user->roles()->pluck('roles.id')->map(function ($id) {
+            /** @var int|string $rawId */
+            $rawId = $id;
+
+            return intval($rawId);
+        })->all();
+
+        $deniedPermissionNames = $this->permissionEscalationGuard->deniedPermissionNamesForRoles($actor, $dto->roles, $currentRoleIds);
+        if ($deniedPermissionNames !== []) {
+            return redirect()
+                ->route('users.edit', $user)
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
+        }
+
+        $this->service->update($user, $dto, $actor);
 
         return redirect()
             ->route('users.index')
@@ -111,6 +167,24 @@ class UsersController extends Controller
     public function updatePermissions(PermissionsSyncRequest $request, User $user): RedirectResponse
     {
         $dto = $request->toDto();
+
+        /** @var User $actor */
+        $actor = $request->user();
+
+        /** @var array<int, int> $currentPermissionIds */
+        $currentPermissionIds = $user->permissions()->pluck('permissions.id')->map(function ($id) {
+            /** @var int|string $rawId */
+            $rawId = $id;
+
+            return intval($rawId);
+        })->all();
+
+        $deniedPermissionNames = $this->permissionEscalationGuard->deniedPermissionNames($actor, $dto->permissionIds, $currentPermissionIds);
+        if ($deniedPermissionNames !== []) {
+            return redirect()
+                ->route('users.permissions.edit', $user)
+                ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
+        }
 
         DB::transaction(function () use ($user, $dto): void {
             if (! empty($dto->permissionIds)) {

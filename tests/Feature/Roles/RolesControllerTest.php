@@ -265,4 +265,90 @@ class RolesControllerTest extends TenantAppTestCase
             'event' => 'role.permissions_synced',
         ]);
     }
+
+    // ── Permission Escalation Guard ───────────────────────────────────────────
+
+    public function test_update_permissions_rejects_permission_actor_lacks(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $role = Role::create(['name' => 'escalation-test-' . Str::uuid(), 'guard_name' => 'web']);
+        $permission = Permission::findOrCreate(PermissionKey::AccessSettings->value, 'web');
+
+        $response = $this->actingAs($this->user)->put(route('roles.permissions.update', $role), [
+            'permissions' => [$permission->id],
+        ]);
+
+        $response->assertRedirect(route('roles.permissions.edit', $role));
+        $response->assertSessionHas('error', __('flash.roles.permission_grant_denied', [
+            'permissions' => PermissionKey::AccessSettings->value,
+        ]));
+        $this->assertFalse($role->fresh()->hasPermissionTo($permission));
+    }
+
+    public function test_update_permissions_allows_resubmitting_a_permission_the_actor_could_not_have_granted(): void
+    {
+        $role = Role::create(['name' => 'resubmit-test-' . Str::uuid(), 'guard_name' => 'web']);
+        $permission = Permission::findOrCreate(PermissionKey::AccessSettings->value, 'web');
+        $role->givePermissionTo($permission);
+
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // Resubmitting the role's pre-existing permission (as the edit form
+        // would, since it pre-checks the role's current grants) must not be
+        // blocked even though the actor could never have granted it themselves.
+        $response = $this->actingAs($this->user)->put(route('roles.permissions.update', $role), [
+            'permissions' => [$permission->id],
+        ]);
+
+        $response->assertRedirect(route('roles.edit', $role));
+        $this->assertTrue($role->fresh()->hasPermissionTo($permission));
+    }
+
+    public function test_update_permissions_allows_removing_a_permission_the_actor_could_not_have_granted(): void
+    {
+        $role = Role::create(['name' => 'remove-escalated-' . Str::uuid(), 'guard_name' => 'web']);
+        $permission = Permission::findOrCreate(PermissionKey::AccessSettings->value, 'web');
+        $role->givePermissionTo($permission);
+
+        $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $response = $this->actingAs($this->user)->put(route('roles.permissions.update', $role), []);
+
+        $response->assertRedirect(route('roles.edit', $role));
+        $this->assertFalse($role->fresh()->hasPermissionTo($permission));
+    }
+
+    public function test_update_permissions_denial_message_truncates_to_first_five_with_a_remaining_count(): void
+    {
+        $deniedPermissionValues = [
+            PermissionKey::AccessSettings->value,
+            PermissionKey::AccessCostCodes->value,
+            PermissionKey::AccessDepartments->value,
+            PermissionKey::AccessPositions->value,
+            PermissionKey::AccessCurrencies->value,
+            PermissionKey::AccessCashbook->value,
+            PermissionKey::AccessCashCount->value,
+        ];
+        $permissionIds = [];
+        foreach ($deniedPermissionValues as $value) {
+            $permission = Permission::findOrCreate($value, 'web');
+            $permissionIds[] = $permission->id;
+            $this->role->revokePermissionTo($value);
+        }
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $role = Role::create(['name' => 'truncate-test-' . Str::uuid(), 'guard_name' => 'web']);
+
+        $response = $this->actingAs($this->user)->put(route('roles.permissions.update', $role), [
+            'permissions' => $permissionIds,
+        ]);
+
+        $response->assertRedirect(route('roles.permissions.edit', $role));
+        $response->assertSessionHas('error', fn($message) => str_contains($message, __('flash.and_more_count', ['count' => 2])));
+        $this->assertCount(0, $role->fresh()->permissions);
+    }
 }

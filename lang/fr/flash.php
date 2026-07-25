@@ -68,12 +68,14 @@ return [
         'updated' => 'Utilisateur mis a jour avec succes.',
         'deleted' => 'Utilisateur supprime avec succes.',
         'permissions_updated' => 'Permissions utilisateur mises a jour avec succes.',
+        'permission_grant_denied' => 'Vous ne pouvez pas accorder les permissions suivantes car vous ne les possedez pas vous-meme : :permissions',
     ],
     'roles' => [
         'created' => 'Role cree avec succes.',
         'updated' => 'Role mis a jour avec succes.',
         'deleted' => 'Role supprime avec succes.',
         'permissions_updated' => 'Permissions du role mises a jour avec succes.',
+        'permission_grant_denied' => 'Vous ne pouvez pas accorder les permissions suivantes car vous ne les possedez pas vous-meme : :permissions',
         'delete_blocked_users' => 'Impossible de supprimer un role associe a des utilisateurs.',
     ],
     'workflows' => [
@@ -166,4 +168,5 @@ return [
     'password' => [
         'changed' => 'Votre mot de passe a été modifié avec succès.',
     ],
+    'and_more_count' => 'et :count de plus',
 ];

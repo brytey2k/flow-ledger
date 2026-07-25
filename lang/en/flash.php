@@ -68,12 +68,14 @@ return [
         'updated' => 'User updated successfully.',
         'deleted' => 'User deleted successfully.',
         'permissions_updated' => 'User permissions updated successfully.',
+        'permission_grant_denied' => 'You cannot grant the following permission(s) because you do not have them yourself: :permissions',
     ],
     'roles' => [
         'created' => 'Role created successfully.',
         'updated' => 'Role updated successfully.',
         'deleted' => 'Role deleted successfully.',
         'permissions_updated' => 'Role permissions updated successfully.',
+        'permission_grant_denied' => 'You cannot grant the following permission(s) because you do not have them yourself: :permissions',
         'delete_blocked_users' => 'Cannot delete role that has associated users.',
     ],
     'workflows' => [
@@ -166,4 +168,5 @@ return [
     'password' => [
         'changed' => 'Your password has been changed successfully.',
     ],
+    'and_more_count' => 'and :count more',
 ];
