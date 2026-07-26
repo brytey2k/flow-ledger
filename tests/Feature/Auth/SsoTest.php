@@ -16,12 +16,22 @@ use Tests\TenantAppTestCase;
 
 class SsoTest extends TenantAppTestCase
 {
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The automated-tests tenant fixture doesn't set idp_tenant_id; the
+        // finalize controller now requires it to match the SSO claims.
+        $this->tenant->forceFill(['idp_tenant_id' => 'idp-' . $this->tenant->id])->save();
+    }
+
     /**
      * Mirrors SsoController::routeToTenant(), which writes this token on the
      * central domain via the explicit store name — bypassing Stancl's
      * tenant cache tagging, since the finalize request that reads it back
      * arrives on a tenant subdomain where tenancy has already tagged the
-     * Cache facade.
+     * Cache facade. The key is scoped to the tenant it was minted for.
      *
      * @param string $token
      * @param SsoUserClaimsDto $claims
@@ -29,7 +39,7 @@ class SsoTest extends TenantAppTestCase
     private function storeSsoToken(string $token, SsoUserClaimsDto $claims): void
     {
         Cache::store(config()->string('cache.default'))
-            ->put("sso_login:{$token}", $claims->toArray(), now()->addSeconds(30));
+            ->put("sso_login:{$this->tenant->id}:{$token}", $claims->toArray(), now()->addSeconds(30));
     }
 
     // ── SsoFinalizeController ─────────────────────────────────────────────────
@@ -55,7 +65,7 @@ class SsoTest extends TenantAppTestCase
             email: $this->user->email,
             name: 'Test User',
             email_verified: true,
-            tenant_id: '1',
+            tenant_id: $this->tenant->idp_tenant_id,
             products: ['flow-ledger'],
         );
 
@@ -77,7 +87,7 @@ class SsoTest extends TenantAppTestCase
             email: $this->user->email,
             name: 'Test User',
             email_verified: true,
-            tenant_id: '1',
+            tenant_id: $this->tenant->idp_tenant_id,
             products: ['flow-ledger'],
         );
 
@@ -104,7 +114,7 @@ class SsoTest extends TenantAppTestCase
             email: 'brand-new@example.com',
             name: 'Brand New',
             email_verified: true,
-            tenant_id: '1',
+            tenant_id: $this->tenant->idp_tenant_id,
             products: ['flow-ledger'],
         );
 
@@ -128,7 +138,7 @@ class SsoTest extends TenantAppTestCase
             email: $this->user->email,
             name: 'Test User',
             email_verified: true,
-            tenant_id: '1',
+            tenant_id: $this->tenant->idp_tenant_id,
             products: ['flow-ledger'],
         );
 

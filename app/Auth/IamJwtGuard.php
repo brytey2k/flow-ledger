@@ -177,6 +177,13 @@ class IamJwtGuard implements Guard
             throw new RuntimeException('Token does not grant access to this product.');
         }
 
+        $tokenTenantId = $token->claims()->get('tenant_id');
+        $currentTenantId = tenant()->idp_tenant_id;
+
+        if ($tokenTenantId === null || $currentTenantId === null || (string) $tokenTenantId !== (string) $currentTenantId) {
+            throw new RuntimeException('Token is not valid for this organisation.');
+        }
+
         $sub = $token->claims()->get('sub', '');
 
         if (! is_string($sub) || $sub === '') {

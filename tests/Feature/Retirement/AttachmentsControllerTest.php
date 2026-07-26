@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace Tests\Feature\Retirement;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Role;
 use App\Models\Tenant\Attachment;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
+use App\Models\Tenant\Staff;
+use App\Models\Tenant\User;
+use App\Models\Tenant\WorkflowStage;
+use App\Models\Tenant\WorkflowTemplate;
+use App\Services\WorkflowEngineService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TenantAppTestCase;
@@ -22,6 +28,29 @@ class AttachmentsControllerTest extends TenantAppTestCase
             'payment_request_id' => $advance->id,
             'status' => 'draft',
         ]);
+    }
+
+    private function retirementInWorkflow(): RetirementRequest
+    {
+        $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
+
+        return RetirementRequest::factory()->inWorkflow()->create([
+            'payment_request_id' => $advance->id,
+        ]);
+    }
+
+    /** @return array{template: WorkflowTemplate, stage: WorkflowStage, role: Role} */
+    private function makeApprovalStage(int $displayOrder = 1): array
+    {
+        $template = WorkflowTemplate::factory()->retirement()->create();
+        $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => $displayOrder,
+        ]);
+        $stage->roles()->sync([$role->id]);
+
+        return ['template' => $template, 'stage' => $stage->fresh(), 'role' => $role];
     }
 
     // ── Authentication ────────────────────────────────────────────────────────
@@ -67,7 +96,7 @@ class AttachmentsControllerTest extends TenantAppTestCase
     public function test_non_owner_cannot_delete(): void
     {
         $retirement = $this->draftRetirement();
-        $otherUser = \App\Models\Tenant\User::factory()->create();
+        $otherUser = User::factory()->create();
         $attachment = Attachment::factory()->create([
             'attachable_type' => RetirementRequest::class,
             'attachable_id' => $retirement->id,
@@ -76,6 +105,32 @@ class AttachmentsControllerTest extends TenantAppTestCase
         ]);
 
         $this->actingAs($this->user)
+            ->delete(route('attachments.destroy', $attachment))
+            ->assertForbidden();
+    }
+
+    public function test_requester_who_is_not_uploader_cannot_delete(): void
+    {
+        $requester = User::factory()->create();
+        $staff = Staff::factory()->withUser($requester)->create();
+        $advance = PaymentRequest::factory()->advance()->create([
+            'staff_id' => $staff->id,
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+        ]);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $advance->id,
+            'status' => 'draft',
+        ]);
+
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $retirement->id,
+            'user_id' => $this->user->id,
+            'path' => 'retirements/1/attachments/test.pdf',
+        ]);
+
+        $this->actingAs($requester)
             ->delete(route('attachments.destroy', $attachment))
             ->assertForbidden();
     }
@@ -190,6 +245,120 @@ class AttachmentsControllerTest extends TenantAppTestCase
         $this->actingAs($this->user)
             ->get(route('attachments.download', $attachment))
             ->assertNotFound();
+    }
+
+    public function test_unrelated_user_cannot_download(): void
+    {
+        Storage::fake('local');
+        $retirement = $this->draftRetirement();
+        Storage::disk('local')->put("retirements/{$retirement->id}/attachments/test.pdf", 'file content');
+
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $retirement->id,
+            'user_id' => $this->user->id,
+            'path' => "retirements/{$retirement->id}/attachments/test.pdf",
+            'original_name' => 'test.pdf',
+        ]);
+
+        $unrelatedUser = User::factory()->create();
+
+        $this->actingAs($unrelatedUser)
+            ->get(route('attachments.download', $attachment))
+            ->assertForbidden();
+    }
+
+    public function test_requester_can_download_attachment_they_did_not_upload(): void
+    {
+        Storage::fake('local');
+        $requester = User::factory()->create();
+        $staff = Staff::factory()->withUser($requester)->create();
+        $advance = PaymentRequest::factory()->advance()->create([
+            'staff_id' => $staff->id,
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+        ]);
+        $retirement = RetirementRequest::factory()->create([
+            'payment_request_id' => $advance->id,
+            'status' => 'draft',
+        ]);
+        Storage::disk('local')->put("retirements/{$retirement->id}/attachments/test.pdf", 'file content');
+
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $retirement->id,
+            'user_id' => $this->user->id,
+            'path' => "retirements/{$retirement->id}/attachments/test.pdf",
+            'original_name' => 'test.pdf',
+        ]);
+
+        $this->actingAs($requester)
+            ->get(route('attachments.download', $attachment))
+            ->assertOk()
+            ->assertDownload('test.pdf');
+    }
+
+    public function test_user_eligible_to_act_on_active_stage_can_download(): void
+    {
+        Storage::fake('local');
+        $engine = app(WorkflowEngineService::class);
+        $retirement = $this->retirementInWorkflow();
+
+        ['template' => $template, 'role' => $role] = $this->makeApprovalStage();
+        $approver = User::factory()->create();
+        $approver->assignRole($role);
+
+        $engine->startWorkflow($retirement, $template, $this->user);
+
+        Storage::disk('local')->put("retirements/{$retirement->id}/attachments/test.pdf", 'file content');
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $retirement->id,
+            'user_id' => $this->user->id,
+            'path' => "retirements/{$retirement->id}/attachments/test.pdf",
+            'original_name' => 'test.pdf',
+        ]);
+
+        $this->actingAs($approver)
+            ->get(route('attachments.download', $attachment))
+            ->assertOk()
+            ->assertDownload('test.pdf');
+    }
+
+    public function test_user_who_approved_earlier_stage_can_still_download(): void
+    {
+        Storage::fake('local');
+        $engine = app(WorkflowEngineService::class);
+        $retirement = $this->retirementInWorkflow();
+
+        ['template' => $template, 'role' => $role1] = $this->makeApprovalStage(1);
+        $stage2 = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'display_order' => 2,
+        ]);
+        $role2 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+        $stage2->roles()->sync([$role2->id]);
+
+        $firstApprover = User::factory()->create();
+        $firstApprover->assignRole($role1);
+
+        $instance = $engine->startWorkflow($retirement, $template, $this->user);
+        $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+        $engine->approve($activeStage, $firstApprover);
+
+        Storage::disk('local')->put("retirements/{$retirement->id}/attachments/test.pdf", 'file content');
+        $attachment = Attachment::factory()->create([
+            'attachable_type' => RetirementRequest::class,
+            'attachable_id' => $retirement->id,
+            'user_id' => $this->user->id,
+            'path' => "retirements/{$retirement->id}/attachments/test.pdf",
+            'original_name' => 'test.pdf',
+        ]);
+
+        $this->actingAs($firstApprover)
+            ->get(route('attachments.download', $attachment))
+            ->assertOk()
+            ->assertDownload('test.pdf');
     }
 
     // ── Delete ────────────────────────────────────────────────────────────────

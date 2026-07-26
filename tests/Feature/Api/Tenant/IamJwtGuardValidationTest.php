@@ -33,6 +33,8 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
 
     private string $publicPem;
 
+    private const TENANT_ID = 'idp-tenant-under-test';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -44,6 +46,8 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
             'sso.audience' => self::PRODUCT,
             'sso.product_slug' => self::PRODUCT,
         ]);
+
+        $this->tenant->forceFill(['idp_tenant_id' => self::TENANT_ID])->save();
     }
 
     public function test_valid_token_resolves_the_user(): void
@@ -104,6 +108,26 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
         $this->assertNull($guard->user());
     }
 
+    public function test_token_minted_for_a_different_tenant_is_rejected(): void
+    {
+        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
+
+        $token = $this->mintToken(tenantId: 'some-other-idp-tenant-id');
+        $guard = $this->makeGuard($token);
+
+        $this->assertNull($guard->user());
+    }
+
+    public function test_token_missing_tenant_claim_is_rejected(): void
+    {
+        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
+
+        $token = $this->mintToken(tenantId: null);
+        $guard = $this->makeGuard($token);
+
+        $this->assertNull($guard->user());
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
@@ -113,6 +137,7 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
      * @param string $subject
      * @param DateTimeImmutable|null|null $issuedAt
      * @param DateTimeImmutable|null|null $expiresAt
+     * @param string|null $tenantId Pass null to omit the claim entirely; defaults to the tenant under test.
      */
     private function mintToken(
         string|null $issuer = null,
@@ -121,6 +146,7 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
         string $subject = self::SUB,
         DateTimeImmutable|null $issuedAt = null,
         DateTimeImmutable|null $expiresAt = null,
+        string|null $tenantId = self::TENANT_ID,
     ): string {
         $now = new DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
@@ -130,7 +156,7 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
             InMemory::plainText($this->publicPem),
         );
 
-        $token = $configuration->builder()
+        $builder = $configuration->builder()
             ->withHeader('kid', '1')
             ->issuedBy($issuer ?? self::IDP_URL)
             ->permittedFor($audience ?? self::PRODUCT)
@@ -138,8 +164,13 @@ class IamJwtGuardValidationTest extends TenantAppTestCase
             ->issuedAt($issuedAt ?? $now)
             ->expiresAt($expiresAt ?? $now->modify('+1 hour'))
             ->withClaim('products', $products)
-            ->withClaim('scopes', ['openid', 'profile'])
-            ->getToken($configuration->signer(), $configuration->signingKey());
+            ->withClaim('scopes', ['openid', 'profile']);
+
+        if ($tenantId !== null) {
+            $builder = $builder->withClaim('tenant_id', $tenantId);
+        }
+
+        $token = $builder->getToken($configuration->signer(), $configuration->signingKey());
 
         return $token->toString();
     }

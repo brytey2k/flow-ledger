@@ -10,6 +10,7 @@ use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Services\AttachmentService;
+use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +20,7 @@ class AttachmentsController extends Controller
 {
     public function __construct(
         private readonly AttachmentService $service,
+        private readonly WorkflowEngineService $engine,
     ) {}
 
     public function store(Request $request, RetirementRequest $retirementRequest): RedirectResponse
@@ -38,8 +40,12 @@ class AttachmentsController extends Controller
             ->with('success', __('flash.attachments.uploaded'));
     }
 
-    public function download(Attachment $attachment): StreamedResponse
+    public function download(Request $request, Attachment $attachment): StreamedResponse
     {
+        /** @var User $user */
+        $user = $request->user();
+
+        abort_unless($this->canDownload($attachment, $user), 403);
         abort_unless(Storage::disk('local')->exists($attachment->path), 404);
 
         return Storage::disk('local')->download($attachment->path, $attachment->original_name);
@@ -50,28 +56,35 @@ class AttachmentsController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $allowed = false;
-
-        if ($attachment->attachable_type === RetirementRequest::class && $attachment->attachable instanceof RetirementRequest) {
-            $paymentRequest = $attachment->attachable->paymentRequest;
-            if ($paymentRequest !== null && $paymentRequest->staff !== null) {
-                $allowed = $paymentRequest->staff->user_id === $user->id;
-            }
-        } elseif ($attachment->attachable_type === PaymentRequest::class && $attachment->attachable instanceof PaymentRequest) {
-            $paymentRequest = $attachment->attachable;
-            if ($paymentRequest->staff !== null) {
-                $allowed = $paymentRequest->staff->user_id === $user->id;
-            }
-        }
-
-        if (! $allowed && $attachment->user_id === $user->id) {
-            $allowed = true;
-        }
-
-        abort_unless($allowed, 403);
+        abort_unless($attachment->user_id === $user->id, 403);
 
         $this->service->delete($attachment);
 
         return redirect()->back()->with('success', __('flash.attachments.deleted'));
+    }
+
+    private function canDownload(Attachment $attachment, User $user): bool
+    {
+        if ($attachment->user_id === $user->id) {
+            return true;
+        }
+
+        $paymentRequest = null;
+
+        if ($attachment->attachable_type === RetirementRequest::class && $attachment->attachable instanceof RetirementRequest) {
+            $paymentRequest = $attachment->attachable->paymentRequest;
+        } elseif ($attachment->attachable_type === PaymentRequest::class && $attachment->attachable instanceof PaymentRequest) {
+            $paymentRequest = $attachment->attachable;
+        }
+
+        if ($paymentRequest !== null && $paymentRequest->staff !== null && $paymentRequest->staff->user_id === $user->id) {
+            return true;
+        }
+
+        if ($attachment->attachable instanceof PaymentRequest || $attachment->attachable instanceof RetirementRequest) {
+            return $this->engine->userIsInApprovalChain($attachment->attachable, $user);
+        }
+
+        return false;
     }
 }

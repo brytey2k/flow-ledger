@@ -176,8 +176,10 @@ class SsoController extends Controller
         // Explicit store name bypasses Stancl's tenant cache tagging, since this
         // token is written on the central domain but read on a tenant subdomain
         // where InitializeTenancyByDomain has already tagged the Cache facade.
+        // The tenant id is baked into the key itself so the token can only ever
+        // resolve against the tenant it was minted for.
         Cache::store(config()->string('cache.default'))
-            ->put("sso_login:{$loginToken}", $claims->toArray(), now()->addSeconds(30));
+            ->put("sso_login:{$tenant->id}:{$loginToken}", $claims->toArray(), now()->addSeconds(30));
 
         $port = request()->getPort();
         $portSuffix = in_array($port, [80, 443], true) ? '' : ":{$port}";

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowAction;
@@ -377,6 +378,25 @@ class WorkflowEngineService
         }
 
         return true;
+    }
+
+    public function userIsInApprovalChain(PaymentRequest|RetirementRequest $workflowable, User $user): bool
+    {
+        $activeInstance = $workflowable->activeWorkflowInstance;
+
+        if ($activeInstance !== null) {
+            foreach ($activeInstance->activeInstanceStages as $instanceStage) {
+                if ($this->canUserActOnStage($instanceStage, $user)) {
+                    return true;
+                }
+            }
+        }
+
+        return WorkflowAction::where('user_id', $user->id)
+            ->whereHas('instanceStage.instance', fn($q) => $q
+                ->where('workflowable_type', $workflowable::class)
+                ->where('workflowable_id', $workflowable->id))
+            ->exists();
     }
 
     private function submitterQualifiesAsApprover(
