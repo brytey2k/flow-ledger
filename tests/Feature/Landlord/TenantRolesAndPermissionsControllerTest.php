@@ -12,7 +12,6 @@ use App\Models\Tenant\User as TenantUser;
 use App\Services\LandlordTenantAccessControlService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Mockery;
@@ -20,14 +19,11 @@ use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use Tests\TestCase;
+use Tests\LandlordTestCase;
 
-class TenantRolesAndPermissionsControllerTest extends TestCase
+class TenantRolesAndPermissionsControllerTest extends LandlordTestCase
 {
-    use DatabaseTransactions;
-
-    private Tenant $tenant;
-
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
