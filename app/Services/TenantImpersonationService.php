@@ -11,7 +11,7 @@ use Stancl\Tenancy\Database\Models\ImpersonationToken;
 
 class TenantImpersonationService
 {
-    public function createImpersonationToken(TenantContract $tenant, User $user, string $redirectUrl = '/dashboard', string $guard = 'web'): ImpersonationToken
+    public function createImpersonationToken(TenantContract $tenant, User $user, string $redirectUrl = '/', string $guard = 'web'): ImpersonationToken
     {
         /** @var ImpersonationToken $result */
         $result = $tenant->run(function () use ($tenant, $user, $redirectUrl, $guard): ImpersonationToken {

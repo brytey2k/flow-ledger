@@ -90,4 +90,58 @@ enum PermissionKey: string
     case AccessCashCount = 'access cash count';
     case CreateCashCount = 'create cash count';
     case DeleteCashCount = 'delete cash count';
+
+    public function category(): PermissionCategory
+    {
+        return match ($this) {
+            self::AccessLevels, self::CreateLevel,
+            self::AccessBranches, self::CreateBranch,
+            self::ViewDescendantBranches => PermissionCategory::LevelsAndBranches,
+
+            self::AccessUsers, self::CreateUser,
+            self::DeleteUser, self::ManageUserPermissions => PermissionCategory::Users,
+
+            self::AccessRoles, self::CreateRole,
+            self::DeleteRole, self::ManageRolePermissions => PermissionCategory::Roles,
+
+            self::ViewAccounts, self::CreateAccounts,
+            self::EditAccounts, self::DeleteAccounts => PermissionCategory::Accounts,
+
+            self::ViewTransactions, self::CreateTransactions,
+            self::EditTransactions, self::DeleteTransactions => PermissionCategory::Transactions,
+
+            self::AccessCurrencies, self::CreateCurrency, self::DeleteCurrency,
+            self::ManageCurrencyDenominations => PermissionCategory::Currencies,
+
+            self::AccessDepartments, self::CreateDepartment,
+            self::DeleteDepartment => PermissionCategory::Departments,
+
+            self::AccessCostCodes, self::CreateCostCode,
+            self::DeleteCostCode => PermissionCategory::CostCodes,
+
+            self::AccessPositions, self::CreatePosition, self::DeletePosition,
+            self::AccessStaff, self::CreateStaff, self::DeleteStaff => PermissionCategory::PositionsAndStaff,
+
+            self::AccessPaymentRequests, self::CreatePaymentRequest,
+            self::EditPaymentRequest, self::DeletePaymentRequest => PermissionCategory::PaymentRequests,
+
+            self::AccessRetirementRequests, self::CreateRetirementRequest,
+            self::EditRetirementRequest => PermissionCategory::RetirementRequests,
+
+            self::AccessWorkflowTemplates, self::CreateWorkflowTemplate,
+            self::EditWorkflowTemplate, self::DeleteWorkflowTemplate,
+            self::ApproveRequests, self::DisburseRequests,
+            self::SettleRetirements => PermissionCategory::Workflow,
+
+            self::AccessCashbook, self::CreateCashbookEntry,
+            self::DeleteCashbookEntry => PermissionCategory::Cashbook,
+
+            self::AccessCashCount, self::CreateCashCount,
+            self::DeleteCashCount => PermissionCategory::CashCount,
+
+            self::AccessReports => PermissionCategory::Reports,
+
+            self::AccessSettings, self::AccessActivityLog => PermissionCategory::SettingsAndActivity,
+        };
+    }
 }

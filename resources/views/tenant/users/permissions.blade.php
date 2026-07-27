@@ -39,29 +39,10 @@
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                        @if($permissions->isEmpty())
-                            <div class="col-span-full">
-                                <p class="text-sm text-muted-foreground">{{ __('users.permissions.none') }}</p>
-                            </div>
-                        @else
-                            @foreach($permissions as $permission)
-                                <div class="flex items-start gap-2">
-                                    <input
-                                        type="checkbox"
-                                        id="permission-{{ $permission->id }}"
-                                        name="permissions[]"
-                                        value="{{ $permission->id }}"
-                                        {{ in_array($permission->id, old('permissions', $user->permissions->pluck('id')->toArray())) ? 'checked' : '' }}
-                                        class="mt-1"
-                                    />
-                                    <label for="permission-{{ $permission->id }}" class="text-sm cursor-pointer">
-                                        {{ $permission->name }}
-                                    </label>
-                                </div>
-                            @endforeach
-                        @endif
-                    </div>
+                    @include('partials.permission-selector', [
+                        'permissions' => $permissions,
+                        'selectedIds' => old('permissions', $user->permissions->pluck('id')->toArray()),
+                    ])
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5 border-t">
                         <button type="submit" class="kt-btn kt-btn-primary">

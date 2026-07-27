@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Tenant;
 
+use App\Services\TenantImpersonationService;
 use Illuminate\Support\Str;
 use Stancl\Tenancy\Database\Models\ImpersonationToken;
 use Tests\TenantAppTestCase;
@@ -50,6 +51,17 @@ class ImpersonationControllerTest extends TenantAppTestCase
 
         $this->get(route('impersonate', $token->token))
             ->assertRedirect('/dashboard')
+            ->assertSessionHas('impersonated', true);
+
+        $this->assertAuthenticatedAs($this->user);
+    }
+
+    public function test_impersonate_default_redirect_url_resolves_to_an_existing_route(): void
+    {
+        $token = app(TenantImpersonationService::class)->createImpersonationToken($this->tenant, $this->user);
+
+        $this->get(route('impersonate', $token->token))
+            ->assertRedirect(route('dashboard'))
             ->assertSessionHas('impersonated', true);
 
         $this->assertAuthenticatedAs($this->user);

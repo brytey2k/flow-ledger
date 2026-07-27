@@ -61,42 +61,10 @@
                         <div class="text-sm text-destructive">{{ $message }}</div>
                     @enderror
 
-                    @if(!$permissions->isEmpty())
-                        <div class="flex items-center gap-2 pb-4 border-b">
-                            <input
-                                type="checkbox"
-                                id="select-all-permissions"
-                                class="cursor-pointer"
-                            />
-                            <label for="select-all-permissions" class="text-sm font-medium cursor-pointer">
-                                Select All
-                            </label>
-                        </div>
-                    @endif
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                        @if($permissions->isEmpty())
-                            <div class="col-span-full">
-                                <p class="text-sm text-muted-foreground">No permissions available for this tenant.</p>
-                            </div>
-                        @else
-                            @foreach($permissions as $permission)
-                                <div class="flex items-start gap-2">
-                                    <input
-                                        type="checkbox"
-                                        id="permission-{{ $permission->id }}"
-                                        name="permissions[]"
-                                        value="{{ $permission->id }}"
-                                        {{ in_array($permission->id, old('permissions', $user->permissions->pluck('id')->toArray())) ? 'checked' : '' }}
-                                        class="mt-1 permission-checkbox"
-                                    />
-                                    <label for="permission-{{ $permission->id }}" class="text-sm cursor-pointer">
-                                        {{ ucwords($permission->name) }}
-                                    </label>
-                                </div>
-                            @endforeach
-                        @endif
-                    </div>
+                    @include('partials.permission-selector', [
+                        'permissions' => $permissions,
+                        'selectedIds' => old('permissions', $user->permissions->pluck('id')->toArray()),
+                    ])
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5 border-t">
                         <button type="submit" class="kt-btn kt-btn-primary">
@@ -112,33 +80,3 @@
 </div>
 <!-- End of Container -->
 @endsection
-
-@push('page_js')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const selectAllCheckbox = document.getElementById('select-all-permissions');
-        const permissionCheckboxes = document.querySelectorAll('.permission-checkbox');
-
-        if (selectAllCheckbox && permissionCheckboxes.length > 0) {
-            function updateSelectAllState() {
-                const allChecked = Array.from(permissionCheckboxes).every(cb => cb.checked);
-                const someChecked = Array.from(permissionCheckboxes).some(cb => cb.checked);
-                selectAllCheckbox.checked = allChecked;
-                selectAllCheckbox.indeterminate = someChecked && !allChecked;
-            }
-
-            selectAllCheckbox.addEventListener('change', function() {
-                permissionCheckboxes.forEach(cb => {
-                    cb.checked = this.checked;
-                });
-            });
-
-            permissionCheckboxes.forEach(cb => {
-                cb.addEventListener('change', updateSelectAllState);
-            });
-
-            updateSelectAllState();
-        }
-    });
-</script>
-@endpush
