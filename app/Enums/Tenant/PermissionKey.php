@@ -42,6 +42,7 @@ enum PermissionKey: string
     case DeleteUser = 'delete user';
     case ManageUserPermissions = 'manage user permissions';
     case DeleteRole = 'delete role';
+    case ManageRolePermissions = 'manage role permissions';
     case DeleteCurrency = 'delete currency';
     case DeleteDepartment = 'delete department';
     case DeleteCostCode = 'delete cost code';

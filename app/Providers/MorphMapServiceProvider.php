@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Landlord\User as LandlordUser;
 use App\Models\Role;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Cashbook;
@@ -32,6 +33,7 @@ class MorphMapServiceProvider extends ServiceProvider
             'cash_count' => CashCount::class,
             'role' => Role::class,
             'branch' => Branch::class,
+            'landlord_user' => LandlordUser::class,
         ]);
     }
 }

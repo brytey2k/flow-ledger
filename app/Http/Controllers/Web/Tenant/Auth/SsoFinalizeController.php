@@ -36,7 +36,9 @@ class SsoFinalizeController extends Controller
             abort(403, 'Missing SSO login token.');
         }
 
-        $tenantId = tenant()->getKey();
+        $currentTenant = tenant();
+        abort_unless($currentTenant instanceof \App\Models\Tenant && is_scalar($currentTenant->getKey()), 403);
+        $tenantId = (string) $currentTenant->getKey();
 
         /** @var array{sub: string, email: string, name: string, email_verified: bool, tenant_id: string|null, products: list<string>}|null $raw */
         $raw = Cache::store(config()->string('cache.default'))->pull("sso_login:{$tenantId}:{$token}");
@@ -50,7 +52,7 @@ class SsoFinalizeController extends Controller
         // Defensive check: the tenant-scoped cache key already guarantees this,
         // but assert the IDP's tenant claim matches this tenant in case the key
         // scoping is ever bypassed or misconfigured.
-        if ($claims->tenant_id === null || (string) tenant()->idp_tenant_id !== $claims->tenant_id) {
+        if ($claims->tenant_id === null || ! is_scalar($currentTenant->idp_tenant_id) || (string) $currentTenant->idp_tenant_id !== $claims->tenant_id) {
             abort(403, 'SSO login token is not valid for this organisation.');
         }
 

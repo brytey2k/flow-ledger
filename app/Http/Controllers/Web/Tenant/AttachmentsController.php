@@ -39,7 +39,7 @@ class AttachmentsController extends Controller
         $branchIds = $this->branchScope->allowedBranchIds($user);
         $paymentBranchId = $retirementRequest->paymentRequest?->branch_id;
         abort_unless($paymentBranchId !== null && in_array($paymentBranchId, $branchIds, true), 403);
-        abort_unless($retirementRequest->paymentRequest?->staff?->user_id === $user->id, 403);
+        abort_unless($retirementRequest->paymentRequest->staff?->user_id === $user->id, 403);
 
         $this->service->store($retirementRequest, $file, $user);
 

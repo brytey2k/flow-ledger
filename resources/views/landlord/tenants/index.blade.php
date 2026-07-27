@@ -164,6 +164,22 @@
                                                             </a>
                                                         </div>
                                                         <div class="kt-menu-item">
+                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
+                                                                <span class="kt-menu-icon">
+                                                                    <i class="ki-filled ki-security-user"></i>
+                                                                </span>
+                                                                <span class="kt-menu-title">Roles & Permissions</span>
+                                                            </a>
+                                                        </div>
+                                                        <div class="kt-menu-item">
+                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.users-permissions.index', $tenant) }}">
+                                                                <span class="kt-menu-icon">
+                                                                    <i class="ki-filled ki-people"></i>
+                                                                </span>
+                                                                <span class="kt-menu-title">Users</span>
+                                                            </a>
+                                                        </div>
+                                                        <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="{{ route('landlord.tenants.select-user', $tenant) }}">
                                                                 <span class="kt-menu-icon">
                                                                     <i class="ki-filled ki-user-tick"></i>

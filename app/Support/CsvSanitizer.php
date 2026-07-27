@@ -13,16 +13,16 @@ class CsvSanitizer
      * Neutralise CSV formula injection by prefixing risky string cells with a
      * single quote, so spreadsheet apps render them as text instead of formulas.
      *
-     * @param array<int|string, mixed> $row
+     * @param array<int|string, bool|float|int|string|null> $row
      *
-     * @return array<int|string, mixed>
+     * @return array<int|string, bool|float|int|string|null>
      */
     public static function sanitizeRow(array $row): array
     {
         return array_map(self::sanitizeValue(...), $row);
     }
 
-    public static function sanitizeValue(mixed $value): mixed
+    public static function sanitizeValue(bool|float|int|string|null $value): bool|float|int|string|null
     {
         if (! is_string($value) || $value === '') {
             return $value;

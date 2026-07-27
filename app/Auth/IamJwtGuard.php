@@ -178,9 +178,10 @@ class IamJwtGuard implements Guard
         }
 
         $tokenTenantId = $token->claims()->get('tenant_id');
-        $currentTenantId = tenant()->idp_tenant_id;
+        $currentTenant = tenant();
+        $currentTenantId = $currentTenant instanceof \App\Models\Tenant ? $currentTenant->idp_tenant_id : null;
 
-        if ($tokenTenantId === null || $currentTenantId === null || (string) $tokenTenantId !== (string) $currentTenantId) {
+        if (! is_scalar($tokenTenantId) || ! is_scalar($currentTenantId) || (string) $tokenTenantId !== (string) $currentTenantId) {
             throw new RuntimeException('Token is not valid for this organisation.');
         }
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\Auth\SsoController;
 use App\Http\Controllers\Web\Landlord\Auth\LoginController;
 use App\Http\Controllers\Web\Landlord\DocumentationController;
 use App\Http\Controllers\Web\Landlord\TenantFeatureFlagsController;
+use App\Http\Controllers\Web\Landlord\TenantRolesAndPermissionsController;
 use App\Http\Controllers\Web\Landlord\TenantsController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +48,25 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::get('landlord/sys-admin/tenants/{tenant}/feature-flags', [TenantFeatureFlagsController::class, 'index'])->name('tenants.feature-flags.index');
             Route::put('landlord/sys-admin/tenants/{tenant}/feature-flags', [TenantFeatureFlagsController::class, 'update'])->name('tenants.feature-flags.update');
             Route::post('landlord/sys-admin/feature-flags/bulk', [TenantFeatureFlagsController::class, 'bulkUpdate'])->name('feature-flags.bulk-update');
+
+            // Roles & Permissions
+            Route::get('landlord/sys-admin/tenants/{tenant}/roles', [TenantRolesAndPermissionsController::class, 'roles'])
+                ->name('tenants.roles.index');
+            Route::get('landlord/sys-admin/tenants/{tenant}/roles/{role}/permissions', [TenantRolesAndPermissionsController::class, 'editRolePermissions'])
+                ->name('tenants.roles.permissions.edit');
+            Route::put('landlord/sys-admin/tenants/{tenant}/roles/{role}/permissions', [TenantRolesAndPermissionsController::class, 'updateRolePermissions'])
+                ->name('tenants.roles.permissions.update');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/users-permissions', [TenantRolesAndPermissionsController::class, 'users'])
+                ->name('tenants.users-permissions.index');
+            Route::get('landlord/sys-admin/tenants/{tenant}/users/{user}/roles', [TenantRolesAndPermissionsController::class, 'editUserRoles'])
+                ->name('tenants.users.roles.edit');
+            Route::put('landlord/sys-admin/tenants/{tenant}/users/{user}/roles', [TenantRolesAndPermissionsController::class, 'updateUserRoles'])
+                ->name('tenants.users.roles.update');
+            Route::get('landlord/sys-admin/tenants/{tenant}/users/{user}/permissions', [TenantRolesAndPermissionsController::class, 'editUserPermissions'])
+                ->name('tenants.users.permissions.edit');
+            Route::put('landlord/sys-admin/tenants/{tenant}/users/{user}/permissions', [TenantRolesAndPermissionsController::class, 'updateUserPermissions'])
+                ->name('tenants.users.permissions.update');
         });
     });
 }

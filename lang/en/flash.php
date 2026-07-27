@@ -152,6 +152,11 @@ return [
         'updated' => 'Feature flags updated.',
         'bulk_updated' => 'Bulk feature flag update applied.',
     ],
+    'landlord' => [
+        'role_permissions_updated' => 'Role permissions updated successfully.',
+        'user_roles_updated' => 'User roles updated successfully.',
+        'user_permissions_updated' => 'User permissions updated successfully.',
+    ],
     'settings' => [
         'updated' => 'Settings saved successfully.',
     ],
