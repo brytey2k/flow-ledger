@@ -88,6 +88,20 @@ class SsoControllerTest extends LandlordTestCase
         $this->assertFalse(Cache::has("sso_return:{$state}"));
     }
 
+    public function test_redirect_does_not_store_backslash_return_to_url(): void
+    {
+        // Browsers normalise "/\evil.com" to "//evil.com" (protocol-relative to
+        // evil.com), while PHP's parse_url() sees only a host-less path.
+        $response = $this->get(route('sso.redirect', ['return_to' => '/\\evil.com']));
+
+        $response->assertRedirect();
+        $location = $response->headers->get('Location', '');
+        parse_str((string) parse_url($location, PHP_URL_QUERY), $params);
+        $state = $params['state'] ?? '';
+
+        $this->assertFalse(Cache::has("sso_return:{$state}"));
+    }
+
     // ── callback ──────────────────────────────────────────────────────────────
 
     public function test_callback_aborts_when_state_is_missing(): void

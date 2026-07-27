@@ -190,6 +190,13 @@ class SsoController extends Controller
 
     private function isAllowedReturnUrl(string $url): bool
     {
+        // Browsers normalise backslashes to forward slashes before navigating,
+        // but parse_url() does not — so "/\evil.com" parses as a safe host-less
+        // path here while the browser actually follows it as "//evil.com".
+        if (str_contains($url, '\\')) {
+            return false;
+        }
+
         $parsed = parse_url($url);
 
         if ($parsed === false) {
