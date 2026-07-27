@@ -123,6 +123,7 @@ return [
         'submit_only_draft' => 'Only draft retirements can be submitted.',
         'resubmit_only_sent_back' => 'Only sent-back retirements can be resubmitted.',
         'resubmit_not_owner' => 'You can only resubmit your own retirements.',
+        'submit_not_owner' => 'You can only submit your own retirements.',
         'edit_only_sent_back' => 'Only draft or sent-back retirements can be edited.',
         'edit_not_owner' => 'You can only edit your own retirements.',
         'missing_workflow_template' => 'No workflow template configured for retirements. Please ask an administrator to set one up.',

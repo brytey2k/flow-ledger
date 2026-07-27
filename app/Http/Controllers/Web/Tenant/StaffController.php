@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StaffStoreRequest;
 use App\Http\Requests\Tenant\StaffUpdateRequest;
 use App\Models\Tenant\Staff;
+use App\Models\Tenant\User;
 use App\Repositories\BranchRepository;
 use App\Repositories\DepartmentRepository;
 use App\Repositories\PositionRepository;
@@ -33,7 +34,7 @@ class StaffController extends Controller
 
     public function index(Request $request): View
     {
-        /** @var \App\Models\Tenant\User $user */
+        /** @var User $user */
         $user = $request->user();
         $staff = $this->repository->allWithRelations($this->branchScope->allowedBranchIds($user));
 
@@ -58,8 +59,12 @@ class StaffController extends Controller
         return redirect()->route('staff.index')->with('success', __('flash.staff.created'));
     }
 
-    public function edit(Staff $staff): View
+    public function edit(Request $request, Staff $staff): View
     {
+        /** @var User $user */
+        $user = $request->user();
+        $this->authorizeBranchAccess($staff, $user);
+
         $departments = $this->departmentRepository->allOrderedByName();
         $positions = $this->positionRepository->allOrderedByName();
         $branches = $this->branchRepository->allOrderedByName();
@@ -69,8 +74,12 @@ class StaffController extends Controller
         return view('tenant.staff.edit', compact('staff', 'departments', 'positions', 'branches', 'roles', 'unlinkedUsers'));
     }
 
-    public function show(Staff $staff): View
+    public function show(Request $request, Staff $staff): View
     {
+        /** @var User $user */
+        $user = $request->user();
+        $this->authorizeBranchAccess($staff, $user);
+
         $staff->load('user');
 
         return view('tenant.staff.show', compact('staff'));
@@ -78,15 +87,31 @@ class StaffController extends Controller
 
     public function update(StaffUpdateRequest $request, Staff $staff): RedirectResponse
     {
-        $this->service->update($staff, $request->toDto(), $request->user());
+        /** @var User $user */
+        $user = $request->user();
+        $this->authorizeBranchAccess($staff, $user);
+
+        $this->service->update($staff, $request->toDto(), $user);
 
         return redirect()->route('staff.index')->with('success', __('flash.staff.updated'));
     }
 
-    public function destroy(Staff $staff): RedirectResponse
+    public function destroy(Request $request, Staff $staff): RedirectResponse
     {
-        $this->service->delete($staff, auth()->user());
+        /** @var User $user */
+        $user = $request->user();
+        $this->authorizeBranchAccess($staff, $user);
+
+        $this->service->delete($staff, $user);
 
         return redirect()->route('staff.index')->with('success', __('flash.staff.deleted'));
+    }
+
+    private function authorizeBranchAccess(Staff $staff, User $user): void
+    {
+        abort_unless(
+            $staff->branch_id === null || in_array($staff->branch_id, $this->branchScope->allowedBranchIds($user), true),
+            403,
+        );
     }
 }

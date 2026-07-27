@@ -13,6 +13,7 @@ use App\Repositories\BranchRepository;
 use App\Repositories\CashbookRepository;
 use App\Services\BranchScopeService;
 use App\Services\CashbookService;
+use App\Support\CsvSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -111,14 +112,14 @@ class CashbookController extends Controller
             assert($handle !== false);
             fputcsv($handle, ['Date', 'Description', 'Reference', 'Type', 'Amount (' . $symbol . ')', 'Notes']);
             foreach ($entries as $entry) {
-                fputcsv($handle, [
+                fputcsv($handle, CsvSanitizer::sanitizeRow([
                     $entry->entry_date->format('Y-m-d'),
                     $entry->description,
                     $entry->reference ?? '',
                     $entry->type,
                     number_format((float) $entry->amount, 2, '.', ''),
                     $entry->notes ?? '',
-                ]);
+                ]));
             }
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv']);

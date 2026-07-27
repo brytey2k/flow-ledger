@@ -26,6 +26,14 @@ class RetirementRequestSubmitController extends Controller
                 ->with('error', __('flash.retirements.submit_only_draft'));
         }
 
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+
+        if ($user->staffProfile?->id !== $retirementRequest->paymentRequest?->staff_id) {
+            return redirect()->route('retirement-requests.show', $retirementRequest)
+                ->with('error', __('flash.retirements.submit_not_owner'));
+        }
+
         if ($this->settingsService->isRetirementSourceDocumentRequired() && $retirementRequest->attachments()->doesntExist()) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
                 ->with('error', __('flash.retirements.source_documents_required'));
@@ -43,8 +51,6 @@ class RetirementRequestSubmitController extends Controller
                 ->with('error', __('flash.retirements.no_workflow_stages'));
         }
 
-        /** @var \App\Models\Tenant\User $user */
-        $user = $request->user();
         $this->service->submit($retirementRequest, $user);
 
         return redirect()->route('retirement-requests.show', $retirementRequest)

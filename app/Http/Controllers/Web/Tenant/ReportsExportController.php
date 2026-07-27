@@ -12,6 +12,7 @@ use App\Models\Tenant\WorkflowAction;
 use App\Services\BranchScopeService;
 use App\Services\ReportService;
 use App\Services\RetirementReminderService;
+use App\Support\CsvSanitizer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -523,7 +524,7 @@ class ReportsExportController extends Controller
             fputcsv($handle, $headers);
             foreach ($rows as $row) {
                 // @phpstan-ignore-next-line
-                fputcsv($handle, $row);
+                fputcsv($handle, CsvSanitizer::sanitizeRow($row));
             }
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv']);

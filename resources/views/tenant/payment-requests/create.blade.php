@@ -228,7 +228,13 @@
 <script>
     let nextIndex = {{ count(old('items', [['description' => '', 'amount' => '']])) }};
 
-    const costCodeOptions = `@foreach($costCodes as $code)<option value="{{ $code->id }}">{{ $code->code }} — {{ addslashes($code->name) }}</option>@endforeach`;
+    const costCodes = @json($costCodes->map(fn ($code) => ['id' => $code->id, 'label' => $code->code.' — '.$code->name])->values());
+
+    function populateCostCodeSelect(select) {
+        costCodes.forEach(function (code) {
+            select.appendChild(new Option(code.label, code.id));
+        });
+    }
 
     function isExpense() {
         return document.getElementById('type').value === '{{ \App\Enums\Tenant\PaymentRequestType::Expense->value }}';
@@ -239,9 +245,8 @@
             <div class="expense-fields grid grid-cols-1 lg:grid-cols-2 gap-3" style="${isExpense() ? '' : 'display:none'}">
                 <div>
                     <label class="kt-form-label block mb-1 text-xs text-secondary-foreground">Cost Code *</label>
-                    <select name="items[${index}][cost_code_id]" class="kt-select w-full">
+                    <select name="items[${index}][cost_code_id]" class="kt-select w-full" data-cost-code-select>
                         <option value="">Select…</option>
-                        ${costCodeOptions}
                     </select>
                 </div>
                 <div>
@@ -275,6 +280,8 @@
             ${buildExpenseFields(nextIndex)}
         `;
         container.appendChild(div);
+        const select = div.querySelector('[data-cost-code-select]');
+        if (select) { populateCostCodeSelect(select); }
         nextIndex++;
     }
 

@@ -54,12 +54,38 @@ class UsersControllerTest extends TenantAppTestCase
         $this->actingAs($this->user)->get(route('users.edit', $user))->assertForbidden();
     }
 
-    public function test_user_without_access_permission_cannot_view_permissions_edit(): void
+    public function test_user_without_manage_permissions_permission_cannot_view_permissions_edit(): void
     {
-        $this->role->revokePermissionTo(PermissionKey::AccessUsers->value);
+        $this->role->revokePermissionTo(PermissionKey::ManageUserPermissions->value);
         $user = User::factory()->create();
 
         $this->actingAs($this->user)->get(route('users.permissions.edit', $user))->assertForbidden();
+    }
+
+    public function test_user_without_manage_permissions_permission_cannot_update_permissions(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ManageUserPermissions->value);
+        $user = User::factory()->create();
+        $permission = Permission::findOrCreate(PermissionKey::AccessCostCodes->value, 'web');
+
+        $this->actingAs($this->user)->put(route('users.permissions.update', $user), [
+            'permissions' => [$permission->id],
+        ])->assertForbidden();
+    }
+
+    public function test_access_users_permission_alone_does_not_grant_permissions_edit(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ManageUserPermissions->value);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        $user = User::factory()->create();
+
+        // Holding only the read-level "access users" permission (e.g. a user
+        // who can view the user list) must not be enough to reach the
+        // permissions-management endpoints.
+        $this->actingAs($this->user)->get(route('users.permissions.edit', $user))->assertForbidden();
+        $this->actingAs($this->user)->put(route('users.permissions.update', $user), [
+            'permissions' => [],
+        ])->assertForbidden();
     }
 
     public function test_user_without_create_permission_cannot_view_create(): void
@@ -169,6 +195,27 @@ class UsersControllerTest extends TenantAppTestCase
         $response->assertOk();
         $response->assertViewHas('user');
         $response->assertViewHas('roles');
+    }
+
+    public function test_edit_view_hides_manage_permissions_link_without_permission(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ManageUserPermissions->value);
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($this->user)->get(route('users.edit', $user));
+
+        $response->assertOk();
+        $response->assertDontSee(__('users.buttons.manage_perms'));
+    }
+
+    public function test_edit_view_shows_manage_permissions_link_with_permission(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($this->user)->get(route('users.edit', $user));
+
+        $response->assertOk();
+        $response->assertSee(__('users.buttons.manage_perms'));
     }
 
     // ── Update ────────────────────────────────────────────────────────────────

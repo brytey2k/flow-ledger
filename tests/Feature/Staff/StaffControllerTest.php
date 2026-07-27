@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Staff;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\Department;
 use App\Models\Tenant\Position;
 use App\Models\Tenant\Staff;
@@ -47,6 +48,69 @@ class StaffControllerTest extends TenantAppTestCase
         $response = $this->actingAs($this->user)->post(route('staff.store'), []);
 
         $response->assertForbidden();
+    }
+
+    // ── Branch scoping ───────────────────────────────────────────────────────
+
+    public function test_user_without_view_descendant_branches_cannot_view_out_of_branch_staff(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+        $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+        $response = $this->actingAs($this->user)->get(route('staff.show', $staff));
+
+        $response->assertForbidden();
+    }
+
+    public function test_user_without_view_descendant_branches_cannot_edit_out_of_branch_staff(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+        $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+        $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
+
+        $response->assertForbidden();
+    }
+
+    public function test_user_without_view_descendant_branches_cannot_update_out_of_branch_staff(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+        $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+        $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
+            'first_name' => 'Hacked',
+            'last_name' => $staff->last_name,
+            'department_id' => $staff->department_id,
+            'position_id' => $staff->position_id,
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('staff', ['id' => $staff->id, 'first_name' => 'Hacked']);
+    }
+
+    public function test_user_without_view_descendant_branches_cannot_delete_out_of_branch_staff(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+        $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+        $response = $this->actingAs($this->user)->delete(route('staff.destroy', $staff));
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('staff', ['id' => $staff->id, 'deleted_at' => null]);
+    }
+
+    public function test_user_can_view_staff_in_their_own_branch(): void
+    {
+        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+        $staff = Staff::factory()->withBranch($this->branch)->create();
+
+        $response = $this->actingAs($this->user)->get(route('staff.show', $staff));
+
+        $response->assertOk();
     }
 
     // ── One user per staff (unique constraint) ────────────────────────────────

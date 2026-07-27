@@ -36,7 +36,10 @@ class BackchannelLogoutControllerTest extends TenantAppTestCase
     {
         parent::setUp();
 
-        config(['sso.idp_url' => 'https://idp.test']);
+        config([
+            'sso.idp_url' => 'https://idp.test',
+            'sso.client_id' => 'flow-ledger-client',
+        ]);
 
         $this->mock(SsoClientService::class)
             ->shouldReceive('getIdpPublicKeyPem')
@@ -49,6 +52,9 @@ class BackchannelLogoutControllerTest extends TenantAppTestCase
         bool $expired = false,
         bool $missingEvents = false,
         bool $wrongIssuer = false,
+        bool $wrongAudience = false,
+        bool $missingJti = false,
+        string|null $jti = null,
     ): string {
         $config = Configuration::forAsymmetricSigner(
             new Sha256(),
@@ -57,11 +63,17 @@ class BackchannelLogoutControllerTest extends TenantAppTestCase
         );
 
         $issuer = $wrongIssuer ? 'https://wrong-idp.test' : 'https://idp.test';
+        $audience = $wrongAudience ? 'some-other-client' : 'flow-ledger-client';
 
         $builder = $config->builder()
             ->issuedBy($issuer)
+            ->permittedFor($audience)
             ->relatedTo($sub)
             ->withClaim('tid', $tid);
+
+        if (! $missingJti) {
+            $builder = $builder->identifiedBy($jti ?? 'jti-' . uniqid());
+        }
 
         if (! $missingEvents) {
             $builder = $builder->withClaim('events', [
@@ -124,6 +136,40 @@ class BackchannelLogoutControllerTest extends TenantAppTestCase
     public function test_returns_400_when_token_is_missing_backchannel_logout_event_claim(): void
     {
         $token = $this->makeLogoutToken('sub-abc', 'tid-abc', missingEvents: true);
+
+        $this->post(route('sso.backchannel-logout'), ['logout_token' => $token])
+            ->assertStatus(400)
+            ->assertSeeText('Invalid logout token');
+    }
+
+    public function test_returns_400_when_token_has_wrong_audience(): void
+    {
+        $token = $this->makeLogoutToken('sub-abc', 'tid-abc', wrongAudience: true);
+
+        $this->post(route('sso.backchannel-logout'), ['logout_token' => $token])
+            ->assertStatus(400)
+            ->assertSeeText('Invalid logout token');
+    }
+
+    public function test_returns_400_when_token_is_missing_jti_claim(): void
+    {
+        $token = $this->makeLogoutToken('sub-abc', 'tid-abc', missingJti: true);
+
+        $this->post(route('sso.backchannel-logout'), ['logout_token' => $token])
+            ->assertStatus(400)
+            ->assertSeeText('Invalid logout token');
+    }
+
+    public function test_returns_400_when_logout_token_is_replayed(): void
+    {
+        // Use a tid with no matching tenant so the request short-circuits
+        // before the controller re-initializes tenancy — that re-init tears
+        // down and reconnects the tenant DB connection, which would silently
+        // discard this test's uncommitted transaction and defeat the assertion.
+        $token = $this->makeLogoutToken('sub-' . uniqid(), 'unknown-tid-' . uniqid());
+
+        $this->post(route('sso.backchannel-logout'), ['logout_token' => $token])
+            ->assertStatus(200);
 
         $this->post(route('sso.backchannel-logout'), ['logout_token' => $token])
             ->assertStatus(400)

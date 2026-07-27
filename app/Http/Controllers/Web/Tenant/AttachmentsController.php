@@ -10,6 +10,7 @@ use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Services\AttachmentService;
+use App\Services\BranchScopeService;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class AttachmentsController extends Controller
     public function __construct(
         private readonly AttachmentService $service,
         private readonly WorkflowEngineService $engine,
+        private readonly BranchScopeService $branchScope,
     ) {}
 
     public function store(Request $request, RetirementRequest $retirementRequest): RedirectResponse
@@ -33,6 +35,11 @@ class AttachmentsController extends Controller
         $file = $request->file('file');
         /** @var User $user */
         $user = $request->user();
+
+        $branchIds = $this->branchScope->allowedBranchIds($user);
+        $paymentBranchId = $retirementRequest->paymentRequest?->branch_id;
+        abort_unless($paymentBranchId !== null && in_array($paymentBranchId, $branchIds, true), 403);
+        abort_unless($retirementRequest->paymentRequest?->staff?->user_id === $user->id, 403);
 
         $this->service->store($retirementRequest, $file, $user);
 

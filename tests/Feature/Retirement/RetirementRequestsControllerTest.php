@@ -300,15 +300,28 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
 
     // ── Submit ────────────────────────────────────────────────────────────────
 
+    private function draftRetirementWithOwner(): RetirementRequest
+    {
+        $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $paymentRequest = PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        return RetirementRequest::factory()->create([
+            'status' => 'draft',
+            'payment_request_id' => $paymentRequest->id,
+        ]);
+    }
+
     public function test_submit_transitions_draft_to_in_workflow(): void
     {
         $template = WorkflowTemplate::factory()->retirement()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
 
-        $retirement = RetirementRequest::factory()->create([
-            'status' => 'draft',
-            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
-        ]);
+        $retirement = $this->draftRetirementWithOwner();
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
 
@@ -324,10 +337,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $template = WorkflowTemplate::factory()->retirement()->create();
         WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
 
-        $retirement = RetirementRequest::factory()->create([
-            'status' => 'draft',
-            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
-        ]);
+        $retirement = $this->draftRetirementWithOwner();
 
         $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
 
@@ -341,10 +351,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
     public function test_cannot_submit_when_no_workflow_template_exists(): void
     {
         WorkflowTemplate::query()->delete();
-        $retirement = RetirementRequest::factory()->create([
-            'status' => 'draft',
-            'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
-        ]);
+        $retirement = $this->draftRetirementWithOwner();
 
         $response = $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
 
@@ -358,6 +365,22 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
     public function test_cannot_submit_when_workflow_template_has_no_stages(): void
     {
         WorkflowTemplate::factory()->retirement()->create();
+        $retirement = $this->draftRetirementWithOwner();
+
+        $response = $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
+
+        $response->assertRedirect(route('retirement-requests.show', $retirement));
+        $response->assertSessionHas('error');
+
+        $retirement->refresh();
+        $this->assertSame('draft', $retirement->status);
+    }
+
+    public function test_non_owner_cannot_submit_retirement(): void
+    {
+        $template = WorkflowTemplate::factory()->retirement()->create();
+        WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+
         $retirement = RetirementRequest::factory()->create([
             'status' => 'draft',
             'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
@@ -368,8 +391,7 @@ class RetirementRequestsControllerTest extends TenantAppTestCase
         $response->assertRedirect(route('retirement-requests.show', $retirement));
         $response->assertSessionHas('error');
 
-        $retirement->refresh();
-        $this->assertSame('draft', $retirement->status);
+        $this->assertDatabaseHas('retirement_requests', ['id' => $retirement->id, 'status' => 'draft']);
     }
 
     // ── Edit ─────────────────────────────────────────────────────────────────

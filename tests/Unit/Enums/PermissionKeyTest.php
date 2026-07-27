@@ -24,6 +24,11 @@ class PermissionKeyTest extends TestCase
         $this->assertSame('access users', PermissionKey::AccessUsers->value);
     }
 
+    public function test_manage_user_permissions_value(): void
+    {
+        $this->assertSame('manage user permissions', PermissionKey::ManageUserPermissions->value);
+    }
+
     public function test_view_descendant_branches_value(): void
     {
         $this->assertSame('view descendant branches', PermissionKey::ViewDescendantBranches->value);

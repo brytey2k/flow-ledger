@@ -118,10 +118,12 @@
                             <i class="ki-filled ki-check"></i>
                             {{ __('users.buttons.update') }}
                         </button>
-                        <a class="kt-btn kt-btn-outline" href="{{ route('users.permissions.edit', $user) }}">
-                            <i class="ki-filled ki-security-user"></i>
-                            {{ __('users.buttons.manage_perms') }}
-                        </a>
+                        @can(\App\Enums\Tenant\PermissionKey::ManageUserPermissions->value)
+                            <a class="kt-btn kt-btn-outline" href="{{ route('users.permissions.edit', $user) }}">
+                                <i class="ki-filled ki-security-user"></i>
+                                {{ __('users.buttons.manage_perms') }}
+                            </a>
+                        @endcan
                         <a class="kt-btn kt-btn-light" href="{{ route('users.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                     @can(\App\Enums\Tenant\PermissionKey::DeleteUser->value)

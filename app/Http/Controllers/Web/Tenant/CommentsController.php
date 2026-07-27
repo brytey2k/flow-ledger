@@ -8,14 +8,25 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\CommentStoreRequest;
 use App\Models\Tenant\Comment;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\User;
+use App\Services\BranchScopeService;
+use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 
 class CommentsController extends Controller
 {
+    public function __construct(
+        private readonly BranchScopeService $branchScope,
+        private readonly WorkflowEngineService $workflowEngine,
+    ) {}
+
     public function store(CommentStoreRequest $request, PaymentRequest $paymentRequest): RedirectResponse
     {
-        /** @var \App\Models\Tenant\User $user */
+        /** @var User $user */
         $user = $request->user();
+
+        abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+        abort_unless($this->canComment($paymentRequest, $user), 403);
 
         $dto = $request->toDto();
 
@@ -30,7 +41,7 @@ class CommentsController extends Controller
 
     public function destroy(PaymentRequest $paymentRequest, Comment $comment): RedirectResponse
     {
-        /** @var \App\Models\Tenant\User $user */
+        /** @var User $user */
         $user = auth()->user();
 
         abort_unless($comment->user_id === $user->id, 403);
@@ -39,5 +50,14 @@ class CommentsController extends Controller
 
         return redirect()->route('payment-requests.show', $paymentRequest)
             ->with('success', __('flash.comments.deleted'));
+    }
+
+    private function canComment(PaymentRequest $paymentRequest, User $user): bool
+    {
+        if ($user->staffProfile?->id === $paymentRequest->staff_id) {
+            return true;
+        }
+
+        return $this->workflowEngine->userIsInApprovalChain($paymentRequest, $user);
     }
 }

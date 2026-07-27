@@ -22,7 +22,13 @@ class AttachmentsControllerTest extends TenantAppTestCase
 {
     private function draftRetirement(): RetirementRequest
     {
-        $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
+        $staff = Staff::factory()->withUser($this->user)->create(['branch_id' => $this->branch->id]);
+        $advance = PaymentRequest::factory()->advance()->create([
+            'staff_id' => $staff->id,
+            'branch_id' => $this->branch->id,
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+        ]);
 
         return RetirementRequest::factory()->create([
             'payment_request_id' => $advance->id,
@@ -88,6 +94,19 @@ class AttachmentsControllerTest extends TenantAppTestCase
         $retirement = $this->draftRetirement();
 
         $this->actingAs($this->user)
+            ->post(route('retirement-requests.attachments.store', $retirement), [
+                'file' => UploadedFile::fake()->create('receipt.pdf', 100, 'application/pdf'),
+            ])->assertForbidden();
+    }
+
+    public function test_non_owner_cannot_upload(): void
+    {
+        Storage::fake('local');
+        $retirement = $this->draftRetirement();
+        $otherUser = User::factory()->create(['operational_branch_id' => $this->branch->id]);
+        $otherUser->assignRole($this->role);
+
+        $this->actingAs($otherUser)
             ->post(route('retirement-requests.attachments.store', $retirement), [
                 'file' => UploadedFile::fake()->create('receipt.pdf', 100, 'application/pdf'),
             ])->assertForbidden();

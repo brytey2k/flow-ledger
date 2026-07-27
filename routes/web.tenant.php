@@ -383,10 +383,10 @@ Route::middleware([
             ->name('activity-log.show');
 
         Route::get('/users/{user}/permissions', [UsersController::class, 'editPermissions'])
-            ->can(PermissionKey::AccessUsers->value)
+            ->can(PermissionKey::ManageUserPermissions->value)
             ->name('users.permissions.edit');
         Route::put('/users/{user}/permissions', [UsersController::class, 'updatePermissions'])
-            ->can(PermissionKey::AccessUsers->value)
+            ->can(PermissionKey::ManageUserPermissions->value)
             ->name('users.permissions.update');
 
         // Roles

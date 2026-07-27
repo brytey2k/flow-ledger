@@ -464,4 +464,24 @@ class CashbookControllerTest extends TenantAppTestCase
         $this->assertStringContainsString('Debit entry', $content);
         $this->assertStringNotContainsString('Credit entry', $content);
     }
+
+    public function test_export_neutralises_formula_injection_in_free_text_fields(): void
+    {
+        $cashbook = $this->cashbookForBranch();
+        $this->manualEntry($cashbook, 100.00, [
+            'description' => '=HYPERLINK("http://evil.test","click")',
+            'reference' => '+cmd|"/c calc"',
+            'notes' => '@SUM(1+1)',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('cashbook.export', $this->branch));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('"\'=HYPERLINK(""http://evil.test"",""click"")"', $content);
+        $this->assertStringContainsString('"\'+cmd|""/c calc"""', $content);
+        $this->assertStringContainsString('\'@SUM(1+1)', $content);
+    }
 }

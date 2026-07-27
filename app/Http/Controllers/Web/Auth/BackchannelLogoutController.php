@@ -12,12 +12,14 @@ use App\Services\IdpBackchannelLogoutFailureReporterService;
 use App\Services\SsoClientService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token\Plain;
 use Lcobucci\JWT\Validation\Constraint\IssuedBy;
+use Lcobucci\JWT\Validation\Constraint\PermittedFor;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use RuntimeException;
@@ -115,9 +117,16 @@ class BackchannelLogoutController extends Controller
             throw new RuntimeException('Missing logout token issuer.');
         }
 
+        $audience = config()->string('sso.client_id');
+
+        if ($audience === '') {
+            throw new RuntimeException('Missing logout token audience.');
+        }
+
         $configuration = $configuration->withValidationConstraints(
             new SignedWith($configuration->signer(), $configuration->verificationKey()),
             new IssuedBy($issuer),
+            new PermittedFor($audience),
         );
 
         if ($rawToken === '') {
@@ -150,6 +159,29 @@ class BackchannelLogoutController extends Controller
 
         if (! is_array($events) || ! array_key_exists('http://schemas.openid.net/event/backchannel-logout', $events)) {
             throw new RuntimeException('Missing backchannel-logout event claim.');
+        }
+
+        $jti = $token->claims()->get('jti', '');
+
+        if (! is_string($jti) || $jti === '') {
+            throw new RuntimeException('Missing jti claim.');
+        }
+
+        $expiresAt = $token->claims()->get('exp');
+
+        if (! $expiresAt instanceof \DateTimeImmutable) {
+            throw new RuntimeException('Missing exp claim.');
+        }
+
+        // Explicit store name bypasses Stancl's tenant cache tagging: this check
+        // runs before tenancy is (re-)initialized for the token's tenant, so a
+        // tag-scoped write here would be invisible to a replay of the same
+        // token once tenancy context differs.
+        $replayed = ! Cache::store(config()->string('cache.default'))
+            ->add("backchannel_logout_jti:{$jti}", true, $expiresAt);
+
+        if ($replayed) {
+            throw new RuntimeException('Logout token has already been used.');
         }
 
         $sub = $token->claims()->get('sub', '');
