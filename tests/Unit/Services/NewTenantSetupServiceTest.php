@@ -29,6 +29,16 @@ class NewTenantSetupServiceTest extends TenantAppTestCase
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
+    /** @param list<string> $expectedPermissionNames */
+    private function assertRoleHasExactPermissions(string $roleName, array $expectedPermissionNames): void
+    {
+        $role = Role::where('name', $roleName)->where('guard_name', 'web')->first();
+        $this->assertNotNull($role, "Role [{$roleName}] was not created.");
+
+        $actualNames = $role->permissions()->pluck('name')->sort()->values()->all();
+        $this->assertSame(collect($expectedPermissionNames)->sort()->values()->all(), $actualNames);
+    }
+
     // ── handleReset ───────────────────────────────────────────────────────────
 
     public function test_handle_reset_creates_all_permission_keys(): void
@@ -89,6 +99,96 @@ class NewTenantSetupServiceTest extends TenantAppTestCase
         $adminUser = User::where('email', $adminEmail)->first();
         $this->assertNotNull($adminUser);
         $this->assertTrue($adminUser->hasRole('admin'));
+    }
+
+    public function test_handle_reset_creates_finance_officer_role_with_expected_permissions(): void
+    {
+        $this->clearTenantState();
+
+        app(NewTenantSetupService::class)->handleReset($this->tenant);
+
+        $this->assertRoleHasExactPermissions('Finance Officer', [
+            'access payment requests',
+            'access retirement requests',
+            'approve requests',
+            'create payment request',
+            'create retirement request',
+        ]);
+    }
+
+    public function test_handle_reset_creates_finance_manager_role_with_expected_permissions(): void
+    {
+        $this->clearTenantState();
+
+        app(NewTenantSetupService::class)->handleReset($this->tenant);
+
+        $this->assertRoleHasExactPermissions('Finance Manager', [
+            'access payment requests',
+            'access retirement requests',
+            'approve requests',
+            'create payment request',
+            'create retirement request',
+        ]);
+    }
+
+    public function test_handle_reset_creates_finance_director_role_with_expected_permissions(): void
+    {
+        $this->clearTenantState();
+
+        app(NewTenantSetupService::class)->handleReset($this->tenant);
+
+        $this->assertRoleHasExactPermissions('Finance Director', [
+            'access payment requests',
+            'access retirement requests',
+            'approve requests',
+            'create payment request',
+            'create retirement request',
+        ]);
+    }
+
+    public function test_handle_reset_creates_disbursement_officer_role_with_expected_permissions(): void
+    {
+        $this->clearTenantState();
+
+        app(NewTenantSetupService::class)->handleReset($this->tenant);
+
+        $this->assertRoleHasExactPermissions('Disbursement Officer', [
+            'access payment requests',
+            'access retirement requests',
+            'approve requests',
+            'create payment request',
+            'disburse requests',
+            'settle retirements',
+        ]);
+    }
+
+    // ── handle ────────────────────────────────────────────────────────────────
+
+    public function test_handle_creates_default_roles_with_expected_permissions(): void
+    {
+        $this->clearTenantState();
+
+        app(NewTenantSetupService::class)->handle($this->tenant, 'admin@newco.test', 'secret123');
+
+        $financePermissions = [
+            'access payment requests',
+            'access retirement requests',
+            'approve requests',
+            'create payment request',
+            'create retirement request',
+        ];
+
+        $this->assertRoleHasExactPermissions('Finance Officer', $financePermissions);
+        $this->assertRoleHasExactPermissions('Finance Manager', $financePermissions);
+        $this->assertRoleHasExactPermissions('Finance Director', $financePermissions);
+        $this->assertRoleHasExactPermissions('Disbursement Officer', [
+            'access payment requests',
+            'access retirement requests',
+            'approve requests',
+            'create payment request',
+            'disburse requests',
+            'settle retirements',
+        ]);
     }
 
     // ── createTenant ──────────────────────────────────────────────────────────

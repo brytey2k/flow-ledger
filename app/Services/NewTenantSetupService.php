@@ -19,6 +19,39 @@ use Stancl\Tenancy\Contracts\TenantWithDatabase;
 
 class NewTenantSetupService
 {
+    /** @var array<string, list<PermissionKey>> */
+    private const DEFAULT_ROLE_PERMISSIONS = [
+        'Finance Officer' => [
+            PermissionKey::AccessPaymentRequests,
+            PermissionKey::AccessRetirementRequests,
+            PermissionKey::ApproveRequests,
+            PermissionKey::CreatePaymentRequest,
+            PermissionKey::CreateRetirementRequest,
+        ],
+        'Finance Manager' => [
+            PermissionKey::AccessPaymentRequests,
+            PermissionKey::AccessRetirementRequests,
+            PermissionKey::ApproveRequests,
+            PermissionKey::CreatePaymentRequest,
+            PermissionKey::CreateRetirementRequest,
+        ],
+        'Finance Director' => [
+            PermissionKey::AccessPaymentRequests,
+            PermissionKey::AccessRetirementRequests,
+            PermissionKey::ApproveRequests,
+            PermissionKey::CreatePaymentRequest,
+            PermissionKey::CreateRetirementRequest,
+        ],
+        'Disbursement Officer' => [
+            PermissionKey::AccessPaymentRequests,
+            PermissionKey::AccessRetirementRequests,
+            PermissionKey::ApproveRequests,
+            PermissionKey::CreatePaymentRequest,
+            PermissionKey::DisburseRequests,
+            PermissionKey::SettleRetirements,
+        ],
+    ];
+
     public function handle(TenantWithDatabase $tenant, string $adminEmail, string $adminPassword): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -27,6 +60,8 @@ class NewTenantSetupService
 
         $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'web']);
         $adminRole->givePermissionTo(Permission::all());
+
+        $this->createDefaultRoles();
 
         $branch = $this->createDefaultBranch();
 
@@ -50,6 +85,8 @@ class NewTenantSetupService
 
         $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'web']);
         $adminRole->givePermissionTo(Permission::all());
+
+        $this->createDefaultRoles();
 
         $centralDomain = parse_url(config()->string('app.url'), PHP_URL_HOST);
 
@@ -92,6 +129,17 @@ class NewTenantSetupService
     {
         foreach (PermissionKey::cases() as $key) {
             Permission::create(['name' => $key->value, 'guard_name' => 'web']);
+        }
+    }
+
+    protected function createDefaultRoles(): void
+    {
+        foreach (self::DEFAULT_ROLE_PERMISSIONS as $roleName => $permissionKeys) {
+            $role = Role::create(['name' => $roleName, 'guard_name' => 'web']);
+            $role->givePermissionTo(array_map(
+                static fn(PermissionKey $key): string => $key->value,
+                $permissionKeys,
+            ));
         }
     }
 
