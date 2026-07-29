@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Web\Tenant;
+namespace App\Http\Controllers\Web\Landlord;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -21,12 +21,6 @@ class LocaleController extends Controller
         }
 
         $request->session()->put('locale', $locale);
-
-        $user = $request->user();
-
-        if ($user instanceof \App\Models\Tenant\User && $user->locale !== $locale) {
-            $user->forceFill(['locale' => $locale])->save();
-        }
 
         return back();
     }
