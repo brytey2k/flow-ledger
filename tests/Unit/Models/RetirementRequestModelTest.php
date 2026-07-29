@@ -2,111 +2,83 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Models;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
-use Tests\TenantAppTestCase;
 
-class RetirementRequestModelTest extends TenantAppTestCase
-{
-    public function test_is_draft_returns_true_when_status_is_draft(): void
-    {
-        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+test('is draft returns true when status is draft', function () {
+    $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
 
-        $this->assertTrue($retirement->isDraft());
-    }
+    expect($retirement->isDraft())->toBeTrue();
+});
+test('is draft returns false when status is not draft', function () {
+    $retirement = RetirementRequest::factory()->create(['status' => 'in_workflow']);
 
-    public function test_is_draft_returns_false_when_status_is_not_draft(): void
-    {
-        $retirement = RetirementRequest::factory()->create(['status' => 'in_workflow']);
+    expect($retirement->isDraft())->toBeFalse();
+});
+test('is sent back returns true when status is sent back', function () {
+    $retirement = RetirementRequest::factory()->create(['status' => 'sent_back']);
 
-        $this->assertFalse($retirement->isDraft());
-    }
+    expect($retirement->isSentBack())->toBeTrue();
+});
+test('is sent back returns false for other statuses', function () {
+    $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
 
-    public function test_is_sent_back_returns_true_when_status_is_sent_back(): void
-    {
-        $retirement = RetirementRequest::factory()->create(['status' => 'sent_back']);
+    expect($retirement->isSentBack())->toBeFalse();
+});
+test('get type attribute returns retirement', function () {
+    $retirement = RetirementRequest::factory()->create();
 
-        $this->assertTrue($retirement->isSentBack());
-    }
+    expect($retirement->getTypeAttribute())->toBe('retirement');
+});
+test('payment request relation loads correctly', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
+    $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
 
-    public function test_is_sent_back_returns_false_for_other_statuses(): void
-    {
-        $retirement = RetirementRequest::factory()->create(['status' => 'draft']);
+    expect($retirement->paymentRequest->id)->toEqual($paymentRequest->id);
+});
+test('settled by relation loads user', function () {
+    $user = App\Models\Tenant\User::factory()->create();
+    $retirement = RetirementRequest::factory()->create(['settled_by_user_id' => $user->id]);
 
-        $this->assertFalse($retirement->isSentBack());
-    }
+    expect($retirement->settledBy?->id)->toEqual($user->id);
+});
+test('staff relation resolves through payment request', function () {
+    $staff = App\Models\Tenant\Staff::factory()->create();
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'disbursed',
+        'disbursed_at' => now(),
+        'staff_id' => $staff->id,
+    ]);
+    $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
 
-    public function test_get_type_attribute_returns_retirement(): void
-    {
-        $retirement = RetirementRequest::factory()->create();
+    expect($retirement->staff->id)->toEqual($staff->id);
+});
+test('branch relation resolves through payment request', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'disbursed',
+        'disbursed_at' => now(),
+    ]);
+    $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
 
-        $this->assertSame('retirement', $retirement->getTypeAttribute());
-    }
+    expect($retirement->branch)->not->toBeNull();
+});
+test('currency relation resolves through payment request', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'disbursed',
+        'disbursed_at' => now(),
+    ]);
+    $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
 
-    public function test_payment_request_relation_loads_correctly(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now()]);
-        $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
+    expect($retirement->currency)->not->toBeNull();
+});
+test('items relation returns has many', function () {
+    $retirement = RetirementRequest::factory()->create();
 
-        $this->assertEquals($paymentRequest->id, $retirement->paymentRequest->id);
-    }
+    expect($retirement->items)->toBeInstanceOf(Illuminate\Database\Eloquent\Collection::class);
+});
+test('workflow instances relation returns morph many', function () {
+    $retirement = RetirementRequest::factory()->create();
 
-    public function test_settled_by_relation_loads_user(): void
-    {
-        $user = \App\Models\Tenant\User::factory()->create();
-        $retirement = RetirementRequest::factory()->create(['settled_by_user_id' => $user->id]);
-
-        $this->assertEquals($user->id, $retirement->settledBy?->id);
-    }
-
-    public function test_staff_relation_resolves_through_payment_request(): void
-    {
-        $staff = \App\Models\Tenant\Staff::factory()->create();
-        $paymentRequest = PaymentRequest::factory()->advance()->create([
-            'status' => 'disbursed',
-            'disbursed_at' => now(),
-            'staff_id' => $staff->id,
-        ]);
-        $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
-
-        $this->assertEquals($staff->id, $retirement->staff->id);
-    }
-
-    public function test_branch_relation_resolves_through_payment_request(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create([
-            'status' => 'disbursed',
-            'disbursed_at' => now(),
-        ]);
-        $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
-
-        $this->assertNotNull($retirement->branch);
-    }
-
-    public function test_currency_relation_resolves_through_payment_request(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create([
-            'status' => 'disbursed',
-            'disbursed_at' => now(),
-        ]);
-        $retirement = RetirementRequest::factory()->create(['payment_request_id' => $paymentRequest->id]);
-
-        $this->assertNotNull($retirement->currency);
-    }
-
-    public function test_items_relation_returns_has_many(): void
-    {
-        $retirement = RetirementRequest::factory()->create();
-
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $retirement->items);
-    }
-
-    public function test_workflow_instances_relation_returns_morph_many(): void
-    {
-        $retirement = RetirementRequest::factory()->create();
-
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $retirement->workflowInstances);
-    }
-}
+    expect($retirement->workflowInstances)->toBeInstanceOf(Illuminate\Database\Eloquent\Collection::class);
+});

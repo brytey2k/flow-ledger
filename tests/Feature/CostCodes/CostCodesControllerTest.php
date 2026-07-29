@@ -2,204 +2,148 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\CostCodes;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\CostCode;
 use App\Models\Tenant\Department;
-use Tests\TenantAppTestCase;
 
-class CostCodesControllerTest extends TenantAppTestCase
-{
-    // ── Authentication ────────────────────────────────────────────────────────
+test('guest is redirected from index', function () {
+    $this->get(route('cost-codes.index'))->assertRedirect(route('login'));
+});
+test('guest is redirected from create', function () {
+    $this->get(route('cost-codes.create'))->assertRedirect(route('login'));
+});
+test('guest is redirected from store', function () {
+    $this->post(route('cost-codes.store'), [])->assertRedirect(route('login'));
+});
+test('user without access permission cannot view index', function () {
+    $this->role->revokePermissionTo(PermissionKey::AccessCostCodes->value);
 
-    public function test_guest_is_redirected_from_index(): void
-    {
-        $this->get(route('cost-codes.index'))->assertRedirect(route('login'));
-    }
+    $this->actingAs($this->user)->get(route('cost-codes.index'))->assertForbidden();
+});
+test('user without access permission cannot view edit', function () {
+    $this->role->revokePermissionTo(PermissionKey::AccessCostCodes->value);
+    $costCode = CostCode::factory()->create();
 
-    public function test_guest_is_redirected_from_create(): void
-    {
-        $this->get(route('cost-codes.create'))->assertRedirect(route('login'));
-    }
+    $this->actingAs($this->user)->get(route('cost-codes.edit', $costCode))->assertForbidden();
+});
+test('user without create permission cannot view create', function () {
+    $this->role->revokePermissionTo(PermissionKey::CreateCostCode->value);
 
-    public function test_guest_is_redirected_from_store(): void
-    {
-        $this->post(route('cost-codes.store'), [])->assertRedirect(route('login'));
-    }
+    $this->actingAs($this->user)->get(route('cost-codes.create'))->assertForbidden();
+});
+test('user without create permission cannot store', function () {
+    $this->role->revokePermissionTo(PermissionKey::CreateCostCode->value);
+    $department = Department::factory()->create();
 
-    // ── Authorization ─────────────────────────────────────────────────────────
+    $this->actingAs($this->user)->post(route('cost-codes.store'), [
+        'name' => 'Test Code',
+        'code' => 'TC-0001',
+        'department_id' => $department->id,
+    ])->assertForbidden();
+});
+test('user without delete permission cannot destroy', function () {
+    $this->role->revokePermissionTo(PermissionKey::DeleteCostCode->value);
+    $costCode = CostCode::factory()->create();
 
-    public function test_user_without_access_permission_cannot_view_index(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::AccessCostCodes->value);
+    $this->actingAs($this->user)->delete(route('cost-codes.destroy', $costCode))->assertForbidden();
+});
+test('authorised user can view index', function () {
+    $this->actingAs($this->user)->get(route('cost-codes.index'))->assertOk();
+});
+test('authorised user can view create form with departments', function () {
+    Department::factory()->create();
 
-        $this->actingAs($this->user)->get(route('cost-codes.index'))->assertForbidden();
-    }
+    $response = $this->actingAs($this->user)->get(route('cost-codes.create'));
 
-    public function test_user_without_access_permission_cannot_view_edit(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::AccessCostCodes->value);
-        $costCode = CostCode::factory()->create();
+    $response->assertOk();
+    $response->assertViewHas('departments');
+});
+test('authorised user can store valid cost code', function () {
+    $department = Department::factory()->create();
 
-        $this->actingAs($this->user)->get(route('cost-codes.edit', $costCode))->assertForbidden();
-    }
+    $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
+        'name' => 'Office Supplies',
+        'code' => 'OS-1001',
+        'department_id' => $department->id,
+    ]);
 
-    public function test_user_without_create_permission_cannot_view_create(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::CreateCostCode->value);
+    $response->assertRedirect(route('cost-codes.index'));
+    $this->assertDatabaseHas('cost_codes', [
+        'name' => 'Office Supplies',
+        'code' => 'OS-1001',
+        'department_id' => $department->id,
+    ]);
+});
+test('store fails validation when name is missing', function () {
+    $department = Department::factory()->create();
 
-        $this->actingAs($this->user)->get(route('cost-codes.create'))->assertForbidden();
-    }
+    $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
+        'code' => 'OS-1001',
+        'department_id' => $department->id,
+    ]);
 
-    public function test_user_without_create_permission_cannot_store(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::CreateCostCode->value);
-        $department = Department::factory()->create();
+    $response->assertSessionHasErrors('name');
+});
+test('store fails validation when code is missing', function () {
+    $department = Department::factory()->create();
 
-        $this->actingAs($this->user)->post(route('cost-codes.store'), [
-            'name' => 'Test Code',
-            'code' => 'TC-0001',
-            'department_id' => $department->id,
-        ])->assertForbidden();
-    }
+    $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
+        'name' => 'Office Supplies',
+        'department_id' => $department->id,
+    ]);
 
-    public function test_user_without_delete_permission_cannot_destroy(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::DeleteCostCode->value);
-        $costCode = CostCode::factory()->create();
+    $response->assertSessionHasErrors('code');
+});
+test('store fails validation when department id is missing', function () {
+    $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
+        'name' => 'Office Supplies',
+        'code' => 'OS-1001',
+    ]);
 
-        $this->actingAs($this->user)->delete(route('cost-codes.destroy', $costCode))->assertForbidden();
-    }
+    $response->assertSessionHasErrors('department_id');
+});
+test('store fails validation when department id does not exist', function () {
+    $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
+        'name' => 'Office Supplies',
+        'code' => 'OS-1001',
+        'department_id' => 99999,
+    ]);
 
-    // ── Index ─────────────────────────────────────────────────────────────────
+    $response->assertSessionHasErrors('department_id');
+});
+test('authorised user can view edit form', function () {
+    $costCode = CostCode::factory()->create();
 
-    public function test_authorised_user_can_view_index(): void
-    {
-        $this->actingAs($this->user)->get(route('cost-codes.index'))->assertOk();
-    }
+    $response = $this->actingAs($this->user)->get(route('cost-codes.edit', $costCode));
 
-    // ── Create ────────────────────────────────────────────────────────────────
+    $response->assertOk();
+    $response->assertViewHas('costCode');
+    $response->assertViewHas('departments');
+});
+test('authorised user can update cost code', function () {
+    $costCode = CostCode::factory()->create();
+    $department = Department::factory()->create();
 
-    public function test_authorised_user_can_view_create_form_with_departments(): void
-    {
-        Department::factory()->create();
+    $response = $this->actingAs($this->user)->put(route('cost-codes.update', $costCode), [
+        'name' => 'Updated Name',
+        'code' => 'UP-9999',
+        'department_id' => $department->id,
+    ]);
 
-        $response = $this->actingAs($this->user)->get(route('cost-codes.create'));
+    $response->assertRedirect(route('cost-codes.index'));
+    $this->assertDatabaseHas('cost_codes', [
+        'id' => $costCode->id,
+        'name' => 'Updated Name',
+        'code' => 'UP-9999',
+        'department_id' => $department->id,
+    ]);
+});
+test('authorised user can destroy cost code', function () {
+    $costCode = CostCode::factory()->create();
 
-        $response->assertOk();
-        $response->assertViewHas('departments');
-    }
+    $response = $this->actingAs($this->user)->delete(route('cost-codes.destroy', $costCode));
 
-    // ── Store ─────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_store_valid_cost_code(): void
-    {
-        $department = Department::factory()->create();
-
-        $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
-            'name' => 'Office Supplies',
-            'code' => 'OS-1001',
-            'department_id' => $department->id,
-        ]);
-
-        $response->assertRedirect(route('cost-codes.index'));
-        $this->assertDatabaseHas('cost_codes', [
-            'name' => 'Office Supplies',
-            'code' => 'OS-1001',
-            'department_id' => $department->id,
-        ]);
-    }
-
-    public function test_store_fails_validation_when_name_is_missing(): void
-    {
-        $department = Department::factory()->create();
-
-        $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
-            'code' => 'OS-1001',
-            'department_id' => $department->id,
-        ]);
-
-        $response->assertSessionHasErrors('name');
-    }
-
-    public function test_store_fails_validation_when_code_is_missing(): void
-    {
-        $department = Department::factory()->create();
-
-        $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
-            'name' => 'Office Supplies',
-            'department_id' => $department->id,
-        ]);
-
-        $response->assertSessionHasErrors('code');
-    }
-
-    public function test_store_fails_validation_when_department_id_is_missing(): void
-    {
-        $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
-            'name' => 'Office Supplies',
-            'code' => 'OS-1001',
-        ]);
-
-        $response->assertSessionHasErrors('department_id');
-    }
-
-    public function test_store_fails_validation_when_department_id_does_not_exist(): void
-    {
-        $response = $this->actingAs($this->user)->post(route('cost-codes.store'), [
-            'name' => 'Office Supplies',
-            'code' => 'OS-1001',
-            'department_id' => 99999,
-        ]);
-
-        $response->assertSessionHasErrors('department_id');
-    }
-
-    // ── Edit ──────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_view_edit_form(): void
-    {
-        $costCode = CostCode::factory()->create();
-
-        $response = $this->actingAs($this->user)->get(route('cost-codes.edit', $costCode));
-
-        $response->assertOk();
-        $response->assertViewHas('costCode');
-        $response->assertViewHas('departments');
-    }
-
-    // ── Update ────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_update_cost_code(): void
-    {
-        $costCode = CostCode::factory()->create();
-        $department = Department::factory()->create();
-
-        $response = $this->actingAs($this->user)->put(route('cost-codes.update', $costCode), [
-            'name' => 'Updated Name',
-            'code' => 'UP-9999',
-            'department_id' => $department->id,
-        ]);
-
-        $response->assertRedirect(route('cost-codes.index'));
-        $this->assertDatabaseHas('cost_codes', [
-            'id' => $costCode->id,
-            'name' => 'Updated Name',
-            'code' => 'UP-9999',
-            'department_id' => $department->id,
-        ]);
-    }
-
-    // ── Destroy ───────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_destroy_cost_code(): void
-    {
-        $costCode = CostCode::factory()->create();
-
-        $response = $this->actingAs($this->user)->delete(route('cost-codes.destroy', $costCode));
-
-        $response->assertRedirect(route('cost-codes.index'));
-        $this->assertSoftDeleted('cost_codes', ['id' => $costCode->id]);
-    }
-}
+    $response->assertRedirect(route('cost-codes.index'));
+    $this->assertSoftDeleted('cost_codes', ['id' => $costCode->id]);
+});

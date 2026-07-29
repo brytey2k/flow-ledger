@@ -2,441 +2,369 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Staff;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Department;
 use App\Models\Tenant\Position;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\User;
-use Tests\TenantAppTestCase;
 
-class StaffControllerTest extends TenantAppTestCase
-{
-    // ── Authentication ────────────────────────────────────────────────────────
-
-    public function test_guest_is_redirected_from_index(): void
-    {
-        $response = $this->get(route('staff.index'));
-
-        $response->assertRedirect(route('login'));
-    }
-
-    public function test_guest_cannot_create_staff(): void
-    {
-        $response = $this->post(route('staff.store'), []);
-
-        $response->assertRedirect(route('login'));
-    }
-
-    // ── Authorization ─────────────────────────────────────────────────────────
-
-    public function test_user_without_permission_cannot_access_index(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::AccessStaff->value);
-
-        $response = $this->actingAs($this->user)->get(route('staff.index'));
-
-        $response->assertForbidden();
-    }
-
-    public function test_user_without_permission_cannot_create_staff(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::CreateStaff->value);
-
-        $response = $this->actingAs($this->user)->post(route('staff.store'), []);
-
-        $response->assertForbidden();
-    }
-
-    // ── Branch scoping ───────────────────────────────────────────────────────
-
-    public function test_user_without_view_descendant_branches_cannot_view_out_of_branch_staff(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
-        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
-        $staff = Staff::factory()->withBranch($otherBranch)->create();
-
-        $response = $this->actingAs($this->user)->get(route('staff.show', $staff));
-
-        $response->assertForbidden();
-    }
-
-    public function test_user_without_view_descendant_branches_cannot_edit_out_of_branch_staff(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
-        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
-        $staff = Staff::factory()->withBranch($otherBranch)->create();
-
-        $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
-
-        $response->assertForbidden();
-    }
-
-    public function test_user_without_view_descendant_branches_cannot_update_out_of_branch_staff(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
-        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
-        $staff = Staff::factory()->withBranch($otherBranch)->create();
-
-        $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
-            'first_name' => 'Hacked',
-            'last_name' => $staff->last_name,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-        ]);
-
-        $response->assertForbidden();
-        $this->assertDatabaseMissing('staff', ['id' => $staff->id, 'first_name' => 'Hacked']);
-    }
-
-    public function test_user_without_view_descendant_branches_cannot_delete_out_of_branch_staff(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
-        $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
-        $staff = Staff::factory()->withBranch($otherBranch)->create();
-
-        $response = $this->actingAs($this->user)->delete(route('staff.destroy', $staff));
-
-        $response->assertForbidden();
-        $this->assertDatabaseHas('staff', ['id' => $staff->id, 'deleted_at' => null]);
-    }
-
-    public function test_user_can_view_staff_in_their_own_branch(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
-        $staff = Staff::factory()->withBranch($this->branch)->create();
-
-        $response = $this->actingAs($this->user)->get(route('staff.show', $staff));
-
-        $response->assertOk();
-    }
-
-    // ── One user per staff (unique constraint) ────────────────────────────────
-
-    public function test_cannot_create_user_with_existing_email_on_staff_create(): void
-    {
-        $existingUser = User::factory()->create();
-        $staff = Staff::factory()->make();
-
-        $response = $this->actingAs($this->user)->post(route('staff.store'), [
-            'first_name' => $staff->first_name,
-            'last_name' => $staff->last_name,
-            'email' => $staff->email,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-            'user_action' => 'create',
-            'user_email' => $existingUser->email,
-            'user_password' => 'Password1!',
-            'user_password_confirmation' => 'Password1!',
-        ]);
-
-        $response->assertSessionHasErrors('user_email');
-    }
-
-    public function test_cannot_link_already_linked_user_to_another_staff_on_update(): void
-    {
-        $linkedUser = User::factory()->create();
-        Staff::factory()->withUser($linkedUser)->create();
-
-        $otherStaff = Staff::factory()->create();
-
-        $response = $this->actingAs($this->user)->put(route('staff.update', $otherStaff), [
-            'first_name' => $otherStaff->first_name,
-            'last_name' => $otherStaff->last_name,
-            'department_id' => $otherStaff->department_id,
-            'position_id' => $otherStaff->position_id,
-            'user_action' => 'link',
-            'user_id' => $linkedUser->id,
-        ]);
-
-        $response->assertSessionHasErrors('user_id');
-    }
-
-    public function test_updating_staff_with_existing_linked_user_does_not_change_the_link(): void
-    {
-        $linkedUser = User::factory()->create();
-        $staff = Staff::factory()->withUser($linkedUser)->create();
-
-        $differentUser = User::factory()->create();
-
-        $this->actingAs($this->user)->put(route('staff.update', $staff), [
-            'first_name' => $staff->first_name,
-            'last_name' => $staff->last_name,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-            'user_action' => 'link',
-            'user_id' => $differentUser->id,
-        ]);
-
-        $this->assertDatabaseHas('staff', ['id' => $staff->id, 'user_id' => $linkedUser->id]);
-    }
-
-    // ── CRUD happy paths ──────────────────────────────────────────────────────
-
-    public function test_authorized_user_can_view_staff_index(): void
-    {
-        $response = $this->actingAs($this->user)->get(route('staff.index'));
-
-        $response->assertOk();
-    }
-
-    public function test_authorized_user_can_view_create_form(): void
-    {
-        $response = $this->actingAs($this->user)->get(route('staff.create'));
-
-        $response->assertOk();
-    }
-
-    public function test_can_create_staff_without_user(): void
-    {
-        $department = Department::factory()->create();
-        $position = Position::factory()->create();
-
-        $response = $this->actingAs($this->user)->post(route('staff.store'), [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'department_id' => $department->id,
-            'position_id' => $position->id,
-        ]);
-
-        $response->assertRedirect(route('staff.index'));
-        $this->assertDatabaseHas('staff', [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'department_id' => $department->id,
-            'position_id' => $position->id,
-        ]);
-    }
-
-    public function test_can_update_staff(): void
-    {
-        $staff = Staff::factory()->create();
-
-        $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
-            'first_name' => 'UpdatedFirst',
-            'last_name' => $staff->last_name,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-        ]);
-
-        $response->assertRedirect(route('staff.index'));
-        $this->assertDatabaseHas('staff', [
-            'id' => $staff->id,
-            'first_name' => 'UpdatedFirst',
-        ]);
-    }
-
-    public function test_store_assembles_phone_country_and_phone_number(): void
-    {
-        $department = Department::factory()->create();
-        $position = Position::factory()->create();
-
-        $this->actingAs($this->user)->post(route('staff.store'), [
-            'first_name' => 'Phone',
-            'last_name' => 'Create',
-            'department_id' => $department->id,
-            'position_id' => $position->id,
-            'phone_country' => 'GH',
-            'phone_number' => '0246227810',
-        ]);
-
-        $this->assertDatabaseHas('staff', [
-            'first_name' => 'Phone',
-            'last_name' => 'Create',
-            'phone' => '+233246227810',
-        ]);
-    }
-
-    public function test_update_assembles_phone_country_and_phone_number(): void
-    {
-        $staff = Staff::factory()->create(['phone' => null]);
-
-        $this->actingAs($this->user)->put(route('staff.update', $staff), [
-            'first_name' => $staff->first_name,
-            'last_name' => $staff->last_name,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-            'phone_country' => 'NG',
-            'phone_number' => '08031234567',
-        ]);
-
-        $this->assertDatabaseHas('staff', [
-            'id' => $staff->id,
-            'phone' => '+2348031234567',
-        ]);
-    }
-
-    public function test_can_delete_staff(): void
-    {
-        $staff = Staff::factory()->create();
-
-        $response = $this->actingAs($this->user)->delete(route('staff.destroy', $staff));
-
-        $response->assertRedirect(route('staff.index'));
-        $this->assertDatabaseMissing('staff', ['id' => $staff->id, 'deleted_at' => null]);
-    }
-
-    public function test_authorized_user_can_view_edit_form(): void
-    {
-        $staff = Staff::factory()->create();
-
-        $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
-
-        $response->assertOk();
-    }
-
-    public function test_user_without_permission_cannot_delete_staff(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::DeleteStaff->value);
-        $staff = Staff::factory()->create();
-
-        $response = $this->actingAs($this->user)->delete(route('staff.destroy', $staff));
-
-        $response->assertForbidden();
-    }
-
-    public function test_can_create_staff_with_link_user_action(): void
-    {
-        $department = Department::factory()->create();
-        $position = Position::factory()->create();
-        $unlinkedUser = User::factory()->create();
-
-        $response = $this->actingAs($this->user)->post(route('staff.store'), [
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
-            'department_id' => $department->id,
-            'position_id' => $position->id,
-            'user_action' => 'link',
-            'user_id' => $unlinkedUser->id,
-        ]);
-
-        $response->assertRedirect(route('staff.index'));
-        $this->assertDatabaseHas('staff', [
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
-            'user_id' => $unlinkedUser->id,
-        ]);
-    }
-
-    public function test_can_update_staff_with_link_user_action(): void
-    {
-        $staff = Staff::factory()->create(['user_id' => null]);
-        $unlinkedUser = User::factory()->create();
-
-        $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
-            'first_name' => $staff->first_name,
-            'last_name' => $staff->last_name,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-            'user_action' => 'link',
-            'user_id' => $unlinkedUser->id,
-        ]);
-
-        $response->assertRedirect(route('staff.index'));
-        $this->assertDatabaseHas('staff', [
-            'id' => $staff->id,
-            'user_id' => $unlinkedUser->id,
-        ]);
-    }
-
-    public function test_edit_form_for_staff_without_user_includes_unlinked_users(): void
-    {
-        $staff = Staff::factory()->create(['user_id' => null]);
-
-        $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
-
-        $response->assertOk();
-        $response->assertViewHas('unlinkedUsers');
-    }
-
-    public function test_edit_form_for_staff_with_linked_user_has_empty_unlinked_users(): void
-    {
-        $linkedUser = User::factory()->create();
-        $staff = Staff::factory()->withUser($linkedUser)->create();
-
-        $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
-
-        $response->assertOk();
-        $unlinkedUsers = $response->viewData('unlinkedUsers');
-        $this->assertCount(0, $unlinkedUsers);
-    }
-
-    public function test_can_create_staff_with_create_user_action(): void
-    {
-        $department = Department::factory()->create();
-        $position = Position::factory()->create();
-
-        $response = $this->actingAs($this->user)->post(route('staff.store'), [
-            'first_name' => 'Alice',
-            'last_name' => 'Wonderland',
-            'department_id' => $department->id,
-            'position_id' => $position->id,
-            'user_action' => 'create',
-            'user_email' => 'alice@example.com',
-            'user_password' => 'Password1!',
-            'user_password_confirmation' => 'Password1!',
-        ]);
-
-        $response->assertRedirect(route('staff.index'));
-        $this->assertDatabaseHas('staff', ['first_name' => 'Alice', 'last_name' => 'Wonderland']);
-        $this->assertDatabaseHas('users', ['email' => 'alice@example.com']);
-    }
-
-    public function test_store_fails_validation_when_user_action_is_create_but_email_missing(): void
-    {
-        $department = Department::factory()->create();
-        $position = Position::factory()->create();
-
-        $response = $this->actingAs($this->user)->post(route('staff.store'), [
-            'first_name' => 'Bob',
-            'last_name' => 'Builder',
-            'department_id' => $department->id,
-            'position_id' => $position->id,
-            'user_action' => 'create',
-            'user_password' => 'Password1!',
-            'user_password_confirmation' => 'Password1!',
-        ]);
-
-        $response->assertSessionHasErrors('user_email');
-    }
-
-    public function test_update_with_create_user_action_links_new_user_to_staff(): void
-    {
-        $staff = Staff::factory()->create(['user_id' => null]);
-
-        $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
-            'first_name' => $staff->first_name,
-            'last_name' => $staff->last_name,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-            'user_action' => 'create',
-            'user_email' => 'newuser@example.com',
-            'user_password' => 'Password1!',
-            'user_password_confirmation' => 'Password1!',
-        ]);
-
-        $response->assertRedirect(route('staff.index'));
-        $this->assertDatabaseHas('users', ['email' => 'newuser@example.com']);
-        $staff->refresh();
-        $this->assertNotNull($staff->user_id);
-    }
-
-    public function test_update_fails_validation_when_user_action_is_create_but_email_missing(): void
-    {
-        $staff = Staff::factory()->create(['user_id' => null]);
-
-        $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
-            'first_name' => $staff->first_name,
-            'last_name' => $staff->last_name,
-            'department_id' => $staff->department_id,
-            'position_id' => $staff->position_id,
-            'user_action' => 'create',
-            'user_password' => 'Password1!',
-            'user_password_confirmation' => 'Password1!',
-        ]);
-
-        $response->assertSessionHasErrors('user_email');
-    }
-}
+test('guest is redirected from index', function () {
+    $response = $this->get(route('staff.index'));
+
+    $response->assertRedirect(route('login'));
+});
+test('guest cannot create staff', function () {
+    $response = $this->post(route('staff.store'), []);
+
+    $response->assertRedirect(route('login'));
+});
+test('user without permission cannot access index', function () {
+    $this->role->revokePermissionTo(PermissionKey::AccessStaff->value);
+
+    $response = $this->actingAs($this->user)->get(route('staff.index'));
+
+    $response->assertForbidden();
+});
+test('user without permission cannot create staff', function () {
+    $this->role->revokePermissionTo(PermissionKey::CreateStaff->value);
+
+    $response = $this->actingAs($this->user)->post(route('staff.store'), []);
+
+    $response->assertForbidden();
+});
+test('user without view descendant branches cannot view out of branch staff', function () {
+    $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+    $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+    $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+    $response = $this->actingAs($this->user)->get(route('staff.show', $staff));
+
+    $response->assertForbidden();
+});
+test('user without view descendant branches cannot edit out of branch staff', function () {
+    $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+    $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+    $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+    $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
+
+    $response->assertForbidden();
+});
+test('user without view descendant branches cannot update out of branch staff', function () {
+    $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+    $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+    $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+    $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
+        'first_name' => 'Hacked',
+        'last_name' => $staff->last_name,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+    ]);
+
+    $response->assertForbidden();
+    $this->assertDatabaseMissing('staff', ['id' => $staff->id, 'first_name' => 'Hacked']);
+});
+test('user without view descendant branches cannot delete out of branch staff', function () {
+    $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+    $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+    $staff = Staff::factory()->withBranch($otherBranch)->create();
+
+    $response = $this->actingAs($this->user)->delete(route('staff.destroy', $staff));
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('staff', ['id' => $staff->id, 'deleted_at' => null]);
+});
+test('user can view staff in their own branch', function () {
+    $this->role->revokePermissionTo(PermissionKey::ViewDescendantBranches->value);
+    $staff = Staff::factory()->withBranch($this->branch)->create();
+
+    $response = $this->actingAs($this->user)->get(route('staff.show', $staff));
+
+    $response->assertOk();
+});
+test('cannot create user with existing email on staff create', function () {
+    $existingUser = User::factory()->create();
+    $staff = Staff::factory()->make();
+
+    $response = $this->actingAs($this->user)->post(route('staff.store'), [
+        'first_name' => $staff->first_name,
+        'last_name' => $staff->last_name,
+        'email' => $staff->email,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+        'user_action' => 'create',
+        'user_email' => $existingUser->email,
+        'user_password' => 'Password1!',
+        'user_password_confirmation' => 'Password1!',
+    ]);
+
+    $response->assertSessionHasErrors('user_email');
+});
+test('cannot link already linked user to another staff on update', function () {
+    $linkedUser = User::factory()->create();
+    Staff::factory()->withUser($linkedUser)->create();
+
+    $otherStaff = Staff::factory()->create();
+
+    $response = $this->actingAs($this->user)->put(route('staff.update', $otherStaff), [
+        'first_name' => $otherStaff->first_name,
+        'last_name' => $otherStaff->last_name,
+        'department_id' => $otherStaff->department_id,
+        'position_id' => $otherStaff->position_id,
+        'user_action' => 'link',
+        'user_id' => $linkedUser->id,
+    ]);
+
+    $response->assertSessionHasErrors('user_id');
+});
+test('updating staff with existing linked user does not change the link', function () {
+    $linkedUser = User::factory()->create();
+    $staff = Staff::factory()->withUser($linkedUser)->create();
+
+    $differentUser = User::factory()->create();
+
+    $this->actingAs($this->user)->put(route('staff.update', $staff), [
+        'first_name' => $staff->first_name,
+        'last_name' => $staff->last_name,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+        'user_action' => 'link',
+        'user_id' => $differentUser->id,
+    ]);
+
+    $this->assertDatabaseHas('staff', ['id' => $staff->id, 'user_id' => $linkedUser->id]);
+});
+test('authorized user can view staff index', function () {
+    $response = $this->actingAs($this->user)->get(route('staff.index'));
+
+    $response->assertOk();
+});
+test('authorized user can view create form', function () {
+    $response = $this->actingAs($this->user)->get(route('staff.create'));
+
+    $response->assertOk();
+});
+test('can create staff without user', function () {
+    $department = Department::factory()->create();
+    $position = Position::factory()->create();
+
+    $response = $this->actingAs($this->user)->post(route('staff.store'), [
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'department_id' => $department->id,
+        'position_id' => $position->id,
+    ]);
+
+    $response->assertRedirect(route('staff.index'));
+    $this->assertDatabaseHas('staff', [
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'department_id' => $department->id,
+        'position_id' => $position->id,
+    ]);
+});
+test('can update staff', function () {
+    $staff = Staff::factory()->create();
+
+    $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
+        'first_name' => 'UpdatedFirst',
+        'last_name' => $staff->last_name,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+    ]);
+
+    $response->assertRedirect(route('staff.index'));
+    $this->assertDatabaseHas('staff', [
+        'id' => $staff->id,
+        'first_name' => 'UpdatedFirst',
+    ]);
+});
+test('store assembles phone country and phone number', function () {
+    $department = Department::factory()->create();
+    $position = Position::factory()->create();
+
+    $this->actingAs($this->user)->post(route('staff.store'), [
+        'first_name' => 'Phone',
+        'last_name' => 'Create',
+        'department_id' => $department->id,
+        'position_id' => $position->id,
+        'phone_country' => 'GH',
+        'phone_number' => '0246227810',
+    ]);
+
+    $this->assertDatabaseHas('staff', [
+        'first_name' => 'Phone',
+        'last_name' => 'Create',
+        'phone' => '+233246227810',
+    ]);
+});
+test('update assembles phone country and phone number', function () {
+    $staff = Staff::factory()->create(['phone' => null]);
+
+    $this->actingAs($this->user)->put(route('staff.update', $staff), [
+        'first_name' => $staff->first_name,
+        'last_name' => $staff->last_name,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+        'phone_country' => 'NG',
+        'phone_number' => '08031234567',
+    ]);
+
+    $this->assertDatabaseHas('staff', [
+        'id' => $staff->id,
+        'phone' => '+2348031234567',
+    ]);
+});
+test('can delete staff', function () {
+    $staff = Staff::factory()->create();
+
+    $response = $this->actingAs($this->user)->delete(route('staff.destroy', $staff));
+
+    $response->assertRedirect(route('staff.index'));
+    $this->assertDatabaseMissing('staff', ['id' => $staff->id, 'deleted_at' => null]);
+});
+test('authorized user can view edit form', function () {
+    $staff = Staff::factory()->create();
+
+    $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
+
+    $response->assertOk();
+});
+test('user without permission cannot delete staff', function () {
+    $this->role->revokePermissionTo(PermissionKey::DeleteStaff->value);
+    $staff = Staff::factory()->create();
+
+    $response = $this->actingAs($this->user)->delete(route('staff.destroy', $staff));
+
+    $response->assertForbidden();
+});
+test('can create staff with link user action', function () {
+    $department = Department::factory()->create();
+    $position = Position::factory()->create();
+    $unlinkedUser = User::factory()->create();
+
+    $response = $this->actingAs($this->user)->post(route('staff.store'), [
+        'first_name' => 'Jane',
+        'last_name' => 'Smith',
+        'department_id' => $department->id,
+        'position_id' => $position->id,
+        'user_action' => 'link',
+        'user_id' => $unlinkedUser->id,
+    ]);
+
+    $response->assertRedirect(route('staff.index'));
+    $this->assertDatabaseHas('staff', [
+        'first_name' => 'Jane',
+        'last_name' => 'Smith',
+        'user_id' => $unlinkedUser->id,
+    ]);
+});
+test('can update staff with link user action', function () {
+    $staff = Staff::factory()->create(['user_id' => null]);
+    $unlinkedUser = User::factory()->create();
+
+    $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
+        'first_name' => $staff->first_name,
+        'last_name' => $staff->last_name,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+        'user_action' => 'link',
+        'user_id' => $unlinkedUser->id,
+    ]);
+
+    $response->assertRedirect(route('staff.index'));
+    $this->assertDatabaseHas('staff', [
+        'id' => $staff->id,
+        'user_id' => $unlinkedUser->id,
+    ]);
+});
+test('edit form for staff without user includes unlinked users', function () {
+    $staff = Staff::factory()->create(['user_id' => null]);
+
+    $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
+
+    $response->assertOk();
+    $response->assertViewHas('unlinkedUsers');
+});
+test('edit form for staff with linked user has empty unlinked users', function () {
+    $linkedUser = User::factory()->create();
+    $staff = Staff::factory()->withUser($linkedUser)->create();
+
+    $response = $this->actingAs($this->user)->get(route('staff.edit', $staff));
+
+    $response->assertOk();
+    $unlinkedUsers = $response->viewData('unlinkedUsers');
+    expect($unlinkedUsers)->toHaveCount(0);
+});
+test('can create staff with create user action', function () {
+    $department = Department::factory()->create();
+    $position = Position::factory()->create();
+
+    $response = $this->actingAs($this->user)->post(route('staff.store'), [
+        'first_name' => 'Alice',
+        'last_name' => 'Wonderland',
+        'department_id' => $department->id,
+        'position_id' => $position->id,
+        'user_action' => 'create',
+        'user_email' => 'alice@example.com',
+        'user_password' => 'Password1!',
+        'user_password_confirmation' => 'Password1!',
+    ]);
+
+    $response->assertRedirect(route('staff.index'));
+    $this->assertDatabaseHas('staff', ['first_name' => 'Alice', 'last_name' => 'Wonderland']);
+    $this->assertDatabaseHas('users', ['email' => 'alice@example.com']);
+});
+test('store fails validation when user action is create but email missing', function () {
+    $department = Department::factory()->create();
+    $position = Position::factory()->create();
+
+    $response = $this->actingAs($this->user)->post(route('staff.store'), [
+        'first_name' => 'Bob',
+        'last_name' => 'Builder',
+        'department_id' => $department->id,
+        'position_id' => $position->id,
+        'user_action' => 'create',
+        'user_password' => 'Password1!',
+        'user_password_confirmation' => 'Password1!',
+    ]);
+
+    $response->assertSessionHasErrors('user_email');
+});
+test('update with create user action links new user to staff', function () {
+    $staff = Staff::factory()->create(['user_id' => null]);
+
+    $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
+        'first_name' => $staff->first_name,
+        'last_name' => $staff->last_name,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+        'user_action' => 'create',
+        'user_email' => 'newuser@example.com',
+        'user_password' => 'Password1!',
+        'user_password_confirmation' => 'Password1!',
+    ]);
+
+    $response->assertRedirect(route('staff.index'));
+    $this->assertDatabaseHas('users', ['email' => 'newuser@example.com']);
+    $staff->refresh();
+    expect($staff->user_id)->not->toBeNull();
+});
+test('update fails validation when user action is create but email missing', function () {
+    $staff = Staff::factory()->create(['user_id' => null]);
+
+    $response = $this->actingAs($this->user)->put(route('staff.update', $staff), [
+        'first_name' => $staff->first_name,
+        'last_name' => $staff->last_name,
+        'department_id' => $staff->department_id,
+        'position_id' => $staff->position_id,
+        'user_action' => 'create',
+        'user_password' => 'Password1!',
+        'user_password_confirmation' => 'Password1!',
+    ]);
+
+    $response->assertSessionHasErrors('user_email');
+});

@@ -2,138 +2,102 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Models;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\Level;
-use Tests\TenantAppTestCase;
 
-class LevelModelTest extends TenantAppTestCase
-{
-    public function test_get_next_level_returns_the_next_level_by_position(): void
-    {
-        $first = Level::factory()->create(['position' => 1]);
-        $second = Level::factory()->create(['position' => 2]);
+test('get next level returns the next level by position', function () {
+    $first = Level::factory()->create(['position' => 1]);
+    $second = Level::factory()->create(['position' => 2]);
 
-        $this->assertEquals($second->id, $first->getNextLevel()?->id);
-    }
+    expect($first->getNextLevel()?->id)->toEqual($second->id);
+});
+test('get next level returns null when no higher level', function () {
+    $level = Level::factory()->create(['position' => 999]);
 
-    public function test_get_next_level_returns_null_when_no_higher_level(): void
-    {
-        $level = Level::factory()->create(['position' => 999]);
+    expect($level->getNextLevel())->toBeNull();
+});
+test('get previous level returns the previous level by position', function () {
+    $first = Level::factory()->create(['position' => 10]);
+    $second = Level::factory()->create(['position' => 20]);
 
-        $this->assertNull($level->getNextLevel());
-    }
+    expect($second->getPreviousLevel()?->id)->toEqual($first->id);
+});
+test('get previous level returns null when no lower level', function () {
+    $level = Level::factory()->create(['position' => 1]);
 
-    public function test_get_previous_level_returns_the_previous_level_by_position(): void
-    {
-        $first = Level::factory()->create(['position' => 10]);
-        $second = Level::factory()->create(['position' => 20]);
+    expect($level->getPreviousLevel())->toBeNull();
+});
+test('levels below returns all levels with higher position', function () {
+    $first = Level::factory()->create(['position' => 5]);
+    Level::factory()->create(['position' => 10]);
+    Level::factory()->create(['position' => 15]);
 
-        $this->assertEquals($first->id, $second->getPreviousLevel()?->id);
-    }
+    $below = $first->levelsBelow();
+    expect($below->count())->toBeGreaterThanOrEqual(2);
+});
+test('is first returns true for lowest position', function () {
+    // setUp creates a level at position=1, so use 0 to guarantee lowest
+    $lowest = Level::factory()->create(['position' => 0]);
+    Level::factory()->create(['position' => 100]);
 
-    public function test_get_previous_level_returns_null_when_no_lower_level(): void
-    {
-        $level = Level::factory()->create(['position' => 1]);
+    expect($lowest->isFirst())->toBeTrue();
+});
+test('is first returns false for higher position', function () {
+    Level::factory()->create(['position' => 1]);
+    $higher = Level::factory()->create(['position' => 50]);
 
-        $this->assertNull($level->getPreviousLevel());
-    }
+    expect($higher->isFirst())->toBeFalse();
+});
+test('at position returns level at given position', function () {
+    $level = Level::factory()->create(['position' => 42]);
 
-    public function test_levels_below_returns_all_levels_with_higher_position(): void
-    {
-        $first = Level::factory()->create(['position' => 5]);
-        Level::factory()->create(['position' => 10]);
-        Level::factory()->create(['position' => 15]);
+    $found = Level::atPosition(42);
+    expect($found?->id)->toEqual($level->id);
+});
+test('at position returns null when no level at position', function () {
+    expect(Level::atPosition(9999))->toBeNull();
+});
+test('is before or at level returns true when same position', function () {
+    $level = Level::factory()->create(['position' => 5]);
+    $other = Level::factory()->create(['position' => 5]);
 
-        $below = $first->levelsBelow();
-        $this->assertGreaterThanOrEqual(2, $below->count());
-    }
+    expect($level->isBeforeOrAtLevel($other))->toBeTrue();
+});
+test('is before or at level returns true when lower position', function () {
+    $lower = Level::factory()->create(['position' => 3]);
+    $higher = Level::factory()->create(['position' => 7]);
 
-    public function test_is_first_returns_true_for_lowest_position(): void
-    {
-        // setUp creates a level at position=1, so use 0 to guarantee lowest
-        $lowest = Level::factory()->create(['position' => 0]);
-        Level::factory()->create(['position' => 100]);
+    expect($lower->isBeforeOrAtLevel($higher))->toBeTrue();
+});
+test('is before or at level returns false when higher', function () {
+    $lower = Level::factory()->create(['position' => 3]);
+    $higher = Level::factory()->create(['position' => 7]);
 
-        $this->assertTrue($lowest->isFirst());
-    }
+    expect($higher->isBeforeOrAtLevel($lower))->toBeFalse();
+});
+test('is before level returns true when strictly lower position', function () {
+    $lower = Level::factory()->create(['position' => 2]);
+    $higher = Level::factory()->create(['position' => 8]);
 
-    public function test_is_first_returns_false_for_higher_position(): void
-    {
-        Level::factory()->create(['position' => 1]);
-        $higher = Level::factory()->create(['position' => 50]);
+    expect($lower->isBeforeLevel($higher))->toBeTrue();
+});
+test('is before level returns false when same position', function () {
+    $a = Level::factory()->create(['position' => 5]);
+    $b = Level::factory()->create(['position' => 5]);
 
-        $this->assertFalse($higher->isFirst());
-    }
+    expect($a->isBeforeLevel($b))->toBeFalse();
+});
+test('is penultimate returns true for second to last', function () {
+    Level::factory()->create(['position' => 10]);
+    $second = Level::factory()->create(['position' => 20]);
+    Level::factory()->create(['position' => 30]);
 
-    public function test_at_position_returns_level_at_given_position(): void
-    {
-        $level = Level::factory()->create(['position' => 42]);
+    expect($second->isPenultimate())->toBeTrue();
+});
+test('is penultimate returns false for last level', function () {
+    Level::factory()->create(['position' => 10]);
+    Level::factory()->create(['position' => 20]);
+    $last = Level::factory()->create(['position' => 30]);
 
-        $found = Level::atPosition(42);
-        $this->assertEquals($level->id, $found?->id);
-    }
-
-    public function test_at_position_returns_null_when_no_level_at_position(): void
-    {
-        $this->assertNull(Level::atPosition(9999));
-    }
-
-    public function test_is_before_or_at_level_returns_true_when_same_position(): void
-    {
-        $level = Level::factory()->create(['position' => 5]);
-        $other = Level::factory()->create(['position' => 5]);
-
-        $this->assertTrue($level->isBeforeOrAtLevel($other));
-    }
-
-    public function test_is_before_or_at_level_returns_true_when_lower_position(): void
-    {
-        $lower = Level::factory()->create(['position' => 3]);
-        $higher = Level::factory()->create(['position' => 7]);
-
-        $this->assertTrue($lower->isBeforeOrAtLevel($higher));
-    }
-
-    public function test_is_before_or_at_level_returns_false_when_higher(): void
-    {
-        $lower = Level::factory()->create(['position' => 3]);
-        $higher = Level::factory()->create(['position' => 7]);
-
-        $this->assertFalse($higher->isBeforeOrAtLevel($lower));
-    }
-
-    public function test_is_before_level_returns_true_when_strictly_lower_position(): void
-    {
-        $lower = Level::factory()->create(['position' => 2]);
-        $higher = Level::factory()->create(['position' => 8]);
-
-        $this->assertTrue($lower->isBeforeLevel($higher));
-    }
-
-    public function test_is_before_level_returns_false_when_same_position(): void
-    {
-        $a = Level::factory()->create(['position' => 5]);
-        $b = Level::factory()->create(['position' => 5]);
-
-        $this->assertFalse($a->isBeforeLevel($b));
-    }
-
-    public function test_is_penultimate_returns_true_for_second_to_last(): void
-    {
-        Level::factory()->create(['position' => 10]);
-        $second = Level::factory()->create(['position' => 20]);
-        Level::factory()->create(['position' => 30]);
-
-        $this->assertTrue($second->isPenultimate());
-    }
-
-    public function test_is_penultimate_returns_false_for_last_level(): void
-    {
-        Level::factory()->create(['position' => 10]);
-        Level::factory()->create(['position' => 20]);
-        $last = Level::factory()->create(['position' => 30]);
-
-        $this->assertFalse($last->isPenultimate());
-    }
-}
+    expect($last->isPenultimate())->toBeFalse();
+});

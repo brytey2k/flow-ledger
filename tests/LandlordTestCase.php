@@ -14,9 +14,11 @@ abstract class LandlordTestCase extends BaseTestCase
 {
     use DatabaseTransactions;
 
-    protected User $landlordUser;
+    // Public so Pest's file-local helper functions (which run outside any class scope) can
+    // read these fixtures via test()->landlordUser, test()->tenant.
+    public User $landlordUser;
 
-    protected Tenant $tenant;
+    public Tenant $tenant;
 
     #[\Override]
     protected function setUp(): void

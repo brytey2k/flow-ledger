@@ -1,216 +1,152 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Support;
-
 use App\Support\PhoneNumberFormatter;
-use PHPUnit\Framework\TestCase;
 
-class PhoneNumberFormatterTest extends TestCase
-{
-    // ── dialCodeMap ───────────────────────────────────────────────────────────
+test('dial code map returns array of country codes', function () {
+    $map = PhoneNumberFormatter::dialCodeMap();
 
-    public function test_dial_code_map_returns_array_of_country_codes(): void
-    {
-        $map = PhoneNumberFormatter::dialCodeMap();
+    expect($map)->toBeArray();
+    expect($map)->not->toBeEmpty();
+});
+test('dial code map contains ghana', function () {
+    $map = PhoneNumberFormatter::dialCodeMap();
 
-        $this->assertIsArray($map);
-        $this->assertNotEmpty($map);
-    }
+    expect($map)->toHaveKey('GH');
+    expect($map['GH'])->toBe('+233');
+});
+test('dial code map contains nigeria', function () {
+    $map = PhoneNumberFormatter::dialCodeMap();
 
-    public function test_dial_code_map_contains_ghana(): void
-    {
-        $map = PhoneNumberFormatter::dialCodeMap();
+    expect($map)->toHaveKey('NG');
+    expect($map['NG'])->toBe('+234');
+});
+test('dial code map contains us and canada with same code', function () {
+    $map = PhoneNumberFormatter::dialCodeMap();
 
-        $this->assertArrayHasKey('GH', $map);
-        $this->assertSame('+233', $map['GH']);
-    }
+    expect($map)->toHaveKey('US');
+    expect($map)->toHaveKey('CA');
+    expect($map['US'])->toBe('+1');
+    expect($map['CA'])->toBe('+1');
+});
+test('dial code map contains 19 countries', function () {
+    $map = PhoneNumberFormatter::dialCodeMap();
 
-    public function test_dial_code_map_contains_nigeria(): void
-    {
-        $map = PhoneNumberFormatter::dialCodeMap();
+    expect($map)->toHaveCount(19);
+});
+test('assemble returns null for empty local number', function () {
+    $result = PhoneNumberFormatter::assemble('GH', '');
 
-        $this->assertArrayHasKey('NG', $map);
-        $this->assertSame('+234', $map['NG']);
-    }
+    expect($result)->toBeNull();
+});
+test('assemble returns null for null local number', function () {
+    $result = PhoneNumberFormatter::assemble('GH', null);
 
-    public function test_dial_code_map_contains_us_and_canada_with_same_code(): void
-    {
-        $map = PhoneNumberFormatter::dialCodeMap();
+    expect($result)->toBeNull();
+});
+test('assemble returns null for whitespace only local number', function () {
+    $result = PhoneNumberFormatter::assemble('GH', '   ');
 
-        $this->assertArrayHasKey('US', $map);
-        $this->assertArrayHasKey('CA', $map);
-        $this->assertSame('+1', $map['US']);
-        $this->assertSame('+1', $map['CA']);
-    }
+    expect($result)->toBeNull();
+});
+test('assemble returns null for non digit only local number', function () {
+    $result = PhoneNumberFormatter::assemble('GH', '---');
 
-    public function test_dial_code_map_contains_19_countries(): void
-    {
-        $map = PhoneNumberFormatter::dialCodeMap();
+    expect($result)->toBeNull();
+});
+test('assemble prepends ghana dial code', function () {
+    $result = PhoneNumberFormatter::assemble('GH', '244000000');
 
-        $this->assertCount(19, $map);
-    }
+    expect($result)->toBe('+233244000000');
+});
+test('assemble prepends nigeria dial code', function () {
+    $result = PhoneNumberFormatter::assemble('NG', '8012345678');
 
-    // ── assemble ──────────────────────────────────────────────────────────────
+    expect($result)->toBe('+2348012345678');
+});
+test('assemble strips leading zeros from local number', function () {
+    $result = PhoneNumberFormatter::assemble('GH', '0244000000');
 
-    public function test_assemble_returns_null_for_empty_local_number(): void
-    {
-        $result = PhoneNumberFormatter::assemble('GH', '');
+    expect($result)->toBe('+233244000000');
+});
+test('assemble strips non digit characters from local number', function () {
+    $result = PhoneNumberFormatter::assemble('GH', '024-400-0000');
 
-        $this->assertNull($result);
-    }
+    expect($result)->toBe('+233244000000');
+});
+test('assemble returns raw digits for unknown country code', function () {
+    $result = PhoneNumberFormatter::assemble('XX', '123456789');
 
-    public function test_assemble_returns_null_for_null_local_number(): void
-    {
-        $result = PhoneNumberFormatter::assemble('GH', null);
+    expect($result)->toBe('123456789');
+});
+test('assemble is case insensitive for country code', function () {
+    $lower = PhoneNumberFormatter::assemble('gh', '244000000');
+    $upper = PhoneNumberFormatter::assemble('GH', '244000000');
 
-        $this->assertNull($result);
-    }
+    expect($lower)->toBe($upper);
+});
+test('assemble handles null country code', function () {
+    $result = PhoneNumberFormatter::assemble(null, '244000000');
 
-    public function test_assemble_returns_null_for_whitespace_only_local_number(): void
-    {
-        $result = PhoneNumberFormatter::assemble('GH', '   ');
+    expect($result)->toBe('244000000');
+});
+test('assemble prepends us dial code', function () {
+    $result = PhoneNumberFormatter::assemble('US', '2125551234');
 
-        $this->assertNull($result);
-    }
+    expect($result)->toBe('+12125551234');
+});
+test('assemble prepends kenya dial code', function () {
+    $result = PhoneNumberFormatter::assemble('KE', '722000000');
 
-    public function test_assemble_returns_null_for_non_digit_only_local_number(): void
-    {
-        $result = PhoneNumberFormatter::assemble('GH', '---');
+    expect($result)->toBe('+254722000000');
+});
+test('split returns default gh for empty string', function () {
+    [$country, $local] = PhoneNumberFormatter::split('');
 
-        $this->assertNull($result);
-    }
+    expect($country)->toBe('GH');
+    expect($local)->toBe('');
+});
+test('split returns default gh for null', function () {
+    [$country, $local] = PhoneNumberFormatter::split(null);
 
-    public function test_assemble_prepends_ghana_dial_code(): void
-    {
-        $result = PhoneNumberFormatter::assemble('GH', '244000000');
+    expect($country)->toBe('GH');
+    expect($local)->toBe('');
+});
+test('split extracts ghana from international number', function () {
+    [$country, $local] = PhoneNumberFormatter::split('+233244000000');
 
-        $this->assertSame('+233244000000', $result);
-    }
+    expect($country)->toBe('GH');
+    expect($local)->toBe('244000000');
+});
+test('split extracts nigeria from international number', function () {
+    [$country, $local] = PhoneNumberFormatter::split('+2348012345678');
 
-    public function test_assemble_prepends_nigeria_dial_code(): void
-    {
-        $result = PhoneNumberFormatter::assemble('NG', '8012345678');
+    expect($country)->toBe('NG');
+    expect($local)->toBe('8012345678');
+});
+test('split extracts kenya from international number', function () {
+    [$country, $local] = PhoneNumberFormatter::split('+254722000000');
 
-        $this->assertSame('+2348012345678', $result);
-    }
+    expect($country)->toBe('KE');
+    expect($local)->toBe('722000000');
+});
+test('split returns gh with digits for local number without plus', function () {
+    [$country, $local] = PhoneNumberFormatter::split('0244000000');
 
-    public function test_assemble_strips_leading_zeros_from_local_number(): void
-    {
-        $result = PhoneNumberFormatter::assemble('GH', '0244000000');
+    expect($country)->toBe('GH');
+    expect($local)->toBe('0244000000');
+});
+test('split returns two element array', function () {
+    $result = PhoneNumberFormatter::split('+233244000000');
 
-        $this->assertSame('+233244000000', $result);
-    }
+    expect($result)->toHaveCount(2);
+});
+test('assemble and split are inverse operations', function () {
+    $assembled = PhoneNumberFormatter::assemble('NG', '8012345678');
+    expect($assembled)->not->toBeNull();
 
-    public function test_assemble_strips_non_digit_characters_from_local_number(): void
-    {
-        $result = PhoneNumberFormatter::assemble('GH', '024-400-0000');
+    [$country, $local] = PhoneNumberFormatter::split($assembled);
 
-        $this->assertSame('+233244000000', $result);
-    }
-
-    public function test_assemble_returns_raw_digits_for_unknown_country_code(): void
-    {
-        $result = PhoneNumberFormatter::assemble('XX', '123456789');
-
-        $this->assertSame('123456789', $result);
-    }
-
-    public function test_assemble_is_case_insensitive_for_country_code(): void
-    {
-        $lower = PhoneNumberFormatter::assemble('gh', '244000000');
-        $upper = PhoneNumberFormatter::assemble('GH', '244000000');
-
-        $this->assertSame($upper, $lower);
-    }
-
-    public function test_assemble_handles_null_country_code(): void
-    {
-        $result = PhoneNumberFormatter::assemble(null, '244000000');
-
-        $this->assertSame('244000000', $result);
-    }
-
-    public function test_assemble_prepends_us_dial_code(): void
-    {
-        $result = PhoneNumberFormatter::assemble('US', '2125551234');
-
-        $this->assertSame('+12125551234', $result);
-    }
-
-    public function test_assemble_prepends_kenya_dial_code(): void
-    {
-        $result = PhoneNumberFormatter::assemble('KE', '722000000');
-
-        $this->assertSame('+254722000000', $result);
-    }
-
-    // ── split ─────────────────────────────────────────────────────────────────
-
-    public function test_split_returns_default_gh_for_empty_string(): void
-    {
-        [$country, $local] = PhoneNumberFormatter::split('');
-
-        $this->assertSame('GH', $country);
-        $this->assertSame('', $local);
-    }
-
-    public function test_split_returns_default_gh_for_null(): void
-    {
-        [$country, $local] = PhoneNumberFormatter::split(null);
-
-        $this->assertSame('GH', $country);
-        $this->assertSame('', $local);
-    }
-
-    public function test_split_extracts_ghana_from_international_number(): void
-    {
-        [$country, $local] = PhoneNumberFormatter::split('+233244000000');
-
-        $this->assertSame('GH', $country);
-        $this->assertSame('244000000', $local);
-    }
-
-    public function test_split_extracts_nigeria_from_international_number(): void
-    {
-        [$country, $local] = PhoneNumberFormatter::split('+2348012345678');
-
-        $this->assertSame('NG', $country);
-        $this->assertSame('8012345678', $local);
-    }
-
-    public function test_split_extracts_kenya_from_international_number(): void
-    {
-        [$country, $local] = PhoneNumberFormatter::split('+254722000000');
-
-        $this->assertSame('KE', $country);
-        $this->assertSame('722000000', $local);
-    }
-
-    public function test_split_returns_gh_with_digits_for_local_number_without_plus(): void
-    {
-        [$country, $local] = PhoneNumberFormatter::split('0244000000');
-
-        $this->assertSame('GH', $country);
-        $this->assertSame('0244000000', $local);
-    }
-
-    public function test_split_returns_two_element_array(): void
-    {
-        $result = PhoneNumberFormatter::split('+233244000000');
-
-        $this->assertCount(2, $result);
-    }
-
-    public function test_assemble_and_split_are_inverse_operations(): void
-    {
-        $assembled = PhoneNumberFormatter::assemble('NG', '8012345678');
-        $this->assertNotNull($assembled);
-
-        [$country, $local] = PhoneNumberFormatter::split($assembled);
-
-        $this->assertSame('NG', $country);
-        $this->assertSame('8012345678', $local);
-    }
-}
+    expect($country)->toBe('NG');
+    expect($local)->toBe('8012345678');
+});

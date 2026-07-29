@@ -2,141 +2,97 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Currencies;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Currency;
-use Tests\TenantAppTestCase;
 
-class CurrenciesControllerTest extends TenantAppTestCase
-{
-    // ── Authentication ────────────────────────────────────────────────────────
+test('guest is redirected from index', function () {
+    $response = $this->get(route('currencies.index'));
 
-    public function test_guest_is_redirected_from_index(): void
-    {
-        $response = $this->get(route('currencies.index'));
+    $response->assertRedirect(route('login'));
+});
+test('guest is redirected from create', function () {
+    $response = $this->get(route('currencies.create'));
 
-        $response->assertRedirect(route('login'));
-    }
+    $response->assertRedirect(route('login'));
+});
+test('guest cannot post to store', function () {
+    $response = $this->post(route('currencies.store'), [
+        'name' => 'US Dollar',
+        'short_name' => 'USD',
+        'symbol' => '$',
+    ]);
 
-    public function test_guest_is_redirected_from_create(): void
-    {
-        $response = $this->get(route('currencies.create'));
+    $response->assertRedirect(route('login'));
+});
+test('user without access permission cannot view index', function () {
+    $this->role->revokePermissionTo(PermissionKey::AccessCurrencies->value);
 
-        $response->assertRedirect(route('login'));
-    }
+    $response = $this->actingAs($this->user)->get(route('currencies.index'));
 
-    public function test_guest_cannot_post_to_store(): void
-    {
-        $response = $this->post(route('currencies.store'), [
-            'name' => 'US Dollar',
-            'short_name' => 'USD',
-            'symbol' => '$',
-        ]);
+    $response->assertForbidden();
+});
+test('user without create permission cannot access create form', function () {
+    $this->role->revokePermissionTo(PermissionKey::CreateCurrency->value);
 
-        $response->assertRedirect(route('login'));
-    }
+    $response = $this->actingAs($this->user)->get(route('currencies.create'));
 
-    // ── Authorization ─────────────────────────────────────────────────────────
+    $response->assertForbidden();
+});
+test('authorised user can view index', function () {
+    $response = $this->actingAs($this->user)->get(route('currencies.index'));
 
-    public function test_user_without_access_permission_cannot_view_index(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::AccessCurrencies->value);
+    $response->assertOk();
+});
+test('authorised user can view create form', function () {
+    $response = $this->actingAs($this->user)->get(route('currencies.create'));
 
-        $response = $this->actingAs($this->user)->get(route('currencies.index'));
+    $response->assertOk();
+});
+test('authorised user can store currency', function () {
+    $response = $this->actingAs($this->user)->post(route('currencies.store'), [
+        'name' => 'US Dollar',
+        'short_name' => 'USD',
+        'symbol' => '$',
+    ]);
 
-        $response->assertForbidden();
-    }
+    $response->assertRedirect(route('currencies.index'));
+    $this->assertDatabaseHas('currencies', ['name' => 'US Dollar', 'short_name' => 'USD', 'symbol' => '$']);
+});
+test('store fails validation for missing required fields', function () {
+    $response = $this->actingAs($this->user)->post(route('currencies.store'), []);
 
-    public function test_user_without_create_permission_cannot_access_create_form(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::CreateCurrency->value);
+    $response->assertSessionHasErrors(['name', 'short_name', 'symbol']);
+});
+test('authorised user can view edit form', function () {
+    $currency = Currency::factory()->create();
 
-        $response = $this->actingAs($this->user)->get(route('currencies.create'));
+    $response = $this->actingAs($this->user)->get(route('currencies.edit', $currency));
 
-        $response->assertForbidden();
-    }
+    $response->assertOk();
+});
+test('authorised user can update currency', function () {
+    $currency = Currency::factory()->create();
 
-    // ── Index ─────────────────────────────────────────────────────────────────
+    $response = $this->actingAs($this->user)->put(route('currencies.update', $currency), [
+        'name' => 'Euro',
+        'short_name' => 'EUR',
+        'symbol' => '€',
+    ]);
 
-    public function test_authorised_user_can_view_index(): void
-    {
-        $response = $this->actingAs($this->user)->get(route('currencies.index'));
+    $response->assertRedirect(route('currencies.index'));
+    $this->assertDatabaseHas('currencies', [
+        'id' => $currency->id,
+        'name' => 'Euro',
+        'short_name' => 'EUR',
+        'symbol' => '€',
+    ]);
+});
+test('authorised user can delete currency', function () {
+    $currency = Currency::factory()->create();
 
-        $response->assertOk();
-    }
+    $response = $this->actingAs($this->user)->delete(route('currencies.destroy', $currency));
 
-    // ── Create ────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_view_create_form(): void
-    {
-        $response = $this->actingAs($this->user)->get(route('currencies.create'));
-
-        $response->assertOk();
-    }
-
-    // ── Store ─────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_store_currency(): void
-    {
-        $response = $this->actingAs($this->user)->post(route('currencies.store'), [
-            'name' => 'US Dollar',
-            'short_name' => 'USD',
-            'symbol' => '$',
-        ]);
-
-        $response->assertRedirect(route('currencies.index'));
-        $this->assertDatabaseHas('currencies', ['name' => 'US Dollar', 'short_name' => 'USD', 'symbol' => '$']);
-    }
-
-    public function test_store_fails_validation_for_missing_required_fields(): void
-    {
-        $response = $this->actingAs($this->user)->post(route('currencies.store'), []);
-
-        $response->assertSessionHasErrors(['name', 'short_name', 'symbol']);
-    }
-
-    // ── Edit ──────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_view_edit_form(): void
-    {
-        $currency = Currency::factory()->create();
-
-        $response = $this->actingAs($this->user)->get(route('currencies.edit', $currency));
-
-        $response->assertOk();
-    }
-
-    // ── Update ────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_update_currency(): void
-    {
-        $currency = Currency::factory()->create();
-
-        $response = $this->actingAs($this->user)->put(route('currencies.update', $currency), [
-            'name' => 'Euro',
-            'short_name' => 'EUR',
-            'symbol' => '€',
-        ]);
-
-        $response->assertRedirect(route('currencies.index'));
-        $this->assertDatabaseHas('currencies', [
-            'id' => $currency->id,
-            'name' => 'Euro',
-            'short_name' => 'EUR',
-            'symbol' => '€',
-        ]);
-    }
-
-    // ── Destroy ───────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_delete_currency(): void
-    {
-        $currency = Currency::factory()->create();
-
-        $response = $this->actingAs($this->user)->delete(route('currencies.destroy', $currency));
-
-        $response->assertRedirect(route('currencies.index'));
-        $this->assertSoftDeleted('currencies', ['id' => $currency->id]);
-    }
-}
+    $response->assertRedirect(route('currencies.index'));
+    $this->assertSoftDeleted('currencies', ['id' => $currency->id]);
+});

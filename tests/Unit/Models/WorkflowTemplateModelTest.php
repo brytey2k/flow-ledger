@@ -2,152 +2,118 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Models;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowTemplate;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Tests\TenantAppTestCase;
 
-class WorkflowTemplateModelTest extends TenantAppTestCase
-{
-    // ── resolveForBranch() ────────────────────────────────────────────────────
+test('resolve for branch returns branch specific template when exists', function () {
+    $branch = Branch::factory()->create();
+    $master = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
+    $branchTemplate = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id]);
 
-    public function test_resolve_for_branch_returns_branch_specific_template_when_exists(): void
-    {
-        $branch = Branch::factory()->create();
-        $master = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
-        $branchTemplate = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id]);
+    $resolved = WorkflowTemplate::resolveForBranch('advance', $branch->id);
 
-        $resolved = WorkflowTemplate::resolveForBranch('advance', $branch->id);
+    expect($resolved->is($branchTemplate))->toBeTrue();
+    expect($resolved->is($master))->toBeFalse();
+});
+test('resolve for branch falls back to master when no branch template exists', function () {
+    $branch = Branch::factory()->create();
+    $master = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
 
-        $this->assertTrue($resolved->is($branchTemplate));
-        $this->assertFalse($resolved->is($master));
-    }
+    $resolved = WorkflowTemplate::resolveForBranch('advance', $branch->id);
 
-    public function test_resolve_for_branch_falls_back_to_master_when_no_branch_template_exists(): void
-    {
-        $branch = Branch::factory()->create();
-        $master = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
+    expect($resolved->is($master))->toBeTrue();
+});
+test('resolve for branch with null branch id returns master template', function () {
+    $master = WorkflowTemplate::factory()->retirement()->create(['branch_id' => null]);
 
-        $resolved = WorkflowTemplate::resolveForBranch('advance', $branch->id);
+    $resolved = WorkflowTemplate::resolveForBranch('retirement', null);
 
-        $this->assertTrue($resolved->is($master));
-    }
+    expect($resolved->is($master))->toBeTrue();
+});
+test('resolve for branch throws when no master template exists', function () {
+    $this->expectException(ModelNotFoundException::class);
 
-    public function test_resolve_for_branch_with_null_branch_id_returns_master_template(): void
-    {
-        $master = WorkflowTemplate::factory()->retirement()->create(['branch_id' => null]);
+    WorkflowTemplate::resolveForBranch('expense', null);
+});
+test('resolve for branch throws when branch has no template and no master exists', function () {
+    $branch = Branch::factory()->create();
 
-        $resolved = WorkflowTemplate::resolveForBranch('retirement', null);
+    $this->expectException(ModelNotFoundException::class);
 
-        $this->assertTrue($resolved->is($master));
-    }
+    WorkflowTemplate::resolveForBranch('advance', $branch->id);
+});
+test('branch relationship returns null for master template', function () {
+    $template = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
 
-    public function test_resolve_for_branch_throws_when_no_master_template_exists(): void
-    {
-        $this->expectException(ModelNotFoundException::class);
+    expect($template->branch)->toBeNull();
+});
+test('branch relationship returns branch for branch specific template', function () {
+    $branch = Branch::factory()->create();
+    $template = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id]);
 
-        WorkflowTemplate::resolveForBranch('expense', null);
-    }
+    expect($template->branch)->not->toBeNull();
+    expect($template->branch->is($branch))->toBeTrue();
+});
+test('creating assigns a template group id when none given', function () {
+    $template = WorkflowTemplate::factory()->create();
 
-    public function test_resolve_for_branch_throws_when_branch_has_no_template_and_no_master_exists(): void
-    {
-        $branch = Branch::factory()->create();
+    expect($template->template_group_id)->not->toBeNull();
+});
+test('resolve for branch only returns current master template', function () {
+    $superseded = WorkflowTemplate::factory()->advance()->create(['branch_id' => null, 'version' => 1, 'is_current' => false]);
+    $current = WorkflowTemplate::factory()->advance()->create([
+        'branch_id' => null,
+        'template_group_id' => $superseded->template_group_id,
+        'version' => 2,
+        'is_current' => true,
+    ]);
 
-        $this->expectException(ModelNotFoundException::class);
+    $resolved = WorkflowTemplate::resolveForBranch('advance', null);
 
-        WorkflowTemplate::resolveForBranch('advance', $branch->id);
-    }
+    expect($resolved->is($current))->toBeTrue();
+});
+test('resolve for branch only returns current branch specific template', function () {
+    $branch = Branch::factory()->create();
+    $superseded = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id, 'version' => 1, 'is_current' => false]);
+    $current = WorkflowTemplate::factory()->advance()->create([
+        'branch_id' => $branch->id,
+        'template_group_id' => $superseded->template_group_id,
+        'version' => 2,
+        'is_current' => true,
+    ]);
 
-    // ── branch() relationship ─────────────────────────────────────────────────
+    $resolved = WorkflowTemplate::resolveForBranch('advance', $branch->id);
 
-    public function test_branch_relationship_returns_null_for_master_template(): void
-    {
-        $template = WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
+    expect($resolved->is($current))->toBeTrue();
+});
+test('has active instances across family detects active instance on superseded version', function () {
+    $superseded = WorkflowTemplate::factory()->create(['version' => 1, 'is_current' => false]);
+    $current = WorkflowTemplate::factory()->create([
+        'template_group_id' => $superseded->template_group_id,
+        'version' => 2,
+        'is_current' => true,
+    ]);
+    WorkflowInstance::create([
+        'workflow_template_id' => $superseded->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => PaymentRequest::factory()->advance()->create(['status' => 'in_workflow'])->id,
+        'status' => 'in_progress',
+    ]);
 
-        $this->assertNull($template->branch);
-    }
+    expect($current->hasActiveInstancesAcrossFamily())->toBeTrue();
+    expect($current->hasActiveInstances())->toBeFalse();
+});
+test('has active instances across family returns false when no version has active instances', function () {
+    $superseded = WorkflowTemplate::factory()->create(['version' => 1, 'is_current' => false]);
+    $current = WorkflowTemplate::factory()->create([
+        'template_group_id' => $superseded->template_group_id,
+        'version' => 2,
+        'is_current' => true,
+    ]);
 
-    public function test_branch_relationship_returns_branch_for_branch_specific_template(): void
-    {
-        $branch = Branch::factory()->create();
-        $template = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id]);
-
-        $this->assertNotNull($template->branch);
-        $this->assertTrue($template->branch->is($branch));
-    }
-
-    // ── Versioning ─────────────────────────────────────────────────────────────
-
-    public function test_creating_assigns_a_template_group_id_when_none_given(): void
-    {
-        $template = WorkflowTemplate::factory()->create();
-
-        $this->assertNotNull($template->template_group_id);
-    }
-
-    public function test_resolve_for_branch_only_returns_current_master_template(): void
-    {
-        $superseded = WorkflowTemplate::factory()->advance()->create(['branch_id' => null, 'version' => 1, 'is_current' => false]);
-        $current = WorkflowTemplate::factory()->advance()->create([
-            'branch_id' => null,
-            'template_group_id' => $superseded->template_group_id,
-            'version' => 2,
-            'is_current' => true,
-        ]);
-
-        $resolved = WorkflowTemplate::resolveForBranch('advance', null);
-
-        $this->assertTrue($resolved->is($current));
-    }
-
-    public function test_resolve_for_branch_only_returns_current_branch_specific_template(): void
-    {
-        $branch = Branch::factory()->create();
-        $superseded = WorkflowTemplate::factory()->advance()->create(['branch_id' => $branch->id, 'version' => 1, 'is_current' => false]);
-        $current = WorkflowTemplate::factory()->advance()->create([
-            'branch_id' => $branch->id,
-            'template_group_id' => $superseded->template_group_id,
-            'version' => 2,
-            'is_current' => true,
-        ]);
-
-        $resolved = WorkflowTemplate::resolveForBranch('advance', $branch->id);
-
-        $this->assertTrue($resolved->is($current));
-    }
-
-    public function test_has_active_instances_across_family_detects_active_instance_on_superseded_version(): void
-    {
-        $superseded = WorkflowTemplate::factory()->create(['version' => 1, 'is_current' => false]);
-        $current = WorkflowTemplate::factory()->create([
-            'template_group_id' => $superseded->template_group_id,
-            'version' => 2,
-            'is_current' => true,
-        ]);
-        WorkflowInstance::create([
-            'workflow_template_id' => $superseded->id,
-            'workflowable_type' => PaymentRequest::class,
-            'workflowable_id' => PaymentRequest::factory()->advance()->create(['status' => 'in_workflow'])->id,
-            'status' => 'in_progress',
-        ]);
-
-        $this->assertTrue($current->hasActiveInstancesAcrossFamily());
-        $this->assertFalse($current->hasActiveInstances());
-    }
-
-    public function test_has_active_instances_across_family_returns_false_when_no_version_has_active_instances(): void
-    {
-        $superseded = WorkflowTemplate::factory()->create(['version' => 1, 'is_current' => false]);
-        $current = WorkflowTemplate::factory()->create([
-            'template_group_id' => $superseded->template_group_id,
-            'version' => 2,
-            'is_current' => true,
-        ]);
-
-        $this->assertFalse($current->hasActiveInstancesAcrossFamily());
-    }
-}
+    expect($current->hasActiveInstancesAcrossFamily())->toBeFalse();
+});

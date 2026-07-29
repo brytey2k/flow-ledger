@@ -2,266 +2,209 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Api;
-
+uses(Tests\LandlordTestCase::class);
 use App\Jobs\CreateTenantFromIdpJob;
 use App\Jobs\ReportTenantProvisionedToIdpJob;
 use App\Models\Tenant;
 use App\Services\SsoClientService;
-use DateTimeImmutable;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
-use Tests\LandlordTestCase;
 
+const IDP_URL_IDP_TENANT_PROVISION_ENDPOINT = 'https://idp.test';
+const PRODUCT_IDP_TENANT_PROVISION_ENDPOINT = 'flow-ledger';
+const IDP_TENANT_ID_IDP_TENANT_PROVISION_ENDPOINT = 'iam-tenant-42';
+const SUBDOMAIN_IDP_TENANT_PROVISION_ENDPOINT = 'acme-idp';
+const ENVIRONMENT_KEY_IDP_TENANT_PROVISION_ENDPOINT = 'env-key-abc';
+beforeEach(function () {
+    config([
+        'sso.idp_url' => IDP_URL_IDP_TENANT_PROVISION_ENDPOINT,
+        'sso.product_slug' => PRODUCT_IDP_TENANT_PROVISION_ENDPOINT,
+    ]);
+
+    $this->mock(SsoClientService::class)
+        ->shouldReceive('getIdpPublicKeyPem')
+        ->andReturn(idpProvisionKeys()['public']);
+
+    Queue::fake();
+});
 /**
- * Exercises the central-domain POST /api/idp/tenants endpoint end-to-end by
- * minting RS256 provision tokens with a locally generated RSA keypair and
- * stubbing only the public key source (SsoClientService::getIdpPublicKeyPem()).
- * Signature verification, issuer, audience, expiry and claim validation all
- * run for real.
+ * @return array{private: string, public: string}
  */
-class IdpTenantProvisionEndpointTest extends LandlordTestCase
+function idpProvisionKeys(): array
 {
-    private const IDP_URL = 'https://idp.test';
+    static $keys = null;
 
-    private const PRODUCT = 'flow-ledger';
-
-    private const IDP_TENANT_ID = 'iam-tenant-42';
-
-    private const SUBDOMAIN = 'acme-idp';
-
-    private const ENVIRONMENT_KEY = 'env-key-abc';
-
-    private static string $privateKeyPem = '';
-
-    private static string $publicKeyPem = '';
-
-    public static function setUpBeforeClass(): void
-    {
-        parent::setUpBeforeClass();
-
+    if ($keys === null) {
         $resource = openssl_pkey_new([
             'private_key_bits' => 2048,
             'private_key_type' => OPENSSL_KEYTYPE_RSA,
         ]);
-        openssl_pkey_export($resource, static::$privateKeyPem);
+        openssl_pkey_export($resource, $privateKeyPem);
         $details = openssl_pkey_get_details($resource);
-        static::$publicKeyPem = $details['key'];
+        $keys = ['private' => $privateKeyPem, 'public' => $details['key']];
     }
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    return $keys;
+}
+test('missing provision token returns 422', function () {
+    $this->post('/api/idp/tenants')
+        ->assertStatus(422);
 
-        config([
-            'sso.idp_url' => self::IDP_URL,
-            'sso.product_slug' => self::PRODUCT,
-        ]);
+    Queue::assertNothingPushed();
+});
+test('garbage token returns 401', function () {
+    $this->post('/api/idp/tenants', ['provision_token' => 'not-a-jwt'])
+        ->assertStatus(401);
 
-        $this->mock(SsoClientService::class)
-            ->shouldReceive('getIdpPublicKeyPem')
-            ->andReturn(static::$publicKeyPem);
+    Queue::assertNothingPushed();
+});
+test('expired token returns 401', function () {
+    $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
-        Queue::fake();
-    }
+    $token = mintProvisionToken(issuedAt: $now->modify('-2 hours'), expiresAt: $now->modify('-1 hour'));
 
-    // ── Token verification failures ───────────────────────────────────────────
+    $this->post('/api/idp/tenants', ['provision_token' => $token])
+        ->assertStatus(401);
 
-    public function test_missing_provision_token_returns_422(): void
-    {
-        $this->post('/api/idp/tenants')
-            ->assertStatus(422);
+    Queue::assertNothingPushed();
+});
+test('token with wrong issuer returns 401', function () {
+    $token = mintProvisionToken(issuer: 'https://evil-idp.test');
 
-        Queue::assertNothingPushed();
-    }
+    $this->post('/api/idp/tenants', ['provision_token' => $token])
+        ->assertStatus(401);
 
-    public function test_garbage_token_returns_401(): void
-    {
-        $this->post('/api/idp/tenants', ['provision_token' => 'not-a-jwt'])
-            ->assertStatus(401);
+    Queue::assertNothingPushed();
+});
+test('token with wrong audience returns 401', function () {
+    $token = mintProvisionToken(audience: 'some-other-product');
 
-        Queue::assertNothingPushed();
-    }
+    $this->post('/api/idp/tenants', ['provision_token' => $token])
+        ->assertStatus(401);
 
-    public function test_expired_token_returns_401(): void
-    {
-        $now = new DateTimeImmutable('now', new \DateTimeZone('UTC'));
+    Queue::assertNothingPushed();
+});
+test('token with missing claims returns 422', function () {
+    $token = mintProvisionToken(claims: ['environment_key' => null]);
 
-        $token = $this->mintProvisionToken(
-            issuedAt: $now->modify('-2 hours'),
-            expiresAt: $now->modify('-1 hour'),
-        );
+    $this->post('/api/idp/tenants', ['provision_token' => $token])
+        ->assertStatus(422);
 
-        $this->post('/api/idp/tenants', ['provision_token' => $token])
-            ->assertStatus(401);
+    Queue::assertNothingPushed();
+});
+test('token with invalid subdomain returns 422', function () {
+    $token = mintProvisionToken(claims: ['subdomain' => 'Not Valid!']);
 
-        Queue::assertNothingPushed();
-    }
+    $this->post('/api/idp/tenants', ['provision_token' => $token])
+        ->assertStatus(422);
 
-    public function test_token_with_wrong_issuer_returns_401(): void
-    {
-        $token = $this->mintProvisionToken(issuer: 'https://evil-idp.test');
+    Queue::assertNothingPushed();
+});
+test('token with overlong subdomain returns 422', function () {
+    $token = mintProvisionToken(claims: ['subdomain' => str_repeat('a', 51)]);
 
-        $this->post('/api/idp/tenants', ['provision_token' => $token])
-            ->assertStatus(401);
+    $this->post('/api/idp/tenants', ['provision_token' => $token])
+        ->assertStatus(422);
 
-        Queue::assertNothingPushed();
-    }
+    Queue::assertNothingPushed();
+});
+test('valid token queues tenant creation', function () {
+    $this->post('/api/idp/tenants', ['provision_token' => mintProvisionToken()])
+        ->assertStatus(202)
+        ->assertJson(['status' => 'accepted']);
 
-    public function test_token_with_wrong_audience_returns_401(): void
-    {
-        $token = $this->mintProvisionToken(audience: 'some-other-product');
+    Queue::assertPushed(
+        CreateTenantFromIdpJob::class,
+        static fn(CreateTenantFromIdpJob $job): bool => $job->idpTenantId === IDP_TENANT_ID_IDP_TENANT_PROVISION_ENDPOINT
+            && $job->name === 'Acme Corp'
+            && $job->subdomain === SUBDOMAIN_IDP_TENANT_PROVISION_ENDPOINT
+            && $job->environmentKey === ENVIRONMENT_KEY_IDP_TENANT_PROVISION_ENDPOINT,
+    );
+    Queue::assertNotPushed(ReportTenantProvisionedToIdpJob::class);
+});
+test('existing tenant by idp tenant id reports already exists', function () {
+    $existing = new Tenant([
+        'id' => 'existing-' . Str::random(6),
+        'name' => 'Existing Tenant',
+        'is_suspended' => false,
+        'idp_tenant_id' => IDP_TENANT_ID_IDP_TENANT_PROVISION_ENDPOINT,
+    ]);
+    $existing->saveQuietly();
 
-        $this->post('/api/idp/tenants', ['provision_token' => $token])
-            ->assertStatus(401);
+    $this->post('/api/idp/tenants', ['provision_token' => mintProvisionToken()])
+        ->assertStatus(202)
+        ->assertJson(['status' => 'accepted']);
 
-        Queue::assertNothingPushed();
-    }
+    Queue::assertPushed(
+        ReportTenantProvisionedToIdpJob::class,
+        static fn(ReportTenantProvisionedToIdpJob $job): bool => $job->idpTenantId === IDP_TENANT_ID_IDP_TENANT_PROVISION_ENDPOINT
+            && $job->environmentKey === ENVIRONMENT_KEY_IDP_TENANT_PROVISION_ENDPOINT
+            && $job->status === 'already_exists',
+    );
+    Queue::assertNotPushed(CreateTenantFromIdpJob::class);
+});
+test('existing tenant by subdomain reports already exists', function () {
+    $existing = new Tenant([
+        'id' => SUBDOMAIN_IDP_TENANT_PROVISION_ENDPOINT,
+        'name' => 'Existing Tenant',
+        'is_suspended' => false,
+    ]);
+    $existing->saveQuietly();
 
-    // ── Claim validation failures ─────────────────────────────────────────────
+    $this->post('/api/idp/tenants', ['provision_token' => mintProvisionToken()])
+        ->assertStatus(202)
+        ->assertJson(['status' => 'accepted']);
 
-    public function test_token_with_missing_claims_returns_422(): void
-    {
-        $token = $this->mintProvisionToken(claims: ['environment_key' => null]);
+    Queue::assertPushed(
+        ReportTenantProvisionedToIdpJob::class,
+        static fn(ReportTenantProvisionedToIdpJob $job): bool => $job->idpTenantId === IDP_TENANT_ID_IDP_TENANT_PROVISION_ENDPOINT
+            && $job->environmentKey === ENVIRONMENT_KEY_IDP_TENANT_PROVISION_ENDPOINT
+            && $job->status === 'already_exists',
+    );
+    Queue::assertNotPushed(CreateTenantFromIdpJob::class);
+});
+// ── Helpers ───────────────────────────────────────────────────────────────
+/**
+ * @param array<string, string|null> $claims claim overrides; null removes the claim
+ * @param string|null|null $issuer
+ * @param string|null|null $audience
+ * @param DateTimeImmutable|null|null $issuedAt
+ * @param DateTimeImmutable|null|null $expiresAt
+ */
+function mintProvisionToken(array $claims = [], string|null $issuer = null, string|null $audience = null, DateTimeImmutable|null $issuedAt = null, DateTimeImmutable|null $expiresAt = null): string
+{
+    $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
-        $this->post('/api/idp/tenants', ['provision_token' => $token])
-            ->assertStatus(422);
+    $configuration = Configuration::forAsymmetricSigner(
+        new Sha256(),
+        InMemory::plainText(idpProvisionKeys()['private']),
+        InMemory::plainText(idpProvisionKeys()['public']),
+    );
 
-        Queue::assertNothingPushed();
-    }
+    $builder = $configuration->builder()
+        ->withHeader('kid', '1')
+        ->issuedBy($issuer ?? IDP_URL_IDP_TENANT_PROVISION_ENDPOINT)
+        ->permittedFor($audience ?? PRODUCT_IDP_TENANT_PROVISION_ENDPOINT)
+        ->issuedAt($issuedAt ?? $now)
+        ->expiresAt($expiresAt ?? $now->modify('+10 minutes'));
 
-    public function test_token_with_invalid_subdomain_returns_422(): void
-    {
-        $token = $this->mintProvisionToken(claims: ['subdomain' => 'Not Valid!']);
+    $claims = array_merge([
+        'idp_tenant_id' => IDP_TENANT_ID_IDP_TENANT_PROVISION_ENDPOINT,
+        'name' => 'Acme Corp',
+        'subdomain' => SUBDOMAIN_IDP_TENANT_PROVISION_ENDPOINT,
+        'environment_key' => ENVIRONMENT_KEY_IDP_TENANT_PROVISION_ENDPOINT,
+    ], $claims);
 
-        $this->post('/api/idp/tenants', ['provision_token' => $token])
-            ->assertStatus(422);
-
-        Queue::assertNothingPushed();
-    }
-
-    public function test_token_with_overlong_subdomain_returns_422(): void
-    {
-        $token = $this->mintProvisionToken(claims: ['subdomain' => str_repeat('a', 51)]);
-
-        $this->post('/api/idp/tenants', ['provision_token' => $token])
-            ->assertStatus(422);
-
-        Queue::assertNothingPushed();
-    }
-
-    // ── Accepted requests ─────────────────────────────────────────────────────
-
-    public function test_valid_token_queues_tenant_creation(): void
-    {
-        $this->post('/api/idp/tenants', ['provision_token' => $this->mintProvisionToken()])
-            ->assertStatus(202)
-            ->assertJson(['status' => 'accepted']);
-
-        Queue::assertPushed(
-            CreateTenantFromIdpJob::class,
-            static fn(CreateTenantFromIdpJob $job): bool => $job->idpTenantId === self::IDP_TENANT_ID
-                && $job->name === 'Acme Corp'
-                && $job->subdomain === self::SUBDOMAIN
-                && $job->environmentKey === self::ENVIRONMENT_KEY,
-        );
-        Queue::assertNotPushed(ReportTenantProvisionedToIdpJob::class);
-    }
-
-    public function test_existing_tenant_by_idp_tenant_id_reports_already_exists(): void
-    {
-        $existing = new Tenant([
-            'id' => 'existing-' . Str::random(6),
-            'name' => 'Existing Tenant',
-            'is_suspended' => false,
-            'idp_tenant_id' => self::IDP_TENANT_ID,
-        ]);
-        $existing->saveQuietly();
-
-        $this->post('/api/idp/tenants', ['provision_token' => $this->mintProvisionToken()])
-            ->assertStatus(202)
-            ->assertJson(['status' => 'accepted']);
-
-        Queue::assertPushed(
-            ReportTenantProvisionedToIdpJob::class,
-            static fn(ReportTenantProvisionedToIdpJob $job): bool => $job->idpTenantId === self::IDP_TENANT_ID
-                && $job->environmentKey === self::ENVIRONMENT_KEY
-                && $job->status === 'already_exists',
-        );
-        Queue::assertNotPushed(CreateTenantFromIdpJob::class);
-    }
-
-    public function test_existing_tenant_by_subdomain_reports_already_exists(): void
-    {
-        $existing = new Tenant([
-            'id' => self::SUBDOMAIN,
-            'name' => 'Existing Tenant',
-            'is_suspended' => false,
-        ]);
-        $existing->saveQuietly();
-
-        $this->post('/api/idp/tenants', ['provision_token' => $this->mintProvisionToken()])
-            ->assertStatus(202)
-            ->assertJson(['status' => 'accepted']);
-
-        Queue::assertPushed(
-            ReportTenantProvisionedToIdpJob::class,
-            static fn(ReportTenantProvisionedToIdpJob $job): bool => $job->idpTenantId === self::IDP_TENANT_ID
-                && $job->environmentKey === self::ENVIRONMENT_KEY
-                && $job->status === 'already_exists',
-        );
-        Queue::assertNotPushed(CreateTenantFromIdpJob::class);
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /**
-     * @param array<string, string|null> $claims claim overrides; null removes the claim
-     * @param string|null|null $issuer
-     * @param string|null|null $audience
-     * @param DateTimeImmutable|null|null $issuedAt
-     * @param DateTimeImmutable|null|null $expiresAt
-     */
-    private function mintProvisionToken(
-        array $claims = [],
-        string|null $issuer = null,
-        string|null $audience = null,
-        DateTimeImmutable|null $issuedAt = null,
-        DateTimeImmutable|null $expiresAt = null,
-    ): string {
-        $now = new DateTimeImmutable('now', new \DateTimeZone('UTC'));
-
-        $configuration = Configuration::forAsymmetricSigner(
-            new Sha256(),
-            InMemory::plainText(static::$privateKeyPem),
-            InMemory::plainText(static::$publicKeyPem),
-        );
-
-        $builder = $configuration->builder()
-            ->withHeader('kid', '1')
-            ->issuedBy($issuer ?? self::IDP_URL)
-            ->permittedFor($audience ?? self::PRODUCT)
-            ->issuedAt($issuedAt ?? $now)
-            ->expiresAt($expiresAt ?? $now->modify('+10 minutes'));
-
-        $claims = array_merge([
-            'idp_tenant_id' => self::IDP_TENANT_ID,
-            'name' => 'Acme Corp',
-            'subdomain' => self::SUBDOMAIN,
-            'environment_key' => self::ENVIRONMENT_KEY,
-        ], $claims);
-
-        foreach ($claims as $claim => $value) {
-            if ($value !== null) {
-                $builder = $builder->withClaim($claim, $value);
-            }
+    foreach ($claims as $claim => $value) {
+        if ($value !== null) {
+            $builder = $builder->withClaim($claim, $value);
         }
-
-        return $builder
-            ->getToken($configuration->signer(), $configuration->signingKey())
-            ->toString();
     }
+
+    return $builder
+        ->getToken($configuration->signer(), $configuration->signingKey())
+        ->toString();
 }

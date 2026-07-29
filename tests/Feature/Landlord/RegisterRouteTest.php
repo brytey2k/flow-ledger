@@ -2,16 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Landlord;
+uses(Tests\LandlordTestCase::class);
 
-use Tests\LandlordTestCase;
-
-class RegisterRouteTest extends LandlordTestCase
-{
-    public function test_register_route_renders_placeholder(): void
-    {
-        $this->get(route('landlord.register'))
-            ->assertOk()
-            ->assertSee('Register page - to be implemented', false);
-    }
-}
+test('register route renders placeholder', function () {
+    $this->get(route('landlord.register'))
+        ->assertOk()
+        ->assertSee('Register page - to be implemented', false);
+});

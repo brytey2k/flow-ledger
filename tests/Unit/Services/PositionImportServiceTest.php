@@ -2,132 +2,100 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Services;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\Position;
 use App\Services\PositionImportService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
-use Tests\TenantAppTestCase;
 
-class PositionImportServiceTest extends TenantAppTestCase
-{
-    private PositionImportService $service;
+beforeEach(function () {
+    $this->service = app(PositionImportService::class);
+});
+test('valid csv with two positions returns two', function () {
+    $csv = "name\nDeveloper\nDesigner\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    $count = $this->service->import($file);
 
-        $this->service = app(PositionImportService::class);
-    }
+    expect($count)->toBe(2);
+});
+test('valid csv creates position records in database', function () {
+    $csv = "name\nDeveloper\nDesigner\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-    // ── import() ─────────────────────────────────────────────────────────────
+    $this->service->import($file);
 
-    public function test_valid_csv_with_two_positions_returns_two(): void
-    {
-        $csv = "name\nDeveloper\nDesigner\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
+    expect(Position::where('name', 'Developer')->exists())->toBeTrue();
+    expect(Position::where('name', 'Designer')->exists())->toBeTrue();
+});
+test('empty csv with no rows after header throws validation exception', function () {
+    $csv = "name\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-        $count = $this->service->import($file);
+    $this->expectException(ValidationException::class);
 
-        $this->assertSame(2, $count);
-    }
+    $this->service->import($file);
+});
+test('wrong headers throws validation exception', function () {
+    $csv = "position_name\nDeveloper\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-    public function test_valid_csv_creates_position_records_in_database(): void
-    {
-        $csv = "name\nDeveloper\nDesigner\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
+    $this->expectException(ValidationException::class);
 
-        $this->service->import($file);
+    $this->service->import($file);
+});
+test('blank row is silently skipped and rest imported', function () {
+    $csv = "name\n\nDesigner\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-        $this->assertTrue(Position::where('name', 'Developer')->exists());
-        $this->assertTrue(Position::where('name', 'Designer')->exists());
-    }
+    $count = $this->service->import($file);
 
-    public function test_empty_csv_with_no_rows_after_header_throws_validation_exception(): void
-    {
-        $csv = "name\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
+    expect($count)->toBe(1);
+    expect(Position::where('name', 'Designer')->exists())->toBeTrue();
+});
+test('duplicate name within file throws validation exception', function () {
+    $csv = "name\nDeveloper\nDeveloper\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-        $this->expectException(ValidationException::class);
+    $this->expectException(ValidationException::class);
 
-        $this->service->import($file);
-    }
+    $this->service->import($file);
+});
+test('name exceeding 100 characters throws validation exception', function () {
+    $longName = str_repeat('B', 101);
+    $csv = "name\n{$longName}\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-    public function test_wrong_headers_throws_validation_exception(): void
-    {
-        $csv = "position_name\nDeveloper\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
+    $this->expectException(ValidationException::class);
 
-        $this->expectException(ValidationException::class);
+    $this->service->import($file);
+});
+test('duplicate name already existing in database throws validation exception', function () {
+    Position::factory()->create(['name' => 'Developer']);
 
-        $this->service->import($file);
-    }
+    $csv = "name\nDeveloper\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-    public function test_blank_row_is_silently_skipped_and_rest_imported(): void
-    {
-        $csv = "name\n\nDesigner\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
+    $this->expectException(ValidationException::class);
 
-        $count = $this->service->import($file);
+    $this->service->import($file);
+});
+test('single valid position returns one', function () {
+    $csv = "name\nManager\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-        $this->assertSame(1, $count);
-        $this->assertTrue(Position::where('name', 'Designer')->exists());
-    }
+    $count = $this->service->import($file);
 
-    public function test_duplicate_name_within_file_throws_validation_exception(): void
-    {
-        $csv = "name\nDeveloper\nDeveloper\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
+    expect($count)->toBe(1);
+    expect(Position::where('name', 'Manager')->exists())->toBeTrue();
+});
+test('name exactly 100 characters is accepted', function () {
+    $name = str_repeat('B', 100);
+    $csv = "name\n{$name}\n";
+    $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
 
-        $this->expectException(ValidationException::class);
+    $count = $this->service->import($file);
 
-        $this->service->import($file);
-    }
-
-    public function test_name_exceeding_100_characters_throws_validation_exception(): void
-    {
-        $longName = str_repeat('B', 101);
-        $csv = "name\n{$longName}\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
-
-        $this->expectException(ValidationException::class);
-
-        $this->service->import($file);
-    }
-
-    public function test_duplicate_name_already_existing_in_database_throws_validation_exception(): void
-    {
-        Position::factory()->create(['name' => 'Developer']);
-
-        $csv = "name\nDeveloper\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
-
-        $this->expectException(ValidationException::class);
-
-        $this->service->import($file);
-    }
-
-    public function test_single_valid_position_returns_one(): void
-    {
-        $csv = "name\nManager\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
-
-        $count = $this->service->import($file);
-
-        $this->assertSame(1, $count);
-        $this->assertTrue(Position::where('name', 'Manager')->exists());
-    }
-
-    public function test_name_exactly_100_characters_is_accepted(): void
-    {
-        $name = str_repeat('B', 100);
-        $csv = "name\n{$name}\n";
-        $file = UploadedFile::fake()->createWithContent('positions.csv', $csv);
-
-        $count = $this->service->import($file);
-
-        $this->assertSame(1, $count);
-        $this->assertTrue(Position::where('name', $name)->exists());
-    }
-}
+    expect($count)->toBe(1);
+    expect(Position::where('name', $name)->exists())->toBeTrue();
+});

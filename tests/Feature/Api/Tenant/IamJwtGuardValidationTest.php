@@ -2,210 +2,158 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Api\Tenant;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Auth\IamJwtGuard;
 use App\Repositories\UserRepository;
 use App\Services\SsoClientService;
-use DateTimeImmutable;
 use Illuminate\Http\Request;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
-use Tests\TenantAppTestCase;
 
+const IDP_URL_IAM_JWT_GUARD_VALIDATION = 'http://iam.test:81';
+const PRODUCT_IAM_JWT_GUARD_VALIDATION = 'flow-ledger';
+const SUB = 'oidc-sub-real-token';
+const TENANT_ID = 'idp-tenant-under-test';
+beforeEach(function () {
+    [$this->privatePem, $this->publicPem] = generateRsaKeypair();
+
+    config([
+        'sso.idp_url' => IDP_URL_IAM_JWT_GUARD_VALIDATION,
+        'sso.audience' => PRODUCT_IAM_JWT_GUARD_VALIDATION,
+        'sso.product_slug' => PRODUCT_IAM_JWT_GUARD_VALIDATION,
+    ]);
+
+    $this->tenant->forceFill(['idp_tenant_id' => TENANT_ID])->save();
+});
+test('valid token resolves the user', function () {
+    $this->user->forceFill(['oidc_sub' => SUB])->save();
+
+    $token = mintToken();
+    $guard = makeGuardForIamJwtGuardValidation($token);
+
+    $resolved = $guard->user();
+
+    expect($resolved)->not->toBeNull();
+    expect($resolved->getAuthIdentifier())->toBe($this->user->id);
+    expect($guard->check())->toBeTrue();
+});
+test('token with wrong issuer is rejected', function () {
+    $this->user->forceFill(['oidc_sub' => SUB])->save();
+
+    $token = mintToken(issuer: 'http://evil-idp.test');
+    $guard = makeGuardForIamJwtGuardValidation($token);
+
+    expect($guard->user())->toBeNull();
+});
+test('token without matching audience is rejected', function () {
+    $this->user->forceFill(['oidc_sub' => SUB])->save();
+
+    $token = mintToken(audience: 'some-other-product');
+    $guard = makeGuardForIamJwtGuardValidation($token);
+
+    expect($guard->user())->toBeNull();
+});
+test('token without matching product is rejected', function () {
+    $this->user->forceFill(['oidc_sub' => SUB])->save();
+
+    $token = mintToken(products: ['some-other-product']);
+    $guard = makeGuardForIamJwtGuardValidation($token);
+
+    expect($guard->user())->toBeNull();
+});
+test('expired token is rejected', function () {
+    $this->user->forceFill(['oidc_sub' => SUB])->save();
+
+    $now = new DateTimeImmutable('2026-07-04T12:00:00+00:00');
+    $token = mintToken(issuedAt: $now->modify('-2 hours'), expiresAt: $now->modify('-1 hour'));
+    $guard = makeGuardForIamJwtGuardValidation($token);
+
+    expect($guard->user())->toBeNull();
+});
+test('token minted for a different tenant is rejected', function () {
+    $this->user->forceFill(['oidc_sub' => SUB])->save();
+
+    $token = mintToken(tenantId: 'some-other-idp-tenant-id');
+    $guard = makeGuardForIamJwtGuardValidation($token);
+
+    expect($guard->user())->toBeNull();
+});
+test('token missing tenant claim is rejected', function () {
+    $this->user->forceFill(['oidc_sub' => SUB])->save();
+
+    $token = mintToken(tenantId: null);
+    $guard = makeGuardForIamJwtGuardValidation($token);
+
+    expect($guard->user())->toBeNull();
+});
+// ── Helpers ───────────────────────────────────────────────────────────────
 /**
- * Exercises the REAL IamJwtGuard::parseAndValidate() end-to-end by minting an
- * RS256 JWT with a locally generated RSA keypair and stubbing only the public
- * key source (SsoClientService::getIdpPublicKeyPem()). Everything else in the
- * guard runs for real: signature verification, issuer, audience, product and
- * expiry checks, plus user resolution via UserRepository.
+ * @param string|null $issuer
+ * @param string|null|null $audience
+ * @param list<string> $products
+ * @param string $subject
+ * @param DateTimeImmutable|null|null $issuedAt
+ * @param DateTimeImmutable|null|null $expiresAt
+ * @param string|null $tenantId Pass null to omit the claim entirely; defaults to the tenant under test.
  */
-class IamJwtGuardValidationTest extends TenantAppTestCase
+function mintToken(string|null $issuer = null, string|null $audience = null, array $products = [PRODUCT_IAM_JWT_GUARD_VALIDATION], string $subject = SUB, DateTimeImmutable|null $issuedAt = null, DateTimeImmutable|null $expiresAt = null, string|null $tenantId = TENANT_ID): string
 {
-    private const IDP_URL = 'http://iam.test:81';
+    $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
-    private const PRODUCT = 'flow-ledger';
+    $configuration = Configuration::forAsymmetricSigner(
+        new Sha256(),
+        InMemory::plainText(test()->privatePem),
+        InMemory::plainText(test()->publicPem),
+    );
 
-    private const SUB = 'oidc-sub-real-token';
+    $builder = $configuration->builder()
+        ->withHeader('kid', '1')
+        ->issuedBy($issuer ?? IDP_URL_IAM_JWT_GUARD_VALIDATION)
+        ->permittedFor($audience ?? PRODUCT_IAM_JWT_GUARD_VALIDATION)
+        ->relatedTo($subject)
+        ->issuedAt($issuedAt ?? $now)
+        ->expiresAt($expiresAt ?? $now->modify('+1 hour'))
+        ->withClaim('products', $products)
+        ->withClaim('scopes', ['openid', 'profile']);
 
-    private string $privatePem;
-
-    private string $publicPem;
-
-    private const TENANT_ID = 'idp-tenant-under-test';
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        [$this->privatePem, $this->publicPem] = $this->generateRsaKeypair();
-
-        config([
-            'sso.idp_url' => self::IDP_URL,
-            'sso.audience' => self::PRODUCT,
-            'sso.product_slug' => self::PRODUCT,
-        ]);
-
-        $this->tenant->forceFill(['idp_tenant_id' => self::TENANT_ID])->save();
+    if ($tenantId !== null) {
+        $builder = $builder->withClaim('tenant_id', $tenantId);
     }
 
-    public function test_valid_token_resolves_the_user(): void
-    {
-        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
+    $token = $builder->getToken($configuration->signer(), $configuration->signingKey());
 
-        $token = $this->mintToken();
-        $guard = $this->makeGuard($token);
+    return $token->toString();
+}
+function makeGuardForIamJwtGuardValidation(string $rawToken): IamJwtGuard
+{
+    $sso = test()->createPartialMock(SsoClientService::class, ['getIdpPublicKeyPem']);
+    $sso->method('getIdpPublicKeyPem')->willReturn(test()->publicPem);
 
-        $resolved = $guard->user();
+    $request = Request::create('/api/me', 'GET', server: [
+        'HTTP_AUTHORIZATION' => 'Bearer ' . $rawToken,
+    ]);
 
-        $this->assertNotNull($resolved);
-        $this->assertSame($this->user->id, $resolved->getAuthIdentifier());
-        $this->assertTrue($guard->check());
+    return new IamJwtGuard(null, $request, $sso, app(UserRepository::class));
+}
+/**
+ * @return array{0: string, 1: string} [privatePem, publicPem]
+ */
+function generateRsaKeypair(): array
+{
+    $resource = openssl_pkey_new([
+        'private_key_bits' => 2048,
+        'private_key_type' => OPENSSL_KEYTYPE_RSA,
+    ]);
+
+    if ($resource === false) {
+        test()->fail('Unable to generate RSA keypair for test.');
     }
 
-    public function test_token_with_wrong_issuer_is_rejected(): void
-    {
-        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
+    openssl_pkey_export($resource, $privatePem);
 
-        $token = $this->mintToken(issuer: 'http://evil-idp.test');
-        $guard = $this->makeGuard($token);
+    $details = openssl_pkey_get_details($resource);
+    $publicPem = is_array($details) ? (string) $details['key'] : '';
 
-        $this->assertNull($guard->user());
-    }
-
-    public function test_token_without_matching_audience_is_rejected(): void
-    {
-        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
-
-        $token = $this->mintToken(audience: 'some-other-product');
-        $guard = $this->makeGuard($token);
-
-        $this->assertNull($guard->user());
-    }
-
-    public function test_token_without_matching_product_is_rejected(): void
-    {
-        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
-
-        $token = $this->mintToken(products: ['some-other-product']);
-        $guard = $this->makeGuard($token);
-
-        $this->assertNull($guard->user());
-    }
-
-    public function test_expired_token_is_rejected(): void
-    {
-        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
-
-        $now = new DateTimeImmutable('2026-07-04T12:00:00+00:00');
-        $token = $this->mintToken(
-            issuedAt: $now->modify('-2 hours'),
-            expiresAt: $now->modify('-1 hour'),
-        );
-        $guard = $this->makeGuard($token);
-
-        $this->assertNull($guard->user());
-    }
-
-    public function test_token_minted_for_a_different_tenant_is_rejected(): void
-    {
-        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
-
-        $token = $this->mintToken(tenantId: 'some-other-idp-tenant-id');
-        $guard = $this->makeGuard($token);
-
-        $this->assertNull($guard->user());
-    }
-
-    public function test_token_missing_tenant_claim_is_rejected(): void
-    {
-        $this->user->forceFill(['oidc_sub' => self::SUB])->save();
-
-        $token = $this->mintToken(tenantId: null);
-        $guard = $this->makeGuard($token);
-
-        $this->assertNull($guard->user());
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /**
-     * @param string|null $issuer
-     * @param string|null|null $audience
-     * @param list<string> $products
-     * @param string $subject
-     * @param DateTimeImmutable|null|null $issuedAt
-     * @param DateTimeImmutable|null|null $expiresAt
-     * @param string|null $tenantId Pass null to omit the claim entirely; defaults to the tenant under test.
-     */
-    private function mintToken(
-        string|null $issuer = null,
-        string|null $audience = null,
-        array $products = [self::PRODUCT],
-        string $subject = self::SUB,
-        DateTimeImmutable|null $issuedAt = null,
-        DateTimeImmutable|null $expiresAt = null,
-        string|null $tenantId = self::TENANT_ID,
-    ): string {
-        $now = new DateTimeImmutable('now', new \DateTimeZone('UTC'));
-
-        $configuration = Configuration::forAsymmetricSigner(
-            new Sha256(),
-            InMemory::plainText($this->privatePem),
-            InMemory::plainText($this->publicPem),
-        );
-
-        $builder = $configuration->builder()
-            ->withHeader('kid', '1')
-            ->issuedBy($issuer ?? self::IDP_URL)
-            ->permittedFor($audience ?? self::PRODUCT)
-            ->relatedTo($subject)
-            ->issuedAt($issuedAt ?? $now)
-            ->expiresAt($expiresAt ?? $now->modify('+1 hour'))
-            ->withClaim('products', $products)
-            ->withClaim('scopes', ['openid', 'profile']);
-
-        if ($tenantId !== null) {
-            $builder = $builder->withClaim('tenant_id', $tenantId);
-        }
-
-        $token = $builder->getToken($configuration->signer(), $configuration->signingKey());
-
-        return $token->toString();
-    }
-
-    private function makeGuard(string $rawToken): IamJwtGuard
-    {
-        $sso = $this->createPartialMock(SsoClientService::class, ['getIdpPublicKeyPem']);
-        $sso->method('getIdpPublicKeyPem')->willReturn($this->publicPem);
-
-        $request = Request::create('/api/me', 'GET', server: [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $rawToken,
-        ]);
-
-        return new IamJwtGuard(null, $request, $sso, $this->app->make(UserRepository::class));
-    }
-
-    /**
-     * @return array{0: string, 1: string} [privatePem, publicPem]
-     */
-    private function generateRsaKeypair(): array
-    {
-        $resource = openssl_pkey_new([
-            'private_key_bits' => 2048,
-            'private_key_type' => OPENSSL_KEYTYPE_RSA,
-        ]);
-
-        if ($resource === false) {
-            $this->fail('Unable to generate RSA keypair for test.');
-        }
-
-        openssl_pkey_export($resource, $privatePem);
-
-        $details = openssl_pkey_get_details($resource);
-        $publicPem = is_array($details) ? (string) $details['key'] : '';
-
-        return [$privatePem, $publicPem];
-    }
+    return [$privatePem, $publicPem];
 }

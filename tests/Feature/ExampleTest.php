@@ -2,23 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature;
+uses(Tests\TenantAppTestCase::class);
+test('tenant dashboard requires authentication', function () {
+    $response = $this->get(route('dashboard'));
 
-use Tests\TenantAppTestCase;
+    $response->assertRedirect(route('login'));
+});
+test('authenticated user can access dashboard', function () {
+    $response = $this->actingAs($this->user)->get(route('dashboard'));
 
-class ExampleTest extends TenantAppTestCase
-{
-    public function test_tenant_dashboard_requires_authentication(): void
-    {
-        $response = $this->get(route('dashboard'));
-
-        $response->assertRedirect(route('login'));
-    }
-
-    public function test_authenticated_user_can_access_dashboard(): void
-    {
-        $response = $this->actingAs($this->user)->get(route('dashboard'));
-
-        $response->assertOk();
-    }
-}
+    $response->assertOk();
+});

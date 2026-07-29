@@ -2,77 +2,55 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Repositories;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\WorkflowTemplate;
 use App\Repositories\WorkflowTemplateRepository;
-use Tests\TenantAppTestCase;
 
-class WorkflowTemplateRepositoryTest extends TenantAppTestCase
-{
-    private WorkflowTemplateRepository $repository;
+beforeEach(function () {
+    $this->repository = app(WorkflowTemplateRepository::class);
+});
+test('all with stage count returns collection', function () {
+    $result = $this->repository->allWithStageCount();
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    expect($result)->toBeInstanceOf(Illuminate\Database\Eloquent\Collection::class);
+});
+test('all with stage count includes stage count attribute', function () {
+    WorkflowTemplate::factory()->advance()->create(['name' => 'Advance Template']);
 
-        $this->repository = app(WorkflowTemplateRepository::class);
-    }
+    $result = $this->repository->allWithStageCount();
 
-    // ── allWithStageCount ─────────────────────────────────────────────────────
+    expect($result->count())->toBeGreaterThan(0);
+    $first = $result->first();
+    expect($first->relationLoaded('branch') || $first->branch_id === null)->toBeTrue();
+    expect($first->stages_count)->not->toBeNull();
+});
+test('all with stage count orders by name', function () {
+    WorkflowTemplate::factory()->advance()->create(['name' => 'Zulu Template']);
+    WorkflowTemplate::factory()->advance()->create(['name' => 'Alpha Template']);
+    WorkflowTemplate::factory()->advance()->create(['name' => 'Mango Template']);
 
-    public function test_all_with_stage_count_returns_collection(): void
-    {
-        $result = $this->repository->allWithStageCount();
+    $result = $this->repository->allWithStageCount();
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $result);
-    }
+    $names = $result->pluck('name')->all();
+    $sorted = $names;
+    sort($sorted);
+    expect($names)->toBe($sorted);
+});
+test('all with stage count eager loads branch relation', function () {
+    WorkflowTemplate::factory()->advance()->create();
 
-    public function test_all_with_stage_count_includes_stage_count_attribute(): void
-    {
-        WorkflowTemplate::factory()->advance()->create(['name' => 'Advance Template']);
+    $result = $this->repository->allWithStageCount();
 
-        $result = $this->repository->allWithStageCount();
+    expect($result->count())->toBeGreaterThan(0);
+    $first = $result->first();
+    expect($first->relationLoaded('branch'))->toBeTrue();
+});
+test('all with stage count returns zero count for template without stages', function () {
+    WorkflowTemplate::factory()->advance()->create(['name' => 'Empty Template']);
 
-        $this->assertGreaterThan(0, $result->count());
-        $first = $result->first();
-        $this->assertTrue($first->relationLoaded('branch') || $first->branch_id === null);
-        $this->assertNotNull($first->stages_count);
-    }
+    $result = $this->repository->allWithStageCount();
 
-    public function test_all_with_stage_count_orders_by_name(): void
-    {
-        WorkflowTemplate::factory()->advance()->create(['name' => 'Zulu Template']);
-        WorkflowTemplate::factory()->advance()->create(['name' => 'Alpha Template']);
-        WorkflowTemplate::factory()->advance()->create(['name' => 'Mango Template']);
-
-        $result = $this->repository->allWithStageCount();
-
-        $names = $result->pluck('name')->all();
-        $sorted = $names;
-        sort($sorted);
-        $this->assertSame($sorted, $names);
-    }
-
-    public function test_all_with_stage_count_eager_loads_branch_relation(): void
-    {
-        WorkflowTemplate::factory()->advance()->create();
-
-        $result = $this->repository->allWithStageCount();
-
-        $this->assertGreaterThan(0, $result->count());
-        $first = $result->first();
-        $this->assertTrue($first->relationLoaded('branch'));
-    }
-
-    public function test_all_with_stage_count_returns_zero_count_for_template_without_stages(): void
-    {
-        WorkflowTemplate::factory()->advance()->create(['name' => 'Empty Template']);
-
-        $result = $this->repository->allWithStageCount();
-
-        $emptyTemplate = $result->firstWhere('name', 'Empty Template');
-        $this->assertNotNull($emptyTemplate);
-        $this->assertSame(0, $emptyTemplate->stages_count);
-    }
-}
+    $emptyTemplate = $result->firstWhere('name', 'Empty Template');
+    expect($emptyTemplate)->not->toBeNull();
+    expect($emptyTemplate->stages_count)->toBe(0);
+});

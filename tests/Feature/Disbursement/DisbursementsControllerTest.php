@@ -2,207 +2,169 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Disbursement;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PaymentMethod;
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\PaymentRequest;
-use Tests\TenantAppTestCase;
 
-class DisbursementsControllerTest extends TenantAppTestCase
-{
-    // ── Authentication ────────────────────────────────────────────────────────
+test('guest is redirected from index', function () {
+    $response = $this->get(route('disbursements.index'));
 
-    public function test_guest_is_redirected_from_index(): void
-    {
-        $response = $this->get(route('disbursements.index'));
+    $response->assertRedirect(route('login'));
+});
+test('guest cannot disburse', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
-        $response->assertRedirect(route('login'));
-    }
+    $response = $this->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::Cash->value,
+    ]);
 
-    public function test_guest_cannot_disburse(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $response->assertRedirect(route('login'));
+});
+test('user without permission cannot access index', function () {
+    $this->role->revokePermissionTo(PermissionKey::DisburseRequests->value);
 
-        $response = $this->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::Cash->value,
-        ]);
+    $response = $this->actingAs($this->user)->get(route('disbursements.index'));
 
-        $response->assertRedirect(route('login'));
-    }
+    $response->assertForbidden();
+});
+test('user without permission cannot disburse', function () {
+    $this->role->revokePermissionTo(PermissionKey::DisburseRequests->value);
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
-    // ── Authorization ─────────────────────────────────────────────────────────
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::Cash->value,
+    ]);
 
-    public function test_user_without_permission_cannot_access_index(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::DisburseRequests->value);
+    $response->assertForbidden();
+});
+test('authorised user sees disbursements index', function () {
+    PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
 
-        $response = $this->actingAs($this->user)->get(route('disbursements.index'));
+    $response = $this->actingAs($this->user)->get(route('disbursements.index'));
 
-        $response->assertForbidden();
-    }
+    $response->assertOk();
+    $response->assertViewIs('tenant.disbursements.index');
+});
+test('index only shows approved requests', function () {
+    $approved = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
+    PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id]);
 
-    public function test_user_without_permission_cannot_disburse(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::DisburseRequests->value);
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $response = $this->actingAs($this->user)->get(route('disbursements.index'));
 
-        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::Cash->value,
-        ]);
+    $response->assertOk();
+    $response->assertViewHas('requests', fn($requests) => $requests->contains($approved));
+    $response->assertViewHas('requests', fn($requests) => $requests->total() === 1);
+});
+test('authorised user can disburse approved request', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
-        $response->assertForbidden();
-    }
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::BankTransfer->value,
+        'disbursement_reference' => 'TXN-001',
+    ]);
 
-    // ── Index ─────────────────────────────────────────────────────────────────
+    $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+    $response->assertSessionHas('success');
 
-    public function test_authorised_user_sees_disbursements_index(): void
-    {
-        PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
-        PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
+    $this->assertDatabaseHas('payment_requests', [
+        'id' => $paymentRequest->id,
+        'status' => 'disbursed',
+        'disbursement_method' => PaymentMethod::BankTransfer->value,
+        'disbursement_reference' => 'TXN-001',
+        'disbursed_by_user_id' => $this->user->id,
+    ]);
+});
+test('disburse without reference is allowed', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
-        $response = $this->actingAs($this->user)->get(route('disbursements.index'));
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::Cash->value,
+    ]);
 
-        $response->assertOk();
-        $response->assertViewIs('tenant.disbursements.index');
-    }
+    $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+    $this->assertDatabaseHas('payment_requests', [
+        'id' => $paymentRequest->id,
+        'status' => 'disbursed',
+        'disbursement_reference' => null,
+    ]);
+});
+test('cannot disburse non approved request', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
 
-    public function test_index_only_shows_approved_requests(): void
-    {
-        $approved = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
-        PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
-        PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id]);
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::Cash->value,
+    ]);
 
-        $response = $this->actingAs($this->user)->get(route('disbursements.index'));
+    $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+    $response->assertSessionHas('error');
 
-        $response->assertOk();
-        $response->assertViewHas('requests', fn($requests) => $requests->contains($approved));
-        $response->assertViewHas('requests', fn($requests) => $requests->total() === 1);
-    }
+    $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'draft']);
+});
+test('disbursement method is required', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
-    // ── Disbursement ──────────────────────────────────────────────────────────
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => '',
+    ]);
 
-    public function test_authorised_user_can_disburse_approved_request(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $response->assertSessionHasErrors('disbursement_method');
+    $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
+});
+test('disburse logs activity', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
-        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::BankTransfer->value,
-            'disbursement_reference' => 'TXN-001',
-        ]);
+    $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::MobileMoney->value,
+        'disbursement_reference' => 'MM-999',
+    ]);
 
-        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
-        $response->assertSessionHas('success');
+    $this->assertDatabaseHas('activity_log', [
+        'subject_type' => PaymentRequest::class,
+        'subject_id' => $paymentRequest->id,
+        'event' => 'request.disbursed',
+    ]);
+});
+test('cannot disburse when insufficient cashbook balance', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'approved',
+        'branch_id' => $this->branch->id,
+        'total_amount' => 100.00,
+    ]);
 
-        $this->assertDatabaseHas('payment_requests', [
-            'id' => $paymentRequest->id,
-            'status' => 'disbursed',
-            'disbursement_method' => PaymentMethod::BankTransfer->value,
-            'disbursement_reference' => 'TXN-001',
-            'disbursed_by_user_id' => $this->user->id,
-        ]);
-    }
+    // Pre-populate cashbook with insufficient balance
+    Cashbook::create([
+        'branch_id' => $this->branch->id,
+        'currency_id' => $paymentRequest->currency_id,
+        'balance' => 50.00,
+    ]);
 
-    public function test_disburse_without_reference_is_allowed(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::Cash->value,
+    ]);
 
-        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::Cash->value,
-        ]);
+    $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+    $response->assertSessionHas('error');
 
-        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
-        $this->assertDatabaseHas('payment_requests', [
-            'id' => $paymentRequest->id,
-            'status' => 'disbursed',
-            'disbursement_reference' => null,
-        ]);
-    }
+    $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
+});
+test('authorised user can disburse approved expense', function () {
+    $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
-    public function test_cannot_disburse_non_approved_request(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft', 'branch_id' => $this->branch->id]);
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::BankTransfer->value,
+        'disbursement_reference' => 'TXN-EXP-001',
+    ]);
 
-        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::Cash->value,
-        ]);
+    $response->assertRedirect(route('payment-requests.show', $paymentRequest));
+    $response->assertSessionHas('success');
 
-        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
-        $response->assertSessionHas('error');
-
-        $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'draft']);
-    }
-
-    public function test_disbursement_method_is_required(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
-
-        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => '',
-        ]);
-
-        $response->assertSessionHasErrors('disbursement_method');
-        $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
-    }
-
-    public function test_disburse_logs_activity(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
-
-        $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::MobileMoney->value,
-            'disbursement_reference' => 'MM-999',
-        ]);
-
-        $this->assertDatabaseHas('activity_log', [
-            'subject_type' => PaymentRequest::class,
-            'subject_id' => $paymentRequest->id,
-            'event' => 'request.disbursed',
-        ]);
-    }
-
-    public function test_cannot_disburse_when_insufficient_cashbook_balance(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->advance()->create([
-            'status' => 'approved',
-            'branch_id' => $this->branch->id,
-            'total_amount' => 100.00,
-        ]);
-
-        // Pre-populate cashbook with insufficient balance
-        Cashbook::create([
-            'branch_id' => $this->branch->id,
-            'currency_id' => $paymentRequest->currency_id,
-            'balance' => 50.00,
-        ]);
-
-        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::Cash->value,
-        ]);
-
-        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
-        $response->assertSessionHas('error');
-
-        $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
-    }
-
-    public function test_authorised_user_can_disburse_approved_expense(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
-
-        $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
-            'disbursement_method' => PaymentMethod::BankTransfer->value,
-            'disbursement_reference' => 'TXN-EXP-001',
-        ]);
-
-        $response->assertRedirect(route('payment-requests.show', $paymentRequest));
-        $response->assertSessionHas('success');
-
-        $this->assertDatabaseHas('payment_requests', [
-            'id' => $paymentRequest->id,
-            'status' => 'disbursed',
-            'disbursement_method' => PaymentMethod::BankTransfer->value,
-        ]);
-    }
-}
+    $this->assertDatabaseHas('payment_requests', [
+        'id' => $paymentRequest->id,
+        'status' => 'disbursed',
+        'disbursement_method' => PaymentMethod::BankTransfer->value,
+    ]);
+});

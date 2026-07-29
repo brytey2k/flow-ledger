@@ -1,80 +1,48 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Enums;
-
 use App\Enums\Tenant\PermissionKey;
-use PHPUnit\Framework\TestCase;
 
-class PermissionKeyTest extends TestCase
-{
-    public function test_access_levels_value(): void
-    {
-        $this->assertSame('access levels', PermissionKey::AccessLevels->value);
-    }
+test('access levels value', function () {
+    expect(PermissionKey::AccessLevels->value)->toBe('access levels');
+});
+test('access branches value', function () {
+    expect(PermissionKey::AccessBranches->value)->toBe('access branches');
+});
+test('access users value', function () {
+    expect(PermissionKey::AccessUsers->value)->toBe('access users');
+});
+test('manage user permissions value', function () {
+    expect(PermissionKey::ManageUserPermissions->value)->toBe('manage user permissions');
+});
+test('view descendant branches value', function () {
+    expect(PermissionKey::ViewDescendantBranches->value)->toBe('view descendant branches');
+});
+test('approve requests value', function () {
+    expect(PermissionKey::ApproveRequests->value)->toBe('approve requests');
+});
+test('disburse requests value', function () {
+    expect(PermissionKey::DisburseRequests->value)->toBe('disburse requests');
+});
+test('settle retirements value', function () {
+    expect(PermissionKey::SettleRetirements->value)->toBe('settle retirements');
+});
+test('access cashbook value', function () {
+    expect(PermissionKey::AccessCashbook->value)->toBe('access cashbook');
+});
+test('access cash count value', function () {
+    expect(PermissionKey::AccessCashCount->value)->toBe('access cash count');
+});
+test('can create from string', function () {
+    expect(PermissionKey::from('access levels'))->toBe(PermissionKey::AccessLevels);
+    expect(PermissionKey::from('create user'))->toBe(PermissionKey::CreateUser);
+    expect(PermissionKey::from('delete role'))->toBe(PermissionKey::DeleteRole);
+});
+test('try from returns null for unknown value', function () {
+    expect(PermissionKey::tryFrom('unknown permission'))->toBeNull();
+});
+test('cases returns expected count', function () {
+    $cases = PermissionKey::cases();
 
-    public function test_access_branches_value(): void
-    {
-        $this->assertSame('access branches', PermissionKey::AccessBranches->value);
-    }
-
-    public function test_access_users_value(): void
-    {
-        $this->assertSame('access users', PermissionKey::AccessUsers->value);
-    }
-
-    public function test_manage_user_permissions_value(): void
-    {
-        $this->assertSame('manage user permissions', PermissionKey::ManageUserPermissions->value);
-    }
-
-    public function test_view_descendant_branches_value(): void
-    {
-        $this->assertSame('view descendant branches', PermissionKey::ViewDescendantBranches->value);
-    }
-
-    public function test_approve_requests_value(): void
-    {
-        $this->assertSame('approve requests', PermissionKey::ApproveRequests->value);
-    }
-
-    public function test_disburse_requests_value(): void
-    {
-        $this->assertSame('disburse requests', PermissionKey::DisburseRequests->value);
-    }
-
-    public function test_settle_retirements_value(): void
-    {
-        $this->assertSame('settle retirements', PermissionKey::SettleRetirements->value);
-    }
-
-    public function test_access_cashbook_value(): void
-    {
-        $this->assertSame('access cashbook', PermissionKey::AccessCashbook->value);
-    }
-
-    public function test_access_cash_count_value(): void
-    {
-        $this->assertSame('access cash count', PermissionKey::AccessCashCount->value);
-    }
-
-    public function test_can_create_from_string(): void
-    {
-        $this->assertSame(PermissionKey::AccessLevels, PermissionKey::from('access levels'));
-        $this->assertSame(PermissionKey::CreateUser, PermissionKey::from('create user'));
-        $this->assertSame(PermissionKey::DeleteRole, PermissionKey::from('delete role'));
-    }
-
-    public function test_try_from_returns_null_for_unknown_value(): void
-    {
-        $this->assertNull(PermissionKey::tryFrom('unknown permission'));
-    }
-
-    public function test_cases_returns_expected_count(): void
-    {
-        $cases = PermissionKey::cases();
-
-        $this->assertGreaterThan(40, count($cases));
-    }
-}
+    expect(count($cases))->toBeGreaterThan(40);
+});

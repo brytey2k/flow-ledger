@@ -2,55 +2,42 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Middleware;
+uses(Tests\TenantAppTestCase::class);
+test('locale is set from session', function () {
+    $response = $this->actingAs($this->user)
+        ->withSession(['locale' => 'fr'])
+        ->get(route('dashboard'));
 
-use Tests\TenantAppTestCase;
+    $response->assertOk();
+    expect(app()->getLocale())->toBe('fr');
+});
+test('locale defaults to app locale when session and user locale absent', function () {
+    $this->user->update(['locale' => null]);
 
-class SetLocaleTest extends TenantAppTestCase
-{
-    public function test_locale_is_set_from_session(): void
-    {
-        $response = $this->actingAs($this->user)
-            ->withSession(['locale' => 'fr'])
-            ->get(route('dashboard'));
+    $response = $this->actingAs($this->user)
+        ->withSession([])
+        ->get(route('dashboard'));
 
-        $response->assertOk();
-        $this->assertSame('fr', app()->getLocale());
-    }
+    $response->assertOk();
+    expect(app()->getLocale())->toBe(config('app.locale', 'en'));
+});
+test('session locale takes precedence over user locale', function () {
+    $this->user->update(['locale' => 'en']);
 
-    public function test_locale_defaults_to_app_locale_when_session_and_user_locale_absent(): void
-    {
-        $this->user->update(['locale' => null]);
+    $response = $this->actingAs($this->user)
+        ->withSession(['locale' => 'fr'])
+        ->get(route('dashboard'));
 
-        $response = $this->actingAs($this->user)
-            ->withSession([])
-            ->get(route('dashboard'));
+    $response->assertOk();
+    expect(app()->getLocale())->toBe('fr');
+});
+test('user locale is used when no session locale', function () {
+    $this->user->update(['locale' => 'en']);
 
-        $response->assertOk();
-        $this->assertSame(config('app.locale', 'en'), app()->getLocale());
-    }
+    $response = $this->actingAs($this->user)
+        ->withSession([])
+        ->get(route('dashboard'));
 
-    public function test_session_locale_takes_precedence_over_user_locale(): void
-    {
-        $this->user->update(['locale' => 'en']);
-
-        $response = $this->actingAs($this->user)
-            ->withSession(['locale' => 'fr'])
-            ->get(route('dashboard'));
-
-        $response->assertOk();
-        $this->assertSame('fr', app()->getLocale());
-    }
-
-    public function test_user_locale_is_used_when_no_session_locale(): void
-    {
-        $this->user->update(['locale' => 'en']);
-
-        $response = $this->actingAs($this->user)
-            ->withSession([])
-            ->get(route('dashboard'));
-
-        $response->assertOk();
-        $this->assertSame('en', app()->getLocale());
-    }
-}
+    $response->assertOk();
+    expect(app()->getLocale())->toBe('en');
+});

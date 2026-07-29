@@ -2,32 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Api\Tenant;
-
+uses(Tests\ApiTenantTestCase::class);
 use App\Interfaces\SessionInvalidatorInterface;
 use Illuminate\Support\Facades\Cache;
 use Mockery\MockInterface;
-use Tests\ApiTenantTestCase;
 
-class LogoutControllerTest extends ApiTenantTestCase
-{
-    public function test_logout_invalidates_session_for_authenticated_user(): void
-    {
-        $this->mock(SessionInvalidatorInterface::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('invalidate')
-                ->once()
-                ->with($this->user->id);
-        });
+test('logout invalidates session for authenticated user', function () {
+    $this->mock(SessionInvalidatorInterface::class, function (MockInterface $mock): void {
+        $mock->shouldReceive('invalidate')
+            ->once()
+            ->with($this->user->id);
+    });
 
-        $this->postJson('/api/logout')
-            ->assertOk()
-            ->assertJsonPath('message', 'Logged out.');
-    }
+    $this->postJson('/api/logout')
+        ->assertOk()
+        ->assertJsonPath('message', 'Logged out.');
+});
+test('logout sets force logout flag end to end', function () {
+    $this->postJson('/api/logout')->assertOk();
 
-    public function test_logout_sets_force_logout_flag_end_to_end(): void
-    {
-        $this->postJson('/api/logout')->assertOk();
-
-        $this->assertTrue((bool) Cache::get("force_logout:{$this->user->id}"));
-    }
-}
+    expect((bool) Cache::get("force_logout:{$this->user->id}"))->toBeTrue();
+});

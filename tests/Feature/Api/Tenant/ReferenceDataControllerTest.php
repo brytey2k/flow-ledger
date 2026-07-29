@@ -2,58 +2,38 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Api\Tenant;
-
+uses(Tests\ApiTenantTestCase::class);
 use App\Models\Tenant\CostCode;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\Department;
-use Tests\ApiTenantTestCase;
 
-class ReferenceDataControllerTest extends ApiTenantTestCase
-{
-    // ── Branches ──────────────────────────────────────────────────────────────
+test('branches returns scoped list', function () {
+    $response = $this->getJson('/api/branches')->assertOk();
 
-    public function test_branches_returns_scoped_list(): void
-    {
-        $response = $this->getJson('/api/branches')->assertOk();
+    $ids = collect($response->json('data'))->pluck('id')->all();
+    expect($ids)->toContain($this->branch->id);
+});
+test('currencies returns all', function () {
+    Currency::factory()->count(3)->create();
 
-        $ids = collect($response->json('data'))->pluck('id')->all();
-        $this->assertContains($this->branch->id, $ids);
-    }
+    $this->getJson('/api/currencies')
+        ->assertOk()
+        ->assertJsonStructure(['data'])
+        ->assertJsonCount(3, 'data');
+});
+test('cost codes returns all', function () {
+    CostCode::factory()->count(2)->create();
 
-    // ── Currencies ────────────────────────────────────────────────────────────
+    $this->getJson('/api/cost-codes')
+        ->assertOk()
+        ->assertJsonStructure(['data'])
+        ->assertJsonCount(2, 'data');
+});
+test('departments returns all', function () {
+    Department::factory()->count(2)->create();
 
-    public function test_currencies_returns_all(): void
-    {
-        Currency::factory()->count(3)->create();
-
-        $this->getJson('/api/currencies')
-            ->assertOk()
-            ->assertJsonStructure(['data'])
-            ->assertJsonCount(3, 'data');
-    }
-
-    // ── Cost Codes ────────────────────────────────────────────────────────────
-
-    public function test_cost_codes_returns_all(): void
-    {
-        CostCode::factory()->count(2)->create();
-
-        $this->getJson('/api/cost-codes')
-            ->assertOk()
-            ->assertJsonStructure(['data'])
-            ->assertJsonCount(2, 'data');
-    }
-
-    // ── Departments ───────────────────────────────────────────────────────────
-
-    public function test_departments_returns_all(): void
-    {
-        Department::factory()->count(2)->create();
-
-        $this->getJson('/api/departments')
-            ->assertOk()
-            ->assertJsonStructure(['data'])
-            ->assertJsonCount(2, 'data');
-    }
-}
+    $this->getJson('/api/departments')
+        ->assertOk()
+        ->assertJsonStructure(['data'])
+        ->assertJsonCount(2, 'data');
+});

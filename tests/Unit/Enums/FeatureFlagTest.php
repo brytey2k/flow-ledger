@@ -1,36 +1,24 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Enums;
-
 use App\Enums\FeatureFlag;
 use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
 use App\Features\MultiCurrency;
 use App\Features\VerifyLoginWithIdp;
-use PHPUnit\Framework\TestCase;
 
-class FeatureFlagTest extends TestCase
-{
-    public function test_feature_class_returns_correct_class_for_each_case(): void
-    {
-        $this->assertSame(MultiCurrency::class, FeatureFlag::MultiCurrency->featureClass());
-        $this->assertSame(LocalAuth::class, FeatureFlag::LocalAuth->featureClass());
-        $this->assertSame(VerifyLoginWithIdp::class, FeatureFlag::VerifyLoginWithIdp->featureClass());
-        $this->assertSame(DelegateIdentityToIdp::class, FeatureFlag::DelegateIdentityToIdp->featureClass());
-    }
-
-    public function test_label_returns_human_readable_name(): void
-    {
-        $this->assertSame('Multi-Currency', FeatureFlag::MultiCurrency->label());
-        $this->assertSame('Local Authentication', FeatureFlag::LocalAuth->label());
-        $this->assertSame('Verify Login with IdP', FeatureFlag::VerifyLoginWithIdp->label());
-        $this->assertSame('Delegate Identity to IdP', FeatureFlag::DelegateIdentityToIdp->label());
-    }
-
-    public function test_cases_returns_all_four_flags(): void
-    {
-        $this->assertCount(4, FeatureFlag::cases());
-    }
-}
+test('feature class returns correct class for each case', function () {
+    expect(FeatureFlag::MultiCurrency->featureClass())->toBe(MultiCurrency::class);
+    expect(FeatureFlag::LocalAuth->featureClass())->toBe(LocalAuth::class);
+    expect(FeatureFlag::VerifyLoginWithIdp->featureClass())->toBe(VerifyLoginWithIdp::class);
+    expect(FeatureFlag::DelegateIdentityToIdp->featureClass())->toBe(DelegateIdentityToIdp::class);
+});
+test('label returns human readable name', function () {
+    expect(FeatureFlag::MultiCurrency->label())->toBe('Multi-Currency');
+    expect(FeatureFlag::LocalAuth->label())->toBe('Local Authentication');
+    expect(FeatureFlag::VerifyLoginWithIdp->label())->toBe('Verify Login with IdP');
+    expect(FeatureFlag::DelegateIdentityToIdp->label())->toBe('Delegate Identity to IdP');
+});
+test('cases returns all four flags', function () {
+    expect(FeatureFlag::cases())->toHaveCount(4);
+});

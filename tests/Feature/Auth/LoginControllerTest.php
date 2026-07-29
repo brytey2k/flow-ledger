@@ -2,217 +2,169 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Auth;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Features\LocalAuth;
 use App\Features\VerifyLoginWithIdp;
 use App\Models\Tenant\User;
 use App\Services\IdpAccessVerificationService;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Pennant\Feature;
-use Tests\TenantAppTestCase;
 
-class LoginControllerTest extends TenantAppTestCase
-{
-    // ── Show login form ───────────────────────────────────────────────────────
+test('login form is accessible to guests', function () {
+    $this->get(route('login'))->assertOk();
+});
+test('login form renders correct view', function () {
+    $this->get(route('login'))->assertViewIs('tenant.auth.login');
+});
+test('user can login with valid credentials', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('Password1!'),
+    ]);
 
-    public function test_login_form_is_accessible_to_guests(): void
-    {
-        $this->get(route('login'))->assertOk();
-    }
+    $response = $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'Password1!',
+    ]);
 
-    public function test_login_form_renders_correct_view(): void
-    {
-        $this->get(route('login'))->assertViewIs('tenant.auth.login');
-    }
+    $response->assertRedirect(route('dashboard'));
+    $this->assertAuthenticatedAs($user);
+});
+test('login fails with invalid password', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('CorrectPassword1!'),
+    ]);
 
-    // ── Login ─────────────────────────────────────────────────────────────────
+    $response = $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'WrongPassword!',
+    ]);
 
-    public function test_user_can_login_with_valid_credentials(): void
-    {
-        $user = User::factory()->create([
-            'password' => Hash::make('Password1!'),
-        ]);
+    $response->assertSessionHasErrors('email');
+    $this->assertGuest();
+});
+test('login fails with nonexistent email', function () {
+    $response = $this->post(route('login'), [
+        'email' => 'nobody@example.com',
+        'password' => 'Password1!',
+    ]);
 
-        $response = $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'Password1!',
-        ]);
+    $response->assertSessionHasErrors('email');
+    $this->assertGuest();
+});
+test('login requires email', function () {
+    $response = $this->post(route('login'), [
+        'password' => 'Password1!',
+    ]);
 
-        $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($user);
-    }
+    $response->assertSessionHasErrors('email');
+});
+test('login requires valid email format', function () {
+    $response = $this->post(route('login'), [
+        'email' => 'not-an-email',
+        'password' => 'Password1!',
+    ]);
 
-    public function test_login_fails_with_invalid_password(): void
-    {
-        $user = User::factory()->create([
-            'password' => Hash::make('CorrectPassword1!'),
-        ]);
+    $response->assertSessionHasErrors('email');
+});
+test('login requires password', function () {
+    $user = User::factory()->create();
 
-        $response = $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'WrongPassword!',
-        ]);
+    $response = $this->post(route('login'), [
+        'email' => $user->email,
+    ]);
 
-        $response->assertSessionHasErrors('email');
-        $this->assertGuest();
-    }
+    $response->assertSessionHasErrors('password');
+});
+test('login with remember me sets cookie', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('Password1!'),
+    ]);
 
-    public function test_login_fails_with_nonexistent_email(): void
-    {
-        $response = $this->post(route('login'), [
-            'email' => 'nobody@example.com',
-            'password' => 'Password1!',
-        ]);
+    $response = $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'Password1!',
+        'remember' => true,
+    ]);
 
-        $response->assertSessionHasErrors('email');
-        $this->assertGuest();
-    }
+    $response->assertRedirect(route('dashboard'));
+    $this->assertAuthenticatedAs($user);
+});
+test('login form shows form when local auth is enabled', function () {
+    Feature::for($this->tenant)->activate(LocalAuth::class);
 
-    public function test_login_requires_email(): void
-    {
-        $response = $this->post(route('login'), [
-            'password' => 'Password1!',
-        ]);
+    $this->get(route('login'))->assertOk()->assertSee('sign_in_form', false);
+});
+test('login form hides form when local auth is disabled', function () {
+    Feature::for($this->tenant)->deactivate(LocalAuth::class);
 
-        $response->assertSessionHasErrors('email');
-    }
+    $this->get(route('login'))->assertOk()->assertDontSee('sign_in_form', false);
+});
+test('login returns 403 when local auth is disabled', function () {
+    Feature::for($this->tenant)->deactivate(LocalAuth::class);
 
-    public function test_login_requires_valid_email_format(): void
-    {
-        $response = $this->post(route('login'), [
-            'email' => 'not-an-email',
-            'password' => 'Password1!',
-        ]);
+    $this->post(route('login'), [
+        'email' => 'user@example.com',
+        'password' => 'Password1!',
+    ])->assertForbidden();
+});
+test('login succeeds when verify with idp is enabled and idp grants access', function () {
+    Feature::for($this->tenant)->activate(VerifyLoginWithIdp::class);
 
-        $response->assertSessionHasErrors('email');
-    }
+    $this->mock(IdpAccessVerificationService::class)
+        ->shouldReceive('userHasAccess')
+        ->once()
+        ->andReturn(true);
 
-    public function test_login_requires_password(): void
-    {
-        $user = User::factory()->create();
+    $user = User::factory()->create(['password' => Hash::make('Password1!')]);
 
-        $response = $this->post(route('login'), [
-            'email' => $user->email,
-        ]);
+    $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'Password1!',
+    ])->assertRedirect(route('dashboard'));
 
-        $response->assertSessionHasErrors('password');
-    }
+    $this->assertAuthenticatedAs($user);
+});
+test('login fails when verify with idp is enabled and idp denies access', function () {
+    Feature::for($this->tenant)->activate(VerifyLoginWithIdp::class);
 
-    public function test_login_with_remember_me_sets_cookie(): void
-    {
-        $user = User::factory()->create([
-            'password' => Hash::make('Password1!'),
-        ]);
+    $this->mock(IdpAccessVerificationService::class)
+        ->shouldReceive('userHasAccess')
+        ->once()
+        ->andReturn(false);
 
-        $response = $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'Password1!',
-            'remember' => true,
-        ]);
+    $user = User::factory()->create(['password' => Hash::make('Password1!')]);
 
-        $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($user);
-    }
+    $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'Password1!',
+    ])->assertSessionHasErrors('email');
 
-    // ── LocalAuth feature flag ────────────────────────────────────────────────
+    $this->assertGuest();
+});
+test('verify with idp is not called when feature is disabled', function () {
+    Feature::for($this->tenant)->deactivate(VerifyLoginWithIdp::class);
 
-    public function test_login_form_shows_form_when_local_auth_is_enabled(): void
-    {
-        Feature::for($this->tenant)->activate(LocalAuth::class);
+    $this->mock(IdpAccessVerificationService::class)
+        ->shouldNotReceive('userHasAccess');
 
-        $this->get(route('login'))->assertOk()->assertSee('sign_in_form', false);
-    }
+    $user = User::factory()->create(['password' => Hash::make('Password1!')]);
 
-    public function test_login_form_hides_form_when_local_auth_is_disabled(): void
-    {
-        Feature::for($this->tenant)->deactivate(LocalAuth::class);
+    $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'Password1!',
+    ])->assertRedirect(route('dashboard'));
+});
+test('authenticated user can logout', function () {
+    $user = User::factory()->create();
 
-        $this->get(route('login'))->assertOk()->assertDontSee('sign_in_form', false);
-    }
+    $this->actingAs($user)->post(route('logout'));
 
-    public function test_login_returns_403_when_local_auth_is_disabled(): void
-    {
-        Feature::for($this->tenant)->deactivate(LocalAuth::class);
+    $this->assertGuest();
+});
+test('logout redirects to login', function () {
+    $user = User::factory()->create();
 
-        $this->post(route('login'), [
-            'email' => 'user@example.com',
-            'password' => 'Password1!',
-        ])->assertForbidden();
-    }
+    $response = $this->actingAs($user)->post(route('logout'));
 
-    // ── VerifyLoginWithIdp feature flag ───────────────────────────────────────
-
-    public function test_login_succeeds_when_verify_with_idp_is_enabled_and_idp_grants_access(): void
-    {
-        Feature::for($this->tenant)->activate(VerifyLoginWithIdp::class);
-
-        $this->mock(IdpAccessVerificationService::class)
-            ->shouldReceive('userHasAccess')
-            ->once()
-            ->andReturn(true);
-
-        $user = User::factory()->create(['password' => Hash::make('Password1!')]);
-
-        $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'Password1!',
-        ])->assertRedirect(route('dashboard'));
-
-        $this->assertAuthenticatedAs($user);
-    }
-
-    public function test_login_fails_when_verify_with_idp_is_enabled_and_idp_denies_access(): void
-    {
-        Feature::for($this->tenant)->activate(VerifyLoginWithIdp::class);
-
-        $this->mock(IdpAccessVerificationService::class)
-            ->shouldReceive('userHasAccess')
-            ->once()
-            ->andReturn(false);
-
-        $user = User::factory()->create(['password' => Hash::make('Password1!')]);
-
-        $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'Password1!',
-        ])->assertSessionHasErrors('email');
-
-        $this->assertGuest();
-    }
-
-    public function test_verify_with_idp_is_not_called_when_feature_is_disabled(): void
-    {
-        Feature::for($this->tenant)->deactivate(VerifyLoginWithIdp::class);
-
-        $this->mock(IdpAccessVerificationService::class)
-            ->shouldNotReceive('userHasAccess');
-
-        $user = User::factory()->create(['password' => Hash::make('Password1!')]);
-
-        $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'Password1!',
-        ])->assertRedirect(route('dashboard'));
-    }
-
-    // ── Logout ────────────────────────────────────────────────────────────────
-
-    public function test_authenticated_user_can_logout(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->post(route('logout'));
-
-        $this->assertGuest();
-    }
-
-    public function test_logout_redirects_to_login(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->actingAs($user)->post(route('logout'));
-
-        $response->assertRedirect(route('login'));
-    }
-}
+    $response->assertRedirect(route('login'));
+});

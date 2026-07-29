@@ -2,51 +2,37 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Models;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\Attachment;
 use App\Models\Tenant\PaymentRequest;
-use Tests\TenantAppTestCase;
 
-class AttachmentModelTest extends TenantAppTestCase
-{
-    public function test_formatted_size_returns_bytes_for_small_files(): void
-    {
-        $attachment = Attachment::factory()->create(['size' => 512]);
+test('formatted size returns bytes for small files', function () {
+    $attachment = Attachment::factory()->create(['size' => 512]);
 
-        $this->assertSame('512 B', $attachment->formattedSize());
-    }
+    expect($attachment->formattedSize())->toBe('512 B');
+});
+test('formatted size returns kb for medium files', function () {
+    $attachment = Attachment::factory()->create(['size' => 2048]);
 
-    public function test_formatted_size_returns_kb_for_medium_files(): void
-    {
-        $attachment = Attachment::factory()->create(['size' => 2048]);
+    expect($attachment->formattedSize())->toBe('2 KB');
+});
+test('formatted size returns mb for large files', function () {
+    $attachment = Attachment::factory()->create(['size' => 2097152]);
 
-        $this->assertSame('2 KB', $attachment->formattedSize());
-    }
+    expect($attachment->formattedSize())->toBe('2 MB');
+});
+test('attachable relation links to payment request', function () {
+    $paymentRequest = PaymentRequest::factory()->create();
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => PaymentRequest::class,
+        'attachable_id' => $paymentRequest->id,
+    ]);
 
-    public function test_formatted_size_returns_mb_for_large_files(): void
-    {
-        $attachment = Attachment::factory()->create(['size' => 2097152]);
+    expect($attachment->attachable)->toBeInstanceOf(PaymentRequest::class);
+    expect($attachment->attachable->id)->toEqual($paymentRequest->id);
+});
+test('user relation links to uploader', function () {
+    $attachment = Attachment::factory()->create(['user_id' => $this->user->id]);
 
-        $this->assertSame('2 MB', $attachment->formattedSize());
-    }
-
-    public function test_attachable_relation_links_to_payment_request(): void
-    {
-        $paymentRequest = PaymentRequest::factory()->create();
-        $attachment = Attachment::factory()->create([
-            'attachable_type' => PaymentRequest::class,
-            'attachable_id' => $paymentRequest->id,
-        ]);
-
-        $this->assertInstanceOf(PaymentRequest::class, $attachment->attachable);
-        $this->assertEquals($paymentRequest->id, $attachment->attachable->id);
-    }
-
-    public function test_user_relation_links_to_uploader(): void
-    {
-        $attachment = Attachment::factory()->create(['user_id' => $this->user->id]);
-
-        $this->assertEquals($this->user->id, $attachment->user->id);
-    }
-}
+    expect($attachment->user->id)->toEqual($this->user->id);
+});

@@ -1,39 +1,29 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Bootstrap;
-
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
-use Tests\TestCase;
 
-class TrustProxiesHostHeaderTest extends TestCase
-{
-    public function test_x_forwarded_host_is_not_trusted(): void
-    {
-        $request = Request::create('http://victim-tenant.flow-ledger.test/login', 'GET');
-        $request->headers->set('X-Forwarded-Host', 'evil.com');
-        $request->headers->set('X-Forwarded-Proto', 'https');
-        $request->server->set('REMOTE_ADDR', '203.0.113.1');
+test('x forwarded host is not trusted', function () {
+    $request = Request::create('http://victim-tenant.flow-ledger.test/login', 'GET');
+    $request->headers->set('X-Forwarded-Host', 'evil.com');
+    $request->headers->set('X-Forwarded-Proto', 'https');
+    $request->server->set('REMOTE_ADDR', '203.0.113.1');
 
-        $middleware = $this->app->make(TrustProxies::class);
+    $middleware = $this->app->make(TrustProxies::class);
 
-        $middleware->handle($request, function (Request $request): void {
-            $this->assertSame('victim-tenant.flow-ledger.test', $request->getHost());
-        });
-    }
+    $middleware->handle($request, function (Request $request): void {
+        expect($request->getHost())->toBe('victim-tenant.flow-ledger.test');
+    });
+});
+test('x forwarded proto is still trusted', function () {
+    $request = Request::create('http://victim-tenant.flow-ledger.test/login', 'GET');
+    $request->headers->set('X-Forwarded-Proto', 'https');
+    $request->server->set('REMOTE_ADDR', '203.0.113.1');
 
-    public function test_x_forwarded_proto_is_still_trusted(): void
-    {
-        $request = Request::create('http://victim-tenant.flow-ledger.test/login', 'GET');
-        $request->headers->set('X-Forwarded-Proto', 'https');
-        $request->server->set('REMOTE_ADDR', '203.0.113.1');
+    $middleware = $this->app->make(TrustProxies::class);
 
-        $middleware = $this->app->make(TrustProxies::class);
-
-        $middleware->handle($request, function (Request $request): void {
-            $this->assertTrue($request->isSecure());
-        });
-    }
-}
+    $middleware->handle($request, function (Request $request): void {
+        expect($request->isSecure())->toBeTrue();
+    });
+});

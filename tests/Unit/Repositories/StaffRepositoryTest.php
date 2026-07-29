@@ -2,150 +2,113 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Repositories;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\User;
 use App\Repositories\StaffRepository;
-use Tests\TenantAppTestCase;
 
-class StaffRepositoryTest extends TenantAppTestCase
-{
-    private StaffRepository $repository;
+beforeEach(function () {
+    $this->repository = app(StaffRepository::class);
+});
+test('all with relations returns collection', function () {
+    $result = $this->repository->allWithRelations([$this->branch->id]);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    expect($result)->toBeInstanceOf(Illuminate\Database\Eloquent\Collection::class);
+});
+test('all with relations includes department and position', function () {
+    Staff::factory()->withBranch($this->branch)->create();
 
-        $this->repository = app(StaffRepository::class);
-    }
+    $result = $this->repository->allWithRelations([$this->branch->id]);
 
-    // ── allWithRelations() ────────────────────────────────────────────────────
+    expect($result->count())->toBeGreaterThan(0);
+    $first = $result->first();
+    expect($first->relationLoaded('department'))->toBeTrue();
+    expect($first->relationLoaded('position'))->toBeTrue();
+});
+test('all with relations is ordered by last name then first name', function () {
+    Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Zulu', 'first_name' => 'Alpha']);
+    Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Alpha', 'first_name' => 'Zulu']);
+    Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Alpha', 'first_name' => 'Able']);
 
-    public function test_all_with_relations_returns_collection(): void
-    {
-        $result = $this->repository->allWithRelations([$this->branch->id]);
+    $result = $this->repository->allWithRelations([$this->branch->id]);
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $result);
-    }
+    $lastNames = $result->pluck('last_name')->all();
+    $sortedLastNames = $lastNames;
+    sort($sortedLastNames);
+    expect($lastNames)->toBe($sortedLastNames);
+});
+test('unlinked users returns collection', function () {
+    $result = $this->repository->unlinkedUsers();
 
-    public function test_all_with_relations_includes_department_and_position(): void
-    {
-        Staff::factory()->withBranch($this->branch)->create();
+    expect($result)->toBeInstanceOf(Illuminate\Database\Eloquent\Collection::class);
+});
+test('unlinked users excludes users with staff profile', function () {
+    $linkedUser = User::factory()->create();
+    Staff::factory()->withUser($linkedUser)->create();
 
-        $result = $this->repository->allWithRelations([$this->branch->id]);
+    $result = $this->repository->unlinkedUsers();
 
-        $this->assertGreaterThan(0, $result->count());
-        $first = $result->first();
-        $this->assertTrue($first->relationLoaded('department'));
-        $this->assertTrue($first->relationLoaded('position'));
-    }
+    $resultIds = $result->pluck('id')->all();
+    expect($resultIds)->not->toContain($linkedUser->id);
+});
+test('unlinked users includes users without staff profile', function () {
+    $unlinkedUser = User::factory()->create(['first_name' => 'Orphan']);
 
-    public function test_all_with_relations_is_ordered_by_last_name_then_first_name(): void
-    {
-        Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Zulu', 'first_name' => 'Alpha']);
-        Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Alpha', 'first_name' => 'Zulu']);
-        Staff::factory()->withBranch($this->branch)->create(['last_name' => 'Alpha', 'first_name' => 'Able']);
+    $result = $this->repository->unlinkedUsers();
 
-        $result = $this->repository->allWithRelations([$this->branch->id]);
+    $resultIds = $result->pluck('id')->all();
+    expect($resultIds)->toContain($unlinkedUser->id);
+});
+test('unlinked users ordered by first name', function () {
+    User::factory()->create(['first_name' => 'Zara']);
+    User::factory()->create(['first_name' => 'Aaron']);
 
-        $lastNames = $result->pluck('last_name')->all();
-        $sortedLastNames = $lastNames;
-        sort($sortedLastNames);
-        $this->assertSame($sortedLastNames, $lastNames);
-    }
+    $result = $this->repository->unlinkedUsers();
 
-    // ── unlinkedUsers() ───────────────────────────────────────────────────────
+    $firstNames = $result->pluck('first_name')->all();
+    $sorted = $firstNames;
+    sort($sorted);
+    expect($firstNames)->toBe($sorted);
+});
+test('unlinked users or current returns collection', function () {
+    $staff = Staff::factory()->create();
 
-    public function test_unlinked_users_returns_collection(): void
-    {
-        $result = $this->repository->unlinkedUsers();
+    $result = $this->repository->unlinkedUsersOrCurrent($staff);
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $result);
-    }
+    expect($result)->toBeInstanceOf(Illuminate\Database\Eloquent\Collection::class);
+});
+test('unlinked users or current includes current linked user', function () {
+    $linkedUser = User::factory()->create();
+    $staff = Staff::factory()->withUser($linkedUser)->create();
 
-    public function test_unlinked_users_excludes_users_with_staff_profile(): void
-    {
-        $linkedUser = User::factory()->create();
-        Staff::factory()->withUser($linkedUser)->create();
+    $result = $this->repository->unlinkedUsersOrCurrent($staff);
 
-        $result = $this->repository->unlinkedUsers();
+    $resultIds = $result->pluck('id')->all();
+    expect($resultIds)->toContain($linkedUser->id);
+});
+test('unlinked users or current excludes other linked users', function () {
+    // Create another staff member linked to a different user — that user should not appear
+    $otherLinkedUser = User::factory()->create();
+    Staff::factory()->withUser($otherLinkedUser)->create();
 
-        $resultIds = $result->pluck('id')->all();
-        $this->assertNotContains($linkedUser->id, $resultIds);
-    }
+    $staff = Staff::factory()->create();
 
-    public function test_unlinked_users_includes_users_without_staff_profile(): void
-    {
-        $unlinkedUser = User::factory()->create(['first_name' => 'Orphan']);
+    // no linked user
+    $result = $this->repository->unlinkedUsersOrCurrent($staff);
 
-        $result = $this->repository->unlinkedUsers();
+    $resultIds = $result->pluck('id')->all();
+    expect($resultIds)->not->toContain($otherLinkedUser->id);
+});
+test('unlinked users or current ordered by first name', function () {
+    $linkedUser = User::factory()->create(['first_name' => 'Zara']);
+    $staff = Staff::factory()->withUser($linkedUser)->create();
 
-        $resultIds = $result->pluck('id')->all();
-        $this->assertContains($unlinkedUser->id, $resultIds);
-    }
+    User::factory()->create(['first_name' => 'Aaron']);
 
-    public function test_unlinked_users_ordered_by_first_name(): void
-    {
-        User::factory()->create(['first_name' => 'Zara']);
-        User::factory()->create(['first_name' => 'Aaron']);
+    $result = $this->repository->unlinkedUsersOrCurrent($staff);
 
-        $result = $this->repository->unlinkedUsers();
-
-        $firstNames = $result->pluck('first_name')->all();
-        $sorted = $firstNames;
-        sort($sorted);
-        $this->assertSame($sorted, $firstNames);
-    }
-
-    // ── unlinkedUsersOrCurrent() ──────────────────────────────────────────────
-
-    public function test_unlinked_users_or_current_returns_collection(): void
-    {
-        $staff = Staff::factory()->create();
-
-        $result = $this->repository->unlinkedUsersOrCurrent($staff);
-
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $result);
-    }
-
-    public function test_unlinked_users_or_current_includes_current_linked_user(): void
-    {
-        $linkedUser = User::factory()->create();
-        $staff = Staff::factory()->withUser($linkedUser)->create();
-
-        $result = $this->repository->unlinkedUsersOrCurrent($staff);
-
-        $resultIds = $result->pluck('id')->all();
-        $this->assertContains($linkedUser->id, $resultIds);
-    }
-
-    public function test_unlinked_users_or_current_excludes_other_linked_users(): void
-    {
-        // Create another staff member linked to a different user — that user should not appear
-        $otherLinkedUser = User::factory()->create();
-        Staff::factory()->withUser($otherLinkedUser)->create();
-
-        $staff = Staff::factory()->create(); // no linked user
-
-        $result = $this->repository->unlinkedUsersOrCurrent($staff);
-
-        $resultIds = $result->pluck('id')->all();
-        $this->assertNotContains($otherLinkedUser->id, $resultIds);
-    }
-
-    public function test_unlinked_users_or_current_ordered_by_first_name(): void
-    {
-        $linkedUser = User::factory()->create(['first_name' => 'Zara']);
-        $staff = Staff::factory()->withUser($linkedUser)->create();
-
-        User::factory()->create(['first_name' => 'Aaron']);
-
-        $result = $this->repository->unlinkedUsersOrCurrent($staff);
-
-        $firstNames = $result->pluck('first_name')->all();
-        $sorted = $firstNames;
-        sort($sorted);
-        $this->assertSame($sorted, $firstNames);
-    }
-}
+    $firstNames = $result->pluck('first_name')->all();
+    $sorted = $firstNames;
+    sort($sorted);
+    expect($firstNames)->toBe($sorted);
+});

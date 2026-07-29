@@ -2,57 +2,40 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Api\Tenant;
+uses(Tests\ApiTenantTestCase::class);
+test('returns authenticated user profile', function () {
+    $response = $this->getJson('/api/me')->assertOk();
 
-use Tests\ApiTenantTestCase;
+    $response->assertJsonStructure([
+        'data' => [
+            'id',
+            'first_name',
+            'last_name',
+            'email',
+            'locale',
+            'branch',
+            'operational_branch',
+            'staff_profile',
+            'roles',
+            'permissions',
+        ],
+    ]);
 
-class MeControllerTest extends ApiTenantTestCase
-{
-    public function test_returns_authenticated_user_profile(): void
-    {
-        $response = $this->getJson('/api/me')->assertOk();
+    expect($response->json('data.id'))->toBe($this->user->id);
+    expect($response->json('data.email'))->toBe($this->user->email);
+});
+test('branch id matches user branch', function () {
+    $response = $this->getJson('/api/me')->assertOk();
 
-        $response->assertJsonStructure([
-            'data' => [
-                'id',
-                'first_name',
-                'last_name',
-                'email',
-                'locale',
-                'branch',
-                'operational_branch',
-                'staff_profile',
-                'roles',
-                'permissions',
-            ],
-        ]);
+    expect($response->json('data.branch.id'))->toBe($this->user->branch_id);
+});
+test('permissions array is not empty for test user', function () {
+    $response = $this->getJson('/api/me')->assertOk();
 
-        $this->assertSame($this->user->id, $response->json('data.id'));
-        $this->assertSame($this->user->email, $response->json('data.email'));
-    }
+    expect($response->json('data.permissions'))->not->toBeEmpty();
+});
+test('roles contains test role', function () {
+    $response = $this->getJson('/api/me')->assertOk();
 
-    public function test_branch_id_matches_user_branch(): void
-    {
-        $response = $this->getJson('/api/me')->assertOk();
-
-        $this->assertSame(
-            $this->user->branch_id,
-            $response->json('data.branch.id'),
-        );
-    }
-
-    public function test_permissions_array_is_not_empty_for_test_user(): void
-    {
-        $response = $this->getJson('/api/me')->assertOk();
-
-        $this->assertNotEmpty($response->json('data.permissions'));
-    }
-
-    public function test_roles_contains_test_role(): void
-    {
-        $response = $this->getJson('/api/me')->assertOk();
-
-        $this->assertContains($this->role->name, $response->json('data.roles'));
-    }
-
-}
+    expect($response->json('data.roles'))->toContain($this->role->name);
+});

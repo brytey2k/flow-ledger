@@ -1,114 +1,66 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Enums;
-
 use App\Enums\Tenant\PaymentRequestStatus;
-use PHPUnit\Framework\TestCase;
 
-class PaymentRequestStatusTest extends TestCase
-{
-    // ── isCancelable ──────────────────────────────────────────────────────────
-
-    public function test_draft_is_cancelable(): void
-    {
-        $this->assertTrue(PaymentRequestStatus::Draft->isCancelable());
-    }
-
-    public function test_in_workflow_is_cancelable(): void
-    {
-        $this->assertTrue(PaymentRequestStatus::InWorkflow->isCancelable());
-    }
-
-    public function test_approved_is_cancelable(): void
-    {
-        $this->assertTrue(PaymentRequestStatus::Approved->isCancelable());
-    }
-
-    public function test_sent_back_is_cancelable(): void
-    {
-        $this->assertTrue(PaymentRequestStatus::SentBack->isCancelable());
-    }
-
-    public function test_disbursed_is_not_cancelable(): void
-    {
-        $this->assertFalse(PaymentRequestStatus::Disbursed->isCancelable());
-    }
-
-    public function test_retired_is_not_cancelable(): void
-    {
-        $this->assertFalse(PaymentRequestStatus::Retired->isCancelable());
-    }
-
-    public function test_cancelled_is_not_cancelable(): void
-    {
-        $this->assertFalse(PaymentRequestStatus::Cancelled->isCancelable());
-    }
-
-    public function test_denied_is_not_cancelable(): void
-    {
-        $this->assertFalse(PaymentRequestStatus::Denied->isCancelable());
-    }
-
-    // ── label ─────────────────────────────────────────────────────────────────
-
-    public function test_draft_label(): void
-    {
-        $this->assertSame('Draft', PaymentRequestStatus::Draft->label());
-    }
-
-    public function test_in_workflow_label(): void
-    {
-        $this->assertSame('In Workflow', PaymentRequestStatus::InWorkflow->label());
-    }
-
-    public function test_approved_label(): void
-    {
-        $this->assertSame('Approved', PaymentRequestStatus::Approved->label());
-    }
-
-    public function test_disbursed_label(): void
-    {
-        $this->assertSame('Disbursed', PaymentRequestStatus::Disbursed->label());
-    }
-
-    public function test_retired_label(): void
-    {
-        $this->assertSame('Retired', PaymentRequestStatus::Retired->label());
-    }
-
-    public function test_cancelled_label(): void
-    {
-        $this->assertSame('Cancelled', PaymentRequestStatus::Cancelled->label());
-    }
-
-    public function test_denied_label(): void
-    {
-        $this->assertSame('Denied', PaymentRequestStatus::Denied->label());
-    }
-
-    public function test_sent_back_label(): void
-    {
-        $this->assertSame('Sent Back', PaymentRequestStatus::SentBack->label());
-    }
-
-    // ── values ────────────────────────────────────────────────────────────────
-
-    public function test_cases_returns_all_eight_statuses(): void
-    {
-        $this->assertCount(8, PaymentRequestStatus::cases());
-    }
-
-    public function test_can_be_created_from_string_value(): void
-    {
-        $this->assertSame(PaymentRequestStatus::Draft, PaymentRequestStatus::from('draft'));
-        $this->assertSame(PaymentRequestStatus::InWorkflow, PaymentRequestStatus::from('in_workflow'));
-        $this->assertSame(PaymentRequestStatus::Approved, PaymentRequestStatus::from('approved'));
-        $this->assertSame(PaymentRequestStatus::Disbursed, PaymentRequestStatus::from('disbursed'));
-        $this->assertSame(PaymentRequestStatus::Retired, PaymentRequestStatus::from('retired'));
-        $this->assertSame(PaymentRequestStatus::Cancelled, PaymentRequestStatus::from('cancelled'));
-        $this->assertSame(PaymentRequestStatus::Denied, PaymentRequestStatus::from('denied'));
-        $this->assertSame(PaymentRequestStatus::SentBack, PaymentRequestStatus::from('sent_back'));
-    }
-}
+test('draft is cancelable', function () {
+    expect(PaymentRequestStatus::Draft->isCancelable())->toBeTrue();
+});
+test('in workflow is cancelable', function () {
+    expect(PaymentRequestStatus::InWorkflow->isCancelable())->toBeTrue();
+});
+test('approved is cancelable', function () {
+    expect(PaymentRequestStatus::Approved->isCancelable())->toBeTrue();
+});
+test('sent back is cancelable', function () {
+    expect(PaymentRequestStatus::SentBack->isCancelable())->toBeTrue();
+});
+test('disbursed is not cancelable', function () {
+    expect(PaymentRequestStatus::Disbursed->isCancelable())->toBeFalse();
+});
+test('retired is not cancelable', function () {
+    expect(PaymentRequestStatus::Retired->isCancelable())->toBeFalse();
+});
+test('cancelled is not cancelable', function () {
+    expect(PaymentRequestStatus::Cancelled->isCancelable())->toBeFalse();
+});
+test('denied is not cancelable', function () {
+    expect(PaymentRequestStatus::Denied->isCancelable())->toBeFalse();
+});
+test('draft label', function () {
+    expect(PaymentRequestStatus::Draft->label())->toBe('Draft');
+});
+test('in workflow label', function () {
+    expect(PaymentRequestStatus::InWorkflow->label())->toBe('In Workflow');
+});
+test('approved label', function () {
+    expect(PaymentRequestStatus::Approved->label())->toBe('Approved');
+});
+test('disbursed label', function () {
+    expect(PaymentRequestStatus::Disbursed->label())->toBe('Disbursed');
+});
+test('retired label', function () {
+    expect(PaymentRequestStatus::Retired->label())->toBe('Retired');
+});
+test('cancelled label', function () {
+    expect(PaymentRequestStatus::Cancelled->label())->toBe('Cancelled');
+});
+test('denied label', function () {
+    expect(PaymentRequestStatus::Denied->label())->toBe('Denied');
+});
+test('sent back label', function () {
+    expect(PaymentRequestStatus::SentBack->label())->toBe('Sent Back');
+});
+test('cases returns all eight statuses', function () {
+    expect(PaymentRequestStatus::cases())->toHaveCount(8);
+});
+test('can be created from string value', function () {
+    expect(PaymentRequestStatus::from('draft'))->toBe(PaymentRequestStatus::Draft);
+    expect(PaymentRequestStatus::from('in_workflow'))->toBe(PaymentRequestStatus::InWorkflow);
+    expect(PaymentRequestStatus::from('approved'))->toBe(PaymentRequestStatus::Approved);
+    expect(PaymentRequestStatus::from('disbursed'))->toBe(PaymentRequestStatus::Disbursed);
+    expect(PaymentRequestStatus::from('retired'))->toBe(PaymentRequestStatus::Retired);
+    expect(PaymentRequestStatus::from('cancelled'))->toBe(PaymentRequestStatus::Cancelled);
+    expect(PaymentRequestStatus::from('denied'))->toBe(PaymentRequestStatus::Denied);
+    expect(PaymentRequestStatus::from('sent_back'))->toBe(PaymentRequestStatus::SentBack);
+});

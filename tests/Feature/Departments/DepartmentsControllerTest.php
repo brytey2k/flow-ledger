@@ -2,128 +2,84 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Departments;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Department;
-use Tests\TenantAppTestCase;
 
-class DepartmentsControllerTest extends TenantAppTestCase
-{
-    // ── Authentication ────────────────────────────────────────────────────────
+test('guest is redirected from index', function () {
+    $response = $this->get(route('departments.index'));
 
-    public function test_guest_is_redirected_from_index(): void
-    {
-        $response = $this->get(route('departments.index'));
+    $response->assertRedirect(route('login'));
+});
+test('guest is redirected from create', function () {
+    $response = $this->get(route('departments.create'));
 
-        $response->assertRedirect(route('login'));
-    }
+    $response->assertRedirect(route('login'));
+});
+test('guest cannot post to store', function () {
+    $response = $this->post(route('departments.store'), ['name' => 'Finance']);
 
-    public function test_guest_is_redirected_from_create(): void
-    {
-        $response = $this->get(route('departments.create'));
+    $response->assertRedirect(route('login'));
+});
+test('user without access permission cannot view index', function () {
+    $this->role->revokePermissionTo(PermissionKey::AccessDepartments->value);
 
-        $response->assertRedirect(route('login'));
-    }
+    $response = $this->actingAs($this->user)->get(route('departments.index'));
 
-    public function test_guest_cannot_post_to_store(): void
-    {
-        $response = $this->post(route('departments.store'), ['name' => 'Finance']);
+    $response->assertForbidden();
+});
+test('user without create permission cannot access create form', function () {
+    $this->role->revokePermissionTo(PermissionKey::CreateDepartment->value);
 
-        $response->assertRedirect(route('login'));
-    }
+    $response = $this->actingAs($this->user)->get(route('departments.create'));
 
-    // ── Authorization ─────────────────────────────────────────────────────────
+    $response->assertForbidden();
+});
+test('authorised user can view index', function () {
+    $response = $this->actingAs($this->user)->get(route('departments.index'));
 
-    public function test_user_without_access_permission_cannot_view_index(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::AccessDepartments->value);
+    $response->assertOk();
+});
+test('authorised user can view create form', function () {
+    $response = $this->actingAs($this->user)->get(route('departments.create'));
 
-        $response = $this->actingAs($this->user)->get(route('departments.index'));
+    $response->assertOk();
+});
+test('authorised user can store department', function () {
+    $response = $this->actingAs($this->user)->post(route('departments.store'), [
+        'name' => 'Finance',
+    ]);
 
-        $response->assertForbidden();
-    }
+    $response->assertRedirect(route('departments.index'));
+    $this->assertDatabaseHas('departments', ['name' => 'Finance']);
+});
+test('store fails validation for missing name', function () {
+    $response = $this->actingAs($this->user)->post(route('departments.store'), []);
 
-    public function test_user_without_create_permission_cannot_access_create_form(): void
-    {
-        $this->role->revokePermissionTo(PermissionKey::CreateDepartment->value);
+    $response->assertSessionHasErrors('name');
+});
+test('authorised user can view edit form', function () {
+    $department = Department::factory()->create();
 
-        $response = $this->actingAs($this->user)->get(route('departments.create'));
+    $response = $this->actingAs($this->user)->get(route('departments.edit', $department));
 
-        $response->assertForbidden();
-    }
+    $response->assertOk();
+});
+test('authorised user can update department', function () {
+    $department = Department::factory()->create(['name' => 'Old Name']);
 
-    // ── Index ─────────────────────────────────────────────────────────────────
+    $response = $this->actingAs($this->user)->put(route('departments.update', $department), [
+        'name' => 'New Name',
+    ]);
 
-    public function test_authorised_user_can_view_index(): void
-    {
-        $response = $this->actingAs($this->user)->get(route('departments.index'));
+    $response->assertRedirect(route('departments.index'));
+    $this->assertDatabaseHas('departments', ['id' => $department->id, 'name' => 'New Name']);
+});
+test('authorised user can delete department', function () {
+    $department = Department::factory()->create();
 
-        $response->assertOk();
-    }
+    $response = $this->actingAs($this->user)->delete(route('departments.destroy', $department));
 
-    // ── Create ────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_view_create_form(): void
-    {
-        $response = $this->actingAs($this->user)->get(route('departments.create'));
-
-        $response->assertOk();
-    }
-
-    // ── Store ─────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_store_department(): void
-    {
-        $response = $this->actingAs($this->user)->post(route('departments.store'), [
-            'name' => 'Finance',
-        ]);
-
-        $response->assertRedirect(route('departments.index'));
-        $this->assertDatabaseHas('departments', ['name' => 'Finance']);
-    }
-
-    public function test_store_fails_validation_for_missing_name(): void
-    {
-        $response = $this->actingAs($this->user)->post(route('departments.store'), []);
-
-        $response->assertSessionHasErrors('name');
-    }
-
-    // ── Edit ──────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_view_edit_form(): void
-    {
-        $department = Department::factory()->create();
-
-        $response = $this->actingAs($this->user)->get(route('departments.edit', $department));
-
-        $response->assertOk();
-    }
-
-    // ── Update ────────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_update_department(): void
-    {
-        $department = Department::factory()->create(['name' => 'Old Name']);
-
-        $response = $this->actingAs($this->user)->put(route('departments.update', $department), [
-            'name' => 'New Name',
-        ]);
-
-        $response->assertRedirect(route('departments.index'));
-        $this->assertDatabaseHas('departments', ['id' => $department->id, 'name' => 'New Name']);
-    }
-
-    // ── Destroy ───────────────────────────────────────────────────────────────
-
-    public function test_authorised_user_can_delete_department(): void
-    {
-        $department = Department::factory()->create();
-
-        $response = $this->actingAs($this->user)->delete(route('departments.destroy', $department));
-
-        $response->assertRedirect(route('departments.index'));
-        $this->assertSoftDeleted('departments', ['id' => $department->id]);
-    }
-}
+    $response->assertRedirect(route('departments.index'));
+    $this->assertSoftDeleted('departments', ['id' => $department->id]);
+});

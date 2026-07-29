@@ -2,41 +2,29 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Middleware;
-
+uses(Tests\TenantAppTestCase::class);
 use Illuminate\Support\Facades\Cache;
-use Tests\TenantAppTestCase;
 
-class CheckForceLogoutTest extends TenantAppTestCase
-{
-    public function test_authenticated_user_without_force_logout_key_can_access_protected_routes(): void
-    {
-        Cache::forget("force_logout:{$this->user->id}");
+test('authenticated user without force logout key can access protected routes', function () {
+    Cache::forget("force_logout:{$this->user->id}");
 
-        $this->actingAs($this->user)->get(route('dashboard'))->assertOk();
-    }
+    $this->actingAs($this->user)->get(route('dashboard'))->assertOk();
+});
+test('authenticated user with force logout key is logged out and redirected', function () {
+    Cache::put("force_logout:{$this->user->id}", true, now()->addHour());
 
-    public function test_authenticated_user_with_force_logout_key_is_logged_out_and_redirected(): void
-    {
-        Cache::put("force_logout:{$this->user->id}", true, now()->addHour());
+    $response = $this->actingAs($this->user)->get(route('dashboard'));
 
-        $response = $this->actingAs($this->user)->get(route('dashboard'));
+    $response->assertRedirect(route('login'));
+    $this->assertGuest();
+});
+test('force logout key does not affect guest requests', function () {
+    Cache::put("force_logout:{$this->user->id}", true, now()->addHour());
 
-        $response->assertRedirect(route('login'));
-        $this->assertGuest();
-    }
+    $this->get(route('login'))->assertOk();
+});
+test('user can access dashboard after force logout key expires', function () {
+    Cache::forget("force_logout:{$this->user->id}");
 
-    public function test_force_logout_key_does_not_affect_guest_requests(): void
-    {
-        Cache::put("force_logout:{$this->user->id}", true, now()->addHour());
-
-        $this->get(route('login'))->assertOk();
-    }
-
-    public function test_user_can_access_dashboard_after_force_logout_key_expires(): void
-    {
-        Cache::forget("force_logout:{$this->user->id}");
-
-        $this->actingAs($this->user)->get(route('dashboard'))->assertOk();
-    }
-}
+    $this->actingAs($this->user)->get(route('dashboard'))->assertOk();
+});

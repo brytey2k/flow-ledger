@@ -2,102 +2,80 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Middleware;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Features\DelegateIdentityToIdp;
 use Laravel\Pennant\Feature;
-use Tests\TenantAppTestCase;
 
-class ForcePasswordChangeTest extends TenantAppTestCase
-{
-    public function test_user_with_must_change_password_is_redirected_to_password_change(): void
-    {
-        $this->user->update(['must_change_password' => true]);
+test('user with must change password is redirected to password change', function () {
+    $this->user->update(['must_change_password' => true]);
 
-        $response = $this->actingAs($this->user)->get(route('dashboard'));
+    $response = $this->actingAs($this->user)->get(route('dashboard'));
 
-        $response->assertRedirect(route('password.change'));
-    }
+    $response->assertRedirect(route('password.change'));
+});
+test('user without must change password can access protected routes', function () {
+    $this->user->update(['must_change_password' => false]);
 
-    public function test_user_without_must_change_password_can_access_protected_routes(): void
-    {
-        $this->user->update(['must_change_password' => false]);
+    $response = $this->actingAs($this->user)->get(route('dashboard'));
 
-        $response = $this->actingAs($this->user)->get(route('dashboard'));
+    $response->assertOk();
+});
+test('user with must change password can still access password change route', function () {
+    $this->user->update(['must_change_password' => true]);
 
-        $response->assertOk();
-    }
+    $response = $this->actingAs($this->user)->get(route('password.change'));
 
-    public function test_user_with_must_change_password_can_still_access_password_change_route(): void
-    {
-        $this->user->update(['must_change_password' => true]);
+    $response->assertOk();
+});
+test('user with must change password can still post to password change', function () {
+    $this->user->update(['must_change_password' => true]);
 
-        $response = $this->actingAs($this->user)->get(route('password.change'));
+    // Send a valid password — if the middleware had blocked it we'd be redirected to password.change,
+    // but the controller should run and redirect to dashboard instead.
+    $response = $this->actingAs($this->user)->put(route('password.change.update'), [
+        'password' => 'NewSecurePassword1!',
+        'password_confirmation' => 'NewSecurePassword1!',
+    ]);
 
-        $response->assertOk();
-    }
+    $response->assertRedirect(route('dashboard'));
+});
+test('user with must change password can post to logout', function () {
+    $this->user->update(['must_change_password' => true]);
 
-    public function test_user_with_must_change_password_can_still_post_to_password_change(): void
-    {
-        $this->user->update(['must_change_password' => true]);
+    $response = $this->actingAs($this->user)->post(route('logout'));
 
-        // Send a valid password — if the middleware had blocked it we'd be redirected to password.change,
-        // but the controller should run and redirect to dashboard instead.
-        $response = $this->actingAs($this->user)->put(route('password.change.update'), [
-            'password' => 'NewSecurePassword1!',
-            'password_confirmation' => 'NewSecurePassword1!',
-        ]);
+    // Logout redirects to login — confirming it passed through the middleware.
+    $response->assertRedirect();
+    $this->assertGuest();
+});
+test('unauthenticated user is not affected by middleware', function () {
+    $response = $this->get(route('dashboard'));
 
-        $response->assertRedirect(route('dashboard'));
-    }
+    $response->assertRedirect(route('login'));
+});
+test('delegate identity to idp bypasses force password change', function () {
+    $this->user->update(['must_change_password' => true]);
 
-    public function test_user_with_must_change_password_can_post_to_logout(): void
-    {
-        $this->user->update(['must_change_password' => true]);
+    Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
 
-        $response = $this->actingAs($this->user)->post(route('logout'));
+    $response = $this->actingAs($this->user)->get(route('dashboard'));
 
-        // Logout redirects to login — confirming it passed through the middleware.
-        $response->assertRedirect();
-        $this->assertGuest();
-    }
+    $response->assertOk();
+});
+test('force password change still applies without delegate identity flag', function () {
+    $this->user->update(['must_change_password' => true]);
 
-    public function test_unauthenticated_user_is_not_affected_by_middleware(): void
-    {
-        $response = $this->get(route('dashboard'));
+    Feature::for($this->tenant)->deactivate(DelegateIdentityToIdp::class);
 
-        $response->assertRedirect(route('login'));
-    }
+    $response = $this->actingAs($this->user)->get(route('dashboard'));
 
-    public function test_delegate_identity_to_idp_bypasses_force_password_change(): void
-    {
-        $this->user->update(['must_change_password' => true]);
+    $response->assertRedirect(route('password.change'));
+});
+test('password change page shows sign out later option', function () {
+    $this->user->update(['must_change_password' => true]);
 
-        Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+    $response = $this->actingAs($this->user)->get(route('password.change'));
 
-        $response = $this->actingAs($this->user)->get(route('dashboard'));
-
-        $response->assertOk();
-    }
-
-    public function test_force_password_change_still_applies_without_delegate_identity_flag(): void
-    {
-        $this->user->update(['must_change_password' => true]);
-
-        Feature::for($this->tenant)->deactivate(DelegateIdentityToIdp::class);
-
-        $response = $this->actingAs($this->user)->get(route('dashboard'));
-
-        $response->assertRedirect(route('password.change'));
-    }
-
-    public function test_password_change_page_shows_sign_out_later_option(): void
-    {
-        $this->user->update(['must_change_password' => true]);
-
-        $response = $this->actingAs($this->user)->get(route('password.change'));
-
-        $response->assertOk();
-        $response->assertSee(route('logout'), false);
-    }
-}
+    $response->assertOk();
+    $response->assertSee(route('logout'), false);
+});

@@ -2,39 +2,31 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Jobs;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Jobs\BootstrapTenant;
 use App\Services\NewTenantSetupService;
-use Tests\TenantAppTestCase;
 
-class BootstrapTenantTest extends TenantAppTestCase
-{
-    public function test_job_calls_handle_reset_with_the_tenant(): void
-    {
-        $service = $this->mock(NewTenantSetupService::class);
-        $service->shouldReceive('handleReset')
-            ->once()
-            ->with($this->tenant);
+test('job calls handle reset with the tenant', function () {
+    $service = $this->mock(NewTenantSetupService::class);
+    $service->shouldReceive('handleReset')
+        ->once()
+        ->with($this->tenant);
 
-        $job = new BootstrapTenant($this->tenant);
-        $job->handle($service);
+    $job = new BootstrapTenant($this->tenant);
+    $job->handle($service);
 
-        // Re-initialize tenancy so tearDown can roll back tenant transaction
-        tenancy()->initialize($this->tenant);
-    }
+    // Re-initialize tenancy so tearDown can roll back tenant transaction
+    tenancy()->initialize($this->tenant);
+});
+test('job ends tenancy after setup', function () {
+    $this->mock(NewTenantSetupService::class)
+        ->shouldReceive('handleReset')
+        ->once();
 
-    public function test_job_ends_tenancy_after_setup(): void
-    {
-        $this->mock(NewTenantSetupService::class)
-            ->shouldReceive('handleReset')
-            ->once();
+    $job = new BootstrapTenant($this->tenant);
+    $job->handle(app(NewTenantSetupService::class));
 
-        $job = new BootstrapTenant($this->tenant);
-        $job->handle(app(NewTenantSetupService::class));
+    expect(tenancy()->tenant)->toBeNull();
 
-        $this->assertNull(tenancy()->tenant);
-
-        tenancy()->initialize($this->tenant);
-    }
-}
+    tenancy()->initialize($this->tenant);
+});

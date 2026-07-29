@@ -30,18 +30,20 @@ abstract class TenantAppTestCase extends BaseTestCase
 
     private bool $tenantTransactionStarted = false;
 
-    protected Tenant $tenant;
+    // Public so Pest's file-local helper functions (which run outside any class scope) can
+    // read these fixtures via test()->tenant, test()->user, etc.
+    public Tenant $tenant;
 
-    protected User $user;
+    public User $user;
 
-    protected Role $role;
+    public Role $role;
 
-    protected Level $level;
+    public Level $level;
 
-    protected Branch $branch;
+    public Branch $branch;
 
     /** @var MockObject&FeatureFlagServiceInterface */
-    protected MockObject $featureFlagMock;
+    public MockObject $featureFlagMock;
 
     #[Override]
     protected function setUp(): void

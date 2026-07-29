@@ -2,61 +2,49 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Console;
-
+uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
 use Spatie\Permission\Models\Permission;
-use Tests\TenantAppTestCase;
 
-class SyncPermissionsTest extends TenantAppTestCase
-{
-    public function test_sync_permissions_creates_missing_permissions(): void
-    {
-        Permission::where('guard_name', 'web')
-            ->where('name', PermissionKey::cases()[0]->value)
-            ->delete();
+test('sync permissions creates missing permissions', function () {
+    Permission::where('guard_name', 'web')
+        ->where('name', PermissionKey::cases()[0]->value)
+        ->delete();
 
-        $this->artisan('permissions:sync')
-            ->assertSuccessful();
+    $this->artisan('permissions:sync')
+        ->assertSuccessful();
 
-        // The command calls tenancy()->end() — re-initialize so tearDown can roll back
-        tenancy()->initialize($this->tenant);
+    // The command calls tenancy()->end() — re-initialize so tearDown can roll back
+    tenancy()->initialize($this->tenant);
 
-        $this->assertDatabaseHas('permissions', [
-            'name' => PermissionKey::cases()[0]->value,
-            'guard_name' => 'web',
-        ], 'tenant');
-    }
+    $this->assertDatabaseHas('permissions', [
+        'name' => PermissionKey::cases()[0]->value,
+        'guard_name' => 'web',
+    ], 'tenant');
+});
+test('sync permissions succeeds when all permissions exist', function () {
+    $this->artisan('permissions:sync')
+        ->assertSuccessful();
 
-    public function test_sync_permissions_succeeds_when_all_permissions_exist(): void
-    {
-        $this->artisan('permissions:sync')
-            ->assertSuccessful();
+    tenancy()->initialize($this->tenant);
+});
+test('sync permissions with prune removes orphaned permissions', function () {
+    Permission::create(['name' => 'orphaned.permission.xyz', 'guard_name' => 'web']);
 
-        tenancy()->initialize($this->tenant);
-    }
+    $this->artisan('permissions:sync --prune')
+        ->assertSuccessful();
 
-    public function test_sync_permissions_with_prune_removes_orphaned_permissions(): void
-    {
-        Permission::create(['name' => 'orphaned.permission.xyz', 'guard_name' => 'web']);
+    // The command calls tenancy()->end() — re-initialize so tearDown can roll back
+    tenancy()->initialize($this->tenant);
 
-        $this->artisan('permissions:sync --prune')
-            ->assertSuccessful();
+    $this->assertDatabaseMissing('permissions', [
+        'name' => 'orphaned.permission.xyz',
+        'guard_name' => 'web',
+    ], 'tenant');
+});
+test('sync permissions with prune does nothing when no orphans', function () {
+    $this->artisan('permissions:sync --prune')
+        ->assertSuccessful();
 
-        // The command calls tenancy()->end() — re-initialize so tearDown can roll back
-        tenancy()->initialize($this->tenant);
-
-        $this->assertDatabaseMissing('permissions', [
-            'name' => 'orphaned.permission.xyz',
-            'guard_name' => 'web',
-        ], 'tenant');
-    }
-
-    public function test_sync_permissions_with_prune_does_nothing_when_no_orphans(): void
-    {
-        $this->artisan('permissions:sync --prune')
-            ->assertSuccessful();
-
-        tenancy()->initialize($this->tenant);
-    }
-}
+    tenancy()->initialize($this->tenant);
+});
