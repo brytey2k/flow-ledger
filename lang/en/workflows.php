@@ -13,6 +13,7 @@ return [
     'edit_title' => 'Edit Template',
     'back' => 'Back',
     'details_card' => 'Template Details',
+    'identity_locked_hint' => 'Type and branch scope are permanent once a template is created and cannot be changed.',
 
     'fields' => [
         'name' => 'Template Name',
@@ -42,6 +43,15 @@ return [
     ],
 
     'show' => [
+        'version_history' => 'Version History',
+        'version_badge' => 'Version :number',
+        'superseded_badge' => 'Superseded',
+        'draft_badge' => 'Draft',
+        'draft_banner' => 'You\'re editing a draft. Changes here won\'t affect live payment requests until you publish.',
+        'publish' => 'Publish',
+        'discard_draft' => 'Discard Draft',
+        'confirm_publish' => 'Publish this draft? It will become the active version for new payment requests.',
+        'confirm_discard' => 'Discard this draft? All changes made here will be permanently lost.',
         'parallel_groups' => 'Parallel Groups',
         'parallel_groups_hint' => 'Assign stages to a group to run them simultaneously',
         'add_group' => 'Add Group',
@@ -57,6 +67,14 @@ return [
             'parallel_group' => 'Parallel Group',
             'skip_below' => 'Skip Below',
             'approver_scope' => 'Approver Scope',
+        ],
+        'column_tips' => [
+            'order' => 'Stages run lowest number first. Stages that share the same number run at the same time. Example: stage 1 (Finance Review) finishes before stage 2 (CFO Approval) starts.',
+            'stage_name' => 'A label for this approval step, shown to approvers in their inbox and on the request timeline. Example: "Department Head Approval".',
+            'roles' => 'Any user holding one of the listed roles can approve or reject at this stage. Example: assigning "Finance Manager" lets every Finance Manager act on it.',
+            'parallel_group' => 'Groups stages that run simultaneously instead of one after another. ALL requires every stage in the group to approve before moving on; ANY advances the request as soon as one stage approves. Example: a "Finance & HR" group set to ALL needs sign-off from both before the next stage begins.',
+            'skip_below' => 'This stage is skipped automatically when the request total is below this amount. Example: a value of 500 means requests under 500 bypass the stage entirely.',
+            'approver_scope' => 'Further restricts who can approve, beyond having the required role. Example: Branch scope means only approvers based in the same branch as the requester can act on this stage.',
         ],
         'sequential' => 'Sequential',
         'and_label' => 'AND',
@@ -99,5 +117,27 @@ return [
             'delete' => 'Delete Stage',
         ],
         'confirm_delete' => 'Delete this stage?',
+        'sync_warning' => [
+            'heading' => 'This will reorder other stages too',
+            'body' => 'To keep this parallel group running together, {names} will also be updated to display order {order}.',
+            'proceed' => 'Yes, update and save',
+            'cancel' => 'Cancel',
+        ],
+    ],
+
+    'versions' => [
+        'title' => 'Version History',
+        'subtitle' => 'Past and current versions of this workflow template',
+        'back' => 'Back to Template',
+        'columns' => [
+            'version' => 'Version',
+            'created_at' => 'Created',
+            'status' => 'Status',
+            'total_requests' => 'Total Requests',
+            'active_requests' => 'Active Requests',
+        ],
+        'current' => 'Current',
+        'superseded' => 'Superseded',
+        'draft' => 'Draft',
     ],
 ];

@@ -17,6 +17,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Override;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -84,6 +85,15 @@ abstract class TenantAppTestCase extends BaseTestCase
 
         $this->tenant = $tenant;
         tenancy()->initialize($this->tenant);
+
+        // Route requests through the tenant's own domain rather than the
+        // central app URL. Central domains host landlord routes (e.g. the
+        // marketing "/" route), which would otherwise collide with
+        // domain-agnostic tenant routes such as "dashboard".
+        $domain = $this->tenant->domains()->first()?->domain;
+        if ($domain) {
+            URL::forceRootUrl('http://' . $domain);
+        }
     }
 
     protected function init(): void

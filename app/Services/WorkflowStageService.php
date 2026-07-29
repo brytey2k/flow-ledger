@@ -24,6 +24,7 @@ class WorkflowStageService
                 'scope_to_branch' => $dto->scopeToBranch,
             ]);
             $stage->roles()->sync($dto->roleIds);
+            $this->syncParallelGroupDisplayOrder($stage);
 
             return $stage;
         });
@@ -41,6 +42,27 @@ class WorkflowStageService
                 'scope_to_branch' => $dto->scopeToBranch,
             ]);
             $stage->roles()->sync($dto->roleIds);
+            $this->syncParallelGroupDisplayOrder($stage);
         });
+    }
+
+    /**
+     * Stages in the same parallel group are activated together by the workflow
+     * engine only when they share an identical display_order (see
+     * WorkflowEngineService::activateNextStages()). A mismatch there either
+     * silently drops a branch's approvers or permanently stalls the instance,
+     * so every sibling is force-kept in sync whenever one member is saved.
+     *
+     * @param WorkflowStage $stage
+     */
+    private function syncParallelGroupDisplayOrder(WorkflowStage $stage): void
+    {
+        if ($stage->parallel_group_id === null) {
+            return;
+        }
+
+        WorkflowStage::where('parallel_group_id', $stage->parallel_group_id)
+            ->where('id', '!=', $stage->id)
+            ->update(['display_order' => $stage->display_order]);
     }
 }

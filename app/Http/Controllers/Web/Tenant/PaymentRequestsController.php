@@ -37,9 +37,15 @@ class PaymentRequestsController extends Controller
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
-        $requests = $this->repository->paginated($this->branchScope->allowedBranchIds($user));
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
+        $scope = $request->string('scope')->value() === 'mine' ? 'mine' : 'branch';
+        $status = $request->string('status')->value() ?: null;
+        $currentStaffId = $user->staffProfile?->id;
+        $staffId = $scope === 'mine' ? $currentStaffId : null;
 
-        return view('tenant.payment-requests.index', compact('requests'));
+        $requests = $this->repository->paginated($allowedBranchIds, status: $status, staffId: $staffId);
+
+        return view('tenant.payment-requests.index', compact('requests', 'status', 'scope', 'currentStaffId'));
     }
 
     public function create(Request $request): RedirectResponse|View

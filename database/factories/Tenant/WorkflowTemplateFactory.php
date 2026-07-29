@@ -36,4 +36,12 @@ class WorkflowTemplateFactory extends Factory
     {
         return $this->state(['type' => \App\Enums\Tenant\PaymentRequestType::Retirement->value]);
     }
+
+    public function draft(): static
+    {
+        return $this->state([
+            'status' => \App\Enums\Tenant\WorkflowTemplateStatus::Draft->value,
+            'is_current' => false,
+        ]);
+    }
 }

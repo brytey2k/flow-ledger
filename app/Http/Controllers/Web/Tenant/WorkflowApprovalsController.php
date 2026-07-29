@@ -40,6 +40,7 @@ class WorkflowApprovalsController extends Controller
         $instanceStage->load([
             'stage',
             'actions.user',
+            'instance.template',
             'instance.instanceStages.stage',
             'instance.workflowable.staff',
             'instance.workflowable.branch',

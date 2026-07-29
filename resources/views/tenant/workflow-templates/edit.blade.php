@@ -41,39 +41,34 @@
                         </div>
 
                         <div>
-                            <label class="kt-form-label block mb-2" for="type">
-                                {{ __('workflows.fields.type') }} <span class="text-destructive">*</span>
+                            <label class="kt-form-label block mb-2">
+                                {{ __('workflows.fields.type') }}
                             </label>
-                            <select id="type" name="type" class="kt-select w-full">
-                                <option value="advance" {{ old('type', $workflowTemplate->type) === 'advance' ? 'selected' : '' }}>{{ __('workflows.fields.type_advance') }}</option>
-                                <option value="expense" {{ old('type', $workflowTemplate->type) === 'expense' ? 'selected' : '' }}>{{ __('workflows.fields.type_expense') }}</option>
-                                <option value="retirement" {{ old('type', $workflowTemplate->type) === 'retirement' ? 'selected' : '' }}>{{ __('workflows.fields.type_retirement') }}</option>
-                            </select>
-                            @error('type')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
+                            <div>
+                                <span class="kt-badge kt-badge-sm kt-badge-outline">
+                                    @if($workflowTemplate->type === 'advance') {{ __('workflows.fields.type_advance') }}
+                                    @elseif($workflowTemplate->type === 'expense') {{ __('workflows.fields.type_expense') }}
+                                    @elseif($workflowTemplate->type === 'retirement') {{ __('workflows.fields.type_retirement') }}
+                                    @else {{ ucfirst($workflowTemplate->type) }}
+                                    @endif
+                                </span>
+                            </div>
                         </div>
 
                         <div>
-                            <label class="kt-form-label block mb-2" for="branch_id">
+                            <label class="kt-form-label block mb-2">
                                 {{ __('workflows.fields.branch') }}
                             </label>
-                            <select id="branch_id" name="branch_id" class="kt-select w-full"
-                                    aria-invalid="@error('branch_id') true @else false @enderror">
-                                <option value="">{{ __('workflows.fields.branch_master') }}</option>
-                                @foreach($branches as $branch)
-                                    <option value="{{ $branch->id }}" {{ old('branch_id', $workflowTemplate->branch_id) == $branch->id ? 'selected' : '' }}>
-                                        {{ $branch->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="mt-1 text-xs text-muted-foreground">
-                                {{ __('workflows.fields.branch_hint') }}
+                            <div>
+                                <span class="kt-badge kt-badge-sm kt-badge-outline">
+                                    {{ $workflowTemplate->branch->name ?? __('workflows.fields.branch_master') }}
+                                </span>
                             </div>
-                            @error('branch_id')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
                         </div>
+                    </div>
+
+                    <div class="text-xs text-muted-foreground">
+                        {{ __('workflows.identity_locked_hint') }}
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-between items-center">

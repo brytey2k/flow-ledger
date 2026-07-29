@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Tenant;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Exceptions\InsufficientCashbookBalanceException;
 use App\Http\Requests\Tenant\DisbursementStoreRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Services\BranchScopeService;
@@ -54,7 +55,11 @@ class DisbursementController extends BaseApiController
         abort_unless(in_array($paymentRequest->branch_id, $branchIds, true), 403);
         abort_unless($paymentRequest->status === 'approved', 422, 'Only approved requests can be disbursed.');
 
-        $this->service->disburse($paymentRequest, $request->toDto(), $user);
+        try {
+            $this->service->disburse($paymentRequest, $request->toDto(), $user);
+        } catch (InsufficientCashbookBalanceException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json(['data' => $paymentRequest->refresh()]);
     }

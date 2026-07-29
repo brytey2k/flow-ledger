@@ -75,6 +75,56 @@ class WorkflowStageControllerTest extends TenantAppTestCase
         $response->assertViewHas('parallelGroups');
     }
 
+    public function test_create_form_exposes_existing_group_members_for_client_side_sync_check(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $existing = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'name' => 'Existing Sibling',
+            'display_order' => 4,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('workflow-templates.stages.create', $template));
+
+        $response->assertViewHas('parallelGroupStages', fn(array $data) => $data[$group->id][0] === [
+            'id' => $existing->id,
+            'name' => 'Existing Sibling',
+            'display_order' => 4,
+        ]);
+    }
+
+    /**
+     * Regression test: @json() only escapes quote characters found inside the data
+     * itself, not the structural quotes of the JSON syntax — so embedding it in a
+     * double-quoted x-data="..." attribute breaks the page the moment the JSON's own
+     * `"key":` syntax appears. The attribute must be single-quoted so JSON_HEX_APOS
+     * neutralizes any apostrophes in stage names instead of terminating the attribute.
+     */
+    public function test_create_page_renders_stage_names_with_quotes_safely_in_alpine_data(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'name' => 'Manager\'s "Special" Review',
+            'display_order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('workflow-templates.stages.create', $template));
+
+        $response->assertOk();
+        $response->assertSee("x-data='workflowStageForm(", false);
+        preg_match('/x-data=\'workflowStageForm\((.*?), null\)\'/s', $response->getContent(), $matches);
+        $this->assertNotEmpty($matches);
+        $decoded = json_decode($matches[1], true);
+        $this->assertSame('Manager\'s "Special" Review', $decoded[$group->id][0]['name']);
+    }
+
     // ── Store ─────────────────────────────────────────────────────────────────
 
     public function test_user_can_create_stage_with_roles(): void
@@ -189,6 +239,29 @@ class WorkflowStageControllerTest extends TenantAppTestCase
         ]);
     }
 
+    public function test_store_syncs_display_order_of_existing_group_members(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $existing = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 1,
+        ]);
+        $role = Role::create(['name' => 'approver_sync', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($this->user)
+            ->post(route('workflow-templates.stages.store', $template), [
+                'name' => 'New Parallel Sibling',
+                'display_order' => 6,
+                'parallel_group_id' => $group->id,
+                'role_ids' => [$role->id],
+            ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('workflow_stages', ['id' => $existing->id, 'display_order' => 6]);
+    }
+
     // ── Edit form ─────────────────────────────────────────────────────────────
 
     public function test_edit_form_returns_ok_with_stage_data(): void
@@ -203,6 +276,46 @@ class WorkflowStageControllerTest extends TenantAppTestCase
         $response->assertViewHas('workflowTemplate');
         $response->assertViewHas('workflowStage');
         $response->assertViewHas('roles');
+    }
+
+    public function test_edit_form_exposes_parallel_group_stages_for_client_side_sync_check(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 2,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('workflow-templates.stages.edit', [$template, $stage]));
+
+        $response->assertViewHas('parallelGroupStages', fn(array $data) => count($data[$group->id]) === 1
+            && $data[$group->id][0]['id'] === $stage->id);
+    }
+
+    /** @see test_create_page_renders_stage_names_with_quotes_safely_in_alpine_data for why this matters */
+    public function test_edit_page_renders_stage_names_with_quotes_safely_in_alpine_data(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'name' => 'Manager\'s "Special" Review',
+            'display_order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('workflow-templates.stages.edit', [$template, $stage]));
+
+        $response->assertOk();
+        $response->assertSee("x-data='workflowStageForm(", false);
+        preg_match('/x-data=\'workflowStageForm\((.*?), ' . $stage->id . '\)\'/s', $response->getContent(), $matches);
+        $this->assertNotEmpty($matches);
+        $decoded = json_decode($matches[1], true);
+        $this->assertSame('Manager\'s "Special" Review', $decoded[$group->id][0]['name']);
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
@@ -229,9 +342,37 @@ class WorkflowStageControllerTest extends TenantAppTestCase
         $this->assertDatabaseMissing('workflow_stage_roles', ['workflow_stage_id' => $stage->id, 'role_id' => $oldRole->id]);
     }
 
-    // ── Store blocked by active instances ────────────────────────────────────
+    public function test_update_syncs_display_order_of_other_group_members(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 2,
+        ]);
+        $sibling = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 2,
+        ]);
+        $role = Role::create(['name' => 'approver_update_sync', 'guard_name' => 'web']);
 
-    public function test_store_is_blocked_when_template_has_active_instances(): void
+        $response = $this->actingAs($this->user)
+            ->put(route('workflow-templates.stages.update', [$template, $stage]), [
+                'name' => $stage->name,
+                'display_order' => 7,
+                'parallel_group_id' => $group->id,
+                'role_ids' => [$role->id],
+            ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('workflow_stages', ['id' => $sibling->id, 'display_order' => 7]);
+    }
+
+    // ── Store forks a new version when active instances exist ────────────────
+
+    public function test_store_forks_new_version_when_template_has_active_instances(): void
     {
         $template = WorkflowTemplate::factory()->create();
         $role = Role::create(['name' => 'approver_lock', 'guard_name' => 'web']);
@@ -245,22 +386,57 @@ class WorkflowStageControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)
             ->post(route('workflow-templates.stages.store', $template), [
-                'name' => 'Blocked Stage',
+                'name' => 'New Stage',
                 'display_order' => 1,
                 'role_ids' => [$role->id],
             ]);
 
-        $response->assertRedirect(route('workflow-templates.show', $template));
-        $response->assertSessionHas('error');
-        $this->assertDatabaseMissing('workflow_stages', ['name' => 'Blocked Stage']);
+        $this->assertDatabaseCount('workflow_templates', 2);
+        $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+            ->where('status', 'draft')->firstOrFail();
+        $this->assertNotSame($template->id, $draft->id);
+        $this->assertSame(2, $draft->version);
+        $response->assertRedirect(route('workflow-templates.show', $draft));
+        $this->assertDatabaseHas('workflow_stages', [
+            'workflow_template_id' => $draft->id,
+            'name' => 'New Stage',
+        ]);
+        $this->assertDatabaseMissing('workflow_stages', [
+            'workflow_template_id' => $template->id,
+            'name' => 'New Stage',
+        ]);
+        // The original stays the live, is_current version until the draft is explicitly published.
+        $template->refresh();
+        $this->assertTrue($template->is_current);
+        $this->assertFalse($draft->is_current);
     }
 
-    // ── Update blocked by active instances ───────────────────────────────────
-
-    public function test_update_is_blocked_when_template_has_active_instances(): void
+    public function test_store_edits_in_place_when_no_active_instances(): void
     {
         $template = WorkflowTemplate::factory()->create();
-        $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+        $role = Role::create(['name' => 'approver_no_lock', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($this->user)
+            ->post(route('workflow-templates.stages.store', $template), [
+                'name' => 'New Stage',
+                'display_order' => 1,
+                'role_ids' => [$role->id],
+            ]);
+
+        $this->assertDatabaseCount('workflow_templates', 1);
+        $response->assertRedirect(route('workflow-templates.show', $template));
+        $this->assertDatabaseHas('workflow_stages', [
+            'workflow_template_id' => $template->id,
+            'name' => 'New Stage',
+        ]);
+    }
+
+    // ── Update forks a new version when active instances exist ───────────────
+
+    public function test_update_forks_new_version_when_template_has_active_instances(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'name' => 'Original Stage']);
         $role = Role::create(['name' => 'update_lock_role', 'guard_name' => 'web']);
         $subject = PaymentRequest::factory()->inWorkflow()->create();
         WorkflowInstance::create([
@@ -272,14 +448,43 @@ class WorkflowStageControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)
             ->put(route('workflow-templates.stages.update', [$template, $stage]), [
-                'name' => 'Should Not Update',
+                'name' => 'Renamed Stage',
                 'display_order' => 1,
                 'role_ids' => [$role->id],
             ]);
 
+        $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+            ->where('status', 'draft')->firstOrFail();
+        $response->assertRedirect(route('workflow-templates.show', $draft));
+        $this->assertDatabaseHas('workflow_stages', [
+            'workflow_template_id' => $draft->id,
+            'name' => 'Renamed Stage',
+        ]);
+        // The original stage on the still-live version is untouched — in-flight instances still see it.
+        $this->assertDatabaseHas('workflow_stages', [
+            'id' => $stage->id,
+            'workflow_template_id' => $template->id,
+            'name' => 'Original Stage',
+        ]);
+        $this->assertTrue($template->fresh()->is_current);
+    }
+
+    public function test_update_edits_in_place_when_no_active_instances(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+        $role = Role::create(['name' => 'update_no_lock_role', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($this->user)
+            ->put(route('workflow-templates.stages.update', [$template, $stage]), [
+                'name' => 'Renamed In Place',
+                'display_order' => 1,
+                'role_ids' => [$role->id],
+            ]);
+
+        $this->assertDatabaseCount('workflow_templates', 1);
         $response->assertRedirect(route('workflow-templates.show', $template));
-        $response->assertSessionHas('error');
-        $this->assertDatabaseMissing('workflow_stages', ['name' => 'Should Not Update']);
+        $this->assertDatabaseHas('workflow_stages', ['id' => $stage->id, 'name' => 'Renamed In Place']);
     }
 
     // ── Destroy ───────────────────────────────────────────────────────────────
@@ -296,7 +501,7 @@ class WorkflowStageControllerTest extends TenantAppTestCase
         $this->assertDatabaseMissing('workflow_stages', ['id' => $stage->id]);
     }
 
-    public function test_destroy_is_blocked_when_template_has_active_instances(): void
+    public function test_destroy_forks_new_version_when_template_has_active_instances(): void
     {
         $template = WorkflowTemplate::factory()->create();
         $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
@@ -311,8 +516,82 @@ class WorkflowStageControllerTest extends TenantAppTestCase
         $response = $this->actingAs($this->user)
             ->delete(route('workflow-templates.stages.destroy', [$template, $stage]));
 
-        $response->assertRedirect(route('workflow-templates.show', $template));
-        $response->assertSessionHas('error');
-        $this->assertDatabaseHas('workflow_stages', ['id' => $stage->id]);
+        $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+            ->where('status', 'draft')->firstOrFail();
+        $response->assertRedirect(route('workflow-templates.show', $draft));
+        // The original stage on the still-live version still exists — in-flight instances still see it.
+        $this->assertDatabaseHas('workflow_stages', ['id' => $stage->id, 'workflow_template_id' => $template->id]);
+        $this->assertDatabaseMissing('workflow_stages', ['workflow_template_id' => $draft->id, 'name' => $stage->name]);
+    }
+
+    // ── Draft/publish gate ────────────────────────────────────────────────────
+
+    public function test_repeated_structural_edits_during_active_instances_reuse_a_single_draft(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $role = Role::create(['name' => 'draft_reuse_role', 'guard_name' => 'web']);
+        $subject = PaymentRequest::factory()->inWorkflow()->create();
+        WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $subject->id,
+            'status' => 'in_progress',
+        ]);
+
+        // First structural edit forks a draft.
+        $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $template), [
+            'name' => 'Stage One',
+            'display_order' => 1,
+            'role_ids' => [$role->id],
+        ]);
+
+        $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+            ->where('status', 'draft')->firstOrFail();
+
+        // A second structural edit made directly on the draft applies in place — no second fork.
+        $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $draft), [
+            'name' => 'Stage Two',
+            'display_order' => 2,
+            'role_ids' => [$role->id],
+        ]);
+
+        $this->assertDatabaseCount('workflow_templates', 2);
+        $this->assertDatabaseHas('workflow_stages', ['workflow_template_id' => $draft->id, 'name' => 'Stage One']);
+        $this->assertDatabaseHas('workflow_stages', ['workflow_template_id' => $draft->id, 'name' => 'Stage Two']);
+    }
+
+    public function test_structural_edit_against_stale_original_redirects_to_existing_draft_instead_of_forking_again(): void
+    {
+        $template = WorkflowTemplate::factory()->create();
+        $role = Role::create(['name' => 'stale_page_role', 'guard_name' => 'web']);
+        $subject = PaymentRequest::factory()->inWorkflow()->create();
+        WorkflowInstance::create([
+            'workflow_template_id' => $template->id,
+            'workflowable_type' => PaymentRequest::class,
+            'workflowable_id' => $subject->id,
+            'status' => 'in_progress',
+        ]);
+
+        $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $template), [
+            'name' => 'Stage One',
+            'display_order' => 1,
+            'role_ids' => [$role->id],
+        ]);
+        $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+            ->where('status', 'draft')->firstOrFail();
+
+        // A second new payment request now attaches to the still-current original, giving it
+        // active instances again. A stale request against the original (e.g. a bookmarked page)
+        // must redirect to the existing draft instead of creating a second one.
+        $response = $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $template), [
+            'name' => 'Should Not Be Created',
+            'display_order' => 2,
+            'role_ids' => [$role->id],
+        ]);
+
+        $response->assertRedirect(route('workflow-templates.show', $draft));
+        $response->assertSessionHas('warning');
+        $this->assertDatabaseCount('workflow_templates', 2);
+        $this->assertDatabaseMissing('workflow_stages', ['name' => 'Should Not Be Created']);
     }
 }

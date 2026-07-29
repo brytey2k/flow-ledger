@@ -10,10 +10,40 @@
                 <span class="kt-badge kt-badge-sm {{ $typeColors[$workflowTemplate->type] ?? 'kt-badge-outline' }}">
                     {{ ucfirst($workflowTemplate->type) }}
                 </span>
+                <span class="kt-badge kt-badge-sm kt-badge-outline">
+                    {{ __('workflows.show.version_badge', ['number' => $workflowTemplate->version]) }}
+                </span>
+                @if($workflowTemplate->isDraft())
+                    <span class="kt-badge kt-badge-sm kt-badge-warning">{{ __('workflows.show.draft_badge') }}</span>
+                @elseif(!$workflowTemplate->is_current)
+                    <span class="kt-badge kt-badge-sm kt-badge-warning">{{ __('workflows.show.superseded_badge') }}</span>
+                @endif
                 &bull; {{ $workflowTemplate->stages->count() }} {{ Str::plural('stage', $workflowTemplate->stages->count()) }}
             </div>
         </div>
         <div class="flex items-center gap-2.5">
+            @if($workflowTemplate->isDraft())
+                @can(App\Enums\Tenant\PermissionKey::EditWorkflowTemplate->value)
+                    <form method="POST" action="{{ route('workflow-templates.draft.discard', $workflowTemplate) }}" class="inline">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="kt-btn kt-btn-outline kt-btn-destructive" onclick="return confirm('{{ __('workflows.show.confirm_discard') }}')">
+                            <i class="ki-filled ki-trash"></i>
+                            {{ __('workflows.show.discard_draft') }}
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('workflow-templates.publish', $workflowTemplate) }}" class="inline">
+                        @csrf
+                        <button type="submit" class="kt-btn kt-btn-primary" onclick="return confirm('{{ __('workflows.show.confirm_publish') }}')">
+                            <i class="ki-filled ki-check"></i>
+                            {{ __('workflows.show.publish') }}
+                        </button>
+                    </form>
+                @endcan
+            @endif
+            <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.versions', $workflowTemplate) }}">
+                <i class="ki-filled ki-time"></i>
+                {{ __('workflows.show.version_history') }}
+            </a>
             @can(App\Enums\Tenant\PermissionKey::EditWorkflowTemplate->value)
                 <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.edit', $workflowTemplate) }}">
                     <i class="ki-filled ki-pencil"></i>
@@ -26,6 +56,14 @@
             </a>
         </div>
     </div>
+    @if($workflowTemplate->isDraft())
+        <div class="kt-alert kt-alert-light kt-alert-warning mt-5 mb-5 lg:mb-7.5">
+            <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
+            <div class="kt-alert-content">
+                <div class="kt-alert-description">{{ __('workflows.show.draft_banner') }}</div>
+            </div>
+        </div>
+    @endif
 </div>
 
 <div class="kt-container-fixed">
@@ -100,12 +138,12 @@
                         <table class="kt-table kt-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.order') }}</span></span></th>
-                                    <th class="min-w-[180px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.stage_name') }}</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.roles') }}</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.parallel_group') }}</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.skip_below') }}</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.approver_scope') }}</span></span></th>
+                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.order') }}<x-help-tooltip :text="__('workflows.show.column_tips.order')" /></span></span></th>
+                                    <th class="min-w-[180px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.stage_name') }}<x-help-tooltip :text="__('workflows.show.column_tips.stage_name')" /></span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.roles') }}<x-help-tooltip :text="__('workflows.show.column_tips.roles')" /></span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.parallel_group') }}<x-help-tooltip :text="__('workflows.show.column_tips.parallel_group')" /></span></span></th>
+                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.skip_below') }}<x-help-tooltip :text="__('workflows.show.column_tips.skip_below')" /></span></span></th>
+                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.approver_scope') }}<x-help-tooltip :text="__('workflows.show.column_tips.approver_scope')" /></span></span></th>
                                     <th class="min-w-[100px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>

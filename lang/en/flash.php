@@ -88,6 +88,10 @@ return [
         'parallel_group_created' => 'Parallel group created.',
         'parallel_group_deleted' => 'Parallel group deleted.',
         'template_locked' => 'This workflow template cannot be modified while requests are in progress.',
+        'template_has_history' => 'This workflow template cannot be deleted because one or more of its past versions has completed request history. Historical templates are retained for audit purposes.',
+        'template_published' => 'Draft published. This is now the active version for new payment requests.',
+        'draft_discarded' => 'Draft discarded.',
+        'draft_in_progress' => 'A draft is already being edited for this template. Continue your changes here, then publish when ready.',
     ],
     'requests' => [
         'missing_staff_profile' => 'Your account is not linked to a staff profile with a branch. Please contact an administrator.',

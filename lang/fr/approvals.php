@@ -33,5 +33,9 @@ return [
         'total_amount' => 'Montant total',
         'submitted_label' => 'Soumis',
         'notes' => 'Notes',
+        'retiring_request' => 'Demande a liquider',
+        'workflow_version' => 'Version :version',
+        'already_resolved_heading' => 'Aucune action requise',
+        'already_resolved_body' => 'Cette etape a deja ete resolue et n attend plus votre decision.',
     ],
 ];

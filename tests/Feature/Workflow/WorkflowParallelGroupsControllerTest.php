@@ -96,7 +96,7 @@ class WorkflowParallelGroupsControllerTest extends TenantAppTestCase
         ]);
     }
 
-    public function test_store_is_blocked_when_template_has_active_instances(): void
+    public function test_store_forks_new_version_when_template_has_active_instances(): void
     {
         $template = WorkflowTemplate::factory()->create();
         $subject = PaymentRequest::factory()->inWorkflow()->create();
@@ -109,15 +109,22 @@ class WorkflowParallelGroupsControllerTest extends TenantAppTestCase
 
         $response = $this->actingAs($this->user)
             ->post(route('workflow-templates.parallel-groups.store', $template), [
-                'name' => 'Blocked Group',
+                'name' => 'New Group',
                 'require_all' => true,
             ]);
 
-        $response->assertRedirect(route('workflow-templates.show', $template));
-        $response->assertSessionHas('error');
-        $this->assertDatabaseMissing('workflow_parallel_groups', [
-            'name' => 'Blocked Group',
+        $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+            ->where('status', 'draft')->firstOrFail();
+        $response->assertRedirect(route('workflow-templates.show', $draft));
+        $this->assertDatabaseHas('workflow_parallel_groups', [
+            'workflow_template_id' => $draft->id,
+            'name' => 'New Group',
         ]);
+        $this->assertDatabaseMissing('workflow_parallel_groups', [
+            'workflow_template_id' => $template->id,
+            'name' => 'New Group',
+        ]);
+        $this->assertTrue($template->fresh()->is_current);
     }
 
     // ── Destroy ───────────────────────────────────────────────────────────────
@@ -135,7 +142,7 @@ class WorkflowParallelGroupsControllerTest extends TenantAppTestCase
         $this->assertDatabaseMissing('workflow_parallel_groups', ['id' => $group->id]);
     }
 
-    public function test_destroy_is_blocked_when_template_has_active_instances(): void
+    public function test_destroy_forks_new_version_when_template_has_active_instances(): void
     {
         $template = WorkflowTemplate::factory()->create();
         $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
@@ -150,8 +157,11 @@ class WorkflowParallelGroupsControllerTest extends TenantAppTestCase
         $response = $this->actingAs($this->user)
             ->delete(route('workflow-templates.parallel-groups.destroy', [$template, $group]));
 
-        $response->assertRedirect(route('workflow-templates.show', $template));
-        $response->assertSessionHas('error');
-        $this->assertDatabaseHas('workflow_parallel_groups', ['id' => $group->id]);
+        $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+            ->where('status', 'draft')->firstOrFail();
+        $response->assertRedirect(route('workflow-templates.show', $draft));
+        // The original group on the still-live version is untouched.
+        $this->assertDatabaseHas('workflow_parallel_groups', ['id' => $group->id, 'workflow_template_id' => $template->id]);
+        $this->assertDatabaseMissing('workflow_parallel_groups', ['workflow_template_id' => $draft->id, 'name' => $group->name]);
     }
 }

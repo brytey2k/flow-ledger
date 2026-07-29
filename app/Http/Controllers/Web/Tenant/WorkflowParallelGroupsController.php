@@ -8,15 +8,24 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\WorkflowParallelGroupStoreRequest;
 use App\Models\Tenant\WorkflowParallelGroup;
 use App\Models\Tenant\WorkflowTemplate;
+use App\Services\WorkflowTemplateVersioningService;
 use Illuminate\Http\RedirectResponse;
 
 class WorkflowParallelGroupsController extends Controller
 {
+    public function __construct(
+        private readonly WorkflowTemplateVersioningService $versioning,
+    ) {}
+
     public function store(WorkflowParallelGroupStoreRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
-        if ($workflowTemplate->hasActiveInstances()) {
-            return redirect()->route('workflow-templates.show', $workflowTemplate)
-                ->with('error', __('flash.workflows.template_locked'));
+        if ($this->versioning->shouldFork($workflowTemplate, isStructuralChange: true)) {
+            if (($draft = $this->versioning->draftFor($workflowTemplate)) !== null) {
+                return redirect()->route('workflow-templates.show', $draft)
+                    ->with('warning', __('flash.workflows.draft_in_progress'));
+            }
+
+            $workflowTemplate = $this->versioning->forkDraft($workflowTemplate)->newTemplate;
         }
 
         $dto = $request->toDto();
@@ -31,9 +40,15 @@ class WorkflowParallelGroupsController extends Controller
 
     public function destroy(WorkflowTemplate $workflowTemplate, WorkflowParallelGroup $workflowParallelGroup): RedirectResponse
     {
-        if ($workflowTemplate->hasActiveInstances()) {
-            return redirect()->route('workflow-templates.show', $workflowTemplate)
-                ->with('error', __('flash.workflows.template_locked'));
+        if ($this->versioning->shouldFork($workflowTemplate, isStructuralChange: true)) {
+            if (($draft = $this->versioning->draftFor($workflowTemplate)) !== null) {
+                return redirect()->route('workflow-templates.show', $draft)
+                    ->with('warning', __('flash.workflows.draft_in_progress'));
+            }
+
+            $fork = $this->versioning->forkDraft($workflowTemplate);
+            $workflowTemplate = $fork->newTemplate;
+            $workflowParallelGroup = WorkflowParallelGroup::findOrFail($fork->groupIdMap[$workflowParallelGroup->id]);
         }
 
         $workflowParallelGroup->delete();

@@ -43,7 +43,7 @@
             $agingLabels = ['0–30 days', '31–60 days', '61+ days'];
             $agingColors = ['kt-badge-success', 'kt-badge-warning', 'kt-badge-danger'];
         @endphp
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($agingLabels as $i => $label)
                 <div class="kt-card p-5">
                     <div class="flex items-center justify-between mb-2">

@@ -28,8 +28,8 @@ class CashbookService
             ['currency_id' => $currencyId, 'balance' => 0],
         );
 
-        // Prevent disbursement if balance is positive but insufficient for the amount.
-        if ($cashbook->balance > 0 && $cashbook->balance < $amount) {
+        // Prevent disbursement if balance is already negative, or positive but insufficient.
+        if ($cashbook->balance < 0 || ($cashbook->balance > 0 && $cashbook->balance < $amount)) {
             throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for disbursement.');
         }
 

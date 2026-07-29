@@ -1,0 +1,68 @@
+/* Hallmark tokens — Flow Ledger marketing page. Coral catalog theme (editorial genre). */
+:root {
+    /* Colour — warm anchor hue ~45-55, Coral cluster */
+    --color-paper: oklch(97% 0.008 55);
+    --color-paper-2: oklch(99% 0.004 55);
+    --color-paper-3: oklch(94.5% 0.011 55);
+    --color-rule: oklch(89% 0.013 50);
+    --color-rule-2: oklch(84% 0.015 48);
+    --color-ink: oklch(23% 0.014 45);
+    --color-ink-2: oklch(42% 0.016 45);
+    --color-muted: oklch(44% 0.014 50);
+    --color-accent: oklch(56% 0.17 35);
+    --color-accent-strong: oklch(46% 0.16 33);
+    --color-accent-ink: oklch(96% 0.008 40);
+    --color-focus: oklch(64% 0.17 35);
+
+    /* Type */
+    --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+    --text-xs: 0.64rem;
+    --text-sm: 0.8rem;
+    --text-base: 1rem;
+    --text-md: 1.25rem;
+    --text-lg: 1.5625rem;
+    --text-xl: 1.9531rem;
+    --text-2xl: 2.4414rem;
+    --text-3xl: 3.0518rem;
+    --text-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
+
+    /* Space — 4pt scale */
+    --space-3xs: 0.125rem;
+    --space-2xs: 0.25rem;
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2.5rem;
+    --space-2xl: 4rem;
+    --space-3xl: 6rem;
+    --space-4xl: 9rem;
+
+    /* Radius */
+    --radius-card: 0.875rem;
+    --radius-control: 0.625rem;
+    --radius-pill: 999px;
+
+    /* Motion */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --dur-micro: 120ms;
+    --dur-short: 220ms;
+    --dur-long: 420ms;
+
+    /* Z-index */
+    --z-base: 1;
+    --z-raised: 10;
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-modal: 400;
+
+    /* Layout */
+    --space-nav-h: 4.5rem;
+    --page-max: 72rem;
+    --page-gutter: clamp(1.25rem, 4vw, 2.5rem);
+}

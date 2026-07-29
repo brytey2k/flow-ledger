@@ -23,7 +23,10 @@
                 <h3 class="kt-card-title">{{ __('workflows.stages.details_card') }}</h3>
             </div>
             <div class="kt-card-content">
-                <form method="POST" action="{{ route('workflow-templates.stages.update', [$workflowTemplate, $workflowStage]) }}" class="grid gap-7">
+                <form id="stage-form" method="POST" action="{{ route('workflow-templates.stages.update', [$workflowTemplate, $workflowStage]) }}"
+                      class="grid gap-7"
+                      x-data='workflowStageForm(@json($parallelGroupStages), {{ $workflowStage->id }})'
+                      @submit="onSubmit($event)">
                     @csrf
                     @method('PUT')
 
@@ -44,7 +47,8 @@
                             </label>
                             <input id="display_order" name="display_order" type="number" min="1"
                                    value="{{ old('display_order', $workflowStage->display_order) }}"
-                                   class="kt-input w-full" />
+                                   class="kt-input w-full"
+                                   @input="showSyncWarning = false" />
                             <div class="mt-1 text-xs text-muted-foreground">{{ __('workflows.stages.fields.order_hint') }}</div>
                             @error('display_order') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
                         </div>
@@ -63,7 +67,8 @@
                             <label class="kt-form-label block mb-2" for="parallel_group_id">
                                 {{ __('workflows.stages.fields.parallel_group') }}
                             </label>
-                            <select id="parallel_group_id" name="parallel_group_id" class="kt-select w-full">
+                            <select id="parallel_group_id" name="parallel_group_id" class="kt-select w-full"
+                                    @change="showSyncWarning = false">
                                 <option value="">{{ __('workflows.stages.fields.none_sequential') }}</option>
                                 @foreach($parallelGroups as $group)
                                     <option value="{{ $group->id }}"
@@ -73,6 +78,22 @@
                                 @endforeach
                             </select>
                             @error('parallel_group_id') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="kt-alert kt-alert-light kt-alert-warning" x-show="showSyncWarning" x-cloak x-transition>
+                        <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
+                        <div class="kt-alert-content">
+                            <div class="font-medium text-mono">{{ __('workflows.stages.sync_warning.heading') }}</div>
+                            <div class="kt-alert-description" x-text="syncWarningMessage"></div>
+                            <div class="mt-3 flex items-center gap-2.5">
+                                <button type="button" class="kt-btn kt-btn-sm kt-btn-warning" @click="proceed('stage-form')">
+                                    {{ __('workflows.stages.sync_warning.proceed') }}
+                                </button>
+                                <button type="button" class="kt-btn kt-btn-sm kt-btn-light" @click="cancel()">
+                                    {{ __('workflows.stages.sync_warning.cancel') }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -134,4 +155,56 @@
         </div>
     </div>
 </div>
+
+@push('page_js')
+<script>
+function workflowStageForm(groups, excludeStageId) {
+    return {
+        groups: groups,
+        excludeStageId: excludeStageId,
+        showSyncWarning: false,
+        syncWarningMessage: '',
+
+        mismatchedSiblings(parallelGroupId, displayOrder) {
+            const siblings = this.groups[parallelGroupId];
+            if (!parallelGroupId || !siblings) {
+                return [];
+            }
+
+            const order = Number(displayOrder);
+
+            return siblings.filter((stage) => stage.id !== this.excludeStageId && Number(stage.display_order) !== order);
+        },
+
+        onSubmit(event) {
+            const form = event.target;
+            const parallelGroupId = form.elements.parallel_group_id ? form.elements.parallel_group_id.value : '';
+            const displayOrder = form.elements.display_order.value;
+            const siblings = this.mismatchedSiblings(parallelGroupId, displayOrder);
+
+            if (siblings.length === 0) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const names = siblings.map((stage) => stage.name).join(', ');
+            this.syncWarningMessage = '{{ __('workflows.stages.sync_warning.body') }}'
+                .replace('{names}', names)
+                .replace('{order}', displayOrder);
+            this.showSyncWarning = true;
+        },
+
+        proceed(formId) {
+            this.showSyncWarning = false;
+            document.getElementById(formId).submit();
+        },
+
+        cancel() {
+            this.showSyncWarning = false;
+        },
+    };
+}
+</script>
+@endpush
 @endsection

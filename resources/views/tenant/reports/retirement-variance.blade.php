@@ -49,7 +49,7 @@
 
         {{-- Summary Cards --}}
         @if($rows->isNotEmpty())
-        <div class="grid gap-5 sm:grid-cols-3">
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <div class="kt-card p-5">
                 <div class="text-xs text-secondary-foreground mb-1">Total Disbursed</div>
                 <div class="text-xl font-semibold text-mono">{{ number_format((float) $totalDisbursed, 2) }}</div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Services;
 
 use App\DTOs\Tenant\WorkflowStageDto;
+use App\Models\Tenant\WorkflowParallelGroup;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\WorkflowStageService;
@@ -316,5 +317,115 @@ class WorkflowStageServiceTest extends TenantAppTestCase
         $this->makeService()->update($stage, $dto);
 
         $this->assertTrue($stage->fresh()->scope_to_branch);
+    }
+
+    // ── parallel group display_order sync ───────────────────────────────────
+
+    public function test_create_syncs_display_order_to_existing_group_siblings(): void
+    {
+        $template = $this->makeTemplate();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $existing = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 1,
+        ]);
+
+        $dto = new WorkflowStageDto(
+            name: 'Second Approver',
+            displayOrder: 5,
+            skipBelowAmount: null,
+            parallelGroupId: $group->id,
+            roleIds: [],
+        );
+
+        $this->makeService()->create($template, $dto);
+
+        $this->assertSame(5, $existing->fresh()->display_order);
+    }
+
+    public function test_create_does_not_touch_stages_outside_the_group(): void
+    {
+        $template = $this->makeTemplate();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $unrelated = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => null,
+            'display_order' => 1,
+        ]);
+
+        $dto = new WorkflowStageDto(
+            name: 'Grouped Stage',
+            displayOrder: 7,
+            skipBelowAmount: null,
+            parallelGroupId: $group->id,
+            roleIds: [],
+        );
+
+        $this->makeService()->create($template, $dto);
+
+        $this->assertSame(1, $unrelated->fresh()->display_order);
+    }
+
+    public function test_update_syncs_display_order_to_all_other_group_members(): void
+    {
+        $template = $this->makeTemplate();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 2,
+        ]);
+        $sibling1 = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 2,
+        ]);
+        $sibling2 = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 2,
+        ]);
+
+        $dto = new WorkflowStageDto(
+            name: $stage->name,
+            displayOrder: 9,
+            skipBelowAmount: null,
+            parallelGroupId: $group->id,
+            roleIds: [],
+        );
+
+        $this->makeService()->update($stage, $dto);
+
+        $this->assertSame(9, $sibling1->fresh()->display_order);
+        $this->assertSame(9, $sibling2->fresh()->display_order);
+    }
+
+    public function test_update_moving_stage_out_of_group_leaves_former_siblings_untouched(): void
+    {
+        $template = $this->makeTemplate();
+        $group = WorkflowParallelGroup::factory()->create(['workflow_template_id' => $template->id]);
+        $stage = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 3,
+        ]);
+        $sibling = WorkflowStage::factory()->create([
+            'workflow_template_id' => $template->id,
+            'parallel_group_id' => $group->id,
+            'display_order' => 3,
+        ]);
+
+        $dto = new WorkflowStageDto(
+            name: $stage->name,
+            displayOrder: 8,
+            skipBelowAmount: null,
+            parallelGroupId: null,
+            roleIds: [],
+        );
+
+        $this->makeService()->update($stage, $dto);
+
+        $this->assertSame(3, $sibling->fresh()->display_order);
     }
 }

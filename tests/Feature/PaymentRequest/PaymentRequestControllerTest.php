@@ -8,6 +8,7 @@ use App\Models\Tenant\Branch;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\PaymentRequestItem;
+use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\RetirementRequestItem;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowInstance;
@@ -95,6 +96,92 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertSee('No requests yet');
+    }
+
+    // ── Index Filters ─────────────────────────────────────────────────────────
+
+    private function disbursedAdvance(int|null $staffId = null): PaymentRequest
+    {
+        return PaymentRequest::factory()->advance()->create([
+            'status' => 'disbursed',
+            'disbursed_at' => now(),
+            'branch_id' => $this->branch->id,
+            'staff_id' => $staffId ?? Staff::factory()->withBranch($this->branch)->create()->id,
+        ]);
+    }
+
+    public function test_index_pending_retirement_filter_lists_disbursed_advances_without_retirement(): void
+    {
+        $advance = $this->disbursedAdvance();
+        PaymentRequest::factory()->create(['branch_id' => $this->branch->id, 'status' => 'draft']);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.index', ['status' => 'pending_retirement']));
+
+        $response->assertOk();
+        $response->assertViewHas('requests', fn($requests) => $requests->contains('id', $advance->id) && $requests->count() === 1);
+    }
+
+    public function test_index_pending_retirement_filter_excludes_advances_with_active_retirement(): void
+    {
+        $withActiveRetirement = $this->disbursedAdvance();
+        RetirementRequest::factory()->create(['payment_request_id' => $withActiveRetirement->id, 'status' => 'in_workflow']);
+
+        $withCancelledOnly = $this->disbursedAdvance();
+        RetirementRequest::factory()->create(['payment_request_id' => $withCancelledOnly->id, 'status' => 'cancelled']);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.index', ['status' => 'pending_retirement']));
+
+        $response->assertOk();
+        $response->assertViewHas('requests', fn($requests) => ! $requests->contains('id', $withActiveRetirement->id)
+                && $requests->contains('id', $withCancelledOnly->id));
+    }
+
+    public function test_index_scope_mine_only_shows_current_users_requests(): void
+    {
+        $myStaff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $mine = PaymentRequest::factory()->create(['branch_id' => $this->branch->id, 'staff_id' => $myStaff->id]);
+        $others = PaymentRequest::factory()->create(['branch_id' => $this->branch->id]);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.index', ['scope' => 'mine']));
+
+        $response->assertOk();
+        $response->assertViewHas('requests', fn($requests) => $requests->contains('id', $mine->id) && ! $requests->contains('id', $others->id));
+    }
+
+    public function test_index_scope_branch_is_default_and_unchanged(): void
+    {
+        $myStaff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $mine = PaymentRequest::factory()->create(['branch_id' => $this->branch->id, 'staff_id' => $myStaff->id]);
+        $others = PaymentRequest::factory()->create(['branch_id' => $this->branch->id]);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.index'));
+
+        $response->assertOk();
+        $response->assertViewHas('requests', fn($requests) => $requests->contains('id', $mine->id) && $requests->contains('id', $others->id));
+    }
+
+    public function test_index_status_filter_narrows_to_specific_status(): void
+    {
+        $approved = PaymentRequest::factory()->create(['branch_id' => $this->branch->id, 'status' => 'approved']);
+        PaymentRequest::factory()->create(['branch_id' => $this->branch->id, 'status' => 'draft']);
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.index', ['status' => 'approved']));
+
+        $response->assertOk();
+        $response->assertViewHas('requests', fn($requests) => $requests->contains('id', $approved->id) && $requests->count() === 1);
+    }
+
+    public function test_retire_button_shown_only_for_owner_of_eligible_advance(): void
+    {
+        $myStaff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+        $mine = $this->disbursedAdvance($myStaff->id);
+        $others = $this->disbursedAdvance();
+
+        $response = $this->actingAs($this->user)->get(route('payment-requests.index'));
+
+        $response->assertOk();
+        $response->assertSee(route('retirement-requests.create', $mine), false);
+        $response->assertDontSee(route('retirement-requests.create', $others), false);
     }
 
     // ── Create Form ───────────────────────────────────────────────────────────
@@ -259,6 +346,7 @@ class PaymentRequestControllerTest extends TenantAppTestCase
 
         $response->assertOk();
         $response->assertViewHas('canActOnActiveStage');
+        $response->assertSee(__('payment_requests.show.workflow_version', ['version' => $template->version]));
     }
 
     // ── Edit ─────────────────────────────────────────────────────────────────

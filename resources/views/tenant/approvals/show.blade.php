@@ -39,8 +39,13 @@
                     {{ ucfirst($req->type) }}
                 </span>
             </div>
-            <div class="text-sm text-secondary-foreground">
-                {{ __('common.columns.stage') }}: <span class="font-medium text-mono">{{ $instanceStage->stage->name }}</span>
+            <div class="flex items-center gap-2 text-sm text-secondary-foreground">
+                <span>{{ __('common.columns.stage') }}: <span class="font-medium text-mono">{{ $instanceStage->stage->name }}</span></span>
+                @if($instanceStage->instance?->template)
+                    <span class="kt-badge kt-badge-sm kt-badge-outline">
+                        {{ __('approvals.show.workflow_version', ['version' => $instanceStage->instance->template->version]) }}
+                    </span>
+                @endif
             </div>
         </div>
         <div class="flex items-center gap-2.5">
@@ -208,47 +213,57 @@
                         <h3 class="kt-card-title">{{ __('approvals.show.your_decision') }}</h3>
                     </div>
                     <div class="kt-card-content p-5">
-                        <form method="POST" action="{{ route('approvals.store', $instanceStage) }}" id="approval-form">
-                            @csrf
+                        @if($instanceStage->isActive())
+                            <form method="POST" action="{{ route('approvals.store', $instanceStage) }}" id="approval-form">
+                                @csrf
 
-                            {{-- Comment --}}
-                            <div class="mb-4">
-                                <label class="kt-form-label block mb-2" for="comment">
-                                    {{ __('approvals.show.comment_label') }}
-                                    <span class="text-secondary-foreground font-normal text-xs">{{ __('approvals.show.comment_required') }}</span>
-                                </label>
-                                <textarea id="comment" name="comment" rows="4"
-                                          class="kt-textarea w-full"
-                                          placeholder="{{ __('approvals.show.comment_placeholder') }}"
-                                          aria-invalid="@error('comment') true @else false @enderror">{{ old('comment') }}</textarea>
-                                @error('comment')
-                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                                @enderror
-                                @error('action')
-                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                                @enderror
-                            </div>
+                                {{-- Comment --}}
+                                <div class="mb-4">
+                                    <label class="kt-form-label block mb-2" for="comment">
+                                        {{ __('approvals.show.comment_label') }}
+                                        <span class="text-secondary-foreground font-normal text-xs">{{ __('approvals.show.comment_required') }}</span>
+                                    </label>
+                                    <textarea id="comment" name="comment" rows="4"
+                                              class="kt-textarea w-full"
+                                              placeholder="{{ __('approvals.show.comment_placeholder') }}"
+                                              aria-invalid="@error('comment') true @else false @enderror">{{ old('comment') }}</textarea>
+                                    @error('comment')
+                                        <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                                    @enderror
+                                    @error('action')
+                                        <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                                    @enderror
+                                </div>
 
-                            {{-- Buttons --}}
-                            <div class="flex flex-col gap-2">
-                                <button type="submit" name="action" value="approve"
-                                        class="kt-btn kt-btn-success w-full">
-                                    <i class="ki-filled ki-check-circle"></i>
-                                    {{ __('common.approve') }}
-                                </button>
-                                <button type="submit" name="action" value="send_back"
-                                        class="kt-btn kt-btn-warning kt-btn-outline w-full">
-                                    <i class="ki-filled ki-arrow-left"></i>
-                                    {{ __('common.send_back') }}
-                                </button>
-                                <button type="submit" name="action" value="reject"
-                                        onclick="return confirm('{{ __('approvals.show.reject_confirm') }}')"
-                                        class="kt-btn kt-btn-danger kt-btn-outline w-full">
-                                    <i class="ki-filled ki-cross-circle"></i>
-                                    {{ __('common.reject') }}
-                                </button>
+                                {{-- Buttons --}}
+                                <div class="flex flex-col gap-2">
+                                    <button type="submit" name="action" value="approve"
+                                            class="kt-btn kt-btn-success w-full">
+                                        <i class="ki-filled ki-check-circle"></i>
+                                        {{ __('common.approve') }}
+                                    </button>
+                                    <button type="submit" name="action" value="send_back"
+                                            class="kt-btn kt-btn-warning kt-btn-outline w-full">
+                                        <i class="ki-filled ki-arrow-left"></i>
+                                        {{ __('common.send_back') }}
+                                    </button>
+                                    <button type="submit" name="action" value="reject"
+                                            onclick="return confirm('{{ __('approvals.show.reject_confirm') }}')"
+                                            class="kt-btn kt-btn-danger kt-btn-outline w-full">
+                                        <i class="ki-filled ki-cross-circle"></i>
+                                        {{ __('common.reject') }}
+                                    </button>
+                                </div>
+                            </form>
+                        @else
+                            <div class="flex flex-col items-center gap-2 py-4 text-center">
+                                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                    <i class="ki-filled ki-check text-base"></i>
+                                </span>
+                                <p class="text-sm font-medium text-mono">{{ __('approvals.show.already_resolved_heading') }}</p>
+                                <p class="text-sm text-secondary-foreground">{{ __('approvals.show.already_resolved_body') }}</p>
                             </div>
-                        </form>
+                        @endif
                     </div>
                 </div>
 

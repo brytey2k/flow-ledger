@@ -8,6 +8,7 @@ use App\Models\Tenant\PaymentRequest;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,15 +18,27 @@ class PaymentRequestRepository
     /**
      * @param array<int, int> $branchIds
      * @param int $perPage
+     * @param string|null $status
+     * @param int|null $staffId
      *
      * @return LengthAwarePaginator<int, PaymentRequest>
      */
-    public function paginated(array $branchIds, int $perPage = 20): LengthAwarePaginator
+    public function paginated(array $branchIds, int $perPage = 20, string|null $status = null, int|null $staffId = null): LengthAwarePaginator
     {
-        return PaymentRequest::with(['staff', 'branch', 'currency'])
+        return PaymentRequest::with([
+            'staff', 'branch', 'currency',
+            'retirementRequests' => fn(HasMany $q) => $q->whereIn('status', ['draft', 'in_workflow', 'approved', 'sent_back']),
+        ])
             ->whereIn('branch_id', $branchIds)
+            ->when($staffId, fn(EloquentBuilder $q) => $q->where('staff_id', $staffId))
+            ->when($status === 'pending_retirement', fn(EloquentBuilder $q) => $q
+                ->where('type', 'advance')
+                ->where('status', 'disbursed')
+                ->whereDoesntHave('retirementRequests', fn(EloquentBuilder $q2) => $q2->whereIn('status', ['draft', 'in_workflow', 'approved', 'sent_back'])))
+            ->when($status !== null && $status !== 'pending_retirement', fn(EloquentBuilder $q) => $q->where('status', $status))
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     /**
@@ -50,6 +63,7 @@ class PaymentRequestRepository
             'branch',
             'currency',
             'items.costCode',
+            'activeWorkflowInstance.template',
             'activeWorkflowInstance.instanceStages.stage.roles',
             'activities.causer',
             'comments.user',

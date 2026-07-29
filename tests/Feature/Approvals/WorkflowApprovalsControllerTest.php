@@ -273,6 +273,38 @@ class WorkflowApprovalsControllerTest extends TenantAppTestCase
         $response->assertViewHas('instanceStage');
     }
 
+    public function test_review_screen_shows_workflow_version_badge(): void
+    {
+        [, $instanceStage] = $this->submitRequestWithTemplate();
+
+        $response = $this->actingAs($this->user)->get(route('approvals.show', $instanceStage));
+
+        $response->assertOk();
+        $response->assertSee("Version {$instanceStage->instance->template->version}");
+    }
+
+    public function test_review_screen_shows_action_form_when_stage_is_active(): void
+    {
+        [, $instanceStage] = $this->submitRequestWithTemplate();
+
+        $response = $this->actingAs($this->user)->get(route('approvals.show', $instanceStage));
+
+        $response->assertOk();
+        $response->assertSee('id="approval-form"', false);
+    }
+
+    public function test_review_screen_hides_action_form_when_stage_already_resolved(): void
+    {
+        [, $instanceStage] = $this->submitRequestWithTemplate();
+        $instanceStage->update(['status' => 'approved']);
+
+        $response = $this->actingAs($this->user)->get(route('approvals.show', $instanceStage));
+
+        $response->assertOk();
+        $response->assertDontSee('id="approval-form"', false);
+        $response->assertSee(__('approvals.show.already_resolved_heading'));
+    }
+
     // ── Store: Approve ────────────────────────────────────────────────────────
 
     public function test_approve_marks_stage_approved_and_redirects(): void

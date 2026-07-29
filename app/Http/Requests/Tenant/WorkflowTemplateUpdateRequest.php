@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Tenant;
 
+use App\DTOs\Tenant\WorkflowTemplateNameUpdateDto;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class WorkflowTemplateUpdateRequest extends FormRequest
 {
@@ -19,17 +19,13 @@ class WorkflowTemplateUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:150'],
-            'type' => ['required', Rule::in([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value, \App\Enums\Tenant\PaymentRequestType::Retirement->value])],
-            'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
         ];
     }
 
-    public function toDto(): \App\DTOs\Tenant\WorkflowTemplateDto
+    public function toDto(): WorkflowTemplateNameUpdateDto
     {
-        return new \App\DTOs\Tenant\WorkflowTemplateDto(
+        return new WorkflowTemplateNameUpdateDto(
             name: $this->string('name')->toString(),
-            type: $this->string('type')->toString(),
-            branchId: $this->integer('branch_id') ?: null,
         );
     }
 }

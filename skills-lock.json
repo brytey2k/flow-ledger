@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/ccc/SKILL.md",
       "computedHash": "485211ec7ef033f784261d1dba56770fea20163aebdd482950e8d4878b74c6b2"
+    },
+    "hallmark": {
+      "source": "nutlope/hallmark",
+      "sourceType": "github",
+      "skillPath": "skills/hallmark/SKILL.md",
+      "computedHash": "8a8ecafd613f09e701330b5aa4a591ac539abb2605596df4a2394f03628d1d76"
     }
   }
 }

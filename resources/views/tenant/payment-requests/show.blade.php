@@ -33,6 +33,11 @@
                 <span class="kt-badge kt-badge-sm {{ $statusColors[$paymentRequest->status] ?? 'kt-badge-outline' }}">
                     {{ ucwords(str_replace('_', ' ', $paymentRequest->status)) }}
                 </span>
+                @if($paymentRequest->activeWorkflowInstance?->template)
+                    <span class="kt-badge kt-badge-sm kt-badge-outline">
+                        {{ __('payment_requests.show.workflow_version', ['version' => $paymentRequest->activeWorkflowInstance->template->version]) }}
+                    </span>
+                @endif
             </div>
             <div class="text-sm text-secondary-foreground">
                 Created {{ $paymentRequest->created_at->format('M d, Y \a\t g:i A') }}

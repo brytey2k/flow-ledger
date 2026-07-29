@@ -88,6 +88,10 @@ return [
         'parallel_group_created' => 'Groupe parallele cree.',
         'parallel_group_deleted' => 'Groupe parallele supprime.',
         'template_locked' => 'Ce modele de workflow ne peut pas etre modifie tant que des demandes sont en cours.',
+        'template_has_history' => 'Ce modele de workflow ne peut pas etre supprime car une ou plusieurs de ses versions precedentes ont un historique de demandes. Les modeles historiques sont conserves a des fins d audit.',
+        'template_published' => 'Brouillon publie. C est maintenant la version active pour les nouvelles demandes de paiement.',
+        'draft_discarded' => 'Brouillon abandonne.',
+        'draft_in_progress' => 'Un brouillon est deja en cours de modification pour ce modele. Continuez vos changements ici, puis publiez quand vous etes pret.',
     ],
     'requests' => [
         'missing_staff_profile' => 'Votre compte n est pas lie a un profil de personnel avec une succursale. Veuillez contacter un administrateur.',

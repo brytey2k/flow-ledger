@@ -46,7 +46,7 @@
         </div>
 
         {{-- Summary Stats --}}
-        <div class="grid gap-5 sm:grid-cols-3">
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <div class="kt-card p-5">
                 <p class="text-xs text-secondary-foreground mb-1">Total Counts</p>
                 <p class="text-2xl font-semibold text-mono">{{ $totalCounts }}</p>

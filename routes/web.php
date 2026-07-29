@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\Auth\BackchannelLogoutController;
 use App\Http\Controllers\Web\Auth\SsoController;
 use App\Http\Controllers\Web\Landlord\Auth\LoginController;
 use App\Http\Controllers\Web\Landlord\DocumentationController;
+use App\Http\Controllers\Web\Landlord\HomeController;
 use App\Http\Controllers\Web\Landlord\TenantFeatureFlagsController;
 use App\Http\Controllers\Web\Landlord\TenantRolesAndPermissionsController;
 use App\Http\Controllers\Web\Landlord\TenantsController;
@@ -22,6 +23,8 @@ foreach (config('tenancy.central_domains') as $domain) {
     });
 
     Route::domain($domain)->name('landlord.')->group(static function () {
+        Route::get('/', [HomeController::class, 'index'])->name('home');
+
         Route::get('landlord/sys-admin/login', [LoginController::class, 'create'])->name('login');
         Route::post('landlord/sys-admin/login', [LoginController::class, 'store'])->name('do-login')->middleware('throttle:5,1');
 

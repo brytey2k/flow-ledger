@@ -50,7 +50,7 @@
         </div>
 
         {{-- KPI cards --}}
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div class="kt-card p-5">
                 <div class="text-xs text-secondary-foreground mb-1">SLA Compliance Rate</div>
                 <div class="text-3xl font-bold {{ $complianceRate >= 80 ? 'text-success' : ($complianceRate >= 60 ? 'text-warning' : 'text-danger') }}">

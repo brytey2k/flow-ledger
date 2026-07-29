@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Api\Tenant;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
@@ -97,6 +98,30 @@ class DisbursementControllerTest extends ApiTenantTestCase
         $this->postJson("/api/disbursements/{$pr->id}", [
             'disbursement_method' => 'cash',
         ])->assertForbidden();
+    }
+
+    public function test_store_rejects_disbursement_when_insufficient_cashbook_balance(): void
+    {
+        $pr = PaymentRequest::factory()->create([
+            'staff_id' => $this->staff->id,
+            'branch_id' => $this->branch->id,
+            'currency_id' => $this->currency->id,
+            'status' => 'approved',
+            'total_amount' => 100.00,
+        ]);
+
+        Cashbook::create([
+            'branch_id' => $this->branch->id,
+            'currency_id' => $this->currency->id,
+            'balance' => 50.00,
+        ]);
+
+        $this->postJson("/api/disbursements/{$pr->id}", [
+            'disbursement_method' => 'cash',
+        ])->assertStatus(422)
+            ->assertJsonPath('message', 'Insufficient cashbook balance for disbursement.');
+
+        $this->assertDatabaseHas('payment_requests', ['id' => $pr->id, 'status' => 'approved']);
     }
 
     public function test_store_requires_valid_disbursement_method(): void

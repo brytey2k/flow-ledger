@@ -108,6 +108,15 @@ class CashbookServiceTest extends TenantAppTestCase
         $this->assertEqualsWithDelta(-500.0, (float) $cashbook->balance, 0.01);
     }
 
+    public function test_record_disbursement_throws_when_balance_is_negative(): void
+    {
+        $this->makeCashbook(-200.0);
+        $request = $this->approvedAdvance(500.0);
+
+        $this->expectException(InsufficientCashbookBalanceException::class);
+        $this->makeService()->recordDisbursement($request, $this->user);
+    }
+
     public function test_record_disbursement_throws_when_balance_is_positive_but_insufficient(): void
     {
         $this->makeCashbook(100.0);

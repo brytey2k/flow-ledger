@@ -76,6 +76,7 @@ return [
         'retirements' => 'Retirements',
         'amount_expended' => 'Amount Expended',
         'difference' => 'Difference',
+        'workflow_version' => 'Version :version',
     ],
 
     'status' => [
@@ -113,5 +114,27 @@ return [
     'types' => [
         'advance' => 'Advance',
         'expense' => 'Expense',
+    ],
+
+    'filters' => [
+        'status_label' => 'Status',
+        'scope_label' => 'Show',
+        'apply' => 'Apply',
+        'status_options' => [
+            'all' => 'All Statuses',
+            'draft' => 'Draft',
+            'in_workflow' => 'In Workflow',
+            'approved' => 'Approved',
+            'disbursed' => 'Disbursed',
+            'pending_retirement' => 'Pending Retirement',
+            'retired' => 'Retired',
+            'sent_back' => 'Sent Back',
+            'denied' => 'Denied',
+            'cancelled' => 'Cancelled',
+        ],
+        'scope_options' => [
+            'branch' => 'Branch',
+            'mine' => 'My Requests',
+        ],
     ],
 ];

@@ -38,6 +38,29 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
+        <div class="kt-card p-5">
+            <form method="GET" class="flex flex-wrap gap-4 items-end">
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-foreground">{{ __('payment_requests.filters.status_label') }}</label>
+                    <select name="status" class="kt-select kt-select-sm">
+                        @foreach(__('payment_requests.filters.status_options') as $value => $label)
+                            <option value="{{ $value === 'all' ? '' : $value }}" @selected(($status ?? '') === ($value === 'all' ? '' : $value))>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-foreground">{{ __('payment_requests.filters.scope_label') }}</label>
+                    <select name="scope" class="kt-select kt-select-sm">
+                        @foreach(__('payment_requests.filters.scope_options') as $value => $label)
+                            <option value="{{ $value }}" @selected(($scope ?? 'branch') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="kt-btn kt-btn-sm kt-btn-primary">{{ __('payment_requests.filters.apply') }}</button>
+                <a href="{{ route('payment-requests.index') }}" class="kt-btn kt-btn-sm kt-btn-light">Reset</a>
+            </form>
+        </div>
+
         <div class="kt-card kt-card-grid">
             <div class="kt-card-header">
                 <h3 class="kt-card-title">{{ __('payment_requests.all') }}</h3>
@@ -73,7 +96,7 @@
                                     <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.status') }}</span></span></th>
                                     <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.date') }}</span></span></th>
-                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
+                                    <th class="min-w-[180px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -103,11 +126,26 @@
                                         </td>
                                         <td><span class="text-sm text-foreground">{{ $req->created_at->format('M d, Y') }}</span></td>
                                         <td class="text-center">
-                                            <a href="{{ route('payment-requests.show', $req) }}"
-                                               class="kt-btn kt-btn-sm kt-btn-outline">
-                                                <i class="ki-filled ki-eye"></i>
-                                                {{ __('common.view') }}
-                                            </a>
+                                            @php
+                                                $canRetire = $req->isAdvance() && $req->isDisbursed() && $req->retirementRequests->isEmpty();
+                                                $isOwner = isset($currentStaffId) && $currentStaffId === $req->staff_id;
+                                            @endphp
+                                            <div class="flex items-center justify-center gap-2">
+                                                <a href="{{ route('payment-requests.show', $req) }}"
+                                                   class="kt-btn kt-btn-sm kt-btn-outline">
+                                                    <i class="ki-filled ki-eye"></i>
+                                                    {{ __('common.view') }}
+                                                </a>
+                                                @can(PermissionKey::CreateRetirementRequest->value)
+                                                    @if($canRetire && $isOwner)
+                                                        <a href="{{ route('retirement-requests.create', $req) }}"
+                                                           class="kt-btn kt-btn-sm kt-btn-primary">
+                                                            <i class="ki-filled ki-file-up"></i>
+                                                            {{ __('payment_requests.buttons.retire') }}
+                                                        </a>
+                                                    @endif
+                                                @endcan
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

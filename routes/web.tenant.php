@@ -428,6 +428,9 @@ Route::middleware([
         Route::get('/workflow-templates/{workflowTemplate}', [WorkflowTemplatesController::class, 'show'])
             ->can(PermissionKey::AccessWorkflowTemplates->value)
             ->name('workflow-templates.show');
+        Route::get('/workflow-templates/{workflowTemplate}/versions', [WorkflowTemplatesController::class, 'versions'])
+            ->can(PermissionKey::AccessWorkflowTemplates->value)
+            ->name('workflow-templates.versions');
         Route::get('/workflow-templates/{workflowTemplate}/edit', [WorkflowTemplatesController::class, 'edit'])
             ->can(PermissionKey::EditWorkflowTemplate->value)
             ->name('workflow-templates.edit');
@@ -437,6 +440,12 @@ Route::middleware([
         Route::delete('/workflow-templates/{workflowTemplate}', [WorkflowTemplatesController::class, 'destroy'])
             ->can(PermissionKey::DeleteWorkflowTemplate->value)
             ->name('workflow-templates.destroy');
+        Route::post('/workflow-templates/{workflowTemplate}/publish', [WorkflowTemplatesController::class, 'publish'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.publish');
+        Route::delete('/workflow-templates/{workflowTemplate}/draft', [WorkflowTemplatesController::class, 'discardDraft'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('workflow-templates.draft.discard');
 
         // Workflow Stages (nested under templates)
         Route::get('/workflow-templates/{workflowTemplate}/stages/create', [WorkflowStagesController::class, 'create'])

@@ -38,5 +38,8 @@ return [
         'submitted_label' => 'Submitted',
         'notes' => 'Notes',
         'retiring_request' => 'Retiring Request',
+        'workflow_version' => 'Version :version',
+        'already_resolved_heading' => 'No action needed',
+        'already_resolved_body' => 'This stage has already been resolved and is no longer awaiting your decision.',
     ],
 ];

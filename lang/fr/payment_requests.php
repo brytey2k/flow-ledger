@@ -69,6 +69,7 @@ return [
         'no_attachments' => 'Aucun document justificatif joint.',
         'confirm_delete_attachment' => 'Etes-vous sur de vouloir supprimer cette piece jointe ?',
         'source_documents_required_warning' => 'Des documents justificatifs sont requis. Veuillez en joindre au moins un avant de soumettre.',
+        'workflow_version' => 'Version :version',
     ],
     'status' => [
         'awaiting_approval' => 'En attente d approbation',
@@ -103,5 +104,27 @@ return [
     'types' => [
         'advance' => 'Avance',
         'expense' => 'Depense',
+    ],
+
+    'filters' => [
+        'status_label' => 'Statut',
+        'scope_label' => 'Afficher',
+        'apply' => 'Appliquer',
+        'status_options' => [
+            'all' => 'Tous les statuts',
+            'draft' => 'Brouillon',
+            'in_workflow' => 'En cours',
+            'approved' => 'Approuvee',
+            'disbursed' => 'Decaissee',
+            'pending_retirement' => 'En attente de reddition',
+            'retired' => 'Reddition faite',
+            'sent_back' => 'Renvoyee',
+            'denied' => 'Rejetee',
+            'cancelled' => 'Annulee',
+        ],
+        'scope_options' => [
+            'branch' => 'Succursale',
+            'mine' => 'Mes demandes',
+        ],
     ],
 ];
