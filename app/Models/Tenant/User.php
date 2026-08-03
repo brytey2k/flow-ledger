@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use App\Enums\Tenant\UserStatus;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $remember_token
  * @property int $branch_id
  * @property int $operational_branch_id
+ * @property UserStatus $status
+ * @property \Illuminate\Support\Carbon|null $invited_at
+ * @property int|null $invited_by
+ * @property \Illuminate\Support\Carbon|null $activated_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -66,6 +71,10 @@ class User extends Authenticatable implements HasLocalePreference
         'locale',
         'branch_id',
         'operational_branch_id',
+        'status',
+        'invited_at',
+        'invited_by',
+        'activated_at',
     ];
 
     protected $hidden = [
@@ -80,6 +89,9 @@ class User extends Authenticatable implements HasLocalePreference
             'password' => 'hashed',
             'is_oidc_user' => 'boolean',
             'must_change_password' => 'boolean',
+            'status' => UserStatus::class,
+            'invited_at' => 'datetime',
+            'activated_at' => 'datetime',
         ];
     }
 

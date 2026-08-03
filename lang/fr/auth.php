@@ -26,4 +26,5 @@ return [
     'back_to_sign_in' => 'Retour a la connexion',
     'or' => 'ou',
     'sign_in_with_sso' => 'Se connecter avec SSO',
+    'invite_not_accepted' => 'Ce compte a ete invite mais n a pas encore accepte l invitation. Veuillez consulter votre email pour accepter votre invitation.',
 ];

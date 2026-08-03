@@ -69,6 +69,8 @@ return [
         'deleted' => 'Utilisateur supprime avec succes.',
         'permissions_updated' => 'Permissions utilisateur mises a jour avec succes.',
         'permission_grant_denied' => 'Vous ne pouvez pas accorder les permissions suivantes car vous ne les possedez pas vous-meme : :permissions',
+        'invited' => 'Invitation envoyee avec succes.',
+        'invite_resent' => 'Invitation renvoyee avec succes.',
     ],
     'roles' => [
         'created' => 'Role cree avec succes.',

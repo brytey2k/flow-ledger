@@ -32,6 +32,7 @@ return [
     'm2m_client_id' => env('SSO_M2M_CLIENT_ID'),
     'm2m_client_secret' => env('SSO_M2M_CLIENT_SECRET'),
     'm2m_scope' => env('SSO_M2M_SCOPE', 'login:verify'),
+    'm2m_invite_scope' => env('SSO_M2M_INVITE_SCOPE', 'users:invite'),
 
     'verify_ssl' => (bool) env('SSO_VERIFY_SSL', true),
 ];

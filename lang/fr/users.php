@@ -33,6 +33,7 @@ return [
         'add' => 'Ajouter un utilisateur',
         'delete' => 'Supprimer',
         'manage_perms' => 'Gerer les permissions',
+        'invite' => 'Envoyer l invitation',
     ],
     'permissions' => [
         'title' => 'Gerer les permissions utilisateur',
@@ -46,6 +47,7 @@ return [
     'columns' => [
         'roles' => 'Roles',
         'no_roles' => 'Aucun role',
+        'status' => 'Statut',
     ],
     'empty' => [
         'heading' => 'Aucun utilisateur trouve',
@@ -53,4 +55,14 @@ return [
     ],
     'confirm_delete' => 'Supprimer cet utilisateur ? Cette action est irreversible.',
     'confirm_delete_short' => 'Supprimer cet utilisateur ?',
+
+    'status_invited' => 'Invite',
+    'status_active' => 'Actif',
+    'status_suspended' => 'Suspendu',
+
+    'invite_title' => 'Inviter un utilisateur',
+    'invite_subtitle' => 'Envoyer une invitation a un nouvel utilisateur',
+    'invite_notice' => 'L utilisateur recevra une invitation par email pour configurer son compte et se connecter.',
+    'resend_invite' => 'Renvoyer l invitation',
+    'confirm_resend_invite' => 'Renvoyer l email d invitation a cet utilisateur ?',
 ];

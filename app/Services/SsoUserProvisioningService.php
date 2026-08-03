@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\Auth\SsoUserClaimsDto;
+use App\Enums\Tenant\UserStatus;
 use App\Exceptions\UnverifiedEmailException;
 use App\Models\Landlord\User as LandlordUser;
 use App\Models\Tenant\Staff;
@@ -35,6 +36,11 @@ class SsoUserProvisioningService
                 throw new UnverifiedEmailException();
             }
 
+            if ($user->status === UserStatus::Invited) {
+                $user->update(['status' => UserStatus::Active, 'activated_at' => now()]);
+                $user = $user->refresh();
+            }
+
             $this->maybeLinkStaffProfile($user, $claims);
 
             return $user;
@@ -49,7 +55,13 @@ class SsoUserProvisioningService
                 throw new UnverifiedEmailException();
             }
 
-            $user->update(['oidc_sub' => $claims->sub, 'is_oidc_user' => true]);
+            $update = ['oidc_sub' => $claims->sub, 'is_oidc_user' => true];
+            if ($user->status === UserStatus::Invited) {
+                $update['status'] = UserStatus::Active;
+                $update['activated_at'] = now();
+            }
+
+            $user->update($update);
             $user = $user->refresh();
             $this->maybeLinkStaffProfile($user, $claims);
 

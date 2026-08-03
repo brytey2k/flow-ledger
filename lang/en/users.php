@@ -35,6 +35,7 @@ return [
         'add' => 'Add User',
         'delete' => 'Delete',
         'manage_perms' => 'Manage Permissions',
+        'invite' => 'Send Invite',
     ],
 
     'permissions' => [
@@ -50,6 +51,7 @@ return [
     'columns' => [
         'roles' => 'Roles',
         'no_roles' => 'No roles',
+        'status' => 'Status',
     ],
 
     'empty' => [
@@ -59,4 +61,16 @@ return [
 
     'confirm_delete' => 'Are you sure you want to delete this user? This action cannot be undone.',
     'confirm_delete_short' => 'Are you sure you want to delete this user?',
+
+    // Status badges
+    'status_invited' => 'Invited',
+    'status_active' => 'Active',
+    'status_suspended' => 'Suspended',
+
+    // Invite page
+    'invite_title' => 'Invite User',
+    'invite_subtitle' => 'Send an invitation to a new user',
+    'invite_notice' => 'The user will receive an email invitation to set up their account and sign in.',
+    'resend_invite' => 'Resend Invite',
+    'confirm_resend_invite' => 'Resend the invitation email to this user?',
 ];

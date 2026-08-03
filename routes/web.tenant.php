@@ -362,6 +362,12 @@ Route::middleware([
         Route::post('/users', [UsersController::class, 'store'])
             ->can(PermissionKey::CreateUser->value)
             ->name('users.store');
+        Route::post('/users/invite', [UsersController::class, 'storeInvite'])
+            ->can(PermissionKey::CreateUser->value)
+            ->name('users.invite.store');
+        Route::post('/users/{user}/resend-invite', [UsersController::class, 'resendInvite'])
+            ->can(PermissionKey::CreateUser->value)
+            ->name('users.invite.resend');
         Route::get('/users/{user}', [UsersController::class, 'show'])
             ->can(PermissionKey::AccessUsers->value)
             ->name('users.show');

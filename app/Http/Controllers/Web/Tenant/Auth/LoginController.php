@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant\Auth;
 
+use App\Enums\Tenant\UserStatus;
 use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
 use App\Features\VerifyLoginWithIdp;
@@ -37,6 +38,13 @@ class LoginController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        $invitedUser = User::query()->where('email', $credentials['email'])->where('status', UserStatus::Invited)->first();
+        if ($invitedUser !== null) {
+            return back()->withErrors([
+                'email' => __('auth.invite_not_accepted'),
+            ])->onlyInput('email');
+        }
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors([

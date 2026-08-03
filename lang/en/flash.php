@@ -69,6 +69,8 @@ return [
         'deleted' => 'User deleted successfully.',
         'permissions_updated' => 'User permissions updated successfully.',
         'permission_grant_denied' => 'You cannot grant the following permission(s) because you do not have them yourself: :permissions',
+        'invited' => 'Invitation sent successfully.',
+        'invite_resent' => 'Invitation resent successfully.',
     ],
     'roles' => [
         'created' => 'Role created successfully.',

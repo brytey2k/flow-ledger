@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
+use App\Enums\Tenant\UserStatus;
+use App\Features\DelegateIdentityToIdp;
+use App\Jobs\InviteUserToIamJob;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Tenant\User;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
+use Laravel\Pennant\Feature;
 
 test('guest is redirected from index', function () {
     $this->get(route('users.index'))->assertRedirect(route('login'));
@@ -347,4 +352,100 @@ test('update permissions allows removing a permission the actor could not have g
 
     $response->assertRedirect(route('users.edit', $user));
     expect($user->fresh()->hasPermissionTo($permission))->toBeFalse();
+});
+
+test('create shows invite view when identity is delegated', function () {
+    Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+
+    $response = $this->actingAs($this->user)->get(route('users.create'));
+
+    $response->assertOk();
+    $response->assertViewIs('tenant.users.invite');
+});
+
+test('storeInvite is forbidden when identity is not delegated', function () {
+    Feature::for($this->tenant)->deactivate(DelegateIdentityToIdp::class);
+
+    $this->actingAs($this->user)->post(route('users.invite.store'), [
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+        'email' => 'invitee-' . Str::uuid() . '@example.com',
+        'branch_id' => $this->branch->id,
+    ])->assertForbidden();
+});
+
+test('authorised user can invite a user when identity is delegated', function () {
+    Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+    Queue::fake();
+
+    $email = 'invitee-' . Str::uuid() . '@example.com';
+
+    $response = $this->actingAs($this->user)->post(route('users.invite.store'), [
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+        'email' => $email,
+        'branch_id' => $this->branch->id,
+    ]);
+
+    $response->assertRedirect(route('users.index'));
+    $this->assertDatabaseHas('users', [
+        'email' => $email,
+        'status' => UserStatus::Invited->value,
+    ]);
+
+    $invitedUser = User::query()->where('email', $email)->firstOrFail();
+    Queue::assertPushed(InviteUserToIamJob::class, fn(InviteUserToIamJob $job): bool => $job->userId === $invitedUser->id);
+});
+
+test('storeInvite rejects role that grants permission actor lacks', function () {
+    Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+    $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+    app(Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $adminRole = Role::create(['name' => 'escalation-invite-role-' . Str::uuid(), 'guard_name' => 'web']);
+    $adminRole->givePermissionTo(PermissionKey::AccessSettings->value);
+
+    $email = 'escalate-invite-' . Str::uuid() . '@example.com';
+
+    $response = $this->actingAs($this->user)->post(route('users.invite.store'), [
+        'first_name' => 'Escalate',
+        'last_name' => 'Attempt',
+        'email' => $email,
+        'branch_id' => $this->branch->id,
+        'roles' => [$adminRole->id],
+    ]);
+
+    $response->assertRedirect(route('users.create'));
+    $this->assertDatabaseMissing('users', ['email' => $email]);
+});
+
+test('resend invite dispatches job for an invited user', function () {
+    Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+    Queue::fake();
+
+    $user = User::factory()->create([
+        'branch_id' => $this->branch->id,
+        'status' => UserStatus::Invited,
+    ]);
+
+    $response = $this->actingAs($this->user)->post(route('users.invite.resend', $user));
+
+    $response->assertRedirect(route('users.index'));
+    Queue::assertPushed(InviteUserToIamJob::class, fn(InviteUserToIamJob $job): bool => $job->userId === $user->id);
+});
+
+test('resend invite is forbidden when identity is not delegated', function () {
+    Feature::for($this->tenant)->deactivate(DelegateIdentityToIdp::class);
+
+    $user = User::factory()->create(['branch_id' => $this->branch->id, 'status' => UserStatus::Invited]);
+
+    $this->actingAs($this->user)->post(route('users.invite.resend', $user))->assertForbidden();
+});
+
+test('resend invite returns not found for a user who already accepted', function () {
+    Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+
+    $user = User::factory()->create(['branch_id' => $this->branch->id, 'status' => UserStatus::Active]);
+
+    $this->actingAs($this->user)->post(route('users.invite.resend', $user))->assertNotFound();
 });

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Enums\Tenant\UserStatus;
 use App\Features\LocalAuth;
 use App\Features\VerifyLoginWithIdp;
 use App\Models\Tenant\User;
@@ -88,6 +89,21 @@ test('login with remember me sets cookie', function () {
 
     $response->assertRedirect(route('dashboard'));
     $this->assertAuthenticatedAs($user);
+});
+test('login fails for a user who has not accepted their invite', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('Password1!'),
+        'status' => UserStatus::Invited,
+        'invited_at' => now(),
+    ]);
+
+    $response = $this->post(route('login'), [
+        'email' => $user->email,
+        'password' => 'Password1!',
+    ]);
+
+    $response->assertSessionHasErrors(['email' => __('auth.invite_not_accepted')]);
+    $this->assertGuest();
 });
 test('login form shows form when local auth is enabled', function () {
     Feature::for($this->tenant)->activate(LocalAuth::class);

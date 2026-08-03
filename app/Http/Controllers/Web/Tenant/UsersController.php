@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant;
 
+use App\Enums\Tenant\UserStatus;
+use App\Features\DelegateIdentityToIdp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\PermissionsSyncRequest;
+use App\Http\Requests\Tenant\UserInviteRequest;
 use App\Http\Requests\Tenant\UserStoreRequest;
 use App\Http\Requests\Tenant\UserUpdateRequest;
+use App\Jobs\InviteUserToIamJob;
+use App\Models\Tenant;
 use App\Models\Tenant\User;
 use App\Repositories\BranchRepository;
 use App\Repositories\PermissionRepository;
@@ -17,7 +22,9 @@ use App\Services\PermissionEscalationGuard;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Laravel\Pennant\Feature;
 
 class UsersController extends Controller
 {
@@ -46,6 +53,19 @@ class UsersController extends Controller
         return __('flash.users.permission_grant_denied', ['permissions' => $permissionsText]);
     }
 
+    private function identityDelegated(): bool
+    {
+        return Feature::for(tenant())->active(DelegateIdentityToIdp::class);
+    }
+
+    private function currentIdpTenantId(): string|null
+    {
+        /** @var Tenant|null $currentTenant */
+        $currentTenant = tenant();
+
+        return $currentTenant?->idp_tenant_id;
+    }
+
     public function index(): View
     {
         $users = $this->repository->allWithRoles();
@@ -59,6 +79,13 @@ class UsersController extends Controller
     {
         $roles = $this->roleRepository->allOrderedByName();
         $branches = $this->branchRepository->allOrderedByName();
+
+        if ($this->identityDelegated()) {
+            return view('tenant.users.invite', [
+                'roles' => $roles,
+                'branches' => $branches,
+            ]);
+        }
 
         return view('tenant.users.create', [
             'roles' => $roles,
@@ -90,6 +117,77 @@ class UsersController extends Controller
         return redirect()
             ->route('users.index')
             ->with('success', __('flash.users.created'));
+    }
+
+    /**
+     * Invite a new user when identity is delegated to the IDP.
+     *
+     * @param UserInviteRequest $request
+     */
+    public function storeInvite(UserInviteRequest $request): RedirectResponse
+    {
+        abort_unless($this->identityDelegated(), 403);
+
+        /** @var User $authUser */
+        $authUser = $request->user();
+
+        $validated = $request->validated();
+
+        $roleIds = [];
+        if (isset($validated['roles']) && is_array($validated['roles'])) {
+            /** @var array<int, int|string> $roles */
+            $roles = $validated['roles'];
+            $roleIds = array_map('intval', $roles);
+
+            $deniedPermissionNames = $this->permissionEscalationGuard->deniedPermissionNamesForRoles($authUser, $roleIds, []);
+            if ($deniedPermissionNames !== []) {
+                return redirect()
+                    ->route('users.create')
+                    ->withInput($request->all())
+                    ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
+            }
+        }
+
+        $user = User::create([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
+            'password' => bcrypt(Str::random(32)),
+            'must_change_password' => false,
+            'is_oidc_user' => true,
+            'status' => UserStatus::Invited,
+            'invited_at' => now(),
+            'invited_by' => $authUser->id,
+            'branch_id' => $validated['branch_id'],
+            'operational_branch_id' => $validated['operational_branch_id'] ?? $validated['branch_id'],
+        ]);
+
+        if ($roleIds !== []) {
+            $user->syncRoles($roleIds);
+        }
+
+        InviteUserToIamJob::dispatch($user->id, $this->currentIdpTenantId());
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', __('flash.users.invited'));
+    }
+
+    /**
+     * Resend an invitation to a user who has not yet accepted it.
+     *
+     * @param User $user
+     */
+    public function resendInvite(User $user): RedirectResponse
+    {
+        abort_unless($this->identityDelegated(), 403);
+        abort_unless($user->status === UserStatus::Invited, 404);
+
+        InviteUserToIamJob::dispatch($user->id, $this->currentIdpTenantId());
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', __('flash.users.invite_resent'));
     }
 
     public function edit(User $user): View

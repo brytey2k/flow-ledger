@@ -73,6 +73,12 @@
                                             <span class="kt-table-col-sort"></span>
                                         </span>
                                     </th>
+                                    <th class="min-w-[110px]">
+                                        <span class="kt-table-col">
+                                            <span class="kt-table-col-label">{{ __('users.columns.status') }}</span>
+                                            <span class="kt-table-col-sort"></span>
+                                        </span>
+                                    </th>
                                     <th class="min-w-[150px]">
                                         <span class="kt-table-col">
                                             <span class="kt-table-col-label">{{ __('common.columns.created') }}</span>
@@ -105,6 +111,15 @@
                                             </div>
                                         </td>
                                         <td>
+                                            @if($user->status === \App\Enums\Tenant\UserStatus::Invited)
+                                                <span class="badge badge-sm badge-warning">{{ $user->status->label() }}</span>
+                                            @elseif($user->status === \App\Enums\Tenant\UserStatus::Suspended)
+                                                <span class="badge badge-sm badge-destructive">{{ $user->status->label() }}</span>
+                                            @else
+                                                <span class="badge badge-sm badge-success">{{ $user->status->label() }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             <div class="flex flex-col gap-0.5">
                                                 <span class="text-sm text-foreground">{{ $user->created_at->format('M d, Y') }}</span>
                                                 <span class="text-2sm text-secondary-foreground">{{ $user->created_at->format('g:i A') }}</span>
@@ -112,6 +127,16 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-2">
+                                                @if($user->status === \App\Enums\Tenant\UserStatus::Invited)
+                                                    @can(\App\Enums\Tenant\PermissionKey::CreateUser->value)
+                                                        <form action="{{ route('users.invite.resend', $user) }}" method="POST" onsubmit="return confirm('{{ __('users.confirm_resend_invite') }}');" class="inline">
+                                                            @csrf
+                                                            <button type="submit" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost text-primary" title="{{ __('users.resend_invite') }}">
+                                                                <i class="ki-filled ki-sms text-lg"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                @endif
                                                 @can(\App\Enums\Tenant\PermissionKey::AccessUsers->value)
                                                     <a href="{{ route('users.edit', $user) }}" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost text-primary" title="{{ __('common.edit') }}">
                                                         <i class="ki-filled ki-notepad-edit text-lg"></i>
