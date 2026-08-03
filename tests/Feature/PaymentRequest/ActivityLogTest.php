@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
-use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowInstanceStage;
@@ -14,11 +13,9 @@ use App\Services\WorkflowEngineService;
 
 test('creating draft logs request created event', function () {
     $staff = Staff::factory()->create();
-    $currency = Currency::factory()->create();
     $dto = new App\DTOs\Tenant\CreatePaymentRequestDto(
         staffId: $staff->id,
         branchId: $this->branch->id,
-        currencyId: $currency->id,
         type: 'advance',
         notes: null,
         items: [new App\DTOs\Tenant\PaymentRequestItemDto(description: 'Test', amount: 100.0, costCodeId: null, receiptNumber: null)],

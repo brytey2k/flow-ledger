@@ -14,12 +14,13 @@ test('branches returns scoped list', function () {
     expect($ids)->toContain($this->branch->id);
 });
 test('currencies returns all', function () {
+    $existingCount = Currency::count();
     Currency::factory()->count(3)->create();
 
     $this->getJson('/api/currencies')
         ->assertOk()
         ->assertJsonStructure(['data'])
-        ->assertJsonCount(3, 'data');
+        ->assertJsonCount($existingCount + 3, 'data');
 });
 test('cost codes returns all', function () {
     CostCode::factory()->count(2)->create();

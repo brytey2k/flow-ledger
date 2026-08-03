@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\ManualReceiptStoreRequest;
 use App\Models\Tenant\Branch;
-use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\CashbookEntry;
 use App\Repositories\BranchRepository;
 use App\Repositories\CashbookRepository;
@@ -46,10 +45,7 @@ class CashbookController extends Controller
         $user = $request->user();
         abort_unless(in_array($branch->id, $this->branchScope->allowedBranchIds($user), true), 403);
 
-        $cashbook = Cashbook::firstOrCreate(
-            ['branch_id' => $branch->id],
-            ['currency_id' => $branch->currency_id, 'balance' => 0],
-        );
+        $cashbook = $this->service->getOrCreateForBranch($branch);
 
         /** @var array{type?: string, date_from?: string, date_to?: string, description?: string, amount_min?: string, amount_max?: string} $filters */
         $filters = $request->only(['type', 'date_from', 'date_to', 'description', 'amount_min', 'amount_max']);
@@ -64,10 +60,7 @@ class CashbookController extends Controller
         $user = $request->user();
         abort_unless(in_array($branch->id, $this->branchScope->allowedBranchIds($user), true), 403);
 
-        $cashbook = Cashbook::firstOrCreate(
-            ['branch_id' => $branch->id],
-            ['currency_id' => $branch->currency_id, 'balance' => 0],
-        );
+        $cashbook = $this->service->getOrCreateForBranch($branch);
 
         return view('tenant.cashbook.create', compact('branch', 'cashbook'));
     }
@@ -78,10 +71,7 @@ class CashbookController extends Controller
         $storeUser = $request->user();
         abort_unless(in_array($branch->id, $this->branchScope->allowedBranchIds($storeUser), true), 403);
 
-        $cashbook = Cashbook::firstOrCreate(
-            ['branch_id' => $branch->id],
-            ['currency_id' => $branch->currency_id, 'balance' => 0],
-        );
+        $cashbook = $this->service->getOrCreateForBranch($branch);
 
         $this->service->recordManualReceipt($cashbook, $request->toDto(), $storeUser);
 
@@ -96,10 +86,7 @@ class CashbookController extends Controller
         $user = $request->user();
         abort_unless(in_array($branch->id, $this->branchScope->allowedBranchIds($user), true), 403);
 
-        $cashbook = Cashbook::firstOrCreate(
-            ['branch_id' => $branch->id],
-            ['currency_id' => $branch->currency_id, 'balance' => 0],
-        );
+        $cashbook = $this->service->getOrCreateForBranch($branch);
 
         /** @var array{type?: string, date_from?: string, date_to?: string, description?: string, amount_min?: string, amount_max?: string} $filters */
         $filters = $request->only(['type', 'date_from', 'date_to', 'description', 'amount_min', 'amount_max']);

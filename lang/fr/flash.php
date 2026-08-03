@@ -97,6 +97,7 @@ return [
     ],
     'requests' => [
         'missing_staff_profile' => 'Votre compte n est pas lie a un profil de personnel avec une succursale. Veuillez contacter un administrateur.',
+        'branch_currency_not_configured' => 'Votre succursale n a pas de devise configuree. Veuillez contacter un administrateur.',
         'draft_saved' => 'Demande enregistree en brouillon.',
         'draft_delete_only' => 'Seules les demandes en brouillon peuvent etre supprimees.',
         'deleted' => 'Demande supprimee.',

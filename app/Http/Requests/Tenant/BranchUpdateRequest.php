@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Tenant;
 
+use App\Models\Tenant\Branch;
+use App\Rules\Tenant\BranchCurrencyLocked;
 use Illuminate\Foundation\Http\FormRequest;
 
 class BranchUpdateRequest extends FormRequest
@@ -28,7 +30,12 @@ class BranchUpdateRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'code' => ['nullable', 'string', 'max:50', 'unique:branches,code,' . $ignoreId],
             'level_id' => ['required', 'integer', 'exists:levels,id'],
-            'currency_id' => ['required', 'integer', 'exists:currencies,id'],
+            'currency_id' => [
+                'required',
+                'integer',
+                'exists:currencies,id',
+                ...($model instanceof Branch ? [new BranchCurrencyLocked($model)] : []),
+            ],
             'parent_id' => ['nullable', 'integer', 'exists:branches,id'],
         ];
     }

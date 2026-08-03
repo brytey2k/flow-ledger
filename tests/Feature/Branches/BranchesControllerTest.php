@@ -5,6 +5,7 @@ declare(strict_types=1);
 uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Branch;
+use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\Department;
 use App\Models\Tenant\Level;
@@ -109,6 +110,47 @@ test('authorized user can update a branch', function () {
         ->assertRedirect(route('branches.index'));
 
     $this->assertDatabaseHas('branches', ['id' => $branch->id, 'name' => 'Updated Branch Name']);
+});
+test('update rejects currency change once branch has a cashbook', function () {
+    $level = Level::factory()->create();
+    $currency = Currency::factory()->create();
+    $newCurrency = Currency::factory()->create();
+    $branch = Branch::factory()->create(['level_id' => $level->id, 'currency_id' => $currency->id]);
+    Cashbook::create(['branch_id' => $branch->id, 'currency_id' => $currency->id, 'balance' => 0]);
+
+    $payload = validBranchPayload($level, $newCurrency);
+
+    $response = $this->actingAs($this->user)->put(route('branches.update', $branch), $payload);
+
+    $response->assertSessionHasErrors(['currency_id']);
+    $this->assertDatabaseHas('branches', ['id' => $branch->id, 'currency_id' => $currency->id]);
+});
+test('update allows unrelated field changes when branch has a cashbook', function () {
+    $level = Level::factory()->create();
+    $currency = Currency::factory()->create();
+    $branch = Branch::factory()->create(['level_id' => $level->id, 'currency_id' => $currency->id]);
+    Cashbook::create(['branch_id' => $branch->id, 'currency_id' => $currency->id, 'balance' => 0]);
+
+    $payload = validBranchPayload($level, $currency);
+    $payload['name'] = 'Renamed With Cashbook';
+
+    $response = $this->actingAs($this->user)->put(route('branches.update', $branch), $payload);
+
+    $response->assertRedirect(route('branches.index'));
+    $this->assertDatabaseHas('branches', ['id' => $branch->id, 'name' => 'Renamed With Cashbook', 'currency_id' => $currency->id]);
+});
+test('update allows currency change when branch has no cashbook', function () {
+    $level = Level::factory()->create();
+    $currency = Currency::factory()->create();
+    $newCurrency = Currency::factory()->create();
+    $branch = Branch::factory()->create(['level_id' => $level->id, 'currency_id' => $currency->id]);
+
+    $payload = validBranchPayload($level, $newCurrency);
+
+    $response = $this->actingAs($this->user)->put(route('branches.update', $branch), $payload);
+
+    $response->assertRedirect(route('branches.index'));
+    $this->assertDatabaseHas('branches', ['id' => $branch->id, 'currency_id' => $newCurrency->id]);
 });
 test('updating a branch logs activity', function () {
     $level = Level::factory()->create();

@@ -26,7 +26,6 @@ class PaymentRequestStoreRequest extends FormRequest
         $isExpense = $this->input('type') === \App\Enums\Tenant\PaymentRequestType::Expense->value;
 
         return [
-            'currency_id' => ['required', 'integer', 'exists:currencies,id'],
             'type' => ['required', Rule::in([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value])],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
@@ -54,7 +53,6 @@ class PaymentRequestStoreRequest extends FormRequest
         return new \App\DTOs\Tenant\CreatePaymentRequestDto(
             staffId: $staffId,
             branchId: $branchId,
-            currencyId: $this->integer('currency_id'),
             type: $this->string('type')->toString(),
             notes: $this->filled('notes') ? $this->string('notes')->toString() : null,
             items: $items,

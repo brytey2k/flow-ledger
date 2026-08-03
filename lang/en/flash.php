@@ -97,6 +97,7 @@ return [
     ],
     'requests' => [
         'missing_staff_profile' => 'Your account is not linked to a staff profile with a branch. Please contact an administrator.',
+        'branch_currency_not_configured' => 'Your branch does not have a currency configured. Please contact an administrator.',
         'draft_saved' => 'Request saved as draft.',
         'draft_delete_only' => 'Only draft requests can be deleted.',
         'deleted' => 'Request deleted.',

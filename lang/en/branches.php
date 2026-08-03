@@ -28,6 +28,7 @@ return [
         'select_level' => 'Select a level…',
         'currency' => 'Reporting Currency',
         'currency_hint' => 'Currency used for reporting in this branch.',
+        'currency_locked_hint' => 'This branch already has a cashbook, so its currency can no longer be changed.',
         'select_currency' => 'Select a currency…',
         'parent' => 'Parent Branch',
         'parent_hint' => 'Leave empty for root branch, or select a parent.',

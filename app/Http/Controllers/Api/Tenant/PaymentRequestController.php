@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Tenant;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Exceptions\BranchCurrencyNotConfiguredException;
 use App\Http\Requests\Tenant\PaymentRequestStoreRequest;
 use App\Http\Requests\Tenant\PaymentRequestUpdateRequest;
 use App\Models\Tenant\PaymentRequest;
@@ -53,10 +54,14 @@ class PaymentRequestController extends BaseApiController
         /** @var Staff $staffProfile */
         $staffProfile = $user->staffProfile;
 
-        $paymentRequest = $this->service->createDraft(
-            $request->toDto($staffProfile->id, (int) $staffProfile->branch_id),
-            $user,
-        );
+        try {
+            $paymentRequest = $this->service->createDraft(
+                $request->toDto($staffProfile->id, (int) $staffProfile->branch_id),
+                $user,
+            );
+        } catch (BranchCurrencyNotConfiguredException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json(['data' => $paymentRequest->load('items', 'branch', 'currency', 'staff')], 201);
     }

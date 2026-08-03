@@ -151,7 +151,7 @@ test('create form renders', function () {
 
     $response->assertOk();
     $response->assertViewIs('tenant.payment-requests.create');
-    $response->assertViewHas(['staffProfile', 'currencies']);
+    $response->assertViewHas(['staffProfile', 'costCodes']);
 });
 test('create form redirects if no staff profile', function () {
     $response = $this->actingAs($this->user)->get(route('payment-requests.create'));
@@ -210,7 +210,7 @@ test('store fails validation without required fields', function () {
 
     $response = $this->actingAs($this->user)->post(route('payment-requests.store'), []);
 
-    $response->assertSessionHasErrors(['type', 'currency_id', 'items']);
+    $response->assertSessionHasErrors(['type', 'items']);
 });
 test('store fails validation with invalid type', function () {
     Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
@@ -294,7 +294,7 @@ test('edit renders for sent back request owner', function () {
 
     $response->assertOk();
     $response->assertViewIs('tenant.payment-requests.edit');
-    $response->assertViewHas(['paymentRequest', 'currencies', 'costCodes']);
+    $response->assertViewHas(['paymentRequest', 'costCodes']);
 });
 test('edit renders for draft request owner', function () {
     $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
@@ -333,7 +333,6 @@ test('edit redirects if not owner', function () {
 test('update saves changes and redirects to show', function () {
     $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
     $oldCurrency = Currency::factory()->create();
-    $newCurrency = Currency::factory()->create();
     $paymentRequest = PaymentRequest::factory()->advance()->create([
         'status' => 'sent_back',
         'staff_id' => $staff->id,
@@ -344,7 +343,6 @@ test('update saves changes and redirects to show', function () {
     PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id, 'amount' => 100.00]);
 
     $response = $this->actingAs($this->user)->put(route('payment-requests.update', $paymentRequest), [
-        'currency_id' => $newCurrency->id,
         'notes' => 'Updated notes',
         'items' => [
             ['description' => 'New item', 'amount' => '250.00'],
@@ -357,7 +355,7 @@ test('update saves changes and redirects to show', function () {
 
     $this->assertDatabaseHas('payment_requests', [
         'id' => $paymentRequest->id,
-        'currency_id' => $newCurrency->id,
+        'currency_id' => $oldCurrency->id,
         'notes' => 'Updated notes',
         'total_amount' => '300.00',
         'status' => 'sent_back',

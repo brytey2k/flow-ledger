@@ -101,6 +101,7 @@
                                 {{ __('branches.fields.currency') }} <span class="text-destructive">*</span>
                             </label>
                             <select id="currency_id" name="currency_id" class="kt-input w-full" required
+                                    @disabled($currencyLocked)
                                     aria-invalid="@error('currency_id') true @else false @enderror">
                                 <option value="">{{ __('branches.fields.select_currency') }}</option>
                                 @foreach($currencies as $currency)
@@ -109,8 +110,11 @@
                                     </option>
                                 @endforeach
                             </select>
+                            @if($currencyLocked)
+                                <input type="hidden" name="currency_id" value="{{ $branch->currency_id }}">
+                            @endif
                             <div class="mt-1 text-xs text-muted-foreground">
-                                {{ __('branches.fields.currency_hint') }}
+                                {{ $currencyLocked ? __('branches.fields.currency_locked_hint') : __('branches.fields.currency_hint') }}
                             </div>
                             @error('currency_id')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>

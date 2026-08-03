@@ -7,26 +7,47 @@ namespace App\Services;
 use App\DTOs\Tenant\CashbookEntryDto;
 use App\Events\CashbookBalanceChanged;
 use App\Exceptions\InsufficientCashbookBalanceException;
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\CashbookEntry;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
+use Illuminate\Support\Facades\DB;
 
 class CashbookService
 {
+    /**
+     * Get the branch's cashbook, creating it in the branch's current currency if it
+     * doesn't exist yet (falling back to $fallbackCurrencyId if the branch itself has
+     * none configured). Locks the branch row so this can't race with a concurrent
+     * branch-currency update — either the cashbook is created first (and the currency
+     * update then sees it exists and is rejected), or the currency update commits first
+     * (and the cashbook is created in the new currency). No interleaving is possible.
+     *
+     * @param Branch $branch
+     * @param int|null|null $fallbackCurrencyId
+     */
+    public function getOrCreateForBranch(Branch $branch, int|null $fallbackCurrencyId = null): Cashbook
+    {
+        return DB::transaction(function () use ($branch, $fallbackCurrencyId): Cashbook {
+            $lockedBranch = Branch::whereKey($branch->id)->lockForUpdate()->firstOrFail();
+
+            return Cashbook::firstOrCreate(
+                ['branch_id' => $lockedBranch->id],
+                ['currency_id' => $lockedBranch->currency_id ?? $fallbackCurrencyId, 'balance' => 0],
+            );
+        });
+    }
+
     public function recordDisbursement(PaymentRequest $request, User|null $user = null): void
     {
-        $branch = $request->branch;
-        $currencyId = $branch->currency_id ?? $request->currency_id;
-
         $raw = $request->getAttribute('total_amount');
         $amount = is_numeric($raw) ? (float) $raw : 0.0;
 
-        $cashbook = Cashbook::firstOrCreate(
-            ['branch_id' => $request->branch_id],
-            ['currency_id' => $currencyId, 'balance' => 0],
-        );
+        $branch = $request->branch;
+        assert($branch instanceof Branch);
+        $cashbook = $this->getOrCreateForBranch($branch, $request->currency_id);
 
         // Prevent disbursement if balance is already negative, or positive but insufficient.
         if ($cashbook->balance < 0 || ($cashbook->balance > 0 && $cashbook->balance < $amount)) {
@@ -68,12 +89,8 @@ class CashbookService
 
         $paymentRequest = $retirement->paymentRequest()->firstOrFail();
         $branch = $paymentRequest->branch;
-        $currencyId = $branch->currency_id ?? $paymentRequest->currency_id;
-
-        $cashbook = Cashbook::firstOrCreate(
-            ['branch_id' => $paymentRequest->branch_id],
-            ['currency_id' => $currencyId, 'balance' => 0],
-        );
+        assert($branch instanceof Branch);
+        $cashbook = $this->getOrCreateForBranch($branch, $paymentRequest->currency_id);
 
         $raw = $retirement->getAttribute('difference_amount');
         $amount = is_numeric($raw) ? (float) $raw : 0.0;

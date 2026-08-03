@@ -8,6 +8,8 @@ use App\DTOs\Tenant\CreatePaymentRequestDto;
 use App\DTOs\Tenant\DisbursePaymentRequestDto;
 use App\Enums\Tenant\PaymentRequestStatus;
 use App\Enums\Tenant\PaymentRequestType;
+use App\Exceptions\BranchCurrencyNotConfiguredException;
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
@@ -25,6 +27,12 @@ class PaymentRequestService
     public function createDraft(CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
     {
         return DB::transaction(function () use ($dto, $user): PaymentRequest {
+            $branch = Branch::findOrFail($dto->branchId);
+
+            if ($branch->currency_id === null) {
+                throw new BranchCurrencyNotConfiguredException('The branch has no currency configured.');
+            }
+
             $totalAmount = array_sum(array_column(
                 array_map(fn($item) => ['amount' => $item->amount], $dto->items),
                 'amount',
@@ -33,7 +41,7 @@ class PaymentRequestService
             $request = PaymentRequest::create([
                 'staff_id' => $dto->staffId,
                 'branch_id' => $dto->branchId,
-                'currency_id' => $dto->currencyId,
+                'currency_id' => $branch->currency_id,
                 'type' => $dto->type,
                 'notes' => $dto->notes,
                 'total_amount' => $totalAmount,
@@ -118,7 +126,6 @@ class PaymentRequestService
             ));
 
             $paymentRequest->update([
-                'currency_id' => $dto->currencyId,
                 'notes' => $dto->notes,
                 'total_amount' => $totalAmount,
             ]);
@@ -154,7 +161,6 @@ class PaymentRequestService
             ));
 
             $paymentRequest->update([
-                'currency_id' => $dto->currencyId,
                 'notes' => $dto->notes,
                 'total_amount' => $totalAmount,
             ]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant;
 
+use App\Exceptions\BranchCurrencyLockedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\BranchStoreRequest;
 use App\Http\Requests\Tenant\BranchUpdateRequest;
@@ -12,6 +13,7 @@ use App\Repositories\BranchRepository;
 use App\Repositories\CurrencyRepository;
 use App\Repositories\LevelRepository;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BranchesController extends Controller
@@ -74,30 +76,46 @@ class BranchesController extends Controller
         $branches = $this->repository->allExcept($branch->id);
         $currencies = $this->currencyRepository->allOrderedByShortName();
         $descendantsCount = $branch->descendants()->count();
+        $currencyLocked = $branch->cashbook()->exists();
 
-        return view('tenant.branches.edit', compact('branch', 'levels', 'branches', 'currencies', 'descendantsCount'));
+        return view('tenant.branches.edit', compact('branch', 'levels', 'branches', 'currencies', 'descendantsCount', 'currencyLocked'));
     }
 
     public function update(BranchUpdateRequest $request, Branch $branch): RedirectResponse
     {
         $dto = $request->toDto();
 
-        $branch->fill([
-            'name' => $dto->name,
-            'code' => $dto->code,
-            'level_id' => $dto->levelId,
-            'currency_id' => $dto->currencyId,
-        ]);
+        try {
+            DB::transaction(function () use (&$branch, $dto): void {
+                // Re-fetch under a row lock so this can't race with a concurrent
+                // cashbook creation (see CashbookService::getOrCreateForBranch()),
+                // which takes the same lock before deciding what currency to use.
+                $branch = Branch::whereKey($branch->id)->lockForUpdate()->firstOrFail();
 
-        if ($dto->parentId !== (int) $branch->parent_id) {
-            if ($dto->parentId !== null) {
-                $parent = $this->repository->findOrFail($dto->parentId);
-                $branch->moveTo(0, $parent);
-            } else {
-                $branch->makeRoot(0);
-            }
-        } else {
-            $branch->save();
+                if ($dto->currencyId !== $branch->currency_id && $branch->cashbook()->exists()) {
+                    throw new BranchCurrencyLockedException();
+                }
+
+                $branch->fill([
+                    'name' => $dto->name,
+                    'code' => $dto->code,
+                    'level_id' => $dto->levelId,
+                    'currency_id' => $dto->currencyId,
+                ]);
+
+                if ($dto->parentId !== (int) $branch->parent_id) {
+                    if ($dto->parentId !== null) {
+                        $parent = $this->repository->findOrFail($dto->parentId);
+                        $branch->moveTo(0, $parent);
+                    } else {
+                        $branch->makeRoot(0);
+                    }
+                } else {
+                    $branch->save();
+                }
+            });
+        } catch (BranchCurrencyLockedException) {
+            return back()->withErrors(['currency_id' => __('validation.branch_currency_locked')])->withInput();
         }
 
         activity()

@@ -27,6 +27,7 @@ return [
         'select_level' => 'Selectionner un niveau...',
         'currency' => 'Devise de reporting',
         'currency_hint' => 'Devise utilisee pour le reporting dans cette succursale.',
+        'currency_locked_hint' => 'Cette succursale a deja une caisse, sa devise ne peut donc plus etre modifiee.',
         'select_currency' => 'Selectionner une devise...',
         'parent' => 'Succursale parente',
         'parent_hint' => 'Laissez vide pour la racine, ou selectionnez un parent.',

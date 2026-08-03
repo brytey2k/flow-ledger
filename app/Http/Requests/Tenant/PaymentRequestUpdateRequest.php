@@ -23,7 +23,6 @@ class PaymentRequestUpdateRequest extends FormRequest
         $isExpense = $paymentRequest instanceof PaymentRequest && $paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value;
 
         return [
-            'currency_id' => ['required', 'integer', 'exists:currencies,id'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
@@ -50,7 +49,6 @@ class PaymentRequestUpdateRequest extends FormRequest
         return new \App\DTOs\Tenant\CreatePaymentRequestDto(
             staffId: $staffId,
             branchId: $branchId,
-            currencyId: $this->integer('currency_id'),
             type: $type,
             notes: $this->filled('notes') ? $this->string('notes')->toString() : null,
             items: $items,

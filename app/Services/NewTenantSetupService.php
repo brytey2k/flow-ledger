@@ -133,13 +133,13 @@ class NewTenantSetupService
 
         $this->createDefaultRoles();
 
-        $branch = $this->createDefaultBranch();
+        $currency = $this->createDefaultCurrency();
+        $branch = $this->createDefaultBranch($currency);
 
         $this->createDefaultWorkflowTemplates();
 
         $this->createDefaultPositions();
         $this->createDefaultDepartmentsAndCostCodes();
-        $currency = $this->createDefaultCurrency();
         $this->createDefaultCashbook($branch, $currency);
 
         $adminUser = User::create([
@@ -172,13 +172,13 @@ class NewTenantSetupService
 
         $centralDomain = parse_url(config()->string('app.url'), PHP_URL_HOST);
 
-        $branch = $this->createDefaultBranch();
+        $currency = $this->createDefaultCurrency();
+        $branch = $this->createDefaultBranch($currency);
 
         $this->createDefaultWorkflowTemplates();
 
         $this->createDefaultPositions();
         $this->createDefaultDepartmentsAndCostCodes();
-        $currency = $this->createDefaultCurrency();
         $this->createDefaultCashbook($branch, $currency);
 
         $adminUser = User::create([
@@ -197,7 +197,7 @@ class NewTenantSetupService
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
-    protected function createDefaultBranch(): Branch
+    protected function createDefaultBranch(Currency $currency): Branch
     {
         $level = Level::firstOrCreate(
             ['name' => 'Default'],
@@ -206,7 +206,7 @@ class NewTenantSetupService
 
         $branch = Branch::firstOrCreate(
             ['name' => 'Head Office', 'level_id' => $level->id],
-            ['position' => 1],
+            ['position' => 1, 'currency_id' => $currency->id],
         );
 
         BranchClosure::firstOrCreate([

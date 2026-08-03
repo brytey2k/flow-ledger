@@ -10,6 +10,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Tenant\Branch;
+use App\Models\Tenant\Currency;
 use App\Models\Tenant\Level;
 use App\Models\Tenant\User;
 use Exception;
@@ -130,6 +131,10 @@ abstract class TenantAppTestCase extends BaseTestCase
                 return $branch;
             },
         );
+
+        if ($this->branch->currency_id === null) {
+            $this->branch->update(['currency_id' => Currency::factory()->create()->id]);
+        }
 
         $permissions = Cache::store('array')->rememberForever(
             "test.{$tenantKey}.permissions",

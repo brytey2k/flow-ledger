@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant;
 
+use App\Exceptions\BranchCurrencyNotConfiguredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\PaymentRequestStoreRequest;
 use App\Http\Requests\Tenant\PaymentRequestUpdateRequest;
@@ -11,7 +12,6 @@ use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\CostCodeRepository;
-use App\Repositories\CurrencyRepository;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
@@ -26,7 +26,6 @@ class PaymentRequestsController extends Controller
     public function __construct(
         private readonly PaymentRequestRepository $repository,
         private readonly PaymentRequestService $service,
-        private readonly CurrencyRepository $currencyRepository,
         private readonly CostCodeRepository $costCodeRepository,
         private readonly WorkflowEngineService $workflowEngine,
         private readonly BranchScopeService $branchScope,
@@ -52,18 +51,22 @@ class PaymentRequestsController extends Controller
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
-        $staffProfile = $user->staffProfile()->with(['department', 'branch'])->first();
+        $staffProfile = $user->staffProfile()->with(['department', 'branch.currency'])->first();
 
         if (! $staffProfile instanceof Staff || $staffProfile->branch_id === null) {
             return redirect()->route('payment-requests.index')
                 ->with('error', __('flash.requests.missing_staff_profile'));
         }
 
-        $currencies = $this->currencyRepository->allOrderedByName();
+        if ($staffProfile->branch?->currency_id === null) {
+            return redirect()->route('payment-requests.index')
+                ->with('error', __('flash.requests.branch_currency_not_configured'));
+        }
+
         $costCodes = $this->costCodeRepository->allOrderedByCode();
         $defaultAdvanceCostCodeId = $this->settingsService->getDefaultAdvanceCostCodeId();
 
-        return view('tenant.payment-requests.create', compact('staffProfile', 'currencies', 'costCodes', 'defaultAdvanceCostCodeId'));
+        return view('tenant.payment-requests.create', compact('staffProfile', 'costCodes', 'defaultAdvanceCostCodeId'));
     }
 
     public function store(PaymentRequestStoreRequest $request): RedirectResponse
@@ -73,10 +76,15 @@ class PaymentRequestsController extends Controller
         /** @var Staff $staffProfile */
         $staffProfile = $user->staffProfile;
 
-        $paymentRequest = $this->service->createDraft(
-            $request->toDto($staffProfile->id, (int) $staffProfile->branch_id),
-            $user,
-        );
+        try {
+            $paymentRequest = $this->service->createDraft(
+                $request->toDto($staffProfile->id, (int) $staffProfile->branch_id),
+                $user,
+            );
+        } catch (BranchCurrencyNotConfiguredException) {
+            return redirect()->route('payment-requests.index')
+                ->with('error', __('flash.requests.branch_currency_not_configured'));
+        }
 
         return redirect()->route('payment-requests.show', $paymentRequest)
             ->with('success', __('flash.requests.draft_saved'));
@@ -128,10 +136,9 @@ class PaymentRequestsController extends Controller
 
         $paymentRequest->load('items.costCode', 'currency', 'staff.department', 'staff.branch');
 
-        $currencies = $this->currencyRepository->allOrderedByName();
         $costCodes = $this->costCodeRepository->allOrderedByCode();
 
-        return view('tenant.payment-requests.edit', compact('paymentRequest', 'currencies', 'costCodes'));
+        return view('tenant.payment-requests.edit', compact('paymentRequest', 'costCodes'));
     }
 
     public function update(PaymentRequestUpdateRequest $request, PaymentRequest $paymentRequest): RedirectResponse

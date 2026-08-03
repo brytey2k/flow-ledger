@@ -10,7 +10,6 @@ readonly class CreatePaymentRequestDto
     public function __construct(
         public int $staffId,
         public int $branchId,
-        public int $currencyId,
         public string $type,
         public string|null $notes,
         public array $items,

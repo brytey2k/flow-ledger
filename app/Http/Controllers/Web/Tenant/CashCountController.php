@@ -12,6 +12,7 @@ use App\Models\Tenant\CashCount;
 use App\Repositories\CashCountRepository;
 use App\Repositories\CurrencyDenominationRepository;
 use App\Services\BranchScopeService;
+use App\Services\CashbookService;
 use App\Services\CashCountService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class CashCountController extends Controller
         private readonly CurrencyDenominationRepository $denominationRepository,
         private readonly CashCountService $service,
         private readonly BranchScopeService $branchScope,
+        private readonly CashbookService $cashbookService,
     ) {}
 
     public function index(Branch $branch, Request $request): View
@@ -104,9 +106,6 @@ class CashCountController extends Controller
 
     private function getCashbook(Branch $branch): Cashbook
     {
-        return Cashbook::firstOrCreate(
-            ['branch_id' => $branch->id],
-            ['currency_id' => $branch->currency_id, 'balance' => 0],
-        );
+        return $this->cashbookService->getOrCreateForBranch($branch);
     }
 }

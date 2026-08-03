@@ -65,23 +65,15 @@
                             </div>
                         </div>
 
-                        {{-- Currency --}}
+                        {{-- Currency (read-only, derived from branch) --}}
                         <div>
-                            <label class="kt-form-label block mb-2" for="currency_id">
-                                {{ __('payment_requests.fields.currency') }} <span class="text-destructive">*</span>
-                            </label>
-                            <select id="currency_id" name="currency_id" class="kt-select w-full"
-                                    aria-invalid="@error('currency_id') true @else false @enderror">
-                                <option value="">{{ __('payment_requests.fields.select_currency') }}</option>
-                                @foreach($currencies as $currency)
-                                    <option value="{{ $currency->id }}" {{ old('currency_id') == $currency->id ? 'selected' : '' }}>
-                                        {{ $currency->short_name }} — {{ $currency->name }} ({{ $currency->symbol }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('currency_id')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
+                            <label class="kt-form-label block mb-2">{{ __('payment_requests.fields.currency') }}</label>
+                            <div class="kt-input w-full bg-muted/40 flex items-center gap-3 px-4 py-3 rounded-md">
+                                <i class="ki-filled ki-dollar text-secondary-foreground"></i>
+                                <span class="font-medium text-mono">
+                                    {{ $staffProfile->branch?->currency?->short_name }} — {{ $staffProfile->branch?->currency?->name }}
+                                </span>
+                            </div>
                         </div>
 
                         {{-- Notes --}}
