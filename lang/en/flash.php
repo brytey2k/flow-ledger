@@ -116,7 +116,7 @@ return [
         'cancel_not_owner' => 'You can only cancel your own requests.',
         'cannot_cancel_status' => 'This request cannot be cancelled in its current status.',
         'cancelled' => 'Request cancelled successfully.',
-        'source_documents_required' => 'Please attach at least one source document before submitting this expense.',
+        'source_documents_required' => 'Please attach at least one source document before submitting this expense. An administrator can disable this requirement from Settings.',
         'no_active_workflow' => 'There is no active workflow to decline.',
         'cannot_decline' => 'You do not have permission to decline this request.',
         'declined' => 'Request declined successfully.',
@@ -137,7 +137,7 @@ return [
         'settled' => 'Retirement marked as settled.',
         'settle_only_approved' => 'Only approved retirements can be settled.',
         'insufficient_cashbook_balance' => 'Insufficient cashbook balance to settle this retirement.',
-        'source_documents_required' => 'Please attach at least one source document before submitting this retirement.',
+        'source_documents_required' => 'Please attach at least one source document before submitting this retirement. An administrator can disable this requirement from Settings.',
     ],
     'approvals' => [
         'action_recorded' => 'Action recorded successfully.',
