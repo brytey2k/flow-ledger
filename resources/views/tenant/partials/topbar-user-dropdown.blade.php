@@ -1,53 +1,60 @@
-<div class="kt-menu" data-kt-menu="true">
-    <div class="kt-menu-item" data-kt-menu-item-offset="0, 10px" data-kt-menu-item-overflow="true"
-         data-kt-menu-item-placement="bottom-end" data-kt-menu-item-toggle="dropdown"
-         data-kt-menu-item-trigger="click">
-        <div class="kt-menu-toggle btn btn-ghost flex items-center gap-2 cursor-pointer">
-            <div class="flex flex-col items-end text-sm">
-                <span class="font-medium text-foreground leading-none">{{ auth()->user()?->name }}</span>
-                <span class="text-xs text-muted-foreground leading-none mt-1">{{ auth()->user()?->email }}</span>
-            </div>
-            <div class="flex size-9 items-center justify-center rounded-full bg-primary/10">
-                <i class="ki-filled ki-user text-primary text-lg"></i>
-            </div>
+<!-- User -->
+@php
+    $userName = trim((string) (auth()->user()?->name ?? 'User'));
+    $userEmail = (string) (auth()->user()?->email ?? '');
+    $avatarInitial = strtoupper(substr($userName !== '' ? $userName : 'U', 0, 1));
+@endphp
+<div class="shrink-0" data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px" data-kt-dropdown-offset-rtl="-20px, 10px"
+    data-kt-dropdown-placement="bottom-end" data-kt-dropdown-placement-rtl="bottom-start" data-kt-dropdown-trigger="click">
+    <div class="shrink-0 cursor-pointer" data-kt-dropdown-toggle="true">
+        <div class="size-9 shrink-0 rounded-full bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
+            {{ $avatarInitial }}
         </div>
-        <div class="kt-menu-dropdown kt-menu-default w-[240px] py-2.5">
-            <div class="px-3 py-2 flex items-center justify-between gap-2 border-b border-border mb-1">
+    </div>
+    <div class="kt-dropdown-menu w-[250px]" data-kt-dropdown-menu="true">
+        <div class="flex items-center justify-between gap-1.5 px-2.5 py-1.5">
+            <div class="flex items-center gap-2">
+                <div class="size-9 shrink-0 rounded-full bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
+                    {{ $avatarInitial }}
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <span class="text-sm font-semibold leading-none text-foreground">
+                        {{ $userName }}
+                    </span>
+                    <span class="text-xs font-medium leading-none text-secondary-foreground">
+                        {{ $userEmail }}
+                    </span>
+                </div>
+            </div>
+            <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline">
+                Pro
+            </span>
+        </div>
+        <ul class="kt-dropdown-menu-sub">
+            <li>
+                <div class="kt-dropdown-menu-separator">
+                </div>
+            </li>
+        </ul>
+        <div class="mb-2.5 flex flex-col gap-3.5 px-2.5 pt-1.5">
+            <div class="flex items-center justify-between gap-2">
                 <span class="flex items-center gap-2">
-                    <i class="ki-filled ki-moon text-base text-muted-foreground"></i>
-                    <span class="text-2sm font-medium">{{ __('navigation.dark_mode') }}</span>
+                    <i class="ki-filled ki-moon text-base text-muted-foreground">
+                    </i>
+                    <span class="text-2sm font-medium">
+                        {{ __('navigation.dark_mode') }}
+                    </span>
                 </span>
                 <input class="kt-switch" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true"
-                    name="theme_mode" type="checkbox" value="1" />
+                    name="check" type="checkbox" value="1" />
             </div>
-            <div class="px-3 py-2 flex items-center justify-between gap-2 border-b border-border mb-1">
-                <span class="flex items-center gap-2">
-                    <i class="ki-filled ki-translate text-base text-muted-foreground"></i>
-                    <span class="text-2sm font-medium">{{ __('navigation.language') }}</span>
-                </span>
-                <form method="POST" action="{{ route('locale.update') }}" class="min-w-[110px]">
-                    @csrf
-                    <select
-                        name="locale"
-                        class="h-8 w-full rounded-md border border-border bg-background px-2 text-xs text-foreground"
-                        onchange="this.form.submit()"
-                    >
-                        <option value="en" @selected(app()->getLocale() === 'en')>English</option>
-                        <option value="fr" @selected(app()->getLocale() === 'fr')>Francais</option>
-                    </select>
-                </form>
-            </div>
-            <div class="kt-menu-item">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="kt-menu-link w-full text-left">
-                        <span class="kt-menu-icon">
-                            <i class="ki-filled ki-exit-right"></i>
-                        </span>
-                        <span class="kt-menu-title">{{ __('navigation.logout') }}</span>
-                    </button>
-                </form>
-            </div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="kt-btn kt-btn-outline w-full justify-center">
+                    {{ __('navigation.logout') }}
+                </button>
+            </form>
         </div>
     </div>
 </div>
+<!-- End of User -->

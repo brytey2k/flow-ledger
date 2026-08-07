@@ -21,6 +21,7 @@
         @include('tenant.partials.mega-menu')
         <!-- Topbar -->
         <div class="flex items-center gap-2.5">
+            @include('tenant.partials.topbar-locale-dropdown')
             @include('tenant.partials.topbar-user-dropdown')
         </div>
         <!-- End of Topbar -->
