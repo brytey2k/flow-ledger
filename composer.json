@@ -70,6 +70,7 @@
         "test-with-coverage": "tests/run-tests.sh --coverage-cobertura coverage.cobertura.xml",
         "test-parallel": "tests/run-tests-parallel.sh",
         "test-tia": "tests/run-tests.sh --tia",
+        "test-parallel-tia": "tests/run-tests-parallel-tia.sh",
         "pint": [
             "vendor/bin/pint --parallel"
         ],

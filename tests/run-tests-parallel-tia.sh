@@ -14,18 +14,18 @@ export AUTOMATED_TEST_TENANT_MARKER="$$-$(date +%s%N 2>/dev/null || date +%s)-$R
 # app's default "pgsql" connection (used by e.g. App\Models\Tenant at
 # request-handling time) silently diverges onto its own empty
 # "testing_test_N" database while central tenant rows only exist in
-# "testing_pgsql"'s database.
-#
-# Disable Laravel's auto-cloning so "pgsql" stays pointed at the same
-# physical database as "testing_pgsql" for every worker, matching
-# sequential-run behavior. This MUST be passed as the --without-databases CLI
-# flag below rather than the LARAVEL_PARALLEL_TESTING_WITHOUT_DATABASES env
-# var: Collision's TestCommand builds an explicit env array from
-# --without-databases (defaulting to disabled) for the paratest subprocess,
-# and that explicit array wins over anything already exported in this shell.
+# "testing_pgsql"'s database. Disable Laravel's auto-cloning so "pgsql" stays
+# pointed at the same physical database as "testing_pgsql" for every worker,
+# matching sequential-run behavior. Unlike run-tests-parallel.sh, this can be
+# set via the env var here because we invoke vendor/bin/pest directly below
+# instead of going through Collision's TestCommand (which overrides this env
+# var from its --without-databases CLI flag).
+export LARAVEL_PARALLEL_TESTING_WITHOUT_DATABASES=1
 
 cleanup() {
-    php artisan app:remove-automated-tests-tenant --sweep
+    local exit_code=$?
+    php artisan app:remove-automated-tests-tenant --sweep || true
+    exit $exit_code
 }
 
 trap cleanup EXIT
@@ -53,4 +53,4 @@ for token in $(seq 1 "$PROCESSES"); do
     TEST_TOKEN="$token" php artisan app:create-automated-tests-tenant
 done
 
-php artisan test --parallel --without-databases "$@"
+vendor/bin/pest --parallel --tia "$@"

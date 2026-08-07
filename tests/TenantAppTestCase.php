@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Enums\FeatureFlag;
+use App\Helpers\ResolvesAutomatedTestTenantMarker;
 use App\Interfaces\FeatureFlagServiceInterface;
 use App\Models\Permission;
 use App\Models\Role;
@@ -18,6 +19,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Override;
@@ -28,6 +30,7 @@ use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 abstract class TenantAppTestCase extends BaseTestCase
 {
     use DatabaseTransactions;
+    use ResolvesAutomatedTestTenantMarker;
 
     private bool $tenantTransactionStarted = false;
 
@@ -81,7 +84,25 @@ abstract class TenantAppTestCase extends BaseTestCase
 
     protected function initializeTenancy(): void
     {
-        $tenant = Tenant::orderBy('created_at', 'desc')->first();
+        // Resolve the tenant via this worker's marker file (marker() folds in
+        // TEST_TOKEN, so each parallel worker has its own marker/tenant and
+        // never races another worker on the same tenant database) rather than
+        // "most recently created" — otherwise any tenant created elsewhere
+        // during the run becomes the "latest" tenant and hijacks every other
+        // worker's tenancy for as long as it exists.
+        //
+        // The tenant itself must already exist by the time this runs: this
+        // method executes after parent::setUp() has opened this test's
+        // DatabaseTransactions transaction, and Postgres refuses to run
+        // CREATE DATABASE inside a transaction block. So tenants can't be
+        // lazily created here — the test runner scripts provision one tenant
+        // per worker up front (see tests/run-tests-parallel.sh) before Pest
+        // spawns any worker process.
+        $markerFile = $this->markerFilePath($this->marker());
+        $tenant = File::exists($markerFile)
+            ? Tenant::find(File::get($markerFile))
+            : Tenant::orderBy('created_at', 'desc')->first();
+
         if (! $tenant) {
             throw new Exception('No tenant found. Ensure a tenant exists before running tests.');
         }
