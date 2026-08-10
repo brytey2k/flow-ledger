@@ -127,7 +127,7 @@ class NewTenantSetupService
 
         $this->createPermissions();
 
-        $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+        $adminRole = Role::create(['name' => config()->string('roles.system_admin_name'), 'guard_name' => 'web']);
         assert($adminRole instanceof Role);
         $adminRole->givePermissionTo(Permission::all());
 
@@ -164,7 +164,7 @@ class NewTenantSetupService
 
         $this->createPermissions();
 
-        $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+        $adminRole = Role::create(['name' => config()->string('roles.system_admin_name'), 'guard_name' => 'web']);
         assert($adminRole instanceof Role);
         $adminRole->givePermissionTo(Permission::all());
 

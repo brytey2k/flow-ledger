@@ -44,7 +44,7 @@ class CreateAutomatedTestTenant extends Command
                 Permission::create(['name' => $key->value, 'guard_name' => 'web']);
             }
 
-            $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+            $adminRole = Role::create(['name' => config()->string('roles.system_admin_name'), 'guard_name' => 'web']);
             $adminRole->givePermissionTo(Permission::all());
 
             app(PermissionRegistrar::class)->forgetCachedPermissions();

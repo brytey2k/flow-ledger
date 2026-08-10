@@ -161,7 +161,8 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
 - The `{name}` argument should not include the test suite directory. Use `php artisan make:test --pest SomeFeatureTest` instead of `php artisan make:test --pest Feature/SomeFeatureTest`.
-- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
+- Run a single test or filter for quick feedback: `./vendor/bin/sail composer test -- --filter=testName`.
+- Run the entire suite: prefer `./vendor/bin/sail composer test-tia` (Test Impact Analysis) for fast feedback. If unsure whether TIA's change-impact cache might be giving a false pass, fall back to `./vendor/bin/sail composer test-parallel` for a full, uncached run.
 - Do NOT delete tests without approval.
 
 </laravel-boost-guidelines>

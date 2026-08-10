@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Role;
 use App\Models\Tenant;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Stancl\Tenancy\Concerns\HasATenantsOption;
@@ -33,6 +35,7 @@ class SyncPermissions extends Command
             $created = 0;
             $existing = 0;
             $rows = [];
+            $newlyCreatedNames = [];
 
             foreach (PermissionKey::cases() as $case) {
                 $permission = Permission::firstOrCreate([
@@ -42,6 +45,7 @@ class SyncPermissions extends Command
 
                 if ($permission->wasRecentlyCreated) {
                     $created++;
+                    $newlyCreatedNames[] = $case->value;
                     $rows[] = [$case->name, $case->value, '<fg=green>Created</>'];
                 } else {
                     $existing++;
@@ -51,6 +55,8 @@ class SyncPermissions extends Command
 
             $this->table(['Enum Case', 'Permission', 'Status'], $rows);
             $this->info("Created: {$created}, Already existed: {$existing}.");
+
+            $this->grantNewPermissionsToSystemAdmin($newlyCreatedNames);
 
             if ($this->option('prune')) {
                 $this->pruneOrphaned($permissionRegistrar);
@@ -62,6 +68,34 @@ class SyncPermissions extends Command
         });
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Grant only the permissions newly created in this run to the system admin
+     * role, so they remain assignable to someone. Deliberately does NOT sync
+     * the role to the full permission set: a permission it doesn't hold may
+     * have been intentionally revoked from it previously, and re-adding it
+     * here would silently undo that.
+     *
+     * @param  list<string>  $newlyCreatedNames
+     */
+    private function grantNewPermissionsToSystemAdmin(array $newlyCreatedNames): void
+    {
+        if ($newlyCreatedNames === []) {
+            return;
+        }
+
+        try {
+            $systemAdminRole = Role::findByName(config()->string('roles.system_admin_name'), 'web');
+        } catch (RoleDoesNotExist) {
+            $this->warn('No system admin role found for this tenant — skipping permission grant.');
+
+            return;
+        }
+
+        $systemAdminRole->givePermissionTo($newlyCreatedNames);
+
+        $this->info('Granted newly created permissions to the system admin role: '.implode(', ', $newlyCreatedNames));
     }
 
     private function pruneOrphaned(PermissionRegistrar $permissionRegistrar): void

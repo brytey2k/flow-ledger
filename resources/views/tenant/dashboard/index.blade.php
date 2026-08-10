@@ -1,6 +1,14 @@
 @extends('tenant.layouts.base')
 
 @section('content')
+@php
+    $summary = $dashboard['summary'] ?? [];
+    $personal = $dashboard['personal'] ?? [];
+    $pipeline = $dashboard['pipeline'] ?? [];
+    $trends = $dashboard['trends'] ?? [];
+    $insights = $dashboard['insights'] ?? [];
+    $links = $dashboard['links'] ?? [];
+@endphp
 <div class="kt-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
@@ -19,59 +27,174 @@
 
 <div class="kt-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <x-cash-balance-alert-widget :branches="$lowCashBranches" />
-
-        <div class="grid gap-5 lg:grid-cols-3 lg:gap-7.5">
+        @if(!empty($lowCashBranches))
             <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">
+                        <i class="ki-filled ki-warning text-warning mr-2"></i>
+                        {{ __('cash_balance.alert_widget_title') }}
+                    </h3>
+                </div>
+                <div class="kt-card-content p-5 lg:p-7.5">
+                    <div class="grid gap-3">
+                        @foreach($lowCashBranches as $branch)
+                            <div class="flex items-center justify-between rounded-lg border border-warning/30 bg-warning/10 p-4">
+                                <div>
+                                    <div class="font-medium text-foreground">{{ $branch['name'] }}</div>
+                                    <div class="text-sm text-muted-foreground">
+                                        {{ __('cash_balance.current_balance') }}:
+                                        <span class="font-medium text-warning">
+                                            {{ $branch['currency_symbol'] }} {{ number_format((float) $branch['balance'], 2) }}
+                                        </span>
+                                        ·
+                                        {{ __('cash_balance.threshold') }}:
+                                        <span class="font-medium">
+                                            {{ $branch['currency_symbol'] }} {{ number_format((float) $branch['threshold'], 2) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="{{ $links['cash_thresholds'] ?? route('cash-balance-thresholds.index') }}" class="kt-btn kt-btn-sm kt-btn-ghost text-primary">
+                                    <i class="ki-filled ki-arrow-right"></i>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <div class="flex flex-col gap-5 md:flex-row lg:gap-7.5">
+            <div class="kt-card md:flex-1">
                 <div class="kt-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.accounts') }}</span>
-                        <i class="ki-filled ki-wallet text-lg text-primary"></i>
+                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.pending_approvals') }}</span>
+                        <i class="ki-filled ki-check-circle text-lg text-primary"></i>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <span class="text-3xl font-semibold">—</span>
-                        <span class="text-sm text-muted-foreground">{{ __('dashboard.no_accounts') }}</span>
+                        <span class="text-3xl font-semibold">{{ $summary['pending_approvals'] ?? 0 }}</span>
+                        <a href="{{ $links['approvals'] ?? route('approvals.index') }}" class="text-sm text-primary hover:underline">
+                            {{ __('dashboard.review_queue') }}
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="kt-card">
+            <div class="kt-card md:flex-1">
                 <div class="kt-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.transactions') }}</span>
-                        <i class="ki-filled ki-arrows-loop text-lg text-blue-500"></i>
+                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.pending_disbursements') }}</span>
+                        <i class="ki-filled ki-dollar text-lg text-blue-500"></i>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <span class="text-3xl font-semibold">—</span>
-                        <span class="text-sm text-muted-foreground">{{ __('dashboard.no_transactions') }}</span>
+                        <span class="text-3xl font-semibold">{{ $summary['pending_disbursements'] ?? 0 }}</span>
+                        <a href="{{ $links['disbursements'] ?? route('disbursements.index') }}" class="text-sm text-primary hover:underline">
+                            {{ __('dashboard.take_action') }}
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="kt-card">
+            <div class="kt-card md:flex-1">
                 <div class="kt-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.reports') }}</span>
+                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.disbursed_30d') }}</span>
                         <i class="ki-filled ki-chart-line-up text-lg text-green-500"></i>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <span class="text-3xl font-semibold">—</span>
-                        <span class="text-sm text-muted-foreground">{{ __('dashboard.no_data') }}</span>
+                        <span class="text-3xl font-semibold">{{ number_format((float) ($summary['disbursed_total_30d'] ?? 0), 2) }}</span>
+                        <span class="text-sm text-muted-foreground">{{ __('dashboard.requests_created_30d') }}: {{ $summary['requests_created_30d'] ?? 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kt-card md:flex-1">
+                <div class="kt-card-content flex flex-col gap-2 p-5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-muted-foreground">{{ __('dashboard.overdue_advances') }}</span>
+                        <i class="ki-filled ki-time text-lg text-danger"></i>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-3xl font-semibold">{{ $summary['overdue_advances'] ?? 0 }}</span>
+                        <span class="text-sm text-muted-foreground">{{ __('dashboard.send_back_rate_30d') }}: {{ number_format((float) ($summary['send_back_rate_30d'] ?? 0), 1) }}%</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="kt-card">
-            <div class="kt-card-content flex flex-col items-center justify-center gap-4 py-16">
-                <div class="flex size-16 items-center justify-center rounded-full bg-primary/10">
-                    <i class="ki-filled ki-book-open text-3xl text-primary"></i>
+        <div class="grid gap-5 lg:grid-cols-2 lg:gap-7.5">
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">{{ __('dashboard.personal_workload') }}</h3>
                 </div>
-                <div class="flex flex-col items-center gap-2 text-center">
-                    <h3 class="text-lg font-semibold">{{ __('dashboard.ledger_ready') }}</h3>
-                    <p class="text-sm text-muted-foreground max-w-sm">
-                        {{ __('dashboard.ledger_hint') }}
-                    </p>
+                <div class="kt-card-content p-5">
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">{{ __('dashboard.my_draft_requests') }}</span>
+                            <span class="font-semibold">{{ $personal['my_draft_requests'] ?? 0 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">{{ __('dashboard.my_in_workflow_requests') }}</span>
+                            <span class="font-semibold">{{ $personal['my_in_workflow_requests'] ?? 0 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-muted-foreground">{{ __('dashboard.my_draft_retirements') }}</span>
+                            <span class="font-semibold">{{ $personal['my_draft_retirements'] ?? 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">{{ __('dashboard.approval_aging') }}</h3>
+                </div>
+                <div class="kt-card-content p-5">
+                    <div class="space-y-3 text-sm">
+                        @foreach(($pipeline['approval_aging_buckets'] ?? []) as $bucket)
+                            <div class="flex items-center justify-between">
+                                <span class="text-muted-foreground">{{ $bucket['bucket'] }}</span>
+                                <span class="font-semibold">{{ $bucket['count'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-2 lg:gap-7.5">
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">{{ __('dashboard.monthly_spend_trend') }}</h3>
+                </div>
+                <div class="kt-card-content p-5">
+                    <div class="space-y-2 text-sm">
+                        @forelse(($trends['monthly_spend'] ?? []) as $row)
+                            <div class="flex items-center justify-between">
+                                <span class="text-muted-foreground">{{ $row['month_label'] }}</span>
+                                <span class="font-semibold">{{ number_format((float) $row['total'], 2) }} <span class="text-xs text-muted-foreground">({{ $row['count'] }})</span></span>
+                            </div>
+                        @empty
+                            <div class="text-muted-foreground">{{ __('dashboard.no_data') }}</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">{{ __('dashboard.top_spending_branches_30d') }}</h3>
+                </div>
+                <div class="kt-card-content p-5">
+                    <div class="space-y-2 text-sm">
+                        @forelse(($insights['top_spending_branches_30d'] ?? []) as $branch)
+                            <div class="flex items-center justify-between">
+                                <span class="text-muted-foreground">{{ $branch['branch_name'] }}</span>
+                                <span class="font-semibold">{{ number_format((float) $branch['total'], 2) }} <span class="text-xs text-muted-foreground">({{ $branch['count'] }})</span></span>
+                            </div>
+                        @empty
+                            <div class="text-muted-foreground">{{ __('dashboard.no_data') }}</div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>

@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\DB;
 
 class RetirementRequestRepository
 {
+    public function countByStaffAndStatus(int|null $staffId, string $status): int
+    {
+        if ($staffId === null) {
+            return 0;
+        }
+
+        return RetirementRequest::query()
+            ->where('status', $status)
+            ->whereHas('paymentRequest', fn(EloquentBuilder $query) => $query->where('staff_id', $staffId))
+            ->count();
+    }
+
     /**
      * @param array<int, int> $branchIds
      * @param int $perPage

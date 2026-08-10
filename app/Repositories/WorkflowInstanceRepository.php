@@ -9,9 +9,122 @@ use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class WorkflowInstanceRepository
 {
+    public function pendingApprovalsCountForUser(User $user): int
+    {
+        $roleIds = $user->roles()->pluck('id');
+        $staffProfile = $user->staffProfile;
+        $staffBranchId = $staffProfile?->branch_id;
+        $staffDepartmentId = $staffProfile?->department_id;
+
+        return WorkflowInstanceStage::query()
+            ->join('workflow_stages as ws', 'workflow_instance_stages.workflow_stage_id', '=', 'ws.id')
+            ->join('workflow_instances as wi', 'workflow_instance_stages.workflow_instance_id', '=', 'wi.id')
+            ->where('workflow_instance_stages.status', 'active')
+            ->whereHas('stage.roles', fn($q) => $q->whereIn('roles.id', $roleIds))
+            ->when($staffProfile !== null, function ($q) use ($staffDepartmentId): void {
+                $q->where(function ($inner) use ($staffDepartmentId): void {
+                    $inner->where('ws.scope_to_department', false)
+                        ->orWhere(function ($nested) use ($staffDepartmentId): void {
+                            $nested->where('ws.scope_to_department', true)
+                                ->whereNotNull('wi.department_id')
+                                ->where('wi.department_id', $staffDepartmentId);
+                        });
+                });
+            })
+            ->when($staffProfile !== null, function ($q) use ($staffBranchId): void {
+                $q->where(function ($inner) use ($staffBranchId): void {
+                    $inner->where('ws.scope_to_branch', false)
+                        ->orWhere(function ($nested) use ($staffBranchId): void {
+                            $nested->where('ws.scope_to_branch', true)
+                                ->whereNotNull('wi.branch_id')
+                                ->where('wi.branch_id', $staffBranchId);
+                        });
+                });
+            })
+            ->count();
+    }
+
+    /**
+     * @param array<int, int> $branchIds
+     *
+     * @return Collection<int, array{bucket: string, count: int}>
+     */
+    public function approvalAgingBuckets(array $branchIds): Collection
+    {
+        $now = now()->toDateTimeString();
+
+        /** @var Collection<int, object{bucket: string, count: int|float|string}> $rows */
+        $rows = DB::table('workflow_instance_stages')
+            ->join('workflow_instances', 'workflow_instances.id', '=', 'workflow_instance_stages.workflow_instance_id')
+            ->where('workflow_instance_stages.status', 'active')
+            ->whereIn('workflow_instances.branch_id', $branchIds)
+            ->whereNotNull('workflow_instance_stages.started_at')
+            ->selectRaw("CASE
+                WHEN workflow_instance_stages.started_at >= (?::timestamp - INTERVAL '3 days') THEN '0-3 days'
+                WHEN workflow_instance_stages.started_at >= (?::timestamp - INTERVAL '7 days') THEN '4-7 days'
+                ELSE '8+ days'
+            END AS bucket, COUNT(*) as count", [$now, $now])
+            ->groupBy('bucket')
+            ->get();
+
+        $map = collect([
+            ['bucket' => '0-3 days', 'count' => 0],
+            ['bucket' => '4-7 days', 'count' => 0],
+            ['bucket' => '8+ days', 'count' => 0],
+        ])->keyBy('bucket');
+
+        $rows->each(function (object $row) use ($map): void {
+            $bucket = (string) $row->bucket;
+            if ($map->has($bucket)) {
+                $map->put($bucket, [
+                    'bucket' => $bucket,
+                    'count' => (int) $row->count,
+                ]);
+            }
+        });
+
+        /** @var Collection<int, array{bucket: string, count: int}> $result */
+        $result = $map->values();
+
+        return $result;
+    }
+
+    /**
+     * @param array<int, int> $branchIds
+     * @param int $days
+     */
+    public function sendBackRateInLastDays(array $branchIds, int $days = 30): float
+    {
+        $startDate = now()->subDays($days)->toDateString();
+
+        /** @var int $sentBack */
+        $sentBack = DB::table('workflow_instance_stages')
+            ->join('workflow_instances', 'workflow_instances.id', '=', 'workflow_instance_stages.workflow_instance_id')
+            ->whereIn('workflow_instances.branch_id', $branchIds)
+            ->whereDate('workflow_instance_stages.updated_at', '>=', $startDate)
+            ->where('workflow_instance_stages.status', 'sent_back')
+            ->count();
+
+        /** @var int $resolved */
+        $resolved = DB::table('workflow_instance_stages')
+            ->join('workflow_instances', 'workflow_instances.id', '=', 'workflow_instance_stages.workflow_instance_id')
+            ->whereIn('workflow_instances.branch_id', $branchIds)
+            ->whereDate('workflow_instance_stages.updated_at', '>=', $startDate)
+            ->whereIn('workflow_instance_stages.status', ['approved', 'sent_back', 'rejected'])
+            ->count();
+
+        if ($resolved === 0) {
+            return 0.0;
+        }
+
+        return round(($sentBack / $resolved) * 100, 1);
+    }
+
     /** @return LengthAwarePaginator<int, WorkflowInstanceStage> */
     public function activeStagesForUser(User $user, int $perPage = 20): LengthAwarePaginator
     {

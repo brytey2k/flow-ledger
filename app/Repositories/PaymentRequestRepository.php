@@ -15,6 +15,173 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentRequestRepository
 {
+    public function countByStaffAndStatus(int|null $staffId, string $status): int
+    {
+        if ($staffId === null) {
+            return 0;
+        }
+
+        return PaymentRequest::query()
+            ->where('staff_id', $staffId)
+            ->where('status', $status)
+            ->count();
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     */
+    public function countPendingDisbursements(array $allowedBranchIds): int
+    {
+        return PaymentRequest::query()
+            ->whereIn('branch_id', $allowedBranchIds)
+            ->where('status', 'approved')
+            ->count();
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param int $graceDays
+     */
+    public function countOverdueOutstandingAdvances(array $allowedBranchIds, int $graceDays = 30): int
+    {
+        return PaymentRequest::query()
+            ->where('type', 'advance')
+            ->where('status', 'disbursed')
+            ->whereIn('branch_id', $allowedBranchIds)
+            ->whereNotNull('disbursed_at')
+            ->whereDate('disbursed_at', '<=', now()->subDays($graceDays)->toDateString())
+            ->count();
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param int $days
+     */
+    public function sumDisbursedInLastDays(array $allowedBranchIds, int $days = 30): float
+    {
+        /** @var float|int|null $sum */
+        $sum = PaymentRequest::query()
+            ->where('status', 'disbursed')
+            ->whereIn('branch_id', $allowedBranchIds)
+            ->whereDate('disbursed_at', '>=', now()->subDays($days)->toDateString())
+            ->sum('total_amount');
+
+        return (float) ($sum ?? 0);
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param int $days
+     */
+    public function countCreatedInLastDays(array $allowedBranchIds, int $days = 30): int
+    {
+        return PaymentRequest::query()
+            ->whereIn('branch_id', $allowedBranchIds)
+            ->whereDate('created_at', '>=', now()->subDays($days)->toDateString())
+            ->count();
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param int $months
+     *
+     * @return Collection<int, array{month: string, month_label: string, total: float, count: int}>
+     */
+    public function monthlySpendTrend(array $allowedBranchIds, int $months = 6): Collection
+    {
+        $start = now()->startOfMonth()->subMonths($months - 1)->toDateString();
+
+        /** @var Collection<int, object{month: string, month_label: string, total: float|int|string, count: int|float|string}> $rows */
+        $rows = DB::table('payment_requests')
+            ->where('status', 'disbursed')
+            ->whereIn('branch_id', $allowedBranchIds)
+            ->whereDate('disbursed_at', '>=', $start)
+            ->selectRaw("TO_CHAR(disbursed_at, 'YYYY-MM') as month, TO_CHAR(disbursed_at, 'Mon YYYY') as month_label, SUM(total_amount) as total, COUNT(*) as count")
+            ->groupByRaw("TO_CHAR(disbursed_at, 'YYYY-MM'), TO_CHAR(disbursed_at, 'Mon YYYY')")
+            ->orderByRaw("TO_CHAR(disbursed_at, 'YYYY-MM') ASC")
+            ->get();
+
+        /** @var Collection<int, array{month: string, month_label: string, total: float, count: int}> $result */
+        $result = $rows->map(static fn(object $row): array => [
+            'month' => (string) $row->month,
+            'month_label' => (string) $row->month_label,
+            'total' => (float) $row->total,
+            'count' => (int) $row->count,
+        ])->values();
+
+        return $result;
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param int $days
+     * @param int $limit
+     *
+     * @return Collection<int, array{branch_id: int, branch_name: string, total: float, count: int}>
+     */
+    public function topSpendingBranchesInLastDays(array $allowedBranchIds, int $days = 30, int $limit = 5): Collection
+    {
+        /** @var Collection<int, object{branch_id: int, branch_name: string, total: float|int|string, count: int|float|string}> $rows */
+        $rows = DB::table('payment_requests')
+            ->join('branches', 'branches.id', '=', 'payment_requests.branch_id')
+            ->where('payment_requests.status', 'disbursed')
+            ->whereIn('payment_requests.branch_id', $allowedBranchIds)
+            ->whereDate('payment_requests.disbursed_at', '>=', now()->subDays($days)->toDateString())
+            ->whereNull('payment_requests.deleted_at')
+            ->whereNull('branches.deleted_at')
+            ->selectRaw('branches.id as branch_id, branches.name as branch_name, SUM(payment_requests.total_amount) as total, COUNT(payment_requests.id) as count')
+            ->groupBy('branches.id', 'branches.name')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get();
+
+        /** @var Collection<int, array{branch_id: int, branch_name: string, total: float, count: int}> $result */
+        $result = $rows->map(static fn(object $row): array => [
+            'branch_id' => (int) $row->branch_id,
+            'branch_name' => (string) $row->branch_name,
+            'total' => (float) $row->total,
+            'count' => (int) $row->count,
+        ])->values();
+
+        return $result;
+    }
+
+    /**
+     * @param array<int, int> $allowedBranchIds
+     * @param int $graceDays
+     * @param int $limit
+     *
+     * @return Collection<int, array{branch_id: int, branch_name: string, overdue_count: int, overdue_total: float}>
+     */
+    public function overdueOutstandingAdvancesByBranch(array $allowedBranchIds, int $graceDays = 30, int $limit = 5): Collection
+    {
+        /** @var Collection<int, object{branch_id: int, branch_name: string, overdue_count: int|float|string, overdue_total: float|int|string}> $rows */
+        $rows = DB::table('payment_requests')
+            ->join('branches', 'branches.id', '=', 'payment_requests.branch_id')
+            ->where('payment_requests.type', 'advance')
+            ->where('payment_requests.status', 'disbursed')
+            ->whereIn('payment_requests.branch_id', $allowedBranchIds)
+            ->whereNotNull('payment_requests.disbursed_at')
+            ->whereDate('payment_requests.disbursed_at', '<=', now()->subDays($graceDays)->toDateString())
+            ->whereNull('payment_requests.deleted_at')
+            ->whereNull('branches.deleted_at')
+            ->selectRaw('branches.id as branch_id, branches.name as branch_name, COUNT(payment_requests.id) as overdue_count, SUM(payment_requests.total_amount) as overdue_total')
+            ->groupBy('branches.id', 'branches.name')
+            ->orderByDesc('overdue_count')
+            ->limit($limit)
+            ->get();
+
+        /** @var Collection<int, array{branch_id: int, branch_name: string, overdue_count: int, overdue_total: float}> $result */
+        $result = $rows->map(static fn(object $row): array => [
+            'branch_id' => (int) $row->branch_id,
+            'branch_name' => (string) $row->branch_name,
+            'overdue_count' => (int) $row->overdue_count,
+            'overdue_total' => (float) $row->overdue_total,
+        ])->values();
+
+        return $result;
+    }
+
     /**
      * @param array<int, int> $branchIds
      * @param int $perPage

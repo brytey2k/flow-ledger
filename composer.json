@@ -67,10 +67,11 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": "tests/run-tests.sh",
-        "test-with-coverage": "tests/run-tests.sh --coverage-cobertura coverage.cobertura.xml",
+        "test-with-coverage": "tests/run-tests-with-coverage.sh",
         "test-parallel": "tests/run-tests-parallel.sh",
-        "test-tia": "tests/run-tests.sh --tia",
-        "test-parallel-tia": "tests/run-tests-parallel-tia.sh",
+        "test-parallel-with-coverage": "tests/run-tests-parallel-with-coverage.sh",
+        "test-tia": "tests/run-tests-tia.sh",
+        "test-tia-with-coverage": "tests/run-tests-tia-with-coverage.sh",
         "pint": [
             "vendor/bin/pint --parallel"
         ],

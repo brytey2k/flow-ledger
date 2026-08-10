@@ -45,6 +45,7 @@ services:
         volumes:
             - '.:/var/www/html'
             - './docker/8.5/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro'
+            - 'sail-home:/home/sail'
         networks:
             - sail
         depends_on:
@@ -158,4 +159,6 @@ volumes:
     sail-pgsql:
         driver: local
     sail-redis:
+        driver: local
+    sail-home:
         driver: local

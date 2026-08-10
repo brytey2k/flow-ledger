@@ -38,17 +38,18 @@ Tests must be run via the composer scripts — do NOT call `artisan test` direct
 The scripts set up a fresh test tenant, run tests, then clean up automatically.
 
 ```bash
-# Run all tests
-./vendor/bin/sail composer test
-
-# Run all tests in parallel
-./vendor/bin/sail composer test-parallel
-
 # Run a single test file (args passed through to artisan test)
 ./vendor/bin/sail composer test tests/Feature/ExampleTest.php
 
 # Run a specific test method
-./vendor/bin/sail composer test --filter=test_method_name
+./vendor/bin/sail composer test -- --filter=test_method_name
+
+# Run the entire suite (prefer this — Test Impact Analysis gives fast feedback)
+./vendor/bin/sail composer test-tia
+
+# If unsure whether TIA's change-impact cache might be giving a false pass,
+# fall back to a full uncached parallel run
+./vendor/bin/sail composer test-parallel
 ```
 
 ### Code Quality

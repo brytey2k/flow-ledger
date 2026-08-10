@@ -21,6 +21,20 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Testing
+
+```bash
+# Run a single test file or filter for quick feedback on a specific change
+./vendor/bin/sail composer test -- --filter=test_method_name
+
+# Run the entire suite — prefer this, Test Impact Analysis gives fast feedback
+./vendor/bin/sail composer test-tia
+
+# If unsure whether TIA's change-impact cache might be giving a false pass,
+# fall back to a full uncached parallel run
+./vendor/bin/sail composer test-parallel
+```
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
