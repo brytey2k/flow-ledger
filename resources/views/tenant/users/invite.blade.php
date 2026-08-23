@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('users.invite_title') }}</h1>
@@ -11,7 +11,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('users.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('users.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('users.back') }}
             </a>
@@ -21,23 +21,23 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('users.details_card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('users.details_card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <form method="POST" action="{{ route('users.invite.store') }}" class="grid gap-7">
                     @csrf
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <!-- First Name -->
                         <div>
-                            <label class="fl-form-label block mb-2" for="first_name">
+                            <label class="sgh-form-label block mb-2" for="first_name">
                                 {{ __('users.fields.first_name') }} <span class="text-destructive">*</span>
                             </label>
-                            <input id="first_name" name="first_name" type="text" value="{{ old('first_name') }}" class="fl-input w-full" placeholder="e.g. John" required aria-invalid="@error('first_name') true @else false @enderror" />
+                            <input id="first_name" name="first_name" type="text" value="{{ old('first_name') }}" class="sgh-input w-full" placeholder="e.g. John" required aria-invalid="@error('first_name') true @else false @enderror" />
                             @error('first_name')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
@@ -45,10 +45,10 @@
 
                         <!-- Last Name -->
                         <div>
-                            <label class="fl-form-label block mb-2" for="last_name">
+                            <label class="sgh-form-label block mb-2" for="last_name">
                                 {{ __('users.fields.last_name') }} <span class="text-destructive">*</span>
                             </label>
-                            <input id="last_name" name="last_name" type="text" value="{{ old('last_name') }}" class="fl-input w-full" placeholder="e.g. Doe" required aria-invalid="@error('last_name') true @else false @enderror" />
+                            <input id="last_name" name="last_name" type="text" value="{{ old('last_name') }}" class="sgh-input w-full" placeholder="e.g. Doe" required aria-invalid="@error('last_name') true @else false @enderror" />
                             @error('last_name')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
@@ -56,10 +56,10 @@
 
                         <!-- Email -->
                         <div class="lg:col-span-2">
-                            <label class="fl-form-label block mb-2" for="email">
+                            <label class="sgh-form-label block mb-2" for="email">
                                 {{ __('users.fields.email') }} <span class="text-destructive">*</span>
                             </label>
-                            <input id="email" name="email" type="email" value="{{ old('email') }}" class="fl-input w-full" placeholder="e.g. john@example.com" required aria-invalid="@error('email') true @else false @enderror" />
+                            <input id="email" name="email" type="email" value="{{ old('email') }}" class="sgh-input w-full" placeholder="e.g. john@example.com" required aria-invalid="@error('email') true @else false @enderror" />
                             @error('email')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
@@ -67,10 +67,10 @@
 
                         <!-- Branch -->
                         <div>
-                            <label class="fl-form-label block mb-2" for="branch_id">
+                            <label class="sgh-form-label block mb-2" for="branch_id">
                                 {{ __('users.fields.branch') }} <span class="text-destructive">*</span>
                             </label>
-                            <select id="branch_id" name="branch_id" class="fl-select w-full" required aria-invalid="@error('branch_id') true @else false @enderror">
+                            <select id="branch_id" name="branch_id" class="sgh-select w-full" required aria-invalid="@error('branch_id') true @else false @enderror">
                                 <option value="">{{ __('users.fields.select_branch') }}</option>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
@@ -85,10 +85,10 @@
 
                         <!-- Operational Branch -->
                         <div>
-                            <label class="fl-form-label block mb-2" for="operational_branch_id">
+                            <label class="sgh-form-label block mb-2" for="operational_branch_id">
                                 {{ __('users.fields.operational_branch') }}
                             </label>
-                            <select id="operational_branch_id" name="operational_branch_id" class="fl-select w-full" aria-invalid="@error('operational_branch_id') true @else false @enderror">
+                            <select id="operational_branch_id" name="operational_branch_id" class="sgh-select w-full" aria-invalid="@error('operational_branch_id') true @else false @enderror">
                                 <option value="">{{ __('users.fields.select_operational_branch') }}</option>
                                 @foreach($branches as $branch)
                                     <option value="{{ $branch->id }}" {{ old('operational_branch_id') == $branch->id ? 'selected' : '' }}>
@@ -103,7 +103,7 @@
 
                         <!-- Roles -->
                         <div class="col-span-1 lg:col-span-2">
-                            <label class="fl-form-label block mb-2">{{ __('users.fields.roles') }}</label>
+                            <label class="sgh-form-label block mb-2">{{ __('users.fields.roles') }}</label>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 @forelse($roles as $role)
                                     <div class="flex items-start gap-2">
@@ -134,11 +134,11 @@
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
-                        <button type="submit" class="fl-btn fl-btn-primary">
+                        <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-message-circle-filled />
                             {{ __('users.buttons.invite') }}
                         </button>
-                        <a class="fl-btn fl-btn-light" href="{{ route('users.index') }}">{{ __('common.cancel') }}</a>
+                        <a class="sgh-btn sgh-btn-light" href="{{ route('users.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

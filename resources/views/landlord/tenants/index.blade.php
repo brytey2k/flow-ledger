@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-primary" href="{{ route('landlord.tenants.create') }}">
+            <a class="sgh-btn sgh-btn-primary" href="{{ route('landlord.tenants.create') }}">
                 <x-tabler-plus-filled />
                 Add New Tenant
             </a>
@@ -25,11 +25,11 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card fl-card-grid">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">
+        <div class="sgh-card sgh-card-grid">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">
                     All Tenants
                 </h3>
                 <div class="flex items-center gap-2">
@@ -39,54 +39,54 @@
                 </div>
             </div>
             @if($tenants->isEmpty())
-                <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+                <div class="sgh-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
                         <x-tabler-info-square-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">No tenants found</h3>
                         <p class="text-sm text-secondary-foreground mb-4">Get started by creating your first tenant</p>
-                        <a href="{{ route('landlord.tenants.create') }}" class="fl-btn fl-btn-primary">
+                        <a href="{{ route('landlord.tenants.create') }}" class="sgh-btn sgh-btn-primary">
                             <x-tabler-plus-filled />
                             Add Tenant
                         </a>
                     </div>
                 </div>
             @else
-                <div class="fl-card-table">
-                    <div class="fl-scrollable-x-auto border-b border-border">
-                        <table class="fl-table fl-table-border table-fixed">
+                <div class="sgh-card-table">
+                    <div class="sgh-scrollable-x-auto border-b border-border">
+                        <table class="sgh-table sgh-table-border table-fixed">
                             <thead>
                                 <tr>
                                     <th class="min-w-[150px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Tenant</span>
-                                            <span class="fl-table-col-sort"></span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Tenant</span>
+                                            <span class="sgh-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Domains</span>
-                                            <span class="fl-table-col-sort"></span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Domains</span>
+                                            <span class="sgh-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Created</span>
-                                            <span class="fl-table-col-sort"></span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Created</span>
+                                            <span class="sgh-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[120px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Status</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Status</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[110px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">IDP Linked</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">IDP Linked</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[100px] text-center">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Actions</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Actions</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -141,113 +141,67 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <div class="kt-menu" data-kt-menu="true">
-                                                <div class="kt-menu-item" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="click" data-kt-menu-item-placement="bottom-end">
-                                                    <button class="kt-menu-toggle fl-btn fl-btn-sm fl-btn-icon fl-btn-ghost">
-                                                        <x-tabler-dots-vertical-filled class="text-lg" />
+                                            <div class="relative inline-block" x-data="tableDropdown">
+                                                <button type="button" class="sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-ghost" @click="toggle($event)" :aria-expanded="open">
+                                                    <x-tabler-dots-vertical-filled class="text-lg" />
+                                                </button>
+                                                <template x-teleport="body">
+                                                <div x-show="open" x-cloak @click.outside="close()" @click="close()" class="sgh-dropdown-panel w-full max-w-[200px]" :style="`position:fixed;top:${y}px;left:${x - 200}px`">
+                                                    <a class="sgh-dropdown-item" href="#">
+                                                        <x-tabler-eye-filled />
+                                                        <span>View Details</span>
+                                                    </a>
+                                                    <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.feature-flags.index', $tenant) }}">
+                                                        <x-tabler-flag-filled />
+                                                        <span>Feature Flags</span>
+                                                    </a>
+                                                    <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
+                                                        <x-tabler-shield-check-filled />
+                                                        <span>Roles & Permissions</span>
+                                                    </a>
+                                                    <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.users-permissions.index', $tenant) }}">
+                                                        <x-tabler-users-group />
+                                                        <span>Users</span>
+                                                    </a>
+                                                    <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.select-user', $tenant) }}">
+                                                        <x-tabler-user-check />
+                                                        <span>Impersonate User</span>
+                                                    </a>
+                                                    <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.edit', $tenant) }}">
+                                                        <x-tabler-settings-filled />
+                                                        <span>Edit Tenant</span>
+                                                    </a>
+                                                    @if($isSuspended)
+                                                        <form method="POST" action="{{ route('landlord.tenants.unsuspend', $tenant) }}">
+                                                            @csrf
+                                                            <button type="submit" class="sgh-dropdown-item">
+                                                                <x-tabler-circle-check-filled />
+                                                                <span>Reactivate Tenant</span>
+                                                            </button>
+                                                        </form>
+                                                    @else
+                                                        <form method="POST" action="{{ route('landlord.tenants.suspend', $tenant) }}">
+                                                            @csrf
+                                                            <button type="submit" class="sgh-dropdown-item text-warning">
+                                                                <x-tabler-lock-filled />
+                                                                <span>Suspend Tenant</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                    @if($tenantName !== '')
+                                                        <div class="sgh-dropdown-separator"></div>
+                                                        <button type="button" class="sgh-dropdown-item text-warning" @click="$store.modal.show('{{ $modalId }}')">
+                                                            <x-tabler-arrows-diagonal />
+                                                            <span>Reset Tenant</span>
+                                                        </button>
+                                                    @endif
+                                                    <div class="sgh-dropdown-separator"></div>
+                                                    <button type="button" class="sgh-dropdown-item text-danger" @click="$store.modal.show('{{ $deleteModalId }}')">
+                                                        <x-tabler-trash-filled />
+                                                        <span>Delete</span>
                                                     </button>
-                                                    <div class="kt-menu-dropdown kt-menu-default w-full max-w-[200px]" data-kt-menu-dismiss="true">
-                                                        <div class="kt-menu-item">
-                                                            <a class="kt-menu-link" href="#">
-                                                                <span class="kt-menu-icon">
-                                                                    <x-tabler-eye-filled />
-                                                                </span>
-                                                                <span class="kt-menu-title">View Details</span>
-                                                            </a>
-                                                        </div>
-                                                        <div class="kt-menu-item">
-                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.feature-flags.index', $tenant) }}">
-                                                                <span class="kt-menu-icon">
-                                                                    <x-tabler-flag-filled />
-                                                                </span>
-                                                                <span class="kt-menu-title">Feature Flags</span>
-                                                            </a>
-                                                        </div>
-                                                        <div class="kt-menu-item">
-                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
-                                                                <span class="kt-menu-icon">
-                                                                    <x-tabler-shield-check-filled />
-                                                                </span>
-                                                                <span class="kt-menu-title">Roles & Permissions</span>
-                                                            </a>
-                                                        </div>
-                                                        <div class="kt-menu-item">
-                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.users-permissions.index', $tenant) }}">
-                                                                <span class="kt-menu-icon">
-                                                                    <x-tabler-users-group />
-                                                                </span>
-                                                                <span class="kt-menu-title">Users</span>
-                                                            </a>
-                                                        </div>
-                                                        <div class="kt-menu-item">
-                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.select-user', $tenant) }}">
-                                                                <span class="kt-menu-icon">
-                                                                    <x-tabler-user-check />
-                                                                </span>
-                                                                <span class="kt-menu-title">Impersonate User</span>
-                                                            </a>
-                                                        </div>
-                                                        <div class="kt-menu-item">
-                                                            <a class="kt-menu-link" href="{{ route('landlord.tenants.edit', $tenant) }}">
-                                                                <span class="kt-menu-icon">
-                                                                    <x-tabler-settings-filled />
-                                                                </span>
-                                                                <span class="kt-menu-title">Edit Tenant</span>
-                                                            </a>
-                                                        </div>
-                                                        <div class="kt-menu-item">
-                                                            @if($isSuspended)
-                                                                <form method="POST" action="{{ route('landlord.tenants.unsuspend', $tenant) }}" class="w-full">
-                                                                    @csrf
-                                                                    <button type="submit" class="kt-menu-link w-full text-start">
-                                                                        <span class="kt-menu-icon">
-                                                                            <x-tabler-circle-check-filled />
-                                                                        </span>
-                                                                        <span class="kt-menu-title">Reactivate Tenant</span>
-                                                                    </button>
-                                                                </form>
-                                                            @else
-                                                                <form method="POST" action="{{ route('landlord.tenants.suspend', $tenant) }}" class="w-full">
-                                                                    @csrf
-                                                                    <button type="submit" class="kt-menu-link w-full text-start text-warning">
-                                                                        <span class="kt-menu-icon">
-                                                                            <x-tabler-lock-filled />
-                                                                        </span>
-                                                                        <span class="kt-menu-title">Suspend Tenant</span>
-                                                                    </button>
-                                                                </form>
-                                                            @endif
-                                                        </div>
-                                                        <div class="kt-menu-separator"></div>
-                                                        @if($tenantName !== '')
-                                                            <div class="kt-menu-item">
-                                                                <a
-                                                                    class="kt-menu-link text-warning"
-                                                                    data-kt-modal-toggle="#{{ $modalId }}"
-                                                                    href="#"
-                                                                >
-                                                                    <span class="kt-menu-icon">
-                                                                        <x-tabler-arrows-diagonal />
-                                                                    </span>
-                                                                    <span class="kt-menu-title">Reset Tenant</span>
-                                                                </a>
-                                                            </div>
-                                                        @endif
-                                                        <div class="kt-menu-separator"></div>
-                                                        <div class="kt-menu-item">
-                                                            <a
-                                                                class="kt-menu-link text-danger"
-                                                                data-kt-modal-toggle="#{{ $deleteModalId }}"
-                                                                href="#"
-                                                            >
-                                                                <span class="kt-menu-icon">
-                                                                    <x-tabler-trash-filled />
-                                                                </span>
-                                                                <span class="kt-menu-title">Delete</span>
-                                                            </a>
-                                                        </div>
-                                                    </div>
                                                 </div>
+                                                </template>
                                             </div>
                                         </td>
                                     </tr>
@@ -269,20 +223,21 @@
 
                         {{-- Reset Modal --}}
                         @if($tenantName !== '')
-                            <div class="kt-modal" data-kt-modal="true" data-kt-modal-backdrop-static="true" id="{{ $modalId }}">
-                                <div class="kt-modal-content w-full top-[10%]" style="max-width: 400px;">
-                                    <div class="kt-modal-header">
-                                        <h3 class="kt-modal-title text-warning">Reset Tenant: {{ $tenant->id }}</h3>
+                            <div x-show="$store.modal.openId === '{{ $modalId }}'" x-cloak class="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto p-4 pt-[10%]">
+                                <div class="sgh-modal-backdrop" @click="$store.modal.hide()"></div>
+                                <div class="sgh-modal-content" style="max-width: 400px;">
+                                    <div class="sgh-modal-header">
+                                        <h3 class="sgh-modal-title text-warning">Reset Tenant: {{ $tenant->id }}</h3>
                                         <button
                                             type="button"
-                                            class="kt-modal-close"
+                                            class="sgh-modal-close"
                                             aria-label="Close modal"
-                                            data-kt-modal-dismiss="#{{ $modalId }}"
+                                            @click="$store.modal.hide()"
                                         >
                                             <x-tabler-x-filled />
                                         </button>
                                     </div>
-                                    <form method="POST" action="{{ route('landlord.tenants.reset', $tenant) }}" class="kt-modal-body grid gap-4">
+                                    <form method="POST" action="{{ route('landlord.tenants.reset', $tenant) }}" class="sgh-modal-body grid gap-4">
                                         @csrf
 
                                         <div class="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
@@ -294,22 +249,22 @@
                                         </div>
 
                                         <div class="grid gap-2">
-                                            <label class="fl-form-label" for="confirm_tenant_name_{{ $tenant->id }}">
+                                            <label class="sgh-form-label" for="confirm_tenant_name_{{ $tenant->id }}">
                                                 Confirm Tenant Name
                                             </label>
                                             <input
                                                 id="confirm_tenant_name_{{ $tenant->id }}"
                                                 name="confirm_tenant_name"
                                                 type="text"
-                                                class="fl-input"
+                                                class="sgh-input"
                                                 placeholder="Type exact tenant name"
                                                 required
                                             >
                                         </div>
 
-                                        <div class="kt-modal-footer gap-2">
-                                            <button class="fl-btn fl-btn-light" data-kt-modal-dismiss="#{{ $modalId }}" type="button">Cancel</button>
-                                            <button class="fl-btn fl-btn-warning" type="submit">Confirm Reset</button>
+                                        <div class="sgh-modal-footer gap-2">
+                                            <button class="sgh-btn sgh-btn-light" @click="$store.modal.hide()" type="button">Cancel</button>
+                                            <button class="sgh-btn sgh-btn-warning" type="submit">Confirm Reset</button>
                                         </div>
                                     </form>
                                 </div>
@@ -317,15 +272,16 @@
                         @endif
 
                         {{-- Delete Modal --}}
-                        <div class="kt-modal" data-kt-modal="true" data-kt-modal-backdrop-static="true" id="{{ $deleteModalId }}">
-                            <div class="kt-modal-content w-full top-[10%]" style="max-width: 420px;">
-                                <div class="kt-modal-header">
-                                    <h3 class="kt-modal-title text-danger">Delete Tenant: {{ $tenant->id }}</h3>
+                        <div x-show="$store.modal.openId === '{{ $deleteModalId }}'" x-cloak class="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto p-4 pt-[10%]">
+                            <div class="sgh-modal-backdrop" @click="$store.modal.hide()"></div>
+                            <div class="sgh-modal-content" style="max-width: 420px;">
+                                <div class="sgh-modal-header">
+                                    <h3 class="sgh-modal-title text-danger">Delete Tenant: {{ $tenant->id }}</h3>
                                     <button
                                         type="button"
-                                        class="kt-modal-close"
+                                        class="sgh-modal-close"
                                         aria-label="Close modal"
-                                        data-kt-modal-dismiss="#{{ $deleteModalId }}"
+                                        @click="$store.modal.hide()"
                                     >
                                         <x-tabler-x-filled />
                                     </button>
@@ -333,7 +289,7 @@
                                 <form
                                     method="POST"
                                     action="{{ route('landlord.tenants.destroy', $tenant) }}"
-                                    class="kt-modal-body grid gap-4"
+                                    class="sgh-modal-body grid gap-4"
                                 >
                                     @csrf
                                     @method('DELETE')
@@ -347,14 +303,14 @@
                                     </div>
 
                                     <div class="grid gap-2">
-                                        <label class="fl-form-label" for="del_confirm_tenant_name_{{ $tenant->id }}">
+                                        <label class="sgh-form-label" for="del_confirm_tenant_name_{{ $tenant->id }}">
                                             Confirm Tenant Name
                                         </label>
                                         <input
                                             id="del_confirm_tenant_name_{{ $tenant->id }}"
                                             name="confirm_tenant_name"
                                             type="text"
-                                            class="fl-input"
+                                            class="sgh-input"
                                             placeholder="Type exact tenant name"
                                             required
                                         >
@@ -366,7 +322,7 @@
                                             name="delete_database"
                                             type="checkbox"
                                             value="1"
-                                            class="fl-checkbox mt-0.5"
+                                            class="sgh-checkbox mt-0.5"
                                         >
                                         <div class="grid gap-1">
                                             <label class="text-sm font-medium text-foreground cursor-pointer" for="delete_database_{{ $tenant->id }}">
@@ -378,9 +334,9 @@
                                         </div>
                                     </div>
 
-                                    <div class="kt-modal-footer gap-2">
-                                        <button class="fl-btn fl-btn-light" data-kt-modal-dismiss="#{{ $deleteModalId }}" type="button">Cancel</button>
-                                        <button class="fl-btn fl-btn-danger" type="submit">Delete Tenant</button>
+                                    <div class="sgh-modal-footer gap-2">
+                                        <button class="sgh-btn sgh-btn-light" @click="$store.modal.hide()" type="button">Cancel</button>
+                                        <button class="sgh-btn sgh-btn-danger" type="submit">Delete Tenant</button>
                                     </div>
                                 </form>
                             </div>

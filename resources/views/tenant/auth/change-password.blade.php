@@ -15,12 +15,12 @@
 
 @section('content')
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
-    <div class="fl-card max-w-[370px] w-full">
+    <div class="sgh-card max-w-[370px] w-full">
         <div class="flex justify-center" style="padding-top: 3.5rem; padding-bottom: 1.25rem;">
             <img class="dark:hidden h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}" alt="{{ config('app.name') }}" />
             <img class="hidden dark:block h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}" alt="{{ config('app.name') }}" />
         </div>
-        <div class="fl-card-content flex flex-col gap-5 p-10">
+        <div class="sgh-card-content flex flex-col gap-5 p-10">
             <div class="text-center mb-2.5">
                 <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
                     {{ __('auth.change_password') }}
@@ -31,10 +31,10 @@
             </div>
 
             @if ($errors->any())
-                <div class="fl-alert fl-alert-light fl-alert-destructive">
-                    <span class="fl-alert-icon"><x-tabler-info-square-filled class="text-xl" /></span>
-                    <div class="fl-alert-content">
-                        <ul class="fl-alert-description list-disc ps-5">
+                <div class="sgh-alert sgh-alert-light sgh-alert-destructive">
+                    <span class="sgh-alert-icon"><x-tabler-info-square-filled class="text-xl" /></span>
+                    <div class="sgh-alert-content">
+                        <ul class="sgh-alert-description list-disc ps-5">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -48,25 +48,21 @@
                 @method('PUT')
 
                 <div class="flex flex-col gap-1">
-                    <label class="fl-form-label font-normal text-mono" for="password">
+                    <label class="sgh-form-label font-normal text-mono" for="password">
                         {{ __('auth.new_password') }}
                     </label>
-                    <div class="fl-input" data-kt-toggle-password="true" aria-invalid="@error('password') true @else false @enderror">
+                    <div class="sgh-input flex items-center gap-1 py-0" x-data="{ show: false }" aria-invalid="@error('password') true @else false @enderror">
                         <input
+                            class="grow border-0 bg-transparent px-0 py-2 focus:outline-none focus:ring-0"
                             id="password"
                             name="password"
-                            placeholder="{{ __('auth.enter_new_password') }}"
-                            type="password"
-                            required
+                            placeholder="{{ __('auth.enter_new_password') }}" required
                             autofocus
+                            :type="show ? 'text' : 'password'"
                         />
-                        <button class="fl-btn fl-btn-sm fl-btn-ghost fl-btn-icon bg-transparent! -me-1.5" data-kt-toggle-password-trigger="true" type="button">
-                            <span class="kt-toggle-password-active:hidden">
-                                <x-tabler-eye-filled class="text-muted-foreground" />
-                            </span>
-                            <span class="hidden kt-toggle-password-active:block">
-                                <x-tabler-eye-closed class="text-muted-foreground" />
-                            </span>
+                        <button class="sgh-btn sgh-btn-sm sgh-btn-ghost sgh-btn-icon bg-transparent! -me-1.5" @click="show = !show" type="button">
+                            <x-tabler-eye-filled class="text-muted-foreground" x-show="!show" />
+                            <x-tabler-eye-closed class="text-muted-foreground" x-show="show" x-cloak />
                         </button>
                     </div>
                     @error('password')
@@ -75,29 +71,25 @@
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label class="fl-form-label font-normal text-mono" for="password_confirmation">
+                    <label class="sgh-form-label font-normal text-mono" for="password_confirmation">
                         {{ __('auth.confirm_password') }}
                     </label>
-                    <div class="fl-input" data-kt-toggle-password="true">
+                    <div class="sgh-input flex items-center gap-1 py-0" x-data="{ show: false }">
                         <input
+                            class="grow border-0 bg-transparent px-0 py-2 focus:outline-none focus:ring-0"
                             id="password_confirmation"
                             name="password_confirmation"
-                            placeholder="{{ __('auth.confirm_new_password') }}"
-                            type="password"
-                            required
+                            placeholder="{{ __('auth.confirm_new_password') }}" required
+                            :type="show ? 'text' : 'password'"
                         />
-                        <button class="fl-btn fl-btn-sm fl-btn-ghost fl-btn-icon bg-transparent! -me-1.5" data-kt-toggle-password-trigger="true" type="button">
-                            <span class="kt-toggle-password-active:hidden">
-                                <x-tabler-eye-filled class="text-muted-foreground" />
-                            </span>
-                            <span class="hidden kt-toggle-password-active:block">
-                                <x-tabler-eye-closed class="text-muted-foreground" />
-                            </span>
+                        <button class="sgh-btn sgh-btn-sm sgh-btn-ghost sgh-btn-icon bg-transparent! -me-1.5" @click="show = !show" type="button">
+                            <x-tabler-eye-filled class="text-muted-foreground" x-show="!show" />
+                            <x-tabler-eye-closed class="text-muted-foreground" x-show="show" x-cloak />
                         </button>
                     </div>
                 </div>
 
-                <button class="fl-btn fl-btn-primary flex justify-center grow" type="submit">
+                <button class="sgh-btn sgh-btn-primary flex justify-center grow" type="submit">
                     {{ __('auth.change_password') }}
                 </button>
             </form>
@@ -116,9 +108,13 @@
                     <option value="fr" @selected(app()->getLocale() === 'fr')>Francais</option>
                 </select>
             </form>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" x-data="themeToggle">
                 <x-tabler-moon-filled class="text-base text-muted-foreground" />
-                <input class="kt-switch kt-switch-sm" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true" type="checkbox" aria-label="{{ __('navigation.dark_mode') }}" />
+                <button type="button" role="switch" :aria-checked="dark" @click="toggleTheme()"
+                    class="sgh-switch sgh-switch-sm" :class="dark ? 'bg-primary' : 'bg-muted'"
+                    aria-label="{{ __('navigation.dark_mode') }}">
+                    <span class="sgh-switch-thumb" :class="dark ? 'translate-x-[13px]' : 'translate-x-0.5'"></span>
+                </button>
             </div>
         </div>
         <div class="text-center py-4">

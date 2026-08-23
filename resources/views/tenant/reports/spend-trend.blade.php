@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
@@ -19,15 +19,15 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Filters --}}
-        <div class="fl-card p-5">
+        <div class="sgh-card p-5">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">Year</label>
-                    <select name="year" class="fl-select fl-select-sm">
+                    <select name="year" class="sgh-select sgh-select-sm">
                         @foreach($years as $yr)
                             <option value="{{ $yr }}" @selected($yr === $year)>{{ $yr }}</option>
                         @endforeach
@@ -35,13 +35,13 @@
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">Type</label>
-                    <select name="type" class="fl-select fl-select-sm">
+                    <select name="type" class="sgh-select sgh-select-sm">
                         <option value="">All</option>
                         <option value="{{ \App\Enums\Tenant\PaymentRequestType::Advance->value }}" @selected($type === \App\Enums\Tenant\PaymentRequestType::Advance->value)>Advance</option>
                         <option value="{{ \App\Enums\Tenant\PaymentRequestType::Expense->value }}" @selected($type === \App\Enums\Tenant\PaymentRequestType::Expense->value)>Expense</option>
                     </select>
                 </div>
-                <button type="submit" class="fl-btn fl-btn-primary fl-btn-sm">Apply</button>
+                <button type="submit" class="sgh-btn sgh-btn-primary sgh-btn-sm">Apply</button>
             </form>
         </div>
 
@@ -58,7 +58,7 @@
                 return route('reports.disbursement-register', ['date_from' => $mFrom, 'date_to' => $mTo]);
             })->toArray();
         @endphp
-        <div class="fl-card p-5">
+        <div class="sgh-card p-5">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-semibold text-mono">Monthly Spend — {{ $year }}</h3>
                 <span class="text-xs text-secondary-foreground">Click a bar to drill into that month</span>
@@ -68,28 +68,28 @@
         @endif
 
         {{-- Monthly table --}}
-        <div class="fl-card fl-card-grid">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">Monthly Spend — {{ $year }}</h3>
-                <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $rows->count() }} months with data</span>
+        <div class="sgh-card sgh-card-grid">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">Monthly Spend — {{ $year }}</h3>
+                <span class="sgh-badge sgh-badge-sm sgh-badge-outline">{{ $rows->count() }} months with data</span>
             </div>
 
             @if($rows->isEmpty())
-                <div class="fl-card-content flex flex-col items-center justify-center py-12">
+                <div class="sgh-card-content flex flex-col items-center justify-center py-12">
                     <x-tabler-chart-line class="text-5xl text-muted-foreground mb-3" />
                     <p class="text-sm text-secondary-foreground">No disbursed requests found for {{ $year }}.</p>
                 </div>
             @else
                 @php $maxTotal = $rows->max('total') ?: 1; @endphp
-                <div class="fl-card-table">
-                    <div class="fl-scrollable-x-auto border-b border-border">
-                        <table class="fl-table fl-table-border">
+                <div class="sgh-card-table">
+                    <div class="sgh-scrollable-x-auto border-b border-border">
+                        <table class="sgh-table sgh-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[100px]"><span class="fl-table-col"><span class="fl-table-col-label">Month</span></span></th>
-                                    <th class="min-w-[100px]"><span class="fl-table-col"><span class="fl-table-col-label">Requests</span></span></th>
-                                    <th class="min-w-[150px]"><span class="fl-table-col"><span class="fl-table-col-label">Total Disbursed</span></span></th>
-                                    <th class="min-w-[200px]"><span class="fl-table-col"><span class="fl-table-col-label">Volume</span></span></th>
+                                    <th class="min-w-[100px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Month</span></span></th>
+                                    <th class="min-w-[100px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Requests</span></span></th>
+                                    <th class="min-w-[150px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Total Disbursed</span></span></th>
+                                    <th class="min-w-[200px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Volume</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ $staff->full_name }}</h1>
@@ -15,20 +15,20 @@
         </div>
         <div class="flex items-center gap-2.5">
             @can(App\Enums\Tenant\PermissionKey::AccessStaff->value)
-                <a class="fl-btn fl-btn-outline" href="{{ route('staff.edit', $staff) }}">
+                <a class="sgh-btn sgh-btn-outline" href="{{ route('staff.edit', $staff) }}">
                     <x-tabler-pencil-filled />
                     {{ __('staff.edit_title') }}
                 </a>
             @endcan
 
             @can(App\Enums\Tenant\PermissionKey::DeleteStaff->value)
-                <button type="button" class="fl-btn fl-btn-danger" onclick="if(confirm('{{ __('staff.confirm_delete') }}')) { document.getElementById('delete-staff-form').submit(); }">
+                <button type="button" class="sgh-btn sgh-btn-danger" onclick="if(confirm('{{ __('staff.confirm_delete') }}')) { document.getElementById('delete-staff-form').submit(); }">
                     <x-tabler-trash-filled />
                     {{ __('staff.buttons.delete') }}
                 </button>
             @endcan
 
-            <a class="fl-btn fl-btn-outline" href="{{ route('staff.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('staff.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('staff.back') }}
             </a>
@@ -36,12 +36,12 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
-    <div class="fl-card">
-        <div class="fl-card-header">
-            <h3 class="fl-card-title">{{ __('staff.details_card') }}</h3>
+<div class="sgh-container-fixed">
+    <div class="sgh-card">
+        <div class="sgh-card-header">
+            <h3 class="sgh-card-title">{{ __('staff.details_card') }}</h3>
         </div>
-        <div class="fl-card-content grid gap-4 p-5 lg:p-7.5">
+        <div class="sgh-card-content grid gap-4 p-5 lg:p-7.5">
             <div>
                 <p class="text-sm text-muted-foreground">{{ __('staff.fields.first_name') }}</p>
                 <p class="text-lg font-medium text-mono">{{ $staff->first_name }} {{ $staff->last_name }}</p>

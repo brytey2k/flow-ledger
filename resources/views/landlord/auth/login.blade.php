@@ -15,12 +15,12 @@
 
 @section('content')
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
-    <div class="fl-card max-w-[370px] w-full">
+    <div class="sgh-card max-w-[370px] w-full">
         <div class="flex justify-center" style="padding-top: 3.5rem; padding-bottom: 1.25rem;">
             <img class="dark:hidden h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}" alt="{{ config('app.name') }}" />
             <img class="hidden dark:block h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}" alt="{{ config('app.name') }}" />
         </div>
-        <form action="{{ route('landlord.do-login') }}" class="fl-card-content flex flex-col gap-5 p-10" id="sign_in_form" method="POST">
+        <form action="{{ route('landlord.do-login') }}" class="sgh-card-content flex flex-col gap-5 p-10" id="sign_in_form" method="POST">
             @csrf
 
             @if ($errors->any())
@@ -34,11 +34,11 @@
             @endif
 
             <div class="flex flex-col gap-1">
-                <label class="fl-form-label font-normal text-mono" for="email">
+                <label class="sgh-form-label font-normal text-mono" for="email">
                     Email
                 </label>
                 <input
-                    class="fl-input @error('email') border-red-500 @enderror"
+                    class="sgh-input @error('email') border-red-500 @enderror"
                     id="email"
                     name="email"
                     placeholder="email@email.com"
@@ -54,28 +54,25 @@
 
             <div class="flex flex-col gap-1">
                 <div class="flex items-center justify-between gap-1">
-                    <label class="fl-form-label font-normal text-mono" for="password">
+                    <label class="sgh-form-label font-normal text-mono" for="password">
                         Password
                     </label>
-                    <a class="text-sm fl-link shrink-0" href="#">
+                    <a class="text-sm sgh-link shrink-0" href="#">
                         Forgot Password?
                     </a>
                 </div>
-                <div class="fl-input @error('password') border-red-500 @enderror" data-kt-toggle-password="true">
+                <div class="sgh-input flex items-center gap-1 py-0 @error('password') border-red-500 @enderror" x-data="{ show: false }">
                     <input
+                        class="grow border-0 bg-transparent px-0 py-2 focus:outline-none focus:ring-0"
                         id="password"
                         name="password"
                         placeholder="Enter Password"
-                        type="password"
+                        :type="show ? 'text' : 'password'"
                         required
                     />
-                    <button class="fl-btn fl-btn-sm fl-btn-ghost fl-btn-icon bg-transparent! -me-1.5" data-kt-toggle-password-trigger="true" type="button">
-                        <span class="kt-toggle-password-active:hidden">
-                            <x-tabler-eye-filled class="text-muted-foreground" />
-                        </span>
-                        <span class="hidden kt-toggle-password-active:block">
-                            <x-tabler-eye-closed class="text-muted-foreground" />
-                        </span>
+                    <button class="sgh-btn sgh-btn-sm sgh-btn-ghost sgh-btn-icon bg-transparent! -me-1.5" @click="show = !show" type="button">
+                        <x-tabler-eye-filled class="text-muted-foreground" x-show="!show" />
+                        <x-tabler-eye-closed class="text-muted-foreground" x-show="show" x-cloak />
                     </button>
                 </div>
                 @error('password')
@@ -83,14 +80,14 @@
                 @enderror
             </div>
 
-            <label class="fl-label">
-                <input class="fl-checkbox fl-checkbox-sm" name="remember" type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}/>
-                <span class="fl-checkbox-label">
+            <label class="sgh-label">
+                <input class="sgh-checkbox sgh-checkbox-sm" name="remember" type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}/>
+                <span class="sgh-checkbox-label">
                     Remember me
                 </span>
             </label>
 
-            <button class="fl-btn fl-btn-primary flex justify-center grow" type="submit">
+            <button class="sgh-btn sgh-btn-primary flex justify-center grow" type="submit">
                 Sign In
             </button>
         </form>

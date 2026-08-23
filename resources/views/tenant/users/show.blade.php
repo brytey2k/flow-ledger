@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ $user->name }}</h1>
@@ -15,20 +15,20 @@
         </div>
         <div class="flex items-center gap-2.5">
             @can(App\Enums\Tenant\PermissionKey::AccessUsers->value)
-                <a class="fl-btn fl-btn-outline" href="{{ route('users.edit', $user) }}">
+                <a class="sgh-btn sgh-btn-outline" href="{{ route('users.edit', $user) }}">
                     <x-tabler-pencil-filled />
                     {{ __('users.edit_title') }}
                 </a>
             @endcan
 
             @can(App\Enums\Tenant\PermissionKey::DeleteUser->value)
-                <button type="button" class="fl-btn fl-btn-danger" onclick="if(confirm('{{ __('users.confirm_delete') }}')) { document.getElementById('delete-user-form').submit(); }">
+                <button type="button" class="sgh-btn sgh-btn-danger" onclick="if(confirm('{{ __('users.confirm_delete') }}')) { document.getElementById('delete-user-form').submit(); }">
                     <x-tabler-trash-filled />
                     {{ __('users.buttons.delete') }}
                 </button>
             @endcan
 
-            <a class="fl-btn fl-btn-outline" href="{{ route('users.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('users.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('common.back') }}
             </a>
@@ -36,12 +36,12 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
-    <div class="fl-card">
-        <div class="fl-card-header">
-            <h3 class="fl-card-title">{{ __('users.details_card') ?? 'User Details' }}</h3>
+<div class="sgh-container-fixed">
+    <div class="sgh-card">
+        <div class="sgh-card-header">
+            <h3 class="sgh-card-title">{{ __('users.details_card') ?? 'User Details' }}</h3>
         </div>
-        <div class="fl-card-content grid gap-4 p-5 lg:p-7.5">
+        <div class="sgh-card-content grid gap-4 p-5 lg:p-7.5">
             <div>
                 <p class="text-sm text-muted-foreground">{{ __('common.columns.name') }}</p>
                 <p class="text-lg font-medium text-mono">{{ $user->first_name }} {{ $user->last_name }}</p>

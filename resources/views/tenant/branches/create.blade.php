@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('branches.create_title') }}</h1>
@@ -11,7 +11,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('branches.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('branches.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('branches.back') }}
             </a>
@@ -21,23 +21,23 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('branches.details_card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('branches.details_card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <form method="POST" action="{{ route('branches.store') }}" class="grid gap-7">
                     @csrf
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="col-span-1 lg:col-span-2">
-                            <label class="fl-form-label block mb-2" for="name">
+                            <label class="sgh-form-label block mb-2" for="name">
                                 {{ __('branches.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name') }}"
-                                   class="fl-input w-full" placeholder="e.g. Accra Regional Office" required
+                                   class="sgh-input w-full" placeholder="e.g. Accra Regional Office" required
                                    aria-invalid="@error('name') true @else false @enderror" />
                             <div class="mt-1 text-xs text-muted-foreground">
                                 {{ __('branches.fields.name_hint') }}
@@ -48,11 +48,11 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="fl-form-label block mb-2" for="code">
+                            <label class="sgh-form-label block mb-2" for="code">
                                 {{ __('branches.fields.code') }}
                             </label>
                             <input id="code" name="code" type="text" value="{{ old('code') }}"
-                                   class="fl-input w-full" placeholder="e.g. ACC-REG"
+                                   class="sgh-input w-full" placeholder="e.g. ACC-REG"
                                    aria-invalid="@error('code') true @else false @enderror" />
                             <div class="mt-1 text-xs text-muted-foreground">
                                 {{ __('branches.fields.code_hint') }}
@@ -63,10 +63,10 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="fl-form-label block mb-2" for="level_id">
+                            <label class="sgh-form-label block mb-2" for="level_id">
                                 {{ __('branches.fields.level') }} <span class="text-destructive">*</span>
                             </label>
-                            <select id="level_id" name="level_id" class="fl-input w-full" required
+                            <select id="level_id" name="level_id" class="sgh-input w-full" required
                                     aria-invalid="@error('level_id') true @else false @enderror">
                                 <option value="">{{ __('branches.fields.select_level') }}</option>
                                 @foreach($levels as $level)
@@ -84,10 +84,10 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="fl-form-label block mb-2" for="currency_id">
+                            <label class="sgh-form-label block mb-2" for="currency_id">
                                 {{ __('branches.fields.currency') }} <span class="text-destructive">*</span>
                             </label>
-                            <select id="currency_id" name="currency_id" class="fl-input w-full" required
+                            <select id="currency_id" name="currency_id" class="sgh-input w-full" required
                                     aria-invalid="@error('currency_id') true @else false @enderror">
                                 <option value="">{{ __('branches.fields.select_currency') }}</option>
                                 @foreach($currencies as $currency)
@@ -105,10 +105,10 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="fl-form-label block mb-2" for="parent_id">
+                            <label class="sgh-form-label block mb-2" for="parent_id">
                                 {{ __('branches.fields.parent') }}
                             </label>
-                            <select id="parent_id" name="parent_id" class="fl-input w-full"
+                            <select id="parent_id" name="parent_id" class="sgh-input w-full"
                                     aria-invalid="@error('parent_id') true @else false @enderror">
                                 <option value="">{{ __('branches.fields.none_root') }}</option>
                                 @foreach($branches as $b)
@@ -128,11 +128,11 @@
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
-                        <button type="submit" class="fl-btn fl-btn-primary">
+                        <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-plus-filled />
                             {{ __('branches.buttons.create') }}
                         </button>
-                        <a class="fl-btn fl-btn-light" href="{{ route('branches.index') }}">{{ __('common.cancel') }}</a>
+                        <a class="sgh-btn sgh-btn-light" href="{{ route('branches.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

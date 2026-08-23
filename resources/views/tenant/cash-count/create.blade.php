@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cash_count.create_title') }}</h1>
@@ -9,22 +9,22 @@
                 {{ $branch->name }} · {{ $cashbook->currency->name }} ({{ $cashbook->currency->symbol }})
             </div>
         </div>
-        <a href="{{ route('cashbook.index', $branch) }}" class="fl-btn fl-btn-light">
+        <a href="{{ route('cashbook.index', $branch) }}" class="sgh-btn sgh-btn-light">
             <x-tabler-arrow-left />
             {{ __('common.back') }}
         </a>
     </div>
 </div>
 
-<div class="fl-container-fixed" x-data="cashCount()">
+<div class="sgh-container-fixed" x-data="cashCount()">
     <div class="grid gap-5 lg:gap-7.5">
         <form method="POST" action="{{ route('cash-count.store', $branch) }}" class="flex flex-col gap-5">
             @csrf
 
             <!-- Balance Summary Card -->
-            <div class="fl-card">
-                <div class="fl-card-header">
-                    <h3 class="fl-card-title">{{ __('cash_count.labels.counted_total') }}</h3>
+            <div class="sgh-card">
+                <div class="sgh-card-header">
+                    <h3 class="sgh-card-title">{{ __('cash_count.labels.counted_total') }}</h3>
                     <div class="flex items-center gap-3">
                         <div class="flex flex-col items-end gap-0.5">
                             <span class="text-xs text-secondary-foreground">{{ __('cash_count.labels.balance_at_count') }}</span>
@@ -56,12 +56,12 @@
             @php $denominationsByType = $denominations->groupBy(fn($d) => $d->type->value, true); @endphp
             @foreach(['note' => __('cash_count.denominations.types.note'), 'coin' => __('cash_count.denominations.types.coin')] as $type => $typeLabel)
                 @if($denominationsByType->has($type))
-                    <div class="fl-card">
-                        <div class="fl-card-header">
-                            <h3 class="fl-card-title">{{ $typeLabel }}s</h3>
+                    <div class="sgh-card">
+                        <div class="sgh-card-header">
+                            <h3 class="sgh-card-title">{{ $typeLabel }}s</h3>
                             <span class="text-sm text-secondary-foreground">{{ __('cash_count.labels.quantity') }}</span>
                         </div>
-                        <div class="fl-card-content p-5 lg:p-7.5">
+                        <div class="sgh-card-content p-5 lg:p-7.5">
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 @foreach($denominationsByType[$type] as $index => $denomination)
                                     <div class="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
@@ -79,7 +79,7 @@
                                                value="{{ old("items.{$index}.quantity", 0) }}"
                                                min="0"
                                                step="1"
-                                               class="fl-input w-24 text-right @error("items.{$index}.quantity") border-danger @enderror"
+                                               class="sgh-input w-24 text-right @error("items.{$index}.quantity") border-danger @enderror"
                                                placeholder="0">
                                     </div>
                                 @endforeach
@@ -90,13 +90,13 @@
             @endforeach
 
             <!-- Notes -->
-            <div class="fl-card">
-                <div class="fl-card-header">
-                    <h3 class="fl-card-title">{{ __('cash_count.labels.notes') }}</h3>
+            <div class="sgh-card">
+                <div class="sgh-card-header">
+                    <h3 class="sgh-card-title">{{ __('cash_count.labels.notes') }}</h3>
                 </div>
-                <div class="fl-card-content p-5 lg:p-7.5">
+                <div class="sgh-card-content p-5 lg:p-7.5">
                     <textarea name="notes" rows="3"
-                              class="fl-textarea w-full @error('notes') border-danger @enderror"
+                              class="sgh-textarea w-full @error('notes') border-danger @enderror"
                               placeholder="{{ __('cash_count.labels.notes') }}...">{{ old('notes') }}</textarea>
                     @error('notes')
                         <p class="text-sm text-danger mt-1">{{ $message }}</p>
@@ -105,11 +105,11 @@
             </div>
 
             <div class="flex items-center gap-2.5">
-                <button type="submit" class="fl-btn fl-btn-primary">
+                <button type="submit" class="sgh-btn sgh-btn-primary">
                     <x-tabler-check-filled />
                     {{ __('cash_count.buttons.submit') }}
                 </button>
-                <a href="{{ route('cashbook.index', $branch) }}" class="fl-btn fl-btn-light">{{ __('common.cancel') }}</a>
+                <a href="{{ route('cashbook.index', $branch) }}" class="sgh-btn sgh-btn-light">{{ __('common.cancel') }}</a>
             </div>
         </form>
     </div>

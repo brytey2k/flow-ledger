@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="en">
+<html class="h-full" dir="ltr" lang="en">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
@@ -19,42 +19,26 @@
 
     @stack('styles')
 </head>
-<body class="demo1 kt-sidebar-fixed kt-header-fixed flex h-full bg-background text-base text-foreground antialiased">
+<body class="flex h-full bg-background text-base text-foreground antialiased">
     <!-- Theme Mode -->
     <script>
-        const defaultThemeMode = 'light'; // light|dark|system
-        let themeMode;
-
-        if (document.documentElement) {
-            if (localStorage.getItem('kt-theme')) {
-                themeMode = localStorage.getItem('kt-theme');
-            } else if (
-                document.documentElement.hasAttribute('data-kt-theme-mode')
-            ) {
-                themeMode =
-                    document.documentElement.getAttribute('data-kt-theme-mode');
-            } else {
-                themeMode = defaultThemeMode;
-            }
-
+        (function () {
+            let themeMode = localStorage.getItem('sgh-theme') || 'light';
             if (themeMode === 'system') {
-                themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches
-                    ? 'dark'
-                    : 'light';
+                themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
-
             document.documentElement.classList.add(themeMode);
-        }
+        })();
     </script>
     <!-- End of Theme Mode -->
 
     <!-- Page -->
     <!-- Main -->
-    <div class="flex grow">
+    <div class="sgh-shell" x-data="sidebarCollapse" :class="{ 'is-collapsed': collapsed }">
         @include('landlord.layouts.sidebar')
 
         <!-- Wrapper -->
-        <div class="fl-wrapper flex grow flex-col">
+        <div class="sgh-wrapper flex grow flex-col">
             @include('landlord.layouts.header')
 
             <!-- Content -->

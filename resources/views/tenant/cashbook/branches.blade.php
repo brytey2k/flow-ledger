@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cashbook.title') }}</h1>
@@ -15,18 +15,18 @@
 <!-- End of Container -->
 
 <!-- Branches Table -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card fl-card-grid">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('cashbook.branches.card_heading') }}</h3>
+        <div class="sgh-card sgh-card-grid">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('cashbook.branches.card_heading') }}</h3>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-sm badge-outline">{{ $branches->count() }} {{ Str::plural('Branch', $branches->count()) }}</span>
                 </div>
             </div>
 
             @if($branches->isEmpty())
-                <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+                <div class="sgh-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
                         <x-tabler-calculator-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('cashbook.branches.empty_heading') }}</h3>
@@ -34,29 +34,29 @@
                     </div>
                 </div>
             @else
-                <div class="fl-card-table">
-                    <div class="fl-scrollable-x-auto border-b border-border">
-                        <table class="fl-table fl-table-border">
+                <div class="sgh-card-table">
+                    <div class="sgh-scrollable-x-auto border-b border-border">
+                        <table class="sgh-table sgh-table-border">
                             <thead>
                                 <tr>
                                     <th class="min-w-[200px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">{{ __('common.columns.branch') }}</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">{{ __('common.columns.branch') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[140px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">{{ __('common.columns.level') }}</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">{{ __('common.columns.level') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[160px] text-right">
-                                        <span class="fl-table-col justify-end">
-                                            <span class="fl-table-col-label">{{ __('cashbook.columns.balance') }}</span>
+                                        <span class="sgh-table-col justify-end">
+                                            <span class="sgh-table-col-label">{{ __('cashbook.columns.balance') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[80px] text-center">
-                                        <span class="fl-table-col justify-center">
-                                            <span class="fl-table-col-label">{{ __('common.columns.actions') }}</span>
+                                        <span class="sgh-table-col justify-center">
+                                            <span class="sgh-table-col-label">{{ __('common.columns.actions') }}</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -82,7 +82,7 @@
                                         </td>
                                         <td class="text-center">
                                             <a href="{{ route('cashbook.index', $branch) }}"
-                                               class="fl-btn fl-btn-sm fl-btn-icon fl-btn-ghost text-primary"
+                                               class="sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-ghost text-primary"
                                                title="{{ __('cashbook.branches.view_cashbook') }}">
                                                 <x-tabler-calculator-filled class="text-lg" />
                                             </a>

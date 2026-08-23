@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('positions.create_title') }}</h1>
@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('positions.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('positions.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('positions.back') }}
             </a>
@@ -18,23 +18,23 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('positions.details_card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('positions.details_card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <form method="POST" action="{{ route('positions.store') }}" class="grid gap-7">
                     @csrf
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="col-span-1">
-                            <label class="fl-form-label block mb-2" for="name">
+                            <label class="sgh-form-label block mb-2" for="name">
                                 {{ __('positions.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name') }}"
-                                   class="fl-input w-full" placeholder="e.g. Senior Accountant" required
+                                   class="sgh-input w-full" placeholder="e.g. Senior Accountant" required
                                    aria-invalid="@error('name') true @else false @enderror" />
                             <div class="mt-1 text-xs text-muted-foreground">
                                 {{ __('positions.fields.name_hint') }}
@@ -46,11 +46,11 @@
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
-                        <button type="submit" class="fl-btn fl-btn-primary">
+                        <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-plus-filled />
                             {{ __('positions.buttons.create') }}
                         </button>
-                        <a class="fl-btn fl-btn-light" href="{{ route('positions.index') }}">{{ __('common.cancel') }}</a>
+                        <a class="sgh-btn sgh-btn-light" href="{{ route('positions.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

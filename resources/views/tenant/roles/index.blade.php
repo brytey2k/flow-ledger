@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('roles.title') }}</h1>
@@ -12,7 +12,7 @@
         </div>
         <div class="flex items-center gap-2.5">
             @can(\App\Enums\Tenant\PermissionKey::CreateRole->value)
-                <a class="fl-btn fl-btn-primary" href="{{ route('roles.create') }}">
+                <a class="sgh-btn sgh-btn-primary" href="{{ route('roles.create') }}">
                     <x-tabler-plus-filled />
                     {{ __('roles.add_new') }}
                 </a>
@@ -23,11 +23,11 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card fl-card-grid">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('roles.all') }}</h3>
+        <div class="sgh-card sgh-card-grid">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('roles.all') }}</h3>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-sm badge-outline">
                         {{ $roles->count() }} {{ Str::plural('Role', $roles->count()) }}
@@ -36,13 +36,13 @@
             </div>
 
             @if($roles->isEmpty())
-                <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+                <div class="sgh-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
                         <x-tabler-shield-check-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('roles.empty.heading') }}</h3>
                         <p class="text-sm text-secondary-foreground mb-4">{{ __('roles.empty.subtext') }}</p>
                         @can(\App\Enums\Tenant\PermissionKey::CreateRole->value)
-                            <a href="{{ route('roles.create') }}" class="fl-btn fl-btn-primary">
+                            <a href="{{ route('roles.create') }}" class="sgh-btn sgh-btn-primary">
                                 <x-tabler-plus-filled />
                                 {{ __('roles.buttons.add') }}
                             </a>
@@ -50,38 +50,38 @@
                     </div>
                 </div>
             @else
-                <div class="fl-card-table">
-                    <div class="fl-scrollable-x-auto border-b border-border">
-                        <table class="fl-table fl-table-border">
+                <div class="sgh-card-table">
+                    <div class="sgh-scrollable-x-auto border-b border-border">
+                        <table class="sgh-table sgh-table-border">
                             <thead>
                                 <tr>
                                     <th class="min-w-[200px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">{{ __('roles.fields.name') }}</span>
-                                            <span class="fl-table-col-sort"></span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">{{ __('roles.fields.name') }}</span>
+                                            <span class="sgh-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[120px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">{{ __('roles.columns.users') }}</span>
-                                            <span class="fl-table-col-sort"></span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">{{ __('roles.columns.users') }}</span>
+                                            <span class="sgh-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">{{ __('roles.columns.permissions') }}</span>
-                                            <span class="fl-table-col-sort"></span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">{{ __('roles.columns.permissions') }}</span>
+                                            <span class="sgh-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">{{ __('common.columns.created') }}</span>
-                                            <span class="fl-table-col-sort"></span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">{{ __('common.columns.created') }}</span>
+                                            <span class="sgh-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[100px] text-center">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">{{ __('common.columns.actions') }}</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">{{ __('common.columns.actions') }}</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -111,7 +111,7 @@
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-2">
                                                 @can(\App\Enums\Tenant\PermissionKey::AccessRoles->value)
-                                                    <a href="{{ route('roles.edit', $role) }}" class="fl-btn fl-btn-sm fl-btn-icon fl-btn-ghost text-primary" title="{{ __('common.edit') }}">
+                                                    <a href="{{ route('roles.edit', $role) }}" class="sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-ghost text-primary" title="{{ __('common.edit') }}">
                                                         <x-tabler-edit-filled class="text-lg" />
                                                     </a>
                                                 @endcan
@@ -119,7 +119,7 @@
                                                     <form action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm('{{ __('roles.confirm_delete') }}');" class="inline">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="fl-btn fl-btn-sm fl-btn-icon fl-btn-ghost text-danger" title="{{ __('common.delete') }}">
+                                                        <button type="submit" class="sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-ghost text-danger" title="{{ __('common.delete') }}">
                                                             <x-tabler-trash-filled class="text-lg" />
                                                         </button>
                                                     </form>

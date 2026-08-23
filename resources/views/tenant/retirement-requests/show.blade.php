@@ -4,12 +4,12 @@
     use App\Enums\Tenant\PermissionKey;
 
     $statusColors = [
-        'draft'       => 'fl-badge-outline',
-        'in_workflow' => 'fl-badge-primary',
-        'approved'    => 'fl-badge-success',
-        'settled'     => 'fl-badge-info',
-        'sent_back'   => 'fl-badge-warning',
-        'cancelled'   => 'fl-badge-danger',
+        'draft'       => 'sgh-badge-outline',
+        'in_workflow' => 'sgh-badge-primary',
+        'approved'    => 'sgh-badge-success',
+        'settled'     => 'sgh-badge-info',
+        'sent_back'   => 'sgh-badge-warning',
+        'cancelled'   => 'sgh-badge-danger',
     ];
     $diffTypeInfo = [
         'pay_to_staff'      => ['label' => __('retirements.status.pay_to_staff'),   'class' => 'bg-warning/10 text-warning'],
@@ -33,12 +33,12 @@
 @endphp
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-3">
                 <h1 class="text-xl font-medium leading-none text-mono">Retirement #{{ $retirementRequest->id }}</h1>
-                <span class="fl-badge fl-badge-sm {{ $statusColors[$retirementRequest->status] ?? 'fl-badge-outline' }}">
+                <span class="sgh-badge sgh-badge-sm {{ $statusColors[$retirementRequest->status] ?? 'sgh-badge-outline' }}">
                     {{ ucwords(str_replace('_', ' ', $retirementRequest->status)) }}
                 </span>
             </div>
@@ -48,7 +48,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('retirement-requests.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('retirement-requests.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('retirements.show.back') }}
             </a>
@@ -56,7 +56,7 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
@@ -65,11 +65,11 @@
             <div class="lg:col-span-2 flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Summary --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('retirements.show.summary_card') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('retirements.show.summary_card') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5 lg:p-7.5 lg:pt-4">
+                    <div class="sgh-card-content p-5 lg:p-7.5 lg:pt-4">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.staff_member') }}</dt>
@@ -124,10 +124,10 @@
                         </div>
 
                         @if($retirementRequest->no_money_spent)
-                            <div class="mt-4 fl-alert fl-alert-warning">
-                                <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
-                                <div class="fl-alert-content">
-                                    <div class="fl-alert-title">{{ __('retirements.show.no_spend_notice') }}</div>
+                            <div class="mt-4 sgh-alert sgh-alert-warning">
+                                <span class="sgh-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+                                <div class="sgh-alert-content">
+                                    <div class="sgh-alert-title">{{ __('retirements.show.no_spend_notice') }}</div>
                                 </div>
                             </div>
                         @endif
@@ -135,22 +135,22 @@
                 </div>
 
                 {{-- Expenditure Items --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
-                        <span class="fl-badge fl-badge-sm fl-badge-outline">
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
+                        <span class="sgh-badge sgh-badge-sm sgh-badge-outline">
                             {{ $retirementRequest->items->count() }} {{ Str::plural('item', $retirementRequest->items->count()) }}
                         </span>
                     </div>
-                    <div class="fl-card-table">
-                        <div class="fl-scrollable-x-auto border-b border-border">
-                            <table class="fl-table fl-table-border">
+                    <div class="sgh-card-table">
+                        <div class="sgh-scrollable-x-auto border-b border-border">
+                            <table class="sgh-table sgh-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.description') }}</span></span></th>
-                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('retirements.fields.cost_code') }}</span></span></th>
-                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
-                                        <th class="w-[140px] text-end"><span class="fl-table-col justify-end"><span class="fl-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                        <th><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('retirements.fields.cost_code') }}</span></span></th>
+                                        <th><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
+                                        <th class="w-[140px] text-end"><span class="sgh-table-col justify-end"><span class="sgh-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -190,14 +190,14 @@
                 </div>
 
                 {{-- Attachments --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('retirements.show.attachments_card') }}</h3>
-                        <span class="fl-badge fl-badge-sm fl-badge-outline">
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('retirements.show.attachments_card') }}</h3>
+                        <span class="sgh-badge sgh-badge-sm sgh-badge-outline">
                             {{ $retirementRequest->attachments->count() }} {{ Str::plural('file', $retirementRequest->attachments->count()) }}
                         </span>
                     </div>
-                    <div class="fl-card-content p-5 flex flex-col gap-4">
+                    <div class="sgh-card-content p-5 flex flex-col gap-4">
                         @forelse($retirementRequest->attachments as $attachment)
                             <div class="flex items-center justify-between gap-3 p-3 rounded-lg border border-border">
                                 <div class="flex items-center gap-3 min-w-0">
@@ -209,13 +209,13 @@
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
                                     <a href="{{ route('attachments.download', $attachment) }}"
-                                       class="fl-btn fl-btn-sm fl-btn-outline">
+                                       class="sgh-btn sgh-btn-sm sgh-btn-outline">
                                         <x-tabler-cloud-download />
                                     </a>
                                     @if(optional($attachment->attachable->paymentRequest->staff)->user_id === auth()->id())
                                         <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('retirements.show.confirm_delete_attachment') }}')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="fl-btn fl-btn-sm fl-btn-outline text-destructive hover:bg-destructive/10">
+                                            <button type="submit" class="sgh-btn sgh-btn-sm sgh-btn-outline text-destructive hover:bg-destructive/10">
                                                 <x-tabler-trash-filled />
                                             </button>
                                         </form>
@@ -256,11 +256,11 @@
                     ]))->sortByDesc('at')->values();
                 @endphp
 
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('payment_requests.show.timeline') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('payment_requests.show.timeline') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5 flex flex-col gap-4">
+                    <div class="sgh-card-content p-5 flex flex-col gap-4">
                         @forelse($timelineItems as $entry)
                             @if($entry['type'] === 'activity')
                                 @php $log = $entry['item']; @endphp
@@ -306,22 +306,22 @@
             <div class="flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Actions --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('payment_requests.show.actions') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('payment_requests.show.actions') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5 flex flex-col gap-3">
+                    <div class="sgh-card-content p-5 flex flex-col gap-3">
                         @if($retirementRequest->isDraft())
                             @if($isOwner)
                                 <a href="{{ route('retirement-requests.edit', $retirementRequest) }}"
-                                   class="fl-btn fl-btn-outline w-full">
+                                   class="sgh-btn sgh-btn-outline w-full">
                                     <x-tabler-pencil-filled />
                                     {{ __('retirements.buttons.edit_request') }}
                                 </a>
                             @endif
                             <form method="POST" action="{{ route('retirement-requests.submit', $retirementRequest) }}">
                                 @csrf
-                                <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                <button type="submit" class="sgh-btn sgh-btn-primary w-full">
                                     <x-tabler-send-filled />
                                     {{ __('retirements.buttons.submit') }}
                                 </button>
@@ -329,7 +329,7 @@
                             @if($isOwner)
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                    <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full">
                                         <x-tabler-x-filled />
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
@@ -338,7 +338,7 @@
                         @elseif($retirementRequest->status === 'in_workflow')
                             @if($canActOnActiveStage && $activeInstanceStage)
                                 <a href="{{ route('approvals.show', $activeInstanceStage) }}"
-                                   class="fl-btn fl-btn-primary w-full">
+                                   class="sgh-btn sgh-btn-primary w-full">
                                     <x-tabler-circle-check-filled />
                                     {{ __('payment_requests.buttons.review_and_approve') }}
                                 </a>
@@ -351,7 +351,7 @@
                             @if($isOwner)
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                    <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full">
                                         <x-tabler-x-filled />
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
@@ -367,10 +367,10 @@
                                     <form method="POST" action="{{ route('retirement-requests.settle', $retirementRequest) }}" class="flex flex-col gap-2">
                                         @csrf
                                         <div>
-                                            <label class="fl-form-label text-xs block mb-1">{{ __('retirements.show.settlement_notes') }} <span class="text-muted-foreground">(optional)</span></label>
-                                            <textarea name="settlement_notes" rows="2" class="fl-textarea w-full text-sm" placeholder="e.g. Cheque #1234 issued..."></textarea>
+                                            <label class="sgh-form-label text-xs block mb-1">{{ __('retirements.show.settlement_notes') }} <span class="text-muted-foreground">(optional)</span></label>
+                                            <textarea name="settlement_notes" rows="2" class="sgh-textarea w-full text-sm" placeholder="e.g. Cheque #1234 issued..."></textarea>
                                         </div>
-                                        <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                        <button type="submit" class="sgh-btn sgh-btn-primary w-full">
                                             <x-tabler-circle-check-filled />
                                             {{ __('retirements.buttons.settle') }}
                                         </button>
@@ -378,7 +378,7 @@
                                 @else
                                     <form method="POST" action="{{ route('retirement-requests.settle', $retirementRequest) }}">
                                         @csrf
-                                        <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                        <button type="submit" class="sgh-btn sgh-btn-primary w-full">
                                             <x-tabler-circle-check-filled />
                                             {{ __('retirements.buttons.settle') }}
                                         </button>
@@ -392,20 +392,20 @@
                             </div>
                             @if($isOwner)
                                 <a href="{{ route('retirement-requests.edit', $retirementRequest) }}"
-                                   class="fl-btn fl-btn-outline w-full">
+                                   class="sgh-btn sgh-btn-outline w-full">
                                     <x-tabler-pencil-filled />
                                     {{ __('retirements.buttons.edit_request') }}
                                 </a>
                                 <form method="POST" action="{{ route('retirement-requests.resubmit', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                    <button type="submit" class="sgh-btn sgh-btn-primary w-full">
                                         <x-tabler-send-filled />
                                         {{ __('retirements.buttons.resubmit') }}
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                    <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full">
                                         <x-tabler-x-filled />
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
@@ -436,11 +436,11 @@
                 {{-- Workflow Progress --}}
                 @if($retirementRequest->activeWorkflowInstance)
                     @php $instance = $retirementRequest->activeWorkflowInstance; @endphp
-                    <div class="fl-card">
-                        <div class="fl-card-header">
-                            <h3 class="fl-card-title">{{ __('approvals.show.approval_progress') }}</h3>
+                    <div class="sgh-card">
+                        <div class="sgh-card-header">
+                            <h3 class="sgh-card-title">{{ __('approvals.show.approval_progress') }}</h3>
                         </div>
-                        <div class="fl-card-content p-5 flex flex-col gap-3">
+                        <div class="sgh-card-content p-5 flex flex-col gap-3">
                             @foreach($instance->instanceStages->sortBy('stage.display_order') as $instanceStage)
                                 <div class="flex items-start gap-3">
                                     <div class="mt-0.5 shrink-0">

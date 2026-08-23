@@ -1,18 +1,17 @@
 <!-- Header -->
-<header class="kt-header fixed end-0 start-0 top-0 z-10 flex shrink-0 items-stretch bg-background" data-kt-sticky="true"
-        data-kt-sticky-class="border-b border-border" data-kt-sticky-name="header" id="header">
+<header class="sgh-header fixed end-0 top-0 z-10 flex shrink-0 items-stretch bg-background border-b border-border" id="header">
     <!-- Container -->
-    <div class="fl-container-fixed flex items-stretch justify-between lg:gap-4" id="headerContainer">
+    <div class="sgh-container-fixed flex items-stretch justify-between lg:gap-4" id="headerContainer">
         <!-- Mobile Logo -->
         <div class="-ms-1 flex items-center gap-2.5 lg:hidden">
             <a class="shrink-0" href="{{ route('dashboard') }}">
                 <img class="max-h-[25px] w-full" src="{{ asset('assets/media/app/mini-logo.svg') }}"/>
             </a>
             <div class="flex items-center">
-                <button class="fl-btn fl-btn-icon fl-btn-ghost" data-kt-drawer-toggle="#sidebar">
+                <button class="sgh-btn sgh-btn-icon sgh-btn-ghost" @click="$store.sidebarDrawer.show()">
                     <x-tabler-menu />
                 </button>
-                <button class="fl-btn fl-btn-icon fl-btn-ghost" data-kt-drawer-toggle="#mega_menu_wrapper">
+                <button class="sgh-btn sgh-btn-icon sgh-btn-ghost" @click="$store.megaMenu.toggle()">
                     <x-tabler-menu-2-filled />
                 </button>
             </div>

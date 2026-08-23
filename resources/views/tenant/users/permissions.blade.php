@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('users.permissions.title') }}</h1>
@@ -11,7 +11,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('users.edit', $user) }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('users.edit', $user) }}">
                 <x-tabler-arrow-left />
                 {{ __('users.permissions.back') }}
             </a>
@@ -21,13 +21,13 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('users.permissions.card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('users.permissions.card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <form method="POST" action="{{ route('users.permissions.update', $user) }}" class="grid gap-7">
                     @csrf
                     @method('PUT')
@@ -45,11 +45,11 @@
                     ])
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5 border-t">
-                        <button type="submit" class="fl-btn fl-btn-primary">
+                        <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-check-filled />
                             {{ __('users.permissions.update') }}
                         </button>
-                        <a class="fl-btn fl-btn-light" href="{{ route('users.edit', $user) }}">{{ __('common.cancel') }}</a>
+                        <a class="sgh-btn sgh-btn-light" href="{{ route('users.edit', $user) }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

@@ -17,14 +17,14 @@
 @endphp
 
 @if($branches->isNotEmpty())
-    <div class="fl-card fl-card-grid">
-        <div class="fl-card-header">
-            <h3 class="fl-card-title">
+    <div class="sgh-card sgh-card-grid">
+        <div class="sgh-card-header">
+            <h3 class="sgh-card-title">
                 <x-tabler-alert-triangle-filled class="text-warning mr-2" />
                 {{ __('cash_balance.alert_widget_title') }}
             </h3>
         </div>
-        <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+        <div class="sgh-card-content flex flex-col gap-4 p-5 lg:p-7.5">
             <div class="space-y-3">
                 @foreach($branches as $branch)
                     @php
@@ -70,7 +70,7 @@
                                 </div>
                             </div>
                         </div>
-                        <a href="{{ route('cash-balance-thresholds.index') }}" class="fl-btn fl-btn-sm fl-btn-ghost text-primary ml-4">
+                        <a href="{{ route('cash-balance-thresholds.index') }}" class="sgh-btn sgh-btn-sm sgh-btn-ghost text-primary ml-4">
                             <x-tabler-arrow-right />
                         </a>
                     </div>

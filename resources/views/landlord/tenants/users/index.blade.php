@@ -14,7 +14,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
@@ -29,11 +29,11 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
                 <x-tabler-shield-check-filled />
                 Manage Roles
             </a>
-            <a class="fl-btn fl-btn-outline" href="{{ route('landlord.tenants.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('landlord.tenants.index') }}">
                 <x-tabler-arrow-left />
                 Back to Tenants
             </a>
@@ -43,11 +43,11 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">
                     Users for {{ $tenantName }}
                 </h3>
                 <div class="flex items-center gap-2">
@@ -56,7 +56,7 @@
                     </span>
                 </div>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 @if($users->isEmpty())
                     <div class="flex flex-col items-center justify-center py-12">
                         <x-tabler-user-filled class="text-6xl text-muted-foreground mb-4" />
@@ -65,32 +65,32 @@
                     </div>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fl-table fl-table-border table-fixed">
+                        <table class="sgh-table sgh-table-border table-fixed">
                             <thead>
                                 <tr>
                                     <th class="min-w-[200px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Name</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Name</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Email</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Email</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Roles</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Roles</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Direct Permissions</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Direct Permissions</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[180px] text-center">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Actions</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Actions</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -122,11 +122,11 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-2">
-                                                <a href="{{ route('landlord.tenants.users.roles.edit', [$tenant, $user]) }}" class="fl-btn fl-btn-sm fl-btn-outline">
+                                                <a href="{{ route('landlord.tenants.users.roles.edit', [$tenant, $user]) }}" class="sgh-btn sgh-btn-sm sgh-btn-outline">
                                                     <x-tabler-shield-check-filled />
                                                     Roles
                                                 </a>
-                                                <a href="{{ route('landlord.tenants.users.permissions.edit', [$tenant, $user]) }}" class="fl-btn fl-btn-sm fl-btn-outline">
+                                                <a href="{{ route('landlord.tenants.users.permissions.edit', [$tenant, $user]) }}" class="sgh-btn sgh-btn-sm sgh-btn-outline">
                                                     <x-tabler-edit-filled />
                                                     Permissions
                                                 </a>

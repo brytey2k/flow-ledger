@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('staff.import_title') }}</h1>
@@ -10,11 +10,11 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('staff.import.template') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('staff.import.template') }}">
                 <x-tabler-file-arrow-right />
                 {{ __('staff.buttons.download_template') }}
             </a>
-            <a class="fl-btn fl-btn-light" href="{{ route('staff.index') }}">
+            <a class="sgh-btn sgh-btn-light" href="{{ route('staff.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('staff.back') }}
             </a>
@@ -22,24 +22,24 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('staff.sample_card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('staff.sample_card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <p class="text-sm text-secondary-foreground">
                     {{ __('staff.import_notes') }}
                 </p>
             </div>
         </div>
 
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('staff.import_card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('staff.import_card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 @php($importErrors = session('import_errors', []))
                 @if (! empty($importErrors) && is_array($importErrors))
                     <details class="mb-6 rounded-lg border border-warning/30 bg-warning/5 p-4">
@@ -59,7 +59,7 @@
 
                     <div class="grid grid-cols-1 gap-5">
                         <div class="col-span-1">
-                            <label class="fl-form-label block mb-2" for="file">
+                            <label class="sgh-form-label block mb-2" for="file">
                                 {{ __('staff.fields.file') }} <span class="text-destructive">*</span>
                             </label>
                             <input
@@ -67,7 +67,7 @@
                                 name="file"
                                 type="file"
                                 accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                class="fl-input w-full"
+                                class="sgh-input w-full"
                                 required
                                 aria-invalid="@error('file') true @else false @enderror"
                             />
@@ -81,11 +81,11 @@
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
-                        <button type="submit" class="fl-btn fl-btn-primary">
+                        <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-upload />
                             {{ __('staff.buttons.import') }}
                         </button>
-                        <a class="fl-btn fl-btn-light" href="{{ route('staff.index') }}">{{ __('common.cancel') }}</a>
+                        <a class="sgh-btn sgh-btn-light" href="{{ route('staff.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

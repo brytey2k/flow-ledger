@@ -54,7 +54,7 @@
 @endphp
 
 <div>
-    <label class="fl-form-label block mb-2">
+    <label class="sgh-form-label block mb-2">
         {{ $label }}
         @if ($required)
             <span class="text-destructive">*</span>
@@ -66,7 +66,7 @@
         <select
             name="{{ $nameCountry }}"
             id="{{ $nameCountry }}"
-            class="fl-select"
+            class="sgh-select"
             style="min-width:9rem;max-width:10rem;flex-shrink:0"
             aria-label="Country code"
         >
@@ -86,7 +86,7 @@
             name="{{ $nameNumber }}"
             type="tel"
             value="{{ $selectedNumber }}"
-            class="fl-input w-full"
+            class="sgh-input w-full"
             placeholder="246227810"
             @if ($required) required @endif
             @if ($autofocus) autofocus @endif

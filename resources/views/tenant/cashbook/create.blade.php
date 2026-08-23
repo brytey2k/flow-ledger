@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cashbook.create.title', ['branch' => $branch->name]) }}</h1>
@@ -11,7 +11,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('cashbook.index', $branch) }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('cashbook.index', $branch) }}">
                 <x-tabler-arrow-left />
                 {{ __('cashbook.create.back') }}
             </a>
@@ -21,25 +21,25 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('cashbook.create.card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('cashbook.create.card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <form method="POST" action="{{ route('cashbook.store', $branch) }}" class="grid gap-7">
                     @csrf
 
                     <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
                         <!-- Amount -->
                         <div>
-                            <label class="fl-form-label block mb-2" for="amount">
+                            <label class="sgh-form-label block mb-2" for="amount">
                                 {{ __('cashbook.fields.amount', ['symbol' => $cashbook->currency->symbol]) }} <span class="text-destructive">*</span>
                             </label>
                             <input id="amount" name="amount" type="number" step="0.01" min="0.01"
                                    value="{{ old('amount') }}"
-                                   class="fl-input w-full"
+                                   class="sgh-input w-full"
                                    placeholder="0.00"
                                    required
                                    aria-invalid="@error('amount') true @else false @enderror" />
@@ -50,13 +50,13 @@
 
                         <!-- Entry Date -->
                         <div>
-                            <label class="fl-form-label block mb-2" for="entry_date">
+                            <label class="sgh-form-label block mb-2" for="entry_date">
                                 {{ __('common.columns.date') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="entry_date" name="entry_date" type="date"
                                    value="{{ old('entry_date', date('Y-m-d')) }}"
                                    max="{{ date('Y-m-d') }}"
-                                   class="fl-input w-full"
+                                   class="sgh-input w-full"
                                    required
                                    aria-invalid="@error('entry_date') true @else false @enderror" />
                             @error('entry_date')
@@ -66,12 +66,12 @@
 
                         <!-- Reference -->
                         <div>
-                            <label class="fl-form-label block mb-2" for="reference">
+                            <label class="sgh-form-label block mb-2" for="reference">
                                 {{ __('cashbook.fields.reference') }} <span class="text-muted-foreground text-xs">(optional)</span>
                             </label>
                             <input id="reference" name="reference" type="text"
                                    value="{{ old('reference') }}"
-                                   class="fl-input w-full"
+                                   class="sgh-input w-full"
                                    placeholder="{{ __('cashbook.fields.reference_placeholder') }}"
                                    maxlength="100"
                                    aria-invalid="@error('reference') true @else false @enderror" />
@@ -83,11 +83,11 @@
 
                     <!-- Notes -->
                     <div>
-                        <label class="fl-form-label block mb-2" for="notes">
+                        <label class="sgh-form-label block mb-2" for="notes">
                             {{ __('common.notes') }} <span class="text-muted-foreground text-xs">(optional)</span>
                         </label>
                         <textarea id="notes" name="notes" rows="3"
-                                  class="fl-input w-full"
+                                  class="sgh-input w-full"
                                   placeholder="{{ __('cashbook.fields.notes_placeholder') }}"
                                   maxlength="5000"
                                   aria-invalid="@error('notes') true @else false @enderror">{{ old('notes') }}</textarea>
@@ -97,11 +97,11 @@
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
-                        <button type="submit" class="fl-btn fl-btn-primary">
+                        <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-check-filled />
                             {{ __('cashbook.create.save') }}
                         </button>
-                        <a class="fl-btn fl-btn-light" href="{{ route('cashbook.index', $branch) }}">{{ __('common.cancel') }}</a>
+                        <a class="sgh-btn sgh-btn-light" href="{{ route('cashbook.index', $branch) }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

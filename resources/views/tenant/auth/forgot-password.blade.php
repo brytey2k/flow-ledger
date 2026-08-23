@@ -15,12 +15,12 @@
 
 @section('content')
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
-    <div class="fl-card max-w-[370px] w-full">
+    <div class="sgh-card max-w-[370px] w-full">
         <div class="flex justify-center" style="padding-top: 3.5rem; padding-bottom: 1.25rem;">
             <img class="dark:hidden h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}" alt="{{ config('app.name') }}" />
             <img class="hidden dark:block h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}" alt="{{ config('app.name') }}" />
         </div>
-        <div class="fl-card-content flex flex-col gap-5 p-10">
+        <div class="sgh-card-content flex flex-col gap-5 p-10">
             <div class="text-center mb-2.5">
                 <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
                     {{ __('auth.forgot_password') }}
@@ -31,19 +31,19 @@
             </div>
 
             @if (session('status'))
-                <div class="fl-alert fl-alert-light fl-alert-success">
-                    <span class="fl-alert-icon"><x-tabler-circle-check-filled class="text-xl" /></span>
-                    <div class="fl-alert-content">
-                        <p class="fl-alert-description">{{ session('status') }}</p>
+                <div class="sgh-alert sgh-alert-light sgh-alert-success">
+                    <span class="sgh-alert-icon"><x-tabler-circle-check-filled class="text-xl" /></span>
+                    <div class="sgh-alert-content">
+                        <p class="sgh-alert-description">{{ session('status') }}</p>
                     </div>
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="fl-alert fl-alert-light fl-alert-destructive">
-                    <span class="fl-alert-icon"><x-tabler-info-square-filled class="text-xl" /></span>
-                    <div class="fl-alert-content">
-                        <ul class="fl-alert-description list-disc ps-5">
+                <div class="sgh-alert sgh-alert-light sgh-alert-destructive">
+                    <span class="sgh-alert-icon"><x-tabler-info-square-filled class="text-xl" /></span>
+                    <div class="sgh-alert-content">
+                        <ul class="sgh-alert-description list-disc ps-5">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -56,11 +56,11 @@
                 @csrf
 
                 <div class="flex flex-col gap-1">
-                    <label class="fl-form-label font-normal text-mono" for="email">
+                    <label class="sgh-form-label font-normal text-mono" for="email">
                         {{ __('auth.email') }}
                     </label>
                     <input
-                        class="fl-input"
+                        class="sgh-input"
                         id="email"
                         name="email"
                         placeholder="{{ __('auth.email_placeholder') }}"
@@ -75,13 +75,13 @@
                     @enderror
                 </div>
 
-                <button class="fl-btn fl-btn-primary flex justify-center grow" type="submit">
+                <button class="sgh-btn sgh-btn-primary flex justify-center grow" type="submit">
                     {{ __('auth.send_reset_link') }}
                 </button>
             </form>
 
             <div class="text-center">
-                <a class="text-sm fl-link" href="{{ route('login') }}">
+                <a class="text-sm sgh-link" href="{{ route('login') }}">
                     {{ __('auth.back_to_sign_in') }}
                 </a>
             </div>
@@ -100,9 +100,13 @@
                     <option value="fr" @selected(app()->getLocale() === 'fr')>Francais</option>
                 </select>
             </form>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" x-data="themeToggle">
                 <x-tabler-moon-filled class="text-base text-muted-foreground" />
-                <input class="kt-switch kt-switch-sm" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true" type="checkbox" aria-label="{{ __('navigation.dark_mode') }}" />
+                <button type="button" role="switch" :aria-checked="dark" @click="toggleTheme()"
+                    class="sgh-switch sgh-switch-sm" :class="dark ? 'bg-primary' : 'bg-muted'"
+                    aria-label="{{ __('navigation.dark_mode') }}">
+                    <span class="sgh-switch-thumb" :class="dark ? 'translate-x-[13px]' : 'translate-x-0.5'"></span>
+                </button>
             </div>
         </div>
     </div>

@@ -1,7 +1,8 @@
 <!-- Sidebar -->
-<div class="kt-sidebar fixed bottom-0 top-0 z-20 hidden shrink-0 flex-col items-stretch border-e border-e-border bg-background [--kt-drawer-enable:true] lg:flex lg:[--kt-drawer-enable:false]"
-    data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
-    <div class="kt-sidebar-header relative hidden shrink-0 items-center justify-between px-3 lg:flex lg:px-6"
+<div x-show="$store.sidebarDrawer.open" x-cloak class="fixed inset-0 z-10 bg-foreground/40 lg:hidden" @click="$store.sidebarDrawer.hide()"></div>
+<div class="sgh-sidebar fixed bottom-0 top-0 z-20 hidden shrink-0 flex-col items-stretch border-e border-e-border bg-background lg:flex"
+    :class="{ 'flex': $store.sidebarDrawer.open }" @click.outside="$store.sidebarDrawer.hide()" id="sidebar">
+    <div class="relative hidden shrink-0 items-center justify-between px-3 lg:flex lg:px-6"
         id="sidebar_header">
         <a class="dark:hidden" href="{{ route('landlord.tenants.index') }}">
             <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}" />
@@ -12,49 +13,37 @@
             <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_icon_dark.png') }}" />
         </a>
         <button
-            class="fl-btn fl-btn-outline fl-btn-icon absolute start-full top-2/4 size-[30px] -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"
-            data-kt-toggle="body" data-kt-toggle-class="kt-sidebar-collapse" id="sidebar_toggle">
-            <x-tabler-chevron-left class="kt-toggle-active:rotate-180 rtl:translate rtl:kt-toggle-active:rotate-0 transition-all duration-300 rtl:rotate-180" />
+            @click="toggle" :aria-expanded="!collapsed"
+            class="sgh-btn sgh-btn-outline sgh-btn-icon absolute start-full top-2/4 size-[30px] -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4 hidden lg:inline-flex"
+            id="sidebar_toggle">
+            <span :class="{ 'rotate-180 rtl:rotate-0': collapsed }" class="inline-flex transition-transform duration-300">
+                <x-tabler-chevron-left class="rtl:rotate-180" />
+            </span>
         </button>
     </div>
-    <div class="kt-sidebar-content flex shrink-0 grow py-5 pe-2" id="sidebar_content">
-        <div class="kt-scrollable-y-hover flex shrink-0 grow pe-1 ps-2 lg:pe-3 lg:ps-5" data-kt-scrollable="true"
-            data-kt-scrollable-dependencies="#sidebar_header" data-kt-scrollable-height="auto"
-            data-kt-scrollable-offset="0px" data-kt-scrollable-wrappers="#sidebar_content" id="sidebar_scrollable">
+    <div class="flex min-h-0 shrink-0 grow py-5 pe-2" id="sidebar_content">
+        <div class="flex min-h-0 shrink-0 grow overflow-y-auto pe-1 ps-2 lg:pe-3 lg:ps-5" id="sidebar_scrollable">
             <!-- Sidebar Menu -->
-            <div class="kt-menu flex grow flex-col gap-1" data-kt-menu="true" data-kt-menu-accordion-expand-all="false"
-                id="sidebar_menu">
-                <div class="kt-menu-item pt-2.25 pb-px">
-                    <span class="kt-menu-heading pe-[10px] ps-[10px] text-xs font-medium uppercase text-muted-foreground">
-                        System Management
-                    </span>
+            <div class="flex grow flex-col gap-1" id="sidebar_menu">
+                <div class="sgh-nav-heading">
+                    System Management
                 </div>
 
                 {{-- Tenants --}}
-                <div class="kt-menu-item {{ request()->routeIs('landlord.tenants.*') ? 'active' : '' }}">
-                    <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
-                       href="{{ route('landlord.tenants.index') }}" tabindex="0">
-                        <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                            <x-tabler-briefcase-filled class="text-lg" />
-                        </span>
-                        <span class="kt-menu-title kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary text-sm font-medium text-foreground">
-                            Tenants
-                        </span>
-                    </a>
-                </div>
+                <a href="{{ route('landlord.tenants.index') }}" class="sgh-nav-item gap-2.5 {{ request()->routeIs('landlord.tenants.*') ? 'active' : '' }}">
+                    <span class="sgh-nav-icon">
+                        <x-tabler-briefcase-filled class="text-lg" />
+                    </span>
+                    <span class="sgh-nav-title">Tenants</span>
+                </a>
 
                 {{-- Feature Flags --}}
-                <div class="kt-menu-item {{ request()->routeIs('landlord.feature-flags.*') ? 'active' : '' }}">
-                    <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
-                       href="{{ route('landlord.feature-flags.index') }}" tabindex="0">
-                        <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                            <x-tabler-toggle-right-filled class="text-lg" />
-                        </span>
-                        <span class="kt-menu-title kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary text-sm font-medium text-foreground">
-                            Feature Flags
-                        </span>
-                    </a>
-                </div>
+                <a href="{{ route('landlord.feature-flags.index') }}" class="sgh-nav-item gap-2.5 {{ request()->routeIs('landlord.feature-flags.*') ? 'active' : '' }}">
+                    <span class="sgh-nav-icon">
+                        <x-tabler-toggle-right-filled class="text-lg" />
+                    </span>
+                    <span class="sgh-nav-title">Feature Flags</span>
+                </a>
             </div>
             <!-- End of Sidebar Menu -->
         </div>

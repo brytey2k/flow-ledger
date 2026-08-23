@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('workflows.stages.edit_title') }}</h1>
@@ -9,20 +9,20 @@
                 {{ $workflowTemplate->name }} &rsaquo; {{ $workflowStage->name }}
             </div>
         </div>
-        <a class="fl-btn fl-btn-outline" href="{{ route('workflow-templates.show', $workflowTemplate) }}">
+        <a class="sgh-btn sgh-btn-outline" href="{{ route('workflow-templates.show', $workflowTemplate) }}">
             <x-tabler-arrow-left />
             {{ __('workflows.stages.back') }}
         </a>
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('workflows.stages.details_card') }}</h3>
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('workflows.stages.details_card') }}</h3>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <form id="stage-form" method="POST" action="{{ route('workflow-templates.stages.update', [$workflowTemplate, $workflowStage]) }}"
                       class="grid gap-7"
                       x-data='workflowStageForm(@json($parallelGroupStages), {{ $workflowStage->id }})'
@@ -32,42 +32,42 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div>
-                            <label class="fl-form-label block mb-2" for="name">
+                            <label class="sgh-form-label block mb-2" for="name">
                                 {{ __('workflows.stages.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name', $workflowStage->name) }}"
-                                   class="fl-input w-full"
+                                   class="sgh-input w-full"
                                    aria-invalid="@error('name') true @else false @enderror" />
                             @error('name') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="fl-form-label block mb-2" for="display_order">
+                            <label class="sgh-form-label block mb-2" for="display_order">
                                 {{ __('workflows.stages.fields.display_order') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="display_order" name="display_order" type="number" min="1"
                                    value="{{ old('display_order', $workflowStage->display_order) }}"
-                                   class="fl-input w-full"
+                                   class="sgh-input w-full"
                                    @input="showSyncWarning = false" />
                             <div class="mt-1 text-xs text-muted-foreground">{{ __('workflows.stages.fields.order_hint') }}</div>
                             @error('display_order') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="fl-form-label block mb-2" for="skip_below_amount">
+                            <label class="sgh-form-label block mb-2" for="skip_below_amount">
                                 {{ __('workflows.stages.fields.skip_below') }}
                             </label>
                             <input id="skip_below_amount" name="skip_below_amount" type="number" step="0.01" min="0"
                                    value="{{ old('skip_below_amount', $workflowStage->skip_below_amount) }}"
-                                   class="fl-input w-full" placeholder="{{ __('workflows.stages.fields.skip_below_hint_short') }}" />
+                                   class="sgh-input w-full" placeholder="{{ __('workflows.stages.fields.skip_below_hint_short') }}" />
                             @error('skip_below_amount') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="fl-form-label block mb-2" for="parallel_group_id">
+                            <label class="sgh-form-label block mb-2" for="parallel_group_id">
                                 {{ __('workflows.stages.fields.parallel_group') }}
                             </label>
-                            <select id="parallel_group_id" name="parallel_group_id" class="fl-select w-full"
+                            <select id="parallel_group_id" name="parallel_group_id" class="sgh-select w-full"
                                     @change="showSyncWarning = false">
                                 <option value="">{{ __('workflows.stages.fields.none_sequential') }}</option>
                                 @foreach($parallelGroups as $group)
@@ -81,16 +81,16 @@
                         </div>
                     </div>
 
-                    <div class="fl-alert fl-alert-light fl-alert-warning" x-show="showSyncWarning" x-cloak x-transition>
-                        <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
-                        <div class="fl-alert-content">
+                    <div class="sgh-alert sgh-alert-light sgh-alert-warning" x-show="showSyncWarning" x-cloak x-transition>
+                        <span class="sgh-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+                        <div class="sgh-alert-content">
                             <div class="font-medium text-mono">{{ __('workflows.stages.sync_warning.heading') }}</div>
-                            <div class="fl-alert-description" x-text="syncWarningMessage"></div>
+                            <div class="sgh-alert-description" x-text="syncWarningMessage"></div>
                             <div class="mt-3 flex items-center gap-2.5">
-                                <button type="button" class="fl-btn fl-btn-sm fl-btn-warning" @click="proceed('stage-form')">
+                                <button type="button" class="sgh-btn sgh-btn-sm sgh-btn-warning" @click="proceed('stage-form')">
                                     {{ __('workflows.stages.sync_warning.proceed') }}
                                 </button>
-                                <button type="button" class="fl-btn fl-btn-sm fl-btn-light" @click="cancel()">
+                                <button type="button" class="sgh-btn sgh-btn-sm sgh-btn-light" @click="cancel()">
                                     {{ __('workflows.stages.sync_warning.cancel') }}
                                 </button>
                             </div>
@@ -101,28 +101,28 @@
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="hidden" name="scope_to_department" value="0" />
                             <input type="checkbox" id="scope_to_department" name="scope_to_department" value="1"
-                                   class="fl-checkbox"
+                                   class="sgh-checkbox"
                                    {{ old('scope_to_department', $workflowStage->scope_to_department) ? 'checked' : '' }} />
-                            <span class="fl-form-label mb-0">{{ __('workflows.stages.fields.scope_to_department') }}</span>
+                            <span class="sgh-form-label mb-0">{{ __('workflows.stages.fields.scope_to_department') }}</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="hidden" name="scope_to_branch" value="0" />
                             <input type="checkbox" id="scope_to_branch" name="scope_to_branch" value="1"
-                                   class="fl-checkbox"
+                                   class="sgh-checkbox"
                                    {{ old('scope_to_branch', $workflowStage->scope_to_branch) ? 'checked' : '' }} />
-                            <span class="fl-form-label mb-0">{{ __('workflows.stages.fields.scope_to_branch') }}</span>
+                            <span class="sgh-form-label mb-0">{{ __('workflows.stages.fields.scope_to_branch') }}</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="hidden" name="allow_send_back" value="0" />
                             <input type="checkbox" id="allow_send_back" name="allow_send_back" value="1"
-                                   class="fl-checkbox"
+                                   class="sgh-checkbox"
                                    {{ old('allow_send_back', $workflowStage->allow_send_back) ? 'checked' : '' }} />
-                            <span class="fl-form-label mb-0">{{ __('workflows.stages.fields.allow_send_back') }}</span>
+                            <span class="sgh-form-label mb-0">{{ __('workflows.stages.fields.allow_send_back') }}</span>
                         </label>
                     </div>
 
                     <div>
-                        <label class="fl-form-label block mb-2">
+                        <label class="sgh-form-label block mb-2">
                             {{ __('workflows.stages.fields.roles_label') }} <span class="text-destructive">*</span>
                         </label>
                         @error('role_ids') <p class="mb-2 text-sm text-destructive">{{ $message }}</p> @enderror
@@ -132,7 +132,7 @@
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" name="role_ids[]" value="{{ $role->id }}"
                                            {{ in_array($role->id, old('role_ids', $assignedRoleIds)) ? 'checked' : '' }}
-                                           class="fl-checkbox" />
+                                           class="sgh-checkbox" />
                                     <span class="text-sm text-foreground">{{ $role->name }}</span>
                                 </label>
                             @endforeach
@@ -141,13 +141,13 @@
 
                     <div class="pt-5 mt-2 flex justify-between items-center">
                         <div class="flex items-center gap-2.5">
-                            <button type="submit" class="fl-btn fl-btn-primary">
+                            <button type="submit" class="sgh-btn sgh-btn-primary">
                                 <x-tabler-check-filled />
                                 {{ __('workflows.stages.buttons.save') }}
                             </button>
-                            <a class="fl-btn fl-btn-light" href="{{ route('workflow-templates.show', $workflowTemplate) }}">{{ __('common.cancel') }}</a>
+                            <a class="sgh-btn sgh-btn-light" href="{{ route('workflow-templates.show', $workflowTemplate) }}">{{ __('common.cancel') }}</a>
                         </div>
-                        <button type="button" class="fl-btn fl-btn-danger"
+                        <button type="button" class="sgh-btn sgh-btn-danger"
                                 onclick="if(confirm('{{ __('workflows.stages.confirm_delete') }}')) { document.getElementById('delete-stage-form').submit(); }">
                             <x-tabler-trash-filled />
                             {{ __('workflows.stages.buttons.delete') }}

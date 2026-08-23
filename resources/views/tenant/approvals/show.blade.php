@@ -5,17 +5,17 @@
     $retiredPaymentRequest = $req instanceof \App\Models\Tenant\RetirementRequest ? $req->paymentRequest : null;
 
     $statusColors = [
-        'draft'       => 'fl-badge-outline',
-        'in_workflow' => 'fl-badge-primary',
-        'approved'    => 'fl-badge-success',
-        'disbursed'   => 'fl-badge-info',
-        'retired'     => 'fl-badge-neutral',
-        'sent_back'   => 'fl-badge-warning',
-        'cancelled'   => 'fl-badge-danger',
+        'draft'       => 'sgh-badge-outline',
+        'in_workflow' => 'sgh-badge-primary',
+        'approved'    => 'sgh-badge-success',
+        'disbursed'   => 'sgh-badge-info',
+        'retired'     => 'sgh-badge-neutral',
+        'sent_back'   => 'sgh-badge-warning',
+        'cancelled'   => 'sgh-badge-danger',
     ];
     $typeColors = [
-        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'fl-badge-primary',
-        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'fl-badge-warning',
+        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'sgh-badge-primary',
+        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'sgh-badge-warning',
     ];
     $stageStatusIcons = [
         'approved'  => ['icon' => 'tabler-check-filled',         'class' => 'bg-success/20 text-success'],
@@ -28,32 +28,32 @@
 @endphp
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-3">
                 <h1 class="text-xl font-medium leading-none text-mono">
                     Review Request #{{ $req->id }}
                 </h1>
-                <span class="fl-badge fl-badge-sm {{ $typeColors[$req->type] ?? 'fl-badge-outline' }}">
+                <span class="sgh-badge sgh-badge-sm {{ $typeColors[$req->type] ?? 'sgh-badge-outline' }}">
                     {{ ucfirst($req->type) }}
                 </span>
             </div>
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
                 <span>{{ __('common.columns.stage') }}: <span class="font-medium text-mono">{{ $instanceStage->stage->name }}</span></span>
                 @if($instanceStage->instance?->template)
-                    <span class="fl-badge fl-badge-sm fl-badge-outline">
+                    <span class="sgh-badge sgh-badge-sm sgh-badge-outline">
                         {{ __('approvals.show.workflow_version', ['version' => $instanceStage->instance->template->version]) }}
                     </span>
                 @endif
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('approvals.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('approvals.index') }}">
                 <x-tabler-arrow-left />
                 {{ __('approvals.show.back') }}
             </a>
-            <a class="fl-btn fl-btn-outline" href="{{ route('payment-requests.show', $req) }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('payment-requests.show', $req) }}">
                 <x-tabler-eye-filled />
                 {{ __('approvals.show.view_request') }}
             </a>
@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
 
@@ -69,11 +69,11 @@
             <div class="lg:col-span-2 flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Request Details --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('approvals.show.request_details') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('approvals.show.request_details') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5 lg:p-7.5 lg:pt-4">
+                    <div class="sgh-card-content p-5 lg:p-7.5 lg:pt-4">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.staff_member') }}</dt>
@@ -123,21 +123,21 @@
                 </div>
 
                 {{-- Line Items --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('approvals.show.line_items') }}</h3>
-                        <span class="fl-badge fl-badge-sm fl-badge-outline">
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('approvals.show.line_items') }}</h3>
+                        <span class="sgh-badge sgh-badge-sm sgh-badge-outline">
                             {{ $req->items->count() }} {{ Str::plural('item', $req->items->count()) }}
                         </span>
                     </div>
-                    <div class="fl-card-table">
-                        <div class="fl-scrollable-x-auto border-b border-border">
-                            <table class="fl-table fl-table-border">
+                    <div class="sgh-card-table">
+                        <div class="sgh-scrollable-x-auto border-b border-border">
+                            <table class="sgh-table sgh-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.description') }}</span></span></th>
-                                        <th class="w-[180px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
-                                        <th class="w-[160px] text-end"><span class="fl-table-col justify-end"><span class="fl-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                        <th><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th class="w-[180px]"><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
+                                        <th class="w-[160px] text-end"><span class="sgh-table-col justify-end"><span class="sgh-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -175,11 +175,11 @@
 
                 {{-- Prior Actions --}}
                 @if($instanceStage->actions->isNotEmpty())
-                    <div class="fl-card">
-                        <div class="fl-card-header">
-                            <h3 class="fl-card-title">{{ __('approvals.show.action_history') }}</h3>
+                    <div class="sgh-card">
+                        <div class="sgh-card-header">
+                            <h3 class="sgh-card-title">{{ __('approvals.show.action_history') }}</h3>
                         </div>
-                        <div class="fl-card-content p-5 flex flex-col gap-4">
+                        <div class="sgh-card-content p-5 flex flex-col gap-4">
                             @foreach($instanceStage->actions as $action)
                                 <div class="flex gap-3">
                                     <div class="shrink-0 flex h-8 w-8 items-center justify-center rounded-full
@@ -208,23 +208,23 @@
             <div class="flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Action Panel --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('approvals.show.your_decision') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('approvals.show.your_decision') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5">
+                    <div class="sgh-card-content p-5">
                         @if($instanceStage->isActive())
                             <form method="POST" action="{{ route('approvals.store', $instanceStage) }}" id="approval-form">
                                 @csrf
 
                                 {{-- Comment --}}
                                 <div class="mb-4">
-                                    <label class="fl-form-label block mb-2" for="comment">
+                                    <label class="sgh-form-label block mb-2" for="comment">
                                         {{ __('approvals.show.comment_label') }}
                                         <span class="text-secondary-foreground font-normal text-xs">{{ __('approvals.show.comment_required') }}</span>
                                     </label>
                                     <textarea id="comment" name="comment" rows="4"
-                                              class="fl-textarea w-full"
+                                              class="sgh-textarea w-full"
                                               placeholder="{{ __('approvals.show.comment_placeholder') }}"
                                               aria-invalid="@error('comment') true @else false @enderror">{{ old('comment') }}</textarea>
                                     @error('comment')
@@ -238,20 +238,20 @@
                                 {{-- Buttons --}}
                                 <div class="flex flex-col gap-2">
                                     <button type="submit" name="action" value="approve"
-                                            class="fl-btn fl-btn-success w-full">
+                                            class="sgh-btn sgh-btn-success w-full">
                                         <x-tabler-circle-check-filled />
                                         {{ __('common.approve') }}
                                     </button>
                                     @if($instanceStage->stage->allow_send_back)
                                         <button type="submit" name="action" value="send_back"
-                                                class="fl-btn fl-btn-warning fl-btn-outline w-full">
+                                                class="sgh-btn sgh-btn-warning sgh-btn-outline w-full">
                                             <x-tabler-arrow-left />
                                             {{ __('common.send_back') }}
                                         </button>
                                     @endif
                                     <button type="submit" name="action" value="reject"
                                             onclick="return confirm('{{ __('approvals.show.reject_confirm') }}')"
-                                            class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                            class="sgh-btn sgh-btn-danger sgh-btn-outline w-full">
                                         <x-tabler-circle-x-filled />
                                         {{ __('common.reject') }}
                                     </button>
@@ -270,11 +270,11 @@
                 </div>
 
                 {{-- Workflow Progress --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('approvals.show.approval_progress') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('approvals.show.approval_progress') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5 flex flex-col gap-3">
+                    <div class="sgh-card-content p-5 flex flex-col gap-3">
                         @foreach($instanceStage->instance->instanceStages->sortBy('stage.display_order') as $is)
                             @php
                                 $icon = $stageStatusIcons[$is->status] ?? ['icon' => 'tabler-dots-circle-horizontal', 'class' => 'border-2 border-border bg-background text-muted-foreground'];

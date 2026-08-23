@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('retirements.create.title', ['id' => $paymentRequest->id]) }}</h1>
@@ -9,25 +9,25 @@
                 {{ __('retirements.create.subtitle', ['name' => $paymentRequest->staff->full_name]) }}
             </div>
         </div>
-        <a class="fl-btn fl-btn-outline" href="{{ route('payment-requests.show', $paymentRequest) }}">
+        <a class="sgh-btn sgh-btn-outline" href="{{ route('payment-requests.show', $paymentRequest) }}">
             <x-tabler-arrow-left />
             {{ __('retirements.create.back') }}
         </a>
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <form method="POST" action="{{ route('retirement-requests.store', $paymentRequest) }}" id="retirement-form">
         @csrf
 
         <div class="flex flex-col gap-5 lg:gap-7.5">
 
             {{-- Advance Summary --}}
-            <div class="fl-card">
-                <div class="fl-card-header">
-                    <h3 class="fl-card-title">{{ __('retirements.fields.advance_summary') }}</h3>
+            <div class="sgh-card">
+                <div class="sgh-card-header">
+                    <h3 class="sgh-card-title">{{ __('retirements.fields.advance_summary') }}</h3>
                 </div>
-                <div class="fl-card-content p-5">
+                <div class="sgh-card-content p-5">
                     <dl class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         <div>
                             <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('common.columns.staff') }}</dt>
@@ -49,22 +49,22 @@
 
             {{-- Payment Requirement Items --}}
             @if($paymentRequest->items->count() > 0)
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('payment_requests.show.line_items') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('payment_requests.show.line_items') }}</h3>
                         <span class="text-sm text-secondary-foreground">
                             {{ $paymentRequest->items->count() }} {{ Str::plural('item', $paymentRequest->items->count()) }}
                         </span>
                     </div>
-                    <div class="fl-card-table">
-                        <div class="fl-scrollable-x-auto border-b border-border">
-                            <table class="fl-table fl-table-border">
+                    <div class="sgh-card-table">
+                        <div class="sgh-scrollable-x-auto border-b border-border">
+                            <table class="sgh-table sgh-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.description') }}</span></span></th>
-                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
-                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
-                                        <th class="w-[160px] text-end"><span class="fl-table-col justify-end"><span class="fl-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                        <th><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
+                                        <th><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
+                                        <th class="w-[160px] text-end"><span class="sgh-table-col justify-end"><span class="sgh-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -107,15 +107,15 @@
             @endif
 
             {{-- Expenditure Items (full width) --}}
-            <div class="fl-card">
-                <div class="fl-card-header">
-                    <h3 class="fl-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
+            <div class="sgh-card">
+                <div class="sgh-card-header">
+                    <h3 class="sgh-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
                 </div>
-                <div class="fl-card-content p-5 lg:p-7.5 lg:pt-4">
-                    <div class="fl-alert fl-alert-warning mb-4">
-                        <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
-                        <div class="fl-alert-content">
-                            <div class="fl-alert-title">{{ __('retirements.fields.no_spend_warning') }}</div>
+                <div class="sgh-card-content p-5 lg:p-7.5 lg:pt-4">
+                    <div class="sgh-alert sgh-alert-warning mb-4">
+                        <span class="sgh-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+                        <div class="sgh-alert-content">
+                            <div class="sgh-alert-title">{{ __('retirements.fields.no_spend_warning') }}</div>
                             <label class="mt-3 inline-flex items-center gap-2 text-sm font-medium">
                                 <input type="hidden" name="did_not_spend_money" value="0">
                                 <input
@@ -123,7 +123,7 @@
                                     type="checkbox"
                                     name="did_not_spend_money"
                                     value="1"
-                                    class="fl-checkbox"
+                                    class="sgh-checkbox"
                                     @checked(old('did_not_spend_money', false))
                                 >
                                 <span>{{ __('retirements.fields.did_not_spend_money') }}</span>
@@ -149,9 +149,9 @@
                         @foreach($oldItems as $index => $oldItem)
                             <div class="item-row flex flex-col lg:flex-row lg:items-start gap-3 p-4 rounded-lg border border-border">
                                 <div class="flex-1 min-w-0">
-                                    <label class="fl-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
+                                    <label class="sgh-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
                                     <input type="text" name="items[{{ $index }}][description]"
-                                           class="fl-input w-full"
+                                           class="sgh-input w-full"
                                            value="{{ $oldItem['description'] ?? '' }}"
                                            placeholder="{{ __('retirements.fields.what_purchased') }}"
                                            aria-invalid="@error('items.{{ $index }}.description') true @else false @enderror">
@@ -160,8 +160,8 @@
                                     @enderror
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
-                                    <select name="items[{{ $index }}][cost_code_id]" class="fl-select w-full"
+                                    <label class="sgh-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
+                                    <select name="items[{{ $index }}][cost_code_id]" class="sgh-select w-full"
                                             aria-invalid="@error('items.{{ $index }}.cost_code_id') true @else false @enderror">
                                         <option value="">Select…</option>
                                         @foreach($costCodes as $code)
@@ -176,9 +176,9 @@
                                     @enderror
                                 </div>
                                 <div class="lg:w-36 shrink-0">
-                                    <label class="fl-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
+                                    <label class="sgh-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
                                     <input type="number" name="items[{{ $index }}][amount]"
-                                           class="fl-input w-full item-amount"
+                                           class="sgh-input w-full item-amount"
                                            value="{{ $oldItem['amount'] ?? '' }}"
                                            step="0.01" min="0.01"
                                            placeholder="0.00"
@@ -188,14 +188,14 @@
                                     @enderror
                                 </div>
                                 <div class="lg:w-36 shrink-0">
-                                    <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
+                                    <label class="sgh-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
                                     <input type="text" name="items[{{ $index }}][receipt_number]"
-                                           class="fl-input w-full"
+                                           class="sgh-input w-full"
                                            value="{{ $oldItem['receipt_number'] ?? '' }}"
                                            placeholder="{{ __('common.optional') }}">
                                 </div>
                                 <div class="flex items-start justify-end shrink-0 pt-7">
-                                    <button type="button" class="remove-item fl-btn fl-btn-sm fl-btn-icon fl-btn-danger fl-btn-outline"
+                                    <button type="button" class="remove-item sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-danger sgh-btn-outline"
                                             title="Remove item">
                                         <x-tabler-trash-filled />
                                     </button>
@@ -205,7 +205,7 @@
                         </div>
 
                         <button type="button" id="add-item"
-                                class="mt-4 fl-btn fl-btn-sm fl-btn-outline">
+                                class="mt-4 sgh-btn sgh-btn-sm sgh-btn-outline">
                             <x-tabler-plus-filled />
                             {{ __('common.add_item') }}
                         </button>
@@ -217,13 +217,13 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
 
                 {{-- Notes --}}
-                <div class="lg:col-span-2 fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('common.notes') }}</h3>
+                <div class="lg:col-span-2 sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('common.notes') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5">
+                    <div class="sgh-card-content p-5">
                         <textarea name="notes" rows="3"
-                                  class="fl-textarea w-full"
+                                  class="sgh-textarea w-full"
                                   placeholder="{{ __('retirements.fields.notes_placeholder') }}"
                                   aria-invalid="@error('notes') true @else false @enderror">{{ old('notes') }}</textarea>
                         @error('notes')
@@ -233,11 +233,11 @@
                 </div>
 
                 {{-- Summary + Submit --}}
-                <div class="fl-card">
-                    <div class="fl-card-header">
-                        <h3 class="fl-card-title">{{ __('retirements.fields.summary') }}</h3>
+                <div class="sgh-card">
+                    <div class="sgh-card-header">
+                        <h3 class="sgh-card-title">{{ __('retirements.fields.summary') }}</h3>
                     </div>
-                    <div class="fl-card-content p-5 flex flex-col gap-4">
+                    <div class="sgh-card-content p-5 flex flex-col gap-4">
                         <div class="flex justify-between text-sm">
                             <span class="text-secondary-foreground">{{ __('retirements.fields.advance_amount') }}</span>
                             <span class="font-medium text-mono">
@@ -257,7 +257,7 @@
                         </div>
                         <div class="text-xs text-secondary-foreground" id="difference-label"></div>
 
-                        <button type="submit" class="fl-btn fl-btn-primary w-full mt-2">
+                        <button type="submit" class="sgh-btn sgh-btn-primary w-full mt-2">
                             <x-tabler-check-filled />
                             {{ __('retirements.buttons.save_draft') }}
                         </button>
@@ -273,12 +273,12 @@
 <template id="item-template">
     <div class="item-row flex flex-col lg:flex-row lg:items-start gap-3 p-4 rounded-lg border border-border">
         <div class="flex-1 min-w-0">
-            <label class="fl-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
-            <input type="text" name="items[__INDEX__][description]" class="fl-input w-full" placeholder="{{ __('retirements.fields.what_purchased') }}">
+            <label class="sgh-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
+            <input type="text" name="items[__INDEX__][description]" class="sgh-input w-full" placeholder="{{ __('retirements.fields.what_purchased') }}">
         </div>
         <div class="flex-1 min-w-0">
-            <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
-            <select name="items[__INDEX__][cost_code_id]" class="fl-select w-full">
+            <label class="sgh-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
+            <select name="items[__INDEX__][cost_code_id]" class="sgh-select w-full">
                 <option value="">Select…</option>
                 @foreach($costCodes as $code)
                     <option value="{{ $code->id }}">{{ $code->code }} — {{ $code->name }}</option>
@@ -286,15 +286,15 @@
             </select>
         </div>
         <div class="lg:w-36 shrink-0">
-            <label class="fl-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
-            <input type="number" name="items[__INDEX__][amount]" class="fl-input w-full item-amount" step="0.01" min="0.01" placeholder="0.00">
+            <label class="sgh-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
+            <input type="number" name="items[__INDEX__][amount]" class="sgh-input w-full item-amount" step="0.01" min="0.01" placeholder="0.00">
         </div>
         <div class="lg:w-36 shrink-0">
-            <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
-            <input type="text" name="items[__INDEX__][receipt_number]" class="fl-input w-full" placeholder="{{ __('common.optional') }}">
+            <label class="sgh-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
+            <input type="text" name="items[__INDEX__][receipt_number]" class="sgh-input w-full" placeholder="{{ __('common.optional') }}">
         </div>
         <div class="flex items-end justify-end shrink-0">
-            <button type="button" class="remove-item fl-btn fl-btn-sm fl-btn-icon fl-btn-danger fl-btn-outline" title="Remove item">
+            <button type="button" class="remove-item sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-danger sgh-btn-outline" title="Remove item">
                 <x-tabler-trash-filled />
             </button>
         </div>

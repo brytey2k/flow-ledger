@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
@@ -19,7 +19,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="fl-btn fl-btn-outline" href="{{ route('landlord.tenants.index') }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ route('landlord.tenants.index') }}">
                 <x-tabler-arrow-left />
                 Back to Tenants
             </a>
@@ -29,12 +29,12 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
         <!-- Tenant Feature Flags Card -->
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">
                     Manage Feature Flags for {{ $tenant->data['name'] ?? $tenant->id }}
                 </h3>
                 <div class="flex items-center gap-2">
@@ -47,28 +47,28 @@
                     </span>
                 </div>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <form action="{{ route('landlord.tenants.feature-flags.update', $tenant) }}" method="POST">
                     @csrf
                     @method('PUT')
 
                     <div class="overflow-x-auto">
-                        <table class="fl-table fl-table-border">
+                        <table class="sgh-table sgh-table-border">
                             <thead>
                                 <tr>
                                     <th class="w-12">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Enabled</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Enabled</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Feature</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Feature</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="fl-table-col">
-                                            <span class="fl-table-col-label">Status</span>
+                                        <span class="sgh-table-col">
+                                            <span class="sgh-table-col-label">Status</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -81,7 +81,7 @@
                                                 type="checkbox"
                                                 name="flags[]"
                                                 value="{{ $featureFlag->value }}"
-                                                class="fl-checkbox"
+                                                class="sgh-checkbox"
                                                 id="flag_{{ $featureFlag->value }}"
                                                 {{ ($flags[$featureFlag->value] ?? false) ? 'checked' : '' }}
                                             />
@@ -113,7 +113,7 @@
                     @enderror
 
                     <div class="flex justify-end mt-6">
-                        <button type="submit" class="fl-btn fl-btn-primary">
+                        <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-check-filled />
                             Save Changes
                         </button>
@@ -123,9 +123,9 @@
         </div>
 
         <!-- Bulk Operations Card -->
-        <div class="fl-card">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">
+        <div class="sgh-card">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">
                     Bulk Operations
                 </h3>
                 <div class="flex items-center gap-2">
@@ -134,7 +134,7 @@
                     </span>
                 </div>
             </div>
-            <div class="fl-card-content">
+            <div class="sgh-card-content">
                 <p class="text-sm text-secondary-foreground mb-4">
                     Use bulk operations to enable or disable a feature for all tenants at once.
                     This will override individual tenant settings.
@@ -144,10 +144,10 @@
                     @csrf
 
                     <div class="flex-1 min-w-[200px]">
-                        <label class="fl-form-label mb-2 block">
+                        <label class="sgh-form-label mb-2 block">
                             Select Feature
                         </label>
-                        <select name="flag" class="fl-input w-full" required>
+                        <select name="flag" class="sgh-input w-full" required>
                             <option value="">Choose a feature...</option>
                             @foreach($flagDefinitions as $featureFlag)
                                 <option value="{{ $featureFlag->value }}">{{ $featureFlag->label() }}</option>
@@ -156,11 +156,11 @@
                     </div>
 
                     <div class="flex gap-2">
-                        <button type="submit" name="action" value="enable" class="fl-btn fl-btn-success">
+                        <button type="submit" name="action" value="enable" class="sgh-btn sgh-btn-success">
                             <x-tabler-circle-check-filled />
                             Enable for All
                         </button>
-                        <button type="submit" name="action" value="disable" class="fl-btn fl-btn-danger">
+                        <button type="submit" name="action" value="disable" class="sgh-btn sgh-btn-danger">
                             <x-tabler-circle-x-filled />
                             Disable for All
                         </button>

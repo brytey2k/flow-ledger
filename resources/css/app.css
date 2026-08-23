@@ -104,21 +104,90 @@
     color: var(--foreground) !important;
 }
 
-/*
- * Re-enabled for the kt-* -> fl-* Tailwind class migration. This coexists
- * safely with the legacy Metronic bundle (public/assets/css/styles.css,
- * still linked in the head partials): fl-* markup reads the exact same
- * --primary/--border/--radius/etc custom properties Metronic already
- * defines on :root/.dark, so both stylesheets resolve to identical colors.
- */
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+[x-cloak] {
+    display: none !important;
+}
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+
+/*
+ * flow-ledger's own design tokens, independent of the legacy Metronic
+ * bundle (public/assets/css/styles.css). Values match the app's current
+ * dark navy/blue visual identity, carried over 1:1 from the Metronic
+ * :root/.dark custom properties so the sgh-* migration introduced zero
+ * visual change.
+ */
+:root {
+    --background: oklch(100% 0 0);
+    --foreground: oklch(14.1% 0.005 285.823);
+    --card: oklch(100% 0 0);
+    --card-foreground: oklch(14.1% 0.005 285.823);
+    --popover: oklch(100% 0 0);
+    --popover-foreground: oklch(14.1% 0.005 285.823);
+
+    --primary: oklch(62.3% 0.214 259.815);
+    --primary-foreground: #fff;
+    --secondary: oklch(96.7% 0.001 286.375);
+    --secondary-foreground: oklch(21% 0.006 285.885);
+    --muted: oklch(96.7% 0.001 286.375);
+    --muted-foreground: oklch(55.2% 0.016 285.938);
+    --accent: oklch(96.7% 0.001 286.375);
+    --accent-foreground: oklch(21% 0.006 285.885);
+    --destructive: oklch(57.7% 0.245 27.325);
+    --destructive-foreground: #fff;
+    --success: oklch(62.7% 0.194 149.214);
+    --success-foreground: #fff;
+    --info: oklch(55% 0.13 250);
+    --info-foreground: #fff;
+    --warning: oklch(79.5% 0.184 86.047);
+    --warning-foreground: oklch(0.2 0.05 80);
+
+    --border: oklch(94% 0.004 286.32);
+    --input: oklch(92% 0.004 286.32);
+    --ring: oklch(70.5% 0.015 286.067);
+    --radius: 0.5rem;
+
+    --sgh-sidebar-width: 280px;
+    --sgh-sidebar-width-collapse: 80px;
+    --sgh-header-height: 70px;
+}
+
+.dark {
+    --background: oklch(14.1% 0.005 285.823);
+    --foreground: oklch(98.5% 0 0);
+    --card: oklch(14.1% 0.005 285.823);
+    --card-foreground: oklch(98.5% 0 0);
+    --popover: oklch(14.1% 0.005 285.823);
+    --popover-foreground: oklch(98.5% 0 0);
+
+    --primary: oklch(54.6% 0.245 262.881);
+    --primary-foreground: #fff;
+    --secondary: oklch(27.4% 0.006 286.033);
+    --secondary-foreground: oklch(98.5% 0 0);
+    --muted: oklch(21% 0.006 285.885);
+    --muted-foreground: oklch(55.2% 0.016 285.938);
+    --accent: oklch(21% 0.006 285.885);
+    --accent-foreground: oklch(98.5% 0 0);
+    --destructive: oklch(57.7% 0.245 27.325);
+    --destructive-foreground: #fff;
+    --success: oklch(72.3% 0.219 149.579);
+    --success-foreground: oklch(0.16 0.02 150);
+    --info: oklch(64% 0.13 250);
+    --info-foreground: oklch(0.16 0.02 250);
+    --warning: oklch(79.5% 0.184 86.047);
+    --warning-foreground: oklch(0.2 0.05 80);
+
+    --border: oklch(27.4% 0.006 286.033);
+    --input: oklch(27.4% 0.006 286.033);
+    --ring: oklch(44.2% 0.017 285.786);
+}
 
 @theme inline {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -140,212 +209,326 @@
     --color-accent-foreground: var(--accent-foreground);
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
 }
 
 /*
- * fl-* Tailwind component classes replacing the legacy kt-* markup.
+ * sgh-* Tailwind component classes replacing the legacy kt-* markup.
  * Mirrors the sibling church-mgt-system project sgh-* design system for
- * visual consistency between the two products; values reference the CSS
- * custom properties Metronic styles.css already defines on :root/.dark,
- * so fl-* elements match the still-present (JS-critical) kt-* elements
- * exactly. Some resources/views blade files still use kt-* because it is
- * wired to assets/vendors/ktui/ktui.min.js behavior (menus, dropdowns,
- * modals, drawers, scrollables, switches, tooltips, theme toggle).
+ * visual consistency between the two products.
  */
 @layer components {
-    .fl-btn {
+    .sgh-btn {
         @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius)] px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50;
     }
-    .fl-btn-primary {
+    .sgh-btn-primary {
         @apply bg-primary text-primary-foreground hover:opacity-90;
     }
-    .fl-btn-secondary {
+    .sgh-btn-secondary {
         @apply bg-secondary text-secondary-foreground hover:opacity-90;
     }
-    .fl-btn-outline {
+    .sgh-btn-outline {
         @apply border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
     }
-    .fl-btn-light {
+    .sgh-btn-light {
         @apply border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
     }
-    .fl-btn-ghost {
+    .sgh-btn-ghost {
         @apply text-foreground hover:bg-accent hover:text-accent-foreground;
     }
-    .fl-btn-danger,
-    .fl-btn-destructive {
+    .sgh-btn-danger,
+    .sgh-btn-destructive {
         @apply bg-destructive text-destructive-foreground hover:opacity-90;
     }
-    .fl-btn-success {
+    .sgh-btn-success {
         @apply bg-[oklch(0.5_0.12_150)] text-white hover:opacity-90;
     }
-    .fl-btn-warning {
+    .sgh-btn-warning {
         @apply bg-[oklch(0.75_0.15_80)] text-[oklch(0.2_0.05_80)] hover:opacity-90;
     }
-    .fl-btn-sm {
+    .sgh-btn-sm {
         @apply px-2.5 py-1.5 text-xs;
     }
-    .fl-btn-xs {
+    .sgh-btn-xs {
         @apply px-2 py-1 text-xs;
     }
-    .fl-btn-icon {
+    .sgh-btn-icon {
         @apply p-2;
     }
 
-    .fl-input,
-    .fl-select,
-    .fl-textarea {
+    .sgh-input,
+    .sgh-select,
+    .sgh-textarea {
         @apply block w-full rounded-[var(--radius)] border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50;
     }
-    .fl-input-sm,
-    .fl-select-sm {
+    .sgh-input-sm,
+    .sgh-select-sm {
         @apply px-2.5 py-1.5 text-xs;
     }
 
-    .fl-checkbox,
-    .fl-radio {
+    .sgh-checkbox,
+    .sgh-radio {
         @apply size-4 border border-input text-primary focus:ring-2 focus:ring-ring/30;
     }
-    .fl-checkbox {
+    .sgh-checkbox {
         @apply rounded;
     }
-    .fl-checkbox-sm {
+    .sgh-checkbox-sm {
         @apply size-3.5;
     }
-    .fl-checkbox-label {
+    .sgh-checkbox-label {
         @apply text-sm text-foreground;
     }
-    .fl-radio {
+    .sgh-radio {
         @apply rounded-full;
     }
 
-    .fl-label,
-    .fl-form-label {
+    .sgh-label,
+    .sgh-form-label {
         @apply text-sm font-medium text-foreground;
     }
-    .fl-link {
+    .sgh-link {
         @apply font-medium text-primary hover:underline;
     }
 
-    .fl-card {
+    .sgh-card {
         @apply rounded-xl border border-border bg-card text-card-foreground;
     }
-    .fl-card-hover {
+    .sgh-card-hover {
         @apply transition-shadow hover:shadow-md;
     }
-    .fl-card-header {
+    .sgh-card-header {
         @apply flex items-center justify-between gap-3 border-b border-border p-5;
     }
-    .fl-card-title {
+    .sgh-card-title {
         @apply text-sm font-semibold text-foreground;
     }
-    .fl-card-subtitle {
+    .sgh-card-subtitle {
         @apply mt-1 text-xs text-muted-foreground;
     }
-    .fl-card-content,
-    .fl-card-body {
+    .sgh-card-content,
+    .sgh-card-body {
         @apply p-5;
     }
-    .fl-card-footer {
+    .sgh-card-footer {
         @apply flex items-center justify-between gap-3 border-t border-border p-5;
     }
-    .fl-card-grid {
+    .sgh-card-grid {
         @apply grid;
     }
-    .fl-card-table {
+    .sgh-card-table {
         @apply p-0;
     }
 
-    .fl-badge {
+    .sgh-badge {
         @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium leading-relaxed;
     }
-    .fl-badge-sm {
+    .sgh-badge-sm {
         @apply px-1.5 py-0.5 text-[11px];
     }
-    .fl-badge-outline {
+    .sgh-badge-outline {
         @apply border border-border bg-transparent;
     }
-    .fl-badge-neutral {
+    .sgh-badge-neutral {
         @apply bg-muted text-muted-foreground;
     }
-    .fl-badge-primary {
+    .sgh-badge-primary {
         @apply bg-accent text-accent-foreground;
     }
-    .fl-badge-success {
+    .sgh-badge-success {
         @apply bg-[oklch(0.94_0.06_150)] text-[oklch(0.38_0.11_150)];
     }
-    .fl-badge-warning {
+    .sgh-badge-warning {
         @apply bg-[oklch(0.95_0.07_80)] text-[oklch(0.42_0.12_60)];
     }
-    .fl-badge-danger {
+    .sgh-badge-danger {
         @apply bg-[oklch(0.94_0.06_25)] text-[oklch(0.42_0.16_25)];
     }
-    .fl-badge-info {
+    .sgh-badge-info {
         @apply bg-[oklch(0.93_0.05_250)] text-[oklch(0.4_0.13_250)];
     }
 
-    .fl-alert {
+    .sgh-alert {
         @apply flex items-start gap-3 rounded-[var(--radius)] border p-4 text-sm;
     }
-    .fl-alert-icon {
+    .sgh-alert-icon {
         @apply shrink-0;
     }
-    .fl-alert-content {
+    .sgh-alert-content {
         @apply flex-1;
     }
-    .fl-alert-title {
+    .sgh-alert-title {
         @apply font-semibold;
     }
-    .fl-alert-description {
+    .sgh-alert-description {
         @apply mt-1;
     }
-    .fl-alert-light {
+    .sgh-alert-light {
         @apply border-border bg-accent text-accent-foreground;
     }
-    .fl-alert-success {
+    .sgh-alert-success {
         @apply border-[oklch(0.85_0.08_150)] bg-[oklch(0.97_0.03_150)] text-[oklch(0.32_0.1_150)];
     }
-    .fl-alert-danger,
-    .fl-alert-destructive {
+    .sgh-alert-danger,
+    .sgh-alert-destructive {
         @apply border-[oklch(0.85_0.08_25)] bg-[oklch(0.97_0.03_25)] text-[oklch(0.4_0.15_25)];
     }
-    .fl-alert-warning {
+    .sgh-alert-warning {
         @apply border-[oklch(0.87_0.09_80)] bg-[oklch(0.97_0.04_80)] text-[oklch(0.4_0.11_60)];
     }
-    .fl-alert-info {
+    .sgh-alert-info {
         @apply border-[oklch(0.85_0.07_250)] bg-[oklch(0.96_0.03_250)] text-[oklch(0.4_0.12_250)];
     }
 
-    .fl-table {
+    .sgh-table {
         @apply w-full border-collapse text-sm;
     }
-    .fl-table-border thead th,
-    .fl-table-border tbody td {
+    .sgh-table-border thead th,
+    .sgh-table-border tbody td {
         @apply border-b border-border;
     }
-    .fl-table-col {
+    .sgh-table-col {
         @apply px-4 py-3 align-middle text-foreground;
     }
-    .fl-table-col-label {
+    .sgh-table-col-label {
         @apply px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground;
     }
-    .fl-table-col-sort {
+    .sgh-table-col-sort {
         @apply ms-1 inline-block size-3 opacity-40;
     }
-    .fl-table-col-end {
+    .sgh-table-col-end {
         @apply text-end;
     }
 
-    .fl-container-fixed {
+    .sgh-container-fixed {
         @apply mx-auto w-full max-w-[1400px] px-4 lg:px-7.5;
     }
-    .fl-wrapper {
+    .sgh-wrapper {
         @apply flex grow flex-col;
     }
-    .fl-scrollable-x-auto {
+    .sgh-scrollable-x-auto {
         @apply overflow-x-auto;
+    }
+
+    .sgh-switch {
+        @apply relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-border transition-colors;
+    }
+    .sgh-switch-sm {
+        @apply h-4 w-7;
+    }
+    .sgh-switch-thumb {
+        @apply inline-block size-4 -translate-x-px transform rounded-full bg-background shadow-sm ring-1 ring-black/10 transition-transform;
+    }
+    .sgh-switch-sm .sgh-switch-thumb {
+        @apply size-3;
+    }
+
+    .sgh-dropdown-panel {
+        @apply absolute end-0 z-50 mt-2 min-w-[12rem] rounded-[var(--radius)] border border-border bg-popover p-1.5 text-popover-foreground shadow-lg;
+    }
+    .sgh-dropdown-item {
+        @apply flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground;
+    }
+    .sgh-dropdown-separator {
+        @apply my-1.5 border-t border-border;
+    }
+
+    .sgh-nav-heading {
+        @apply px-2.5 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground;
+    }
+    .sgh-nav-item {
+        @apply flex grow items-center gap-2.5 rounded-[var(--radius)] border border-transparent px-2.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent;
+    }
+    .sgh-nav-item.active {
+        @apply bg-accent;
+    }
+    .sgh-nav-icon {
+        @apply w-5 shrink-0 items-start text-muted-foreground;
+    }
+    .sgh-nav-item.active .sgh-nav-icon,
+    .sgh-nav-item.active .sgh-nav-title {
+        @apply text-primary;
+    }
+
+    .sgh-modal-backdrop {
+        @apply fixed inset-0 z-40 bg-foreground/40;
+    }
+    .sgh-modal-content {
+        @apply relative z-50 mx-auto grid max-h-[90vh] w-full max-w-[500px] grid-rows-[auto_1fr] overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xl;
+    }
+    .sgh-modal-header {
+        @apply flex items-center justify-between gap-3 border-b border-border p-5;
+    }
+    .sgh-modal-title {
+        @apply text-base font-semibold text-foreground;
+    }
+    .sgh-modal-close {
+        @apply text-muted-foreground hover:text-foreground;
+    }
+    .sgh-modal-body {
+        @apply overflow-y-auto p-5;
+    }
+    .sgh-modal-footer {
+        @apply flex items-center justify-end border-t border-border p-5;
+    }
+
+    .sgh-tooltip-panel {
+        @apply absolute bottom-full start-1/2 z-50 mb-2 -translate-x-1/2 rounded-md border border-border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-lg;
+    }
+
+    .sgh-shell {
+        @apply flex grow;
+    }
+    .sgh-sidebar {
+        width: var(--sgh-sidebar-width);
+        transition: width 0.3s ease;
+    }
+    .sgh-header {
+        height: var(--sgh-header-height);
+        inset-inline-start: 0;
+        transition: inset-inline-start 0.3s ease;
+    }
+    .sgh-wrapper {
+        padding-top: var(--sgh-header-height);
+        transition: padding-inline-start 0.3s ease;
+    }
+    @media (min-width: 64rem) {
+        .sgh-wrapper {
+            padding-inline-start: var(--sgh-sidebar-width);
+        }
+        .sgh-header {
+            inset-inline-start: var(--sgh-sidebar-width);
+        }
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar {
+        width: var(--sgh-sidebar-width-collapse);
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar:hover {
+        width: var(--sgh-sidebar-width);
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .sgh-nav-title,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .sgh-nav-heading,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .default-logo {
+        display: none;
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .small-logo {
+        display: flex;
+    }
+    @media (min-width: 64rem) {
+        .sgh-shell.is-collapsed .sgh-wrapper {
+            padding-inline-start: var(--sgh-sidebar-width-collapse);
+        }
+        .sgh-shell.is-collapsed .sgh-header {
+            inset-inline-start: var(--sgh-sidebar-width-collapse);
+        }
     }
 }
 
@@ -360,18 +543,18 @@
         --app-link-hover-color: #bfdbfe;
     }
 
-    #content a[href]:not(.btn):not(.fl-btn):not(.kt-btn):not(.kt-menu-link):not([role='button']) {
+    #content a[href]:not(.btn):not(.sgh-btn):not(.kt-btn):not(.kt-menu-link):not([role='button']) {
         color: var(--app-link-color);
         font-weight: 500;
         text-decoration-line: none;
         transition: color 180ms ease;
     }
 
-    #content a[href]:not(.btn):not(.fl-btn):not(.kt-btn):not(.kt-menu-link):not([role='button']):hover {
+    #content a[href]:not(.btn):not(.sgh-btn):not(.kt-btn):not(.kt-menu-link):not([role='button']):hover {
         color: var(--app-link-hover-color);
     }
 
-    #content a[href]:not(.btn):not(.fl-btn):not(.kt-btn):not(.kt-menu-link):not([role='button']):focus-visible {
+    #content a[href]:not(.btn):not(.sgh-btn):not(.kt-btn):not(.kt-menu-link):not([role='button']):focus-visible {
         outline: 2px solid var(--app-link-color);
         outline-offset: 2px;
     }

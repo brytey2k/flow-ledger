@@ -1,32 +1,32 @@
 @php
     /**
-     * Supported flash keys mapped to Metronic fl-alert variants.
+     * Supported flash keys mapped to Metronic sgh-alert variants.
      * status maps to success for legacy usage.
      */
     $flashMap = [
         'success' => [
             'icon'    => 'tabler-circle-check-filled',
-            'variant' => 'fl-alert-success',
+            'variant' => 'sgh-alert-success',
             'label'   => __('common.alerts.success'),
         ],
         'error' => [
             'icon'    => 'tabler-info-circle-filled',
-            'variant' => 'fl-alert-danger',
+            'variant' => 'sgh-alert-danger',
             'label'   => __('common.alerts.error'),
         ],
         'warning' => [
             'icon'    => 'tabler-info-square-rounded-filled',
-            'variant' => 'fl-alert-warning',
+            'variant' => 'sgh-alert-warning',
             'label'   => __('common.alerts.warning'),
         ],
         'info' => [
             'icon'    => 'tabler-info-circle-filled',
-            'variant' => 'fl-alert-info',
+            'variant' => 'sgh-alert-info',
             'label'   => __('common.alerts.info'),
         ],
         'status' => [ // legacy alias used by Laravel redirects
             'icon'    => 'tabler-circle-check-filled',
-            'variant' => 'fl-alert-success',
+            'variant' => 'sgh-alert-success',
             'label'   => __('common.alerts.success'),
         ],
     ];
@@ -35,7 +35,7 @@
     $structured = session('flash');
 @endphp
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     @php
         $hasFlash = $errors->any()
             || (is_array($structured) && ($structured['message'] ?? false))
@@ -43,7 +43,7 @@
     @endphp
     <div class="{{ $hasFlash ? 'grid gap-3 pb-5' : '' }}">
         @if($errors->any())
-            <div class="fl-alert fl-alert-danger">
+            <div class="sgh-alert sgh-alert-danger">
                 <x-tabler-info-circle-filled />
                 <ul class="list-disc ps-5">
                     @foreach ($errors->all() as $error)
@@ -58,7 +58,7 @@
                 $type   = $structured['type'] ?? 'info';
                 $config = $flashMap[$type] ?? $flashMap['info'];
             @endphp
-            <div class="fl-alert {{ $config['variant'] }}">
+            <div class="sgh-alert {{ $config['variant'] }}">
                 <x-dynamic-component :component="$config['icon']" />
                 {!! is_array($structured['message']) ? implode('<br>', array_map('e', $structured['message'])) : e($structured['message']) !!}
             </div>
@@ -67,7 +67,7 @@
         @foreach($flashMap as $key => $config)
             @if (session($key))
                 @php $message = session($key); @endphp
-                <div class="fl-alert {{ $config['variant'] }}">
+                <div class="sgh-alert {{ $config['variant'] }}">
                     <x-dynamic-component :component="$config['icon']" />
                     @if (is_array($message))
                         <ul class="list-disc ps-5">

@@ -35,7 +35,7 @@
     $structured = session('flash');
 @endphp
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-3">
         @if(is_array($structured) && ($structured['message'] ?? false))
             @php

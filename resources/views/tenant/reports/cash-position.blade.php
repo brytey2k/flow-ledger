@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
@@ -19,34 +19,34 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Filters --}}
-        <div class="fl-card p-5">
+        <div class="sgh-card p-5">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">Period From</label>
-                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="fl-input fl-input-sm" />
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="sgh-input sgh-input-sm" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">Period To</label>
-                    <input type="date" name="date_to" value="{{ $dateTo }}" class="fl-input fl-input-sm" />
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="sgh-input sgh-input-sm" />
                 </div>
-                <button type="submit" class="fl-btn fl-btn-primary fl-btn-sm">Apply</button>
+                <button type="submit" class="sgh-btn sgh-btn-primary sgh-btn-sm">Apply</button>
             </form>
         </div>
 
         {{-- Cashbook cards --}}
         @if($cashbooks->isEmpty())
-            <div class="fl-card fl-card-content flex flex-col items-center justify-center py-12">
+            <div class="sgh-card sgh-card-content flex flex-col items-center justify-center py-12">
                 <x-tabler-calculator-filled class="text-5xl text-muted-foreground mb-3" />
                 <p class="text-sm text-secondary-foreground">No cashbooks found.</p>
             </div>
         @else
             <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach($cashbooks as $row)
-                    <div class="fl-card p-5 flex flex-col gap-4">
+                    <div class="sgh-card p-5 flex flex-col gap-4">
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="text-sm font-semibold text-mono">{{ $row['cashbook']->branch?->name ?? 'Unknown Branch' }}</div>

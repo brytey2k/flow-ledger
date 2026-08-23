@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cash_count.show_title') }}</h1>
@@ -10,12 +10,12 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a href="{{ route('cash-count.index', $branch) }}" class="fl-btn fl-btn-light">
+            <a href="{{ route('cash-count.index', $branch) }}" class="sgh-btn sgh-btn-light">
                 <x-tabler-arrow-left />
                 {{ __('cash_count.buttons.back_to_history') }}
             </a>
             @can(\App\Enums\Tenant\PermissionKey::CreateCashCount->value)
-                <a href="{{ route('cash-count.create', $branch) }}" class="fl-btn fl-btn-primary">
+                <a href="{{ route('cash-count.create', $branch) }}" class="sgh-btn sgh-btn-primary">
                     <x-tabler-plus-filled />
                     {{ __('cash_count.buttons.new_count') }}
                 </a>
@@ -24,13 +24,13 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         <!-- Status Card -->
         @php $status = $cashCount->status(); @endphp
-        <div class="fl-card">
-            <div class="fl-card-content p-6 lg:p-8">
+        <div class="sgh-card">
+            <div class="sgh-card-content p-6 lg:p-8">
                 <div class="flex flex-wrap items-center justify-between gap-6">
                     <div class="flex items-center gap-4">
                         @if($status === 'equal')
@@ -93,36 +93,36 @@
         </div>
 
         <!-- Denomination Breakdown -->
-        <div class="fl-card fl-card-grid">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">{{ __('cash_count.denominations.title') }}</h3>
+        <div class="sgh-card sgh-card-grid">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">{{ __('cash_count.denominations.title') }}</h3>
                 <span class="text-sm text-secondary-foreground">
                     {{ $cashbook->currency->name }} ({{ $cashbook->currency->symbol }})
                 </span>
             </div>
-            <div class="fl-card-table">
-                <div class="fl-scrollable-x-auto border-b border-border">
-                    <table class="fl-table fl-table-border">
+            <div class="sgh-card-table">
+                <div class="sgh-scrollable-x-auto border-b border-border">
+                    <table class="sgh-table sgh-table-border">
                         <thead>
                             <tr>
                                 <th class="min-w-[200px]">
-                                    <span class="fl-table-col">
-                                        <span class="fl-table-col-label">{{ __('cash_count.labels.denomination') }}</span>
+                                    <span class="sgh-table-col">
+                                        <span class="sgh-table-col-label">{{ __('cash_count.labels.denomination') }}</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[140px] text-right">
-                                    <span class="fl-table-col justify-end">
-                                        <span class="fl-table-col-label">{{ __('cash_count.denominations.labels.value') }}</span>
+                                    <span class="sgh-table-col justify-end">
+                                        <span class="sgh-table-col-label">{{ __('cash_count.denominations.labels.value') }}</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[100px] text-right">
-                                    <span class="fl-table-col justify-end">
-                                        <span class="fl-table-col-label">{{ __('cash_count.labels.quantity') }}</span>
+                                    <span class="sgh-table-col justify-end">
+                                        <span class="sgh-table-col-label">{{ __('cash_count.labels.quantity') }}</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[140px] text-right">
-                                    <span class="fl-table-col justify-end">
-                                        <span class="fl-table-col-label">{{ __('cash_count.labels.subtotal') }}</span>
+                                    <span class="sgh-table-col justify-end">
+                                        <span class="sgh-table-col-label">{{ __('cash_count.labels.subtotal') }}</span>
                                     </span>
                                 </th>
                             </tr>
@@ -189,7 +189,7 @@
                       onsubmit="return confirm('{{ __('cash_count.confirm_delete') }}');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="fl-btn fl-btn-light text-danger">
+                    <button type="submit" class="sgh-btn sgh-btn-light text-danger">
                         <x-tabler-trash-filled />
                         {{ __('common.delete') }}
                     </button>

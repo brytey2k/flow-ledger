@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
@@ -19,23 +19,23 @@
     </div>
 </div>
 
-<div class="fl-container-fixed">
+<div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Filters --}}
-        <div class="fl-card p-5">
+        <div class="sgh-card p-5">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">From</label>
-                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="fl-input fl-input-sm" />
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="sgh-input sgh-input-sm" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">To</label>
-                    <input type="date" name="date_to" value="{{ $dateTo }}" class="fl-input fl-input-sm" />
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="sgh-input sgh-input-sm" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">Branch</label>
-                    <select name="branch_id" class="fl-select fl-select-sm">
+                    <select name="branch_id" class="sgh-select sgh-select-sm">
                         <option value="">All Branches</option>
                         @foreach($branches as $id => $name)
                             <option value="{{ $id }}" @selected((string) $branchId === (string) $id)>{{ $name }}</option>
@@ -44,44 +44,44 @@
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">Method</label>
-                    <select name="method" class="fl-select fl-select-sm">
+                    <select name="method" class="sgh-select sgh-select-sm">
                         <option value="">All Methods</option>
                         @foreach($methods as $m)
                             <option value="{{ $m->value }}" @selected($method === $m->value)>{{ ucwords(str_replace('_', ' ', $m->value)) }}</option>
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="fl-btn fl-btn-primary fl-btn-sm">Apply</button>
+                <button type="submit" class="sgh-btn sgh-btn-primary sgh-btn-sm">Apply</button>
             </form>
         </div>
 
         {{-- Table --}}
-        <div class="fl-card fl-card-grid">
-            <div class="fl-card-header">
-                <h3 class="fl-card-title">Disbursements</h3>
-                <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $disbursements->total() }} records</span>
+        <div class="sgh-card sgh-card-grid">
+            <div class="sgh-card-header">
+                <h3 class="sgh-card-title">Disbursements</h3>
+                <span class="sgh-badge sgh-badge-sm sgh-badge-outline">{{ $disbursements->total() }} records</span>
             </div>
 
             @if($disbursements->isEmpty())
-                <div class="fl-card-content flex flex-col items-center justify-center py-12">
+                <div class="sgh-card-content flex flex-col items-center justify-center py-12">
                     <x-tabler-building-bank class="text-5xl text-muted-foreground mb-3" />
                     <p class="text-sm text-secondary-foreground">No disbursements found for this period.</p>
                 </div>
             @else
-                <div class="fl-card-table">
-                    <div class="fl-scrollable-x-auto border-b border-border">
-                        <table class="fl-table fl-table-border">
+                <div class="sgh-card-table">
+                    <div class="sgh-scrollable-x-auto border-b border-border">
+                        <table class="sgh-table sgh-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[60px]"><span class="fl-table-col"><span class="fl-table-col-label">#</span></span></th>
-                                    <th class="min-w-[150px]"><span class="fl-table-col"><span class="fl-table-col-label">Staff</span></span></th>
-                                    <th class="min-w-[120px]"><span class="fl-table-col"><span class="fl-table-col-label">Branch</span></span></th>
-                                    <th class="min-w-[80px]"><span class="fl-table-col"><span class="fl-table-col-label">Type</span></span></th>
-                                    <th class="min-w-[130px]"><span class="fl-table-col"><span class="fl-table-col-label">Amount</span></span></th>
-                                    <th class="min-w-[120px]"><span class="fl-table-col"><span class="fl-table-col-label">Method</span></span></th>
-                                    <th class="min-w-[140px]"><span class="fl-table-col"><span class="fl-table-col-label">Reference</span></span></th>
-                                    <th class="min-w-[130px]"><span class="fl-table-col"><span class="fl-table-col-label">Disbursed By</span></span></th>
-                                    <th class="min-w-[120px]"><span class="fl-table-col"><span class="fl-table-col-label">Date</span></span></th>
+                                    <th class="min-w-[60px]"><span class="sgh-table-col"><span class="sgh-table-col-label">#</span></span></th>
+                                    <th class="min-w-[150px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Staff</span></span></th>
+                                    <th class="min-w-[120px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Branch</span></span></th>
+                                    <th class="min-w-[80px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Type</span></span></th>
+                                    <th class="min-w-[130px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Amount</span></span></th>
+                                    <th class="min-w-[120px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Method</span></span></th>
+                                    <th class="min-w-[140px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Reference</span></span></th>
+                                    <th class="min-w-[130px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Disbursed By</span></span></th>
+                                    <th class="min-w-[120px]"><span class="sgh-table-col"><span class="sgh-table-col-label">Date</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -91,7 +91,7 @@
                                         <td><span class="text-sm font-medium text-mono">{{ $req->staff?->full_name ?? '—' }}</span></td>
                                         <td><span class="text-sm text-foreground">{{ $req->branch?->name ?? '—' }}</span></td>
                                         <td>
-                                            <span class="fl-badge fl-badge-sm {{ $req->type === 'advance' ? 'fl-badge-primary' : 'fl-badge-warning' }}">
+                                            <span class="sgh-badge sgh-badge-sm {{ $req->type === 'advance' ? 'sgh-badge-primary' : 'sgh-badge-warning' }}">
                                                 {{ ucfirst($req->type) }}
                                             </span>
                                         </td>
@@ -108,7 +108,7 @@
                 </div>
 
                 @if($disbursements->hasPages())
-                    <div class="fl-card-footer py-4 px-5 lg:px-7.5">
+                    <div class="sgh-card-footer py-4 px-5 lg:px-7.5">
                         {{ $disbursements->links() }}
                     </div>
                 @endif
