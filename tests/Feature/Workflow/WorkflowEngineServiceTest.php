@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Exceptions\SendBackNotAllowedException;
 use App\Models\Role;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Currency;
@@ -319,6 +320,31 @@ test('send back records action and stores sent back stage id', function () {
         'workflow_instance_stage_id' => $activeStage->id,
         'action' => 'send_back',
         'comment' => 'Please fix the amount.',
+    ]);
+});
+test('send back throws when the stage disallows it and leaves state unchanged', function () {
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $role = Role::create(['name' => 'no_send_back_engine_role_' . uniqid(), 'guard_name' => 'web']);
+    $stage = WorkflowStage::factory()->create([
+        'workflow_template_id' => $template->id,
+        'display_order' => 1,
+        'allow_send_back' => false,
+    ]);
+    $stage->roles()->sync([$role->id]);
+    $template->load('stages');
+
+    $subject = makePaymentRequestForWorkflowEngineService();
+    $instance = $this->engine->startWorkflow($subject, $template);
+    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+    expect(fn() => $this->engine->sendBack($activeStage, $this->user, 'Please fix.'))
+        ->toThrow(SendBackNotAllowedException::class);
+
+    $activeStage->refresh();
+    expect($activeStage->status)->toEqual('active');
+    $this->assertDatabaseMissing('workflow_actions', [
+        'workflow_instance_stage_id' => $activeStage->id,
+        'action' => 'send_back',
     ]);
 });
 test('send back in parallel group cancels sibling stages', function () {

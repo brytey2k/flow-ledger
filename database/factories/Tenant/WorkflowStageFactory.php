@@ -40,4 +40,9 @@ class WorkflowStageFactory extends Factory
     {
         return $this->state(['scope_to_branch' => true]);
     }
+
+    public function disallowSendBack(): static
+    {
+        return $this->state(['allow_send_back' => false]);
+    }
 }

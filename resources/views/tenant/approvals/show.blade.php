@@ -242,11 +242,13 @@
                                         <i class="ki-filled ki-check-circle"></i>
                                         {{ __('common.approve') }}
                                     </button>
-                                    <button type="submit" name="action" value="send_back"
-                                            class="kt-btn kt-btn-warning kt-btn-outline w-full">
-                                        <i class="ki-filled ki-arrow-left"></i>
-                                        {{ __('common.send_back') }}
-                                    </button>
+                                    @if($instanceStage->stage->allow_send_back)
+                                        <button type="submit" name="action" value="send_back"
+                                                class="kt-btn kt-btn-warning kt-btn-outline w-full">
+                                            <i class="ki-filled ki-arrow-left"></i>
+                                            {{ __('common.send_back') }}
+                                        </button>
+                                    @endif
                                     <button type="submit" name="action" value="reject"
                                             onclick="return confirm('{{ __('approvals.show.reject_confirm') }}')"
                                             class="kt-btn kt-btn-danger kt-btn-outline w-full">

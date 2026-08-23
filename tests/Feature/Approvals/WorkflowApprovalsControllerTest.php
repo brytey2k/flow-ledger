@@ -260,6 +260,34 @@ test('review screen hides action form when stage already resolved', function () 
     $response->assertDontSee('id="approval-form"', false);
     $response->assertSee(__('approvals.show.already_resolved_heading'));
 });
+test('review screen hides send back button when the stage disallows it', function () {
+    [, $instanceStage] = submitRequestWithTemplate();
+    $instanceStage->stage->update(['allow_send_back' => false]);
+
+    $response = $this->actingAs($this->user)->get(route('approvals.show', $instanceStage));
+
+    $response->assertOk();
+    $response->assertDontSee(__('common.send_back'));
+});
+test('review screen shows send back button when the stage allows it', function () {
+    [, $instanceStage] = submitRequestWithTemplate();
+
+    $response = $this->actingAs($this->user)->get(route('approvals.show', $instanceStage));
+
+    $response->assertOk();
+    $response->assertSee(__('common.send_back'));
+});
+test('sending back against a stage that disallows it redirects with an error and makes no change', function () {
+    [, $instanceStage] = submitRequestWithTemplate();
+    $instanceStage->stage->update(['allow_send_back' => false]);
+
+    $this->actingAs($this->user)->post(route('approvals.store', $instanceStage), [
+        'action' => 'send_back',
+        'comment' => 'Bypassing the UI.',
+    ])->assertRedirect()->assertSessionHas('error');
+
+    expect($instanceStage->fresh()->status)->toEqual('active');
+});
 test('approve marks stage approved and redirects', function () {
     [$paymentRequest, $instanceStage] = submitRequestWithTemplate();
 

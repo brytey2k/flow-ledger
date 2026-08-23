@@ -15,5 +15,6 @@ readonly class WorkflowStageDto
         public array $roleIds,
         public bool $scopeToDepartment = false,
         public bool $scopeToBranch = false,
+        public bool $allowSendBack = true,
     ) {}
 }

@@ -123,6 +123,77 @@ test('user can create stage with roles', function () {
         'role_id' => $role->id,
     ]);
 });
+test('store defaults allow_send_back to true when omitted', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $role = Role::create(['name' => 'default_send_back_role_' . uniqid(), 'guard_name' => 'web']);
+
+    $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $template), [
+        'name' => 'Default Send Back Stage',
+        'display_order' => 1,
+        'role_ids' => [$role->id],
+    ]);
+
+    $stage = WorkflowStage::where('name', 'Default Send Back Stage')->firstOrFail();
+    expect($stage->allow_send_back)->toBeTrue();
+});
+test('store persists allow_send_back false when explicitly unchecked', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $role = Role::create(['name' => 'no_send_back_role_' . uniqid(), 'guard_name' => 'web']);
+
+    $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $template), [
+        'name' => 'Terminal Stage',
+        'display_order' => 1,
+        'role_ids' => [$role->id],
+        'allow_send_back' => '0',
+    ]);
+
+    $stage = WorkflowStage::where('name', 'Terminal Stage')->firstOrFail();
+    expect($stage->allow_send_back)->toBeFalse();
+});
+test('update flips allow_send_back to false', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'allow_send_back' => true]);
+    $role = Role::create(['name' => 'flip_send_back_role_' . uniqid(), 'guard_name' => 'web']);
+    $stage->roles()->sync([$role->id]);
+
+    $this->actingAs($this->user)->put(route('workflow-templates.stages.update', [$template, $stage]), [
+        'name' => $stage->name,
+        'display_order' => $stage->display_order,
+        'role_ids' => [$role->id],
+        'allow_send_back' => '0',
+    ]);
+
+    expect($stage->fresh()->allow_send_back)->toBeFalse();
+});
+test('forking a template preserves a disallowed allow_send_back flag on the copied stage', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $lockedStage = WorkflowStage::factory()->create([
+        'workflow_template_id' => $template->id,
+        'display_order' => 1,
+        'allow_send_back' => false,
+    ]);
+    $role = Role::create(['name' => 'fork_preserve_role_' . uniqid(), 'guard_name' => 'web']);
+    $lockedStage->roles()->sync([$role->id]);
+
+    $subject = PaymentRequest::factory()->inWorkflow()->create();
+    WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $subject->id,
+        'status' => 'in_progress',
+    ]);
+
+    $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $template), [
+        'name' => 'New Stage After Fork',
+        'display_order' => 2,
+        'role_ids' => [$role->id],
+    ]);
+
+    $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)->where('status', 'draft')->firstOrFail();
+    $copiedStage = WorkflowStage::where('workflow_template_id', $draft->id)->where('name', $lockedStage->name)->firstOrFail();
+
+    expect($copiedStage->allow_send_back)->toBeFalse();
+});
 test('store requires name', function () {
     $template = WorkflowTemplate::factory()->create();
     $role = Role::create(['name' => 'approver_b', 'guard_name' => 'web']);

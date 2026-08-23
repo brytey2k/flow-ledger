@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant;
 
+use App\Exceptions\SendBackNotAllowedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\ApprovalActionRequest;
 use App\Models\Tenant\RetirementRequest;
@@ -67,12 +68,16 @@ class WorkflowApprovalsController extends Controller
 
         $dto = $request->toDto();
 
-        match ($dto->action) {
-            'approve' => $this->engine->approve($instanceStage, $user, $dto->comment),
-            'reject' => $this->engine->reject($instanceStage, $user, (string) $dto->comment),
-            'send_back' => $this->engine->sendBack($instanceStage, $user, (string) $dto->comment),
-            default => null,
-        };
+        try {
+            match ($dto->action) {
+                'approve' => $this->engine->approve($instanceStage, $user, $dto->comment),
+                'reject' => $this->engine->reject($instanceStage, $user, (string) $dto->comment),
+                'send_back' => $this->engine->sendBack($instanceStage, $user, (string) $dto->comment),
+                default => null,
+            };
+        } catch (SendBackNotAllowedException) {
+            return back()->with('error', __('flash.approvals.send_back_not_allowed'));
+        }
 
         /** @var \Illuminate\Database\Eloquent\Model $subject */
         $subject = $instanceStage->instance?->workflowable;

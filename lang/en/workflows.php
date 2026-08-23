@@ -110,6 +110,7 @@ return [
             'roles_hint' => 'Any user with one of these roles will see this stage in their approvals inbox.',
             'scope_to_department' => 'Restrict approvers to submitter\'s department',
             'scope_to_branch' => 'Restrict approvers to request\'s branch',
+            'allow_send_back' => 'Allow send-back at this stage',
         ],
         'buttons' => [
             'add' => 'Add Stage',

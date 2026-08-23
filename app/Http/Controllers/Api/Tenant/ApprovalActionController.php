@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Tenant;
 
 use App\Enums\Tenant\PermissionKey;
+use App\Exceptions\SendBackNotAllowedException;
 use App\Http\Requests\Tenant\ApprovalActionRequest;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Services\WorkflowEngineService;
@@ -51,7 +52,12 @@ class ApprovalActionController extends BaseApiController
         abort_unless($workflowInstanceStage->isActive(), 422, 'This stage is no longer active.');
 
         $comment = $request->input('comment');
-        $this->engine->sendBack($workflowInstanceStage, $user, is_string($comment) ? $comment : '');
+
+        try {
+            $this->engine->sendBack($workflowInstanceStage, $user, is_string($comment) ? $comment : '');
+        } catch (SendBackNotAllowedException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json(['data' => $workflowInstanceStage->refresh()->load('instance.workflowable')]);
     }

@@ -142,6 +142,7 @@ return [
     ],
     'approvals' => [
         'action_recorded' => 'Action recorded successfully.',
+        'send_back_not_allowed' => 'This stage does not allow sending the request back for revision.',
     ],
     'tenants' => [
         'created' => 'Tenant created successfully.',

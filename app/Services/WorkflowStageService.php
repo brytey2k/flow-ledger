@@ -22,6 +22,7 @@ class WorkflowStageService
                 'parallel_group_id' => $dto->parallelGroupId,
                 'scope_to_department' => $dto->scopeToDepartment,
                 'scope_to_branch' => $dto->scopeToBranch,
+                'allow_send_back' => $dto->allowSendBack,
             ]);
             $stage->roles()->sync($dto->roleIds);
             $this->syncParallelGroupDisplayOrder($stage);
@@ -40,6 +41,7 @@ class WorkflowStageService
                 'parallel_group_id' => $dto->parallelGroupId,
                 'scope_to_department' => $dto->scopeToDepartment,
                 'scope_to_branch' => $dto->scopeToBranch,
+                'allow_send_back' => $dto->allowSendBack,
             ]);
             $stage->roles()->sync($dto->roleIds);
             $this->syncParallelGroupDisplayOrder($stage);

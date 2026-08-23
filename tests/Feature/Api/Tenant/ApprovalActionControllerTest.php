@@ -75,6 +75,17 @@ test('send back transitions request', function () {
     $pr = PaymentRequest::find($subjectId);
     expect($pr->status)->toEqual('sent_back');
 });
+test('send back 422 when the stage disallows it', function () {
+    $instanceStage = submitRequestForApprovalForApprovalActionController();
+    $instanceStage->stage->update(['allow_send_back' => false]);
+
+    $this->postJson("/api/approvals/{$instanceStage->id}/send-back", [
+        'action' => 'send_back',
+        'comment' => 'not allowed here',
+    ])->assertStatus(422);
+
+    expect($instanceStage->fresh()->status)->toEqual('active');
+});
 test('send back 422 when stage not active', function () {
     $instanceStage = submitRequestForApprovalForApprovalActionController();
     app(App\Services\WorkflowEngineService::class)->approve($instanceStage, $this->user, null);

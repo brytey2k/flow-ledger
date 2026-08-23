@@ -102,6 +102,7 @@ return [
             'roles_hint' => 'Tout utilisateur avec un de ces roles verra cette etape.',
             'scope_to_department' => 'Restreindre les approbateurs au departement du demandeur',
             'scope_to_branch' => 'Restreindre les approbateurs a la succursale de la demande',
+            'allow_send_back' => 'Autoriser le renvoi a cette etape',
         ],
         'buttons' => [
             'add' => 'Ajouter l etape',

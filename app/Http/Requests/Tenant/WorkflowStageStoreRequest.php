@@ -25,6 +25,7 @@ class WorkflowStageStoreRequest extends FormRequest
             'role_ids.*' => ['integer', 'exists:roles,id'],
             'scope_to_department' => ['nullable', 'boolean'],
             'scope_to_branch' => ['nullable', 'boolean'],
+            'allow_send_back' => ['nullable', 'boolean'],
         ];
     }
 
@@ -41,6 +42,7 @@ class WorkflowStageStoreRequest extends FormRequest
             roleIds: array_map(fn(int|string $v): int => (int) $v, $rawRoleIds),
             scopeToDepartment: (bool) $this->input('scope_to_department', false),
             scopeToBranch: (bool) $this->input('scope_to_branch', false),
+            allowSendBack: (bool) $this->input('allow_send_back', true),
         );
     }
 }

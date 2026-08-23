@@ -141,6 +141,7 @@ return [
     ],
     'approvals' => [
         'action_recorded' => 'Action enregistree avec succes.',
+        'send_back_not_allowed' => 'Cette etape ne permet pas de renvoyer la demande pour revision.',
     ],
     'tenants' => [
         'created' => 'Locataire cree avec succes.',

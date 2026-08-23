@@ -148,6 +148,21 @@ test('create sets scope to branch', function () {
 
     expect($stage->scope_to_branch)->toBeTrue();
 });
+test('create sets allow send back false', function () {
+    $template = makeTemplate();
+    $dto = new WorkflowStageDto(
+        name: 'Terminal Stage',
+        displayOrder: 1,
+        skipBelowAmount: null,
+        parallelGroupId: null,
+        roleIds: [],
+        allowSendBack: false,
+    );
+
+    $stage = makeServiceForWorkflowStageService()->create($template, $dto);
+
+    expect($stage->allow_send_back)->toBeFalse();
+});
 test('update changes stage name', function () {
     $template = makeTemplate();
     $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
@@ -274,6 +289,22 @@ test('update sets scope to branch', function () {
     makeServiceForWorkflowStageService()->update($stage, $dto);
 
     expect($stage->fresh()->scope_to_branch)->toBeTrue();
+});
+test('update sets allow send back false', function () {
+    $template = makeTemplate();
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'allow_send_back' => true]);
+    $dto = new WorkflowStageDto(
+        name: $stage->name,
+        displayOrder: $stage->display_order,
+        skipBelowAmount: null,
+        parallelGroupId: null,
+        roleIds: [],
+        allowSendBack: false,
+    );
+
+    makeServiceForWorkflowStageService()->update($stage, $dto);
+
+    expect($stage->fresh()->allow_send_back)->toBeFalse();
 });
 test('create syncs display order to existing group siblings', function () {
     $template = makeTemplate();

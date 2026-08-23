@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property bool $scope_to_department
  * @property bool $scope_to_branch
+ * @property bool $allow_send_back
  */
 class WorkflowStage extends Model
 {
@@ -28,6 +29,7 @@ class WorkflowStage extends Model
         'skip_below_amount',
         'scope_to_department',
         'scope_to_branch',
+        'allow_send_back',
     ];
 
     protected function casts(): array
@@ -37,6 +39,7 @@ class WorkflowStage extends Model
             'display_order' => 'integer',
             'scope_to_department' => 'boolean',
             'scope_to_branch' => 'boolean',
+            'allow_send_back' => 'boolean',
         ];
     }
 

@@ -114,6 +114,13 @@
                                    {{ old('scope_to_branch', '1') ? 'checked' : '' }} />
                             <span class="kt-form-label mb-0">{{ __('workflows.stages.fields.scope_to_branch') }}</span>
                         </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="hidden" name="allow_send_back" value="0" />
+                            <input type="checkbox" id="allow_send_back" name="allow_send_back" value="1"
+                                   class="kt-checkbox"
+                                   {{ old('allow_send_back', '1') ? 'checked' : '' }} />
+                            <span class="kt-form-label mb-0">{{ __('workflows.stages.fields.allow_send_back') }}</span>
+                        </label>
                     </div>
 
                     <div>

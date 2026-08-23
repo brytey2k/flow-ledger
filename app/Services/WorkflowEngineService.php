@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\SendBackNotAllowedException;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
@@ -251,6 +252,13 @@ class WorkflowEngineService
                 return $workflowable;
             }
 
+            /** @var WorkflowStage $stage */
+            $stage = $fresh->stage;
+
+            if (! $stage->allow_send_back) {
+                throw new SendBackNotAllowedException("Send-back is not permitted at the '{$stage->name}' stage.");
+            }
+
             WorkflowAction::create([
                 'workflow_instance_stage_id' => $fresh->id,
                 'user_id' => $user->id,
@@ -262,9 +270,6 @@ class WorkflowEngineService
 
             /** @var WorkflowInstance $instance */
             $instance = $fresh->instance;
-
-            /** @var WorkflowStage $stage */
-            $stage = $fresh->stage;
 
             if ($stage->parallel_group_id !== null) {
                 $instance->instanceStages()
