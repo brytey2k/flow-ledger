@@ -12,8 +12,6 @@
     <link href="{{ asset('assets/media/app/favicon.ico') }}" rel="shortcut icon"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="{{ asset('assets/vendors/apexcharts/apexcharts.css') }}" rel="stylesheet"/>
-    <link href="{{ asset('assets/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet"/>
-    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet"/>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -54,11 +52,6 @@
     </div>
     <!-- End of Main -->
     <!-- End of Page -->
-
-    <!-- Scripts -->
-    <script src="{{ asset('assets/js/core.bundle.js') }}"></script>
-    <script src="{{ asset('assets/vendors/ktui/ktui.min.js') }}"></script>
-    <!-- End of Scripts -->
 
     @stack('scripts')
 </body>
