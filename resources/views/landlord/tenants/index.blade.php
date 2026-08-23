@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
@@ -15,8 +15,8 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-primary" href="{{ route('landlord.tenants.create') }}">
-                <i class="ki-filled ki-plus"></i>
+            <a class="fl-btn fl-btn-primary" href="{{ route('landlord.tenants.create') }}">
+                <x-tabler-plus-filled />
                 Add New Tenant
             </a>
         </div>
@@ -25,11 +25,11 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">
                     All Tenants
                 </h3>
                 <div class="flex items-center gap-2">
@@ -39,54 +39,54 @@
                 </div>
             </div>
             @if($tenants->isEmpty())
-                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+                <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
-                        <i class="ki-filled ki-information-2 text-6xl text-muted-foreground mb-4"></i>
+                        <x-tabler-info-square-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">No tenants found</h3>
                         <p class="text-sm text-secondary-foreground mb-4">Get started by creating your first tenant</p>
-                        <a href="{{ route('landlord.tenants.create') }}" class="kt-btn kt-btn-primary">
-                            <i class="ki-filled ki-plus"></i>
+                        <a href="{{ route('landlord.tenants.create') }}" class="fl-btn fl-btn-primary">
+                            <x-tabler-plus-filled />
                             Add Tenant
                         </a>
                     </div>
                 </div>
             @else
-                <div class="kt-card-table">
-                    <div class="kt-scrollable-x-auto border-b border-border">
-                        <table class="kt-table kt-table-border table-fixed">
+                <div class="fl-card-table">
+                    <div class="fl-scrollable-x-auto border-b border-border">
+                        <table class="fl-table fl-table-border table-fixed">
                             <thead>
                                 <tr>
                                     <th class="min-w-[150px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Tenant</span>
-                                            <span class="kt-table-col-sort"></span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Tenant</span>
+                                            <span class="fl-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Domains</span>
-                                            <span class="kt-table-col-sort"></span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Domains</span>
+                                            <span class="fl-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Created</span>
-                                            <span class="kt-table-col-sort"></span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Created</span>
+                                            <span class="fl-table-col-sort"></span>
                                         </span>
                                     </th>
                                     <th class="min-w-[120px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Status</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Status</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[110px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">IDP Linked</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">IDP Linked</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[100px] text-center">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Actions</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Actions</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -143,14 +143,14 @@
                                         <td class="text-center">
                                             <div class="kt-menu" data-kt-menu="true">
                                                 <div class="kt-menu-item" data-kt-menu-item-toggle="dropdown" data-kt-menu-item-trigger="click" data-kt-menu-item-placement="bottom-end">
-                                                    <button class="kt-menu-toggle kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
-                                                        <i class="ki-filled ki-dots-vertical text-lg"></i>
+                                                    <button class="kt-menu-toggle fl-btn fl-btn-sm fl-btn-icon fl-btn-ghost">
+                                                        <x-tabler-dots-vertical-filled class="text-lg" />
                                                     </button>
                                                     <div class="kt-menu-dropdown kt-menu-default w-full max-w-[200px]" data-kt-menu-dismiss="true">
                                                         <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="#">
                                                                 <span class="kt-menu-icon">
-                                                                    <i class="ki-filled ki-eye"></i>
+                                                                    <x-tabler-eye-filled />
                                                                 </span>
                                                                 <span class="kt-menu-title">View Details</span>
                                                             </a>
@@ -158,7 +158,7 @@
                                                         <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="{{ route('landlord.tenants.feature-flags.index', $tenant) }}">
                                                                 <span class="kt-menu-icon">
-                                                                    <i class="ki-filled ki-flag"></i>
+                                                                    <x-tabler-flag-filled />
                                                                 </span>
                                                                 <span class="kt-menu-title">Feature Flags</span>
                                                             </a>
@@ -166,7 +166,7 @@
                                                         <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
                                                                 <span class="kt-menu-icon">
-                                                                    <i class="ki-filled ki-security-user"></i>
+                                                                    <x-tabler-shield-check-filled />
                                                                 </span>
                                                                 <span class="kt-menu-title">Roles & Permissions</span>
                                                             </a>
@@ -174,7 +174,7 @@
                                                         <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="{{ route('landlord.tenants.users-permissions.index', $tenant) }}">
                                                                 <span class="kt-menu-icon">
-                                                                    <i class="ki-filled ki-people"></i>
+                                                                    <x-tabler-users-group />
                                                                 </span>
                                                                 <span class="kt-menu-title">Users</span>
                                                             </a>
@@ -182,7 +182,7 @@
                                                         <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="{{ route('landlord.tenants.select-user', $tenant) }}">
                                                                 <span class="kt-menu-icon">
-                                                                    <i class="ki-filled ki-user-tick"></i>
+                                                                    <x-tabler-user-check />
                                                                 </span>
                                                                 <span class="kt-menu-title">Impersonate User</span>
                                                             </a>
@@ -190,7 +190,7 @@
                                                         <div class="kt-menu-item">
                                                             <a class="kt-menu-link" href="{{ route('landlord.tenants.edit', $tenant) }}">
                                                                 <span class="kt-menu-icon">
-                                                                    <i class="ki-filled ki-setting-2"></i>
+                                                                    <x-tabler-settings-filled />
                                                                 </span>
                                                                 <span class="kt-menu-title">Edit Tenant</span>
                                                             </a>
@@ -201,7 +201,7 @@
                                                                     @csrf
                                                                     <button type="submit" class="kt-menu-link w-full text-start">
                                                                         <span class="kt-menu-icon">
-                                                                            <i class="ki-filled ki-check-circle"></i>
+                                                                            <x-tabler-circle-check-filled />
                                                                         </span>
                                                                         <span class="kt-menu-title">Reactivate Tenant</span>
                                                                     </button>
@@ -211,7 +211,7 @@
                                                                     @csrf
                                                                     <button type="submit" class="kt-menu-link w-full text-start text-warning">
                                                                         <span class="kt-menu-icon">
-                                                                            <i class="ki-filled ki-lock"></i>
+                                                                            <x-tabler-lock-filled />
                                                                         </span>
                                                                         <span class="kt-menu-title">Suspend Tenant</span>
                                                                     </button>
@@ -227,7 +227,7 @@
                                                                     href="#"
                                                                 >
                                                                     <span class="kt-menu-icon">
-                                                                        <i class="ki-filled ki-arrows-circle"></i>
+                                                                        <x-tabler-arrows-diagonal />
                                                                     </span>
                                                                     <span class="kt-menu-title">Reset Tenant</span>
                                                                 </a>
@@ -241,7 +241,7 @@
                                                                 href="#"
                                                             >
                                                                 <span class="kt-menu-icon">
-                                                                    <i class="ki-filled ki-trash"></i>
+                                                                    <x-tabler-trash-filled />
                                                                 </span>
                                                                 <span class="kt-menu-title">Delete</span>
                                                             </a>
@@ -279,7 +279,7 @@
                                             aria-label="Close modal"
                                             data-kt-modal-dismiss="#{{ $modalId }}"
                                         >
-                                            <i class="ki-filled ki-cross"></i>
+                                            <x-tabler-x-filled />
                                         </button>
                                     </div>
                                     <form method="POST" action="{{ route('landlord.tenants.reset', $tenant) }}" class="kt-modal-body grid gap-4">
@@ -294,22 +294,22 @@
                                         </div>
 
                                         <div class="grid gap-2">
-                                            <label class="kt-form-label" for="confirm_tenant_name_{{ $tenant->id }}">
+                                            <label class="fl-form-label" for="confirm_tenant_name_{{ $tenant->id }}">
                                                 Confirm Tenant Name
                                             </label>
                                             <input
                                                 id="confirm_tenant_name_{{ $tenant->id }}"
                                                 name="confirm_tenant_name"
                                                 type="text"
-                                                class="kt-input"
+                                                class="fl-input"
                                                 placeholder="Type exact tenant name"
                                                 required
                                             >
                                         </div>
 
                                         <div class="kt-modal-footer gap-2">
-                                            <button class="kt-btn kt-btn-light" data-kt-modal-dismiss="#{{ $modalId }}" type="button">Cancel</button>
-                                            <button class="kt-btn kt-btn-warning" type="submit">Confirm Reset</button>
+                                            <button class="fl-btn fl-btn-light" data-kt-modal-dismiss="#{{ $modalId }}" type="button">Cancel</button>
+                                            <button class="fl-btn fl-btn-warning" type="submit">Confirm Reset</button>
                                         </div>
                                     </form>
                                 </div>
@@ -327,7 +327,7 @@
                                         aria-label="Close modal"
                                         data-kt-modal-dismiss="#{{ $deleteModalId }}"
                                     >
-                                        <i class="ki-filled ki-cross"></i>
+                                        <x-tabler-x-filled />
                                     </button>
                                 </div>
                                 <form
@@ -347,14 +347,14 @@
                                     </div>
 
                                     <div class="grid gap-2">
-                                        <label class="kt-form-label" for="del_confirm_tenant_name_{{ $tenant->id }}">
+                                        <label class="fl-form-label" for="del_confirm_tenant_name_{{ $tenant->id }}">
                                             Confirm Tenant Name
                                         </label>
                                         <input
                                             id="del_confirm_tenant_name_{{ $tenant->id }}"
                                             name="confirm_tenant_name"
                                             type="text"
-                                            class="kt-input"
+                                            class="fl-input"
                                             placeholder="Type exact tenant name"
                                             required
                                         >
@@ -366,7 +366,7 @@
                                             name="delete_database"
                                             type="checkbox"
                                             value="1"
-                                            class="kt-checkbox mt-0.5"
+                                            class="fl-checkbox mt-0.5"
                                         >
                                         <div class="grid gap-1">
                                             <label class="text-sm font-medium text-foreground cursor-pointer" for="delete_database_{{ $tenant->id }}">
@@ -379,8 +379,8 @@
                                     </div>
 
                                     <div class="kt-modal-footer gap-2">
-                                        <button class="kt-btn kt-btn-light" data-kt-modal-dismiss="#{{ $deleteModalId }}" type="button">Cancel</button>
-                                        <button class="kt-btn kt-btn-danger" type="submit">Delete Tenant</button>
+                                        <button class="fl-btn fl-btn-light" data-kt-modal-dismiss="#{{ $deleteModalId }}" type="button">Cancel</button>
+                                        <button class="fl-btn fl-btn-danger" type="submit">Delete Tenant</button>
                                     </div>
                                 </form>
                             </div>

@@ -9,7 +9,7 @@
     $pendingThresholdCount = max($branches->count() - $configuredThresholdCount, 0);
 @endphp
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cash_balance.title') }}</h1>
@@ -20,22 +20,22 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-alert kt-alert-light kt-alert-warning">
-            <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
-            <div class="kt-alert-content">
-                <h4 class="kt-alert-title">{{ __('cash_balance.configure_thresholds') }}</h4>
-                <div class="kt-alert-description">{{ __('cash_balance.alert_description') }}</div>
+        <div class="fl-alert fl-alert-light fl-alert-warning">
+            <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+            <div class="fl-alert-content">
+                <h4 class="fl-alert-title">{{ __('cash_balance.configure_thresholds') }}</h4>
+                <div class="fl-alert-description">{{ __('cash_balance.alert_description') }}</div>
             </div>
         </div>
 
         <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col gap-2 p-5">
+            <div class="fl-card">
+                <div class="fl-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-muted-foreground">{{ __('cash_balance.summary_configured_branches') }}</span>
-                        <i class="ki-filled ki-shield-tick text-lg text-primary"></i>
+                        <x-tabler-shield-check-filled class="text-lg text-primary" />
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-3xl font-semibold text-mono">{{ $configuredThresholdCount }}</span>
@@ -44,11 +44,11 @@
                 </div>
             </div>
 
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col gap-2 p-5">
+            <div class="fl-card">
+                <div class="fl-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-muted-foreground">{{ __('cash_balance.summary_active_alerts') }}</span>
-                        <i class="ki-filled ki-notification-bing text-lg text-success"></i>
+                        <x-tabler-bell-ringing-filled class="text-lg text-success" />
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-3xl font-semibold text-mono">{{ $activeThresholdCount }}</span>
@@ -57,11 +57,11 @@
                 </div>
             </div>
 
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col gap-2 p-5">
+            <div class="fl-card">
+                <div class="fl-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-muted-foreground">{{ __('cash_balance.summary_cashbooks_covered') }}</span>
-                        <i class="ki-filled ki-wallet text-lg text-warning"></i>
+                        <x-tabler-wallet class="text-lg text-warning" />
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-3xl font-semibold text-mono">{{ $branchesWithCashbookCount }}</span>
@@ -70,11 +70,11 @@
                 </div>
             </div>
 
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col gap-2 p-5">
+            <div class="fl-card">
+                <div class="fl-card-content flex flex-col gap-2 p-5">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-muted-foreground">{{ __('cash_balance.summary_pending_setup') }}</span>
-                        <i class="ki-filled ki-information-2 text-lg text-info"></i>
+                        <x-tabler-info-square-filled class="text-lg text-info" />
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-3xl font-semibold text-mono">{{ $pendingThresholdCount }}</span>
@@ -85,10 +85,10 @@
         </div>
 
         @if($branches->isEmpty())
-            <div class="kt-card">
-                <div class="kt-card-content flex flex-col items-center justify-center gap-4 py-16">
+            <div class="fl-card">
+                <div class="fl-card-content flex flex-col items-center justify-center gap-4 py-16">
                     <div class="flex size-16 items-center justify-center rounded-full bg-primary/10">
-                        <i class="ki-filled ki-wallet text-3xl text-primary"></i>
+                        <x-tabler-wallet class="text-3xl text-primary" />
                     </div>
                     <div class="flex flex-col items-center gap-2 text-center">
                         <h3 class="text-lg font-semibold text-mono">{{ __('cash_balance.empty.heading') }}</h3>
@@ -111,16 +111,16 @@
                         );
                     @endphp
 
-                    <div class="kt-card kt-card-grid h-full">
-                        <div class="kt-card-header items-start gap-4">
+                    <div class="fl-card fl-card-grid h-full">
+                        <div class="fl-card-header items-start gap-4">
                             <div class="flex flex-col gap-2">
                                 <div class="flex flex-wrap items-center gap-2.5">
-                                    <h3 class="kt-card-title">{{ $branch->name }}</h3>
-                                    <span class="kt-badge kt-badge-sm {{ is_null($threshold) ? 'kt-badge-outline' : 'kt-badge-primary kt-badge-outline' }}">
+                                    <h3 class="fl-card-title">{{ $branch->name }}</h3>
+                                    <span class="fl-badge fl-badge-sm {{ is_null($threshold) ? 'fl-badge-outline' : 'fl-badge-primary fl-badge-outline' }}">
                                         {{ is_null($threshold) ? __('cash_balance.not_configured') : __('cash_balance.configured') }}
                                     </span>
                                     @if(! is_null($threshold))
-                                        <span class="kt-badge kt-badge-sm {{ $threshold->is_active ? 'kt-badge-success kt-badge-outline' : 'kt-badge-warning kt-badge-outline' }}">
+                                        <span class="fl-badge fl-badge-sm {{ $threshold->is_active ? 'fl-badge-success fl-badge-outline' : 'fl-badge-warning fl-badge-outline' }}">
                                             {{ $threshold->is_active ? __('cash_balance.notifications_active') : __('cash_balance.notifications_disabled') }}
                                         </span>
                                     @endif
@@ -139,20 +139,20 @@
 
                             @if($branch->cashbook)
                                 <div class="flex items-center gap-2">
-                                    <span class="kt-badge kt-badge-sm kt-badge-outline">
+                                    <span class="fl-badge fl-badge-sm fl-badge-outline">
                                         {{ $branch->currency?->symbol ?? '' }} {{ number_format((float) $branch->cashbook->balance, 2) }}
                                     </span>
                                 </div>
                             @endif
                         </div>
 
-                        <div class="kt-card-content flex flex-col gap-6 p-5 lg:p-7.5">
+                        <div class="fl-card-content flex flex-col gap-6 p-5 lg:p-7.5">
                             @if(! $branch->cashbook)
-                                <div class="kt-alert kt-alert-light kt-alert-warning">
-                                    <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
-                                    <div class="kt-alert-content">
-                                        <h4 class="kt-alert-title">{{ __('cash_balance.cashbook_missing_title') }}</h4>
-                                        <div class="kt-alert-description">{{ __('cash_balance.cashbook_missing_description') }}</div>
+                                <div class="fl-alert fl-alert-light fl-alert-warning">
+                                    <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+                                    <div class="fl-alert-content">
+                                        <h4 class="fl-alert-title">{{ __('cash_balance.cashbook_missing_title') }}</h4>
+                                        <div class="fl-alert-description">{{ __('cash_balance.cashbook_missing_description') }}</div>
                                     </div>
                                 </div>
                             @endif
@@ -167,11 +167,11 @@
 
                                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                                     <div>
-                                        <label for="threshold-{{ $branch->id }}" class="kt-form-label block mb-2">
+                                        <label for="threshold-{{ $branch->id }}" class="fl-form-label block mb-2">
                                             {{ __('cash_balance.threshold_amount') }} <span class="text-destructive">*</span>
                                         </label>
                                         <div class="flex items-center gap-2">
-                                            <span class="kt-badge kt-badge-sm kt-badge-outline shrink-0">{{ $branch->currency?->symbol ?? '' }}</span>
+                                            <span class="fl-badge fl-badge-sm fl-badge-outline shrink-0">{{ $branch->currency?->symbol ?? '' }}</span>
                                             <input
                                                 type="number"
                                                 id="threshold-{{ $branch->id }}"
@@ -180,7 +180,7 @@
                                                 min="0"
                                                 max="999999.99"
                                                 value="{{ old('threshold_amount', is_null($threshold) ? '' : $threshold->threshold_amount) }}"
-                                                class="kt-input w-full"
+                                                class="fl-input w-full"
                                                 placeholder="0.00"
                                                 required
                                                 aria-invalid="@error('threshold_amount') true @else false @enderror"
@@ -195,7 +195,7 @@
                                     </div>
 
                                     <div>
-                                        <label for="cooldown-{{ $branch->id }}" class="kt-form-label block mb-2">
+                                        <label for="cooldown-{{ $branch->id }}" class="fl-form-label block mb-2">
                                             {{ __('cash_balance.cooldown_minutes') }} <span class="text-destructive">*</span>
                                         </label>
                                         <input
@@ -205,7 +205,7 @@
                                             min="0"
                                             max="10080"
                                             value="{{ old('cooldown_minutes', is_null($threshold) ? '1440' : $threshold->cooldown_minutes) }}"
-                                            class="kt-input w-full"
+                                            class="fl-input w-full"
                                             placeholder="1440"
                                             required
                                             aria-invalid="@error('cooldown_minutes') true @else false @enderror"
@@ -220,7 +220,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="recipients-{{ $branch->id }}" class="kt-form-label block mb-2">
+                                    <label for="recipients-{{ $branch->id }}" class="fl-form-label block mb-2">
                                         {{ __('cash_balance.notification_recipients') }}
                                     </label>
                                     <select
@@ -255,7 +255,7 @@
                                         class="form-checkbox"
                                         @checked((bool) old('is_active', is_null($threshold) ? true : $threshold->is_active))
                                     >
-                                    <label for="active-{{ $branch->id }}" class="kt-form-label mb-0">
+                                    <label for="active-{{ $branch->id }}" class="fl-form-label mb-0">
                                         {{ __('cash_balance.enable_notifications') }}
                                     </label>
                                 </div>
@@ -271,15 +271,15 @@
                                         <form action="{{ route('cash-balance-thresholds.destroy', $threshold) }}" method="POST" onsubmit="return confirm('{{ __('cash_balance.confirm_delete') }}');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="kt-btn kt-btn-light text-danger">
-                                                <i class="ki-filled ki-trash"></i>
+                                            <button type="submit" class="fl-btn fl-btn-light text-danger">
+                                                <x-tabler-trash-filled />
                                                 {{ __('common.delete') }}
                                             </button>
                                         </form>
                                     @endif
 
-                                    <button type="submit" form="{{ $formId }}" class="kt-btn kt-btn-primary">
-                                        <i class="ki-filled ki-check"></i>
+                                    <button type="submit" form="{{ $formId }}" class="fl-btn fl-btn-primary">
+                                        <x-tabler-check-filled />
                                         {{ is_null($threshold) ? __('cash_balance.configure') : __('cash_balance.update') }}
                                     </button>
                                 </div>

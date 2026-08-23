@@ -1,12 +1,12 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
                 <a href="{{ route('reports.index') }}" class="hover:text-primary">Reports</a>
-                <i class="ki-filled ki-right text-xs"></i>
+                <x-tabler-chevron-right-filled class="text-xs" />
                 <span>Requests by Status</span>
             </div>
             <h1 class="text-xl font-medium leading-none text-mono">Requests by Status</h1>
@@ -19,62 +19,62 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Filters --}}
-        <div class="kt-card p-5">
+        <div class="fl-card p-5">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">From</label>
-                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="kt-input kt-input-sm" />
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="fl-input fl-input-sm" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">To</label>
-                    <input type="date" name="date_to" value="{{ $dateTo }}" class="kt-input kt-input-sm" />
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="fl-input fl-input-sm" />
                 </div>
-                <button type="submit" class="kt-btn kt-btn-sm kt-btn-primary">Apply</button>
-                <a href="{{ route('reports.requests-by-status') }}" class="kt-btn kt-btn-sm kt-btn-light">Reset</a>
+                <button type="submit" class="fl-btn fl-btn-sm fl-btn-primary">Apply</button>
+                <a href="{{ route('reports.requests-by-status') }}" class="fl-btn fl-btn-sm fl-btn-light">Reset</a>
             </form>
         </div>
 
         @php
             $statusColors = [
-                'draft'       => 'kt-badge-outline',
-                'in_workflow' => 'kt-badge-primary',
-                'approved'    => 'kt-badge-success',
-                'disbursed'   => 'kt-badge-info',
-                'retired'     => 'kt-badge-neutral',
-                'sent_back'   => 'kt-badge-warning',
-                'cancelled'   => 'kt-badge-danger',
-                'denied'      => 'kt-badge-danger',
-                'settled'     => 'kt-badge-success',
+                'draft'       => 'fl-badge-outline',
+                'in_workflow' => 'fl-badge-primary',
+                'approved'    => 'fl-badge-success',
+                'disbursed'   => 'fl-badge-info',
+                'retired'     => 'fl-badge-neutral',
+                'sent_back'   => 'fl-badge-warning',
+                'cancelled'   => 'fl-badge-danger',
+                'denied'      => 'fl-badge-danger',
+                'settled'     => 'fl-badge-success',
             ];
         @endphp
 
         <div class="grid gap-5 lg:grid-cols-2">
 
             {{-- Payment Requests --}}
-            <div class="kt-card kt-card-grid">
-                <div class="kt-card-header">
-                    <h3 class="kt-card-title">Payment Requests</h3>
-                    <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $paymentTotal }} total</span>
+            <div class="fl-card fl-card-grid">
+                <div class="fl-card-header">
+                    <h3 class="fl-card-title">Payment Requests</h3>
+                    <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $paymentTotal }} total</span>
                 </div>
 
                 @if($paymentStatuses->isEmpty())
-                    <div class="kt-card-content flex flex-col items-center justify-center py-8">
+                    <div class="fl-card-content flex flex-col items-center justify-center py-8">
                         <p class="text-sm text-secondary-foreground">No payment requests found.</p>
                     </div>
                 @else
-                    <div class="kt-card-table">
-                        <div class="kt-scrollable-x-auto border-b border-border">
-                            <table class="kt-table kt-table-border">
+                    <div class="fl-card-table">
+                        <div class="fl-scrollable-x-auto border-b border-border">
+                            <table class="fl-table fl-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Status</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Count</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">% of Total</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Total Value</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">Status</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">Count</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">% of Total</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">Total Value</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -85,7 +85,7 @@
                                         @endphp
                                         <tr>
                                             <td>
-                                                <span class="kt-badge kt-badge-sm {{ $statusColors[$row->status] ?? 'kt-badge-outline' }}">
+                                                <span class="fl-badge fl-badge-sm {{ $statusColors[$row->status] ?? 'fl-badge-outline' }}">
                                                     {{ ucwords(str_replace('_', ' ', $row->status)) }}
                                                 </span>
                                             </td>
@@ -114,33 +114,33 @@
             </div>
 
             {{-- Retirement Requests --}}
-            <div class="kt-card kt-card-grid">
-                <div class="kt-card-header">
-                    <h3 class="kt-card-title">Retirement Requests</h3>
-                    <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $retirementTotal }} total</span>
+            <div class="fl-card fl-card-grid">
+                <div class="fl-card-header">
+                    <h3 class="fl-card-title">Retirement Requests</h3>
+                    <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $retirementTotal }} total</span>
                 </div>
 
                 @if($retirementStatuses->isEmpty())
-                    <div class="kt-card-content flex flex-col items-center justify-center py-8">
+                    <div class="fl-card-content flex flex-col items-center justify-center py-8">
                         <p class="text-sm text-secondary-foreground">No retirement requests found.</p>
                     </div>
                 @else
-                    <div class="kt-card-table">
-                        <div class="kt-scrollable-x-auto border-b border-border">
-                            <table class="kt-table kt-table-border">
+                    <div class="fl-card-table">
+                        <div class="fl-scrollable-x-auto border-b border-border">
+                            <table class="fl-table fl-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Status</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Count</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">% of Total</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">Total Value</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">Status</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">Count</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">% of Total</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">Total Value</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($retirementStatuses as $row)
                                         <tr>
                                             <td>
-                                                <span class="kt-badge kt-badge-sm {{ $statusColors[$row->status] ?? 'kt-badge-outline' }}">
+                                                <span class="fl-badge fl-badge-sm {{ $statusColors[$row->status] ?? 'fl-badge-outline' }}">
                                                     {{ ucwords(str_replace('_', ' ', $row->status)) }}
                                                 </span>
                                             </td>

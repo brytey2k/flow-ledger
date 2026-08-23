@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('staff.import_title') }}</h1>
@@ -10,36 +10,36 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('staff.import.template') }}">
-                <i class="ki-filled ki-file-down"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('staff.import.template') }}">
+                <x-tabler-file-arrow-right />
                 {{ __('staff.buttons.download_template') }}
             </a>
-            <a class="kt-btn kt-btn-light" href="{{ route('staff.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-light" href="{{ route('staff.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('staff.back') }}
             </a>
         </div>
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('staff.sample_card') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('staff.sample_card') }}</h3>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 <p class="text-sm text-secondary-foreground">
                     {{ __('staff.import_notes') }}
                 </p>
             </div>
         </div>
 
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('staff.import_card') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('staff.import_card') }}</h3>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 @php($importErrors = session('import_errors', []))
                 @if (! empty($importErrors) && is_array($importErrors))
                     <details class="mb-6 rounded-lg border border-warning/30 bg-warning/5 p-4">
@@ -59,7 +59,7 @@
 
                     <div class="grid grid-cols-1 gap-5">
                         <div class="col-span-1">
-                            <label class="kt-form-label block mb-2" for="file">
+                            <label class="fl-form-label block mb-2" for="file">
                                 {{ __('staff.fields.file') }} <span class="text-destructive">*</span>
                             </label>
                             <input
@@ -67,7 +67,7 @@
                                 name="file"
                                 type="file"
                                 accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                class="kt-input w-full"
+                                class="fl-input w-full"
                                 required
                                 aria-invalid="@error('file') true @else false @enderror"
                             />
@@ -81,11 +81,11 @@
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
-                        <button type="submit" class="kt-btn kt-btn-primary">
-                            <i class="ki-filled ki-upload"></i>
+                        <button type="submit" class="fl-btn fl-btn-primary">
+                            <x-tabler-upload />
                             {{ __('staff.buttons.import') }}
                         </button>
-                        <a class="kt-btn kt-btn-light" href="{{ route('staff.index') }}">{{ __('common.cancel') }}</a>
+                        <a class="fl-btn fl-btn-light" href="{{ route('staff.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

@@ -30,22 +30,22 @@
     @include('tenant.layouts.sidebar')
 
     <!-- Wrapper -->
-    <div class="kt-wrapper flex grow flex-col">
+    <div class="fl-wrapper flex grow flex-col">
         @include('tenant.layouts.header')
 
         <!-- Content -->
         <main class="grow pt-5" id="content" role="content">
             @if(session('impersonated') === true)
                 @php /** @var \App\Models\Tenant\User|null $impersonatedUser */ $impersonatedUser = auth('web')->user(); @endphp
-                <div class="kt-container-fixed pb-4">
-                    <div class="kt-alert kt-alert-warning flex flex-wrap items-center justify-between gap-3">
+                <div class="fl-container-fixed pb-4">
+                    <div class="fl-alert fl-alert-warning flex flex-wrap items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
-                            <i class="ki-filled ki-user-square"></i>
+                            <x-tabler-user-square-rounded />
                             <span class="font-medium">Impersonation mode: You are viewing this tenant as {{ $impersonatedUser?->first_name }} {{ $impersonatedUser?->last_name }}.</span>
                         </div>
                         <form action="{{ route('exit-impersonation') }}" method="POST">
                             @csrf
-                            <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline">Exit Impersonation</button>
+                            <button type="submit" class="fl-btn fl-btn-sm fl-btn-outline">Exit Impersonation</button>
                         </form>
                     </div>
                 </div>

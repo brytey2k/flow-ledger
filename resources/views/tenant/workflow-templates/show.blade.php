@@ -1,22 +1,22 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ $workflowTemplate->name }}</h1>
             <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
-                @php $typeColors = [\App\Enums\Tenant\PaymentRequestType::Advance->value => 'kt-badge-primary', \App\Enums\Tenant\PaymentRequestType::Expense->value => 'kt-badge-success', \App\Enums\Tenant\PaymentRequestType::Retirement->value => 'kt-badge-warning']; @endphp
-                <span class="kt-badge kt-badge-sm {{ $typeColors[$workflowTemplate->type] ?? 'kt-badge-outline' }}">
+                @php $typeColors = [\App\Enums\Tenant\PaymentRequestType::Advance->value => 'fl-badge-primary', \App\Enums\Tenant\PaymentRequestType::Expense->value => 'fl-badge-success', \App\Enums\Tenant\PaymentRequestType::Retirement->value => 'fl-badge-warning']; @endphp
+                <span class="fl-badge fl-badge-sm {{ $typeColors[$workflowTemplate->type] ?? 'fl-badge-outline' }}">
                     {{ ucfirst($workflowTemplate->type) }}
                 </span>
-                <span class="kt-badge kt-badge-sm kt-badge-outline">
+                <span class="fl-badge fl-badge-sm fl-badge-outline">
                     {{ __('workflows.show.version_badge', ['number' => $workflowTemplate->version]) }}
                 </span>
                 @if($workflowTemplate->isDraft())
-                    <span class="kt-badge kt-badge-sm kt-badge-warning">{{ __('workflows.show.draft_badge') }}</span>
+                    <span class="fl-badge fl-badge-sm fl-badge-warning">{{ __('workflows.show.draft_badge') }}</span>
                 @elseif(!$workflowTemplate->is_current)
-                    <span class="kt-badge kt-badge-sm kt-badge-warning">{{ __('workflows.show.superseded_badge') }}</span>
+                    <span class="fl-badge fl-badge-sm fl-badge-warning">{{ __('workflows.show.superseded_badge') }}</span>
                 @endif
                 &bull; {{ $workflowTemplate->stages->count() }} {{ Str::plural('stage', $workflowTemplate->stages->count()) }}
             </div>
@@ -26,67 +26,67 @@
                 @can(App\Enums\Tenant\PermissionKey::EditWorkflowTemplate->value)
                     <form method="POST" action="{{ route('workflow-templates.draft.discard', $workflowTemplate) }}" class="inline">
                         @csrf @method('DELETE')
-                        <button type="submit" class="kt-btn kt-btn-outline kt-btn-destructive" onclick="return confirm('{{ __('workflows.show.confirm_discard') }}')">
-                            <i class="ki-filled ki-trash"></i>
+                        <button type="submit" class="fl-btn fl-btn-outline fl-btn-destructive" onclick="return confirm('{{ __('workflows.show.confirm_discard') }}')">
+                            <x-tabler-trash-filled />
                             {{ __('workflows.show.discard_draft') }}
                         </button>
                     </form>
                     <form method="POST" action="{{ route('workflow-templates.publish', $workflowTemplate) }}" class="inline">
                         @csrf
-                        <button type="submit" class="kt-btn kt-btn-primary" onclick="return confirm('{{ __('workflows.show.confirm_publish') }}')">
-                            <i class="ki-filled ki-check"></i>
+                        <button type="submit" class="fl-btn fl-btn-primary" onclick="return confirm('{{ __('workflows.show.confirm_publish') }}')">
+                            <x-tabler-check-filled />
                             {{ __('workflows.show.publish') }}
                         </button>
                     </form>
                 @endcan
             @endif
-            <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.versions', $workflowTemplate) }}">
-                <i class="ki-filled ki-time"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('workflow-templates.versions', $workflowTemplate) }}">
+                <x-tabler-clock-filled />
                 {{ __('workflows.show.version_history') }}
             </a>
             @can(App\Enums\Tenant\PermissionKey::EditWorkflowTemplate->value)
-                <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.edit', $workflowTemplate) }}">
-                    <i class="ki-filled ki-pencil"></i>
+                <a class="fl-btn fl-btn-outline" href="{{ route('workflow-templates.edit', $workflowTemplate) }}">
+                    <x-tabler-pencil-filled />
                     {{ __('workflows.edit_title') }}
                 </a>
             @endcan
-            <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('workflow-templates.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('workflows.back') }}
             </a>
         </div>
     </div>
     @if($workflowTemplate->isDraft())
-        <div class="kt-alert kt-alert-light kt-alert-warning mt-5 mb-5 lg:mb-7.5">
-            <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
-            <div class="kt-alert-content">
-                <div class="kt-alert-description">{{ __('workflows.show.draft_banner') }}</div>
+        <div class="fl-alert fl-alert-light fl-alert-warning mt-5 mb-5 lg:mb-7.5">
+            <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+            <div class="fl-alert-content">
+                <div class="fl-alert-description">{{ __('workflows.show.draft_banner') }}</div>
             </div>
         </div>
     @endif
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
         {{-- Parallel Groups --}}
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('workflows.show.parallel_groups') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('workflows.show.parallel_groups') }}</h3>
                 <div class="text-xs text-muted-foreground">{{ __('workflows.show.parallel_groups_hint') }}</div>
             </div>
-            <div class="kt-card-content p-5">
+            <div class="fl-card-content p-5">
                 @if($workflowTemplate->parallelGroups->isNotEmpty())
                     <div class="flex flex-wrap gap-3 mb-5">
                         @foreach($workflowTemplate->parallelGroups as $group)
                             <div class="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
                                 <span class="text-sm font-medium text-mono">{{ $group->name }}</span>
-                                <span class="kt-badge kt-badge-sm {{ $group->require_all ? 'kt-badge-warning' : 'kt-badge-success' }}">
+                                <span class="fl-badge fl-badge-sm {{ $group->require_all ? 'fl-badge-warning' : 'fl-badge-success' }}">
                                     {{ $group->require_all ? 'ALL must approve' : 'ANY one approves' }}
                                 </span>
                                 <form action="{{ route('workflow-templates.parallel-groups.destroy', [$workflowTemplate, $group]) }}" method="POST" class="inline">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-muted-foreground hover:text-destructive" onclick="return confirm('{{ __('workflows.show.delete_group') }}')">
-                                        <i class="ki-filled ki-cross text-xs"></i>
+                                        <x-tabler-x-filled class="text-xs" />
                                     </button>
                                 </form>
                             </div>
@@ -97,21 +97,21 @@
                 <form method="POST" action="{{ route('workflow-templates.parallel-groups.store', $workflowTemplate) }}" class="flex flex-wrap items-start gap-3">
                     @csrf
                     <div>
-                        <label class="kt-form-label block mb-1 text-xs" for="pg_name">Group Name</label>
-                        <input id="pg_name" name="name" type="text" class="kt-input" placeholder="e.g. Finance & HR" />
+                        <label class="fl-form-label block mb-1 text-xs" for="pg_name">Group Name</label>
+                        <input id="pg_name" name="name" type="text" class="fl-input" placeholder="e.g. Finance & HR" />
                         @error('name')
                             <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label class="kt-form-label block mb-1 text-xs" for="pg_require_all">Logic</label>
-                        <select id="pg_require_all" name="require_all" class="kt-select">
+                        <label class="fl-form-label block mb-1 text-xs" for="pg_require_all">Logic</label>
+                        <select id="pg_require_all" name="require_all" class="fl-select">
                             <option value="1">ALL must approve (AND)</option>
                             <option value="0">ANY one approves (OR)</option>
                         </select>
                     </div>
-                    <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline mt-5">
-                        <i class="ki-filled ki-plus"></i>
+                    <button type="submit" class="fl-btn fl-btn-sm fl-btn-outline mt-5">
+                        <x-tabler-plus-filled />
                         {{ __('workflows.show.add_group') }}
                     </button>
                 </form>
@@ -119,43 +119,43 @@
         </div>
 
         {{-- Stages --}}
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('workflows.show.approval_stages') }}</h3>
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('workflows.show.approval_stages') }}</h3>
                 <div class="text-xs text-muted-foreground">{{ __('workflows.show.stages_hint') }}</div>
             </div>
 
             @if($workflowTemplate->stages->isEmpty())
-                <div class="kt-card-content p-5 lg:p-7.5">
+                <div class="fl-card-content p-5 lg:p-7.5">
                     <div class="flex flex-col items-center justify-center py-8">
-                        <i class="ki-filled ki-arrow-right-left text-5xl text-muted-foreground mb-3"></i>
+                        <x-tabler-arrows-exchange class="text-5xl text-muted-foreground mb-3" />
                         <p class="text-sm text-secondary-foreground mb-4">{{ __('workflows.show.no_stages') }}</p>
                     </div>
                 </div>
             @else
-                <div class="kt-card-table">
-                    <div class="kt-scrollable-x-auto border-b border-border">
-                        <table class="kt-table kt-table-border">
+                <div class="fl-card-table">
+                    <div class="fl-scrollable-x-auto border-b border-border">
+                        <table class="fl-table fl-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.order') }}<x-help-tooltip :text="__('workflows.show.column_tips.order')" /></span></span></th>
-                                    <th class="min-w-[180px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.stage_name') }}<x-help-tooltip :text="__('workflows.show.column_tips.stage_name')" /></span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.roles') }}<x-help-tooltip :text="__('workflows.show.column_tips.roles')" /></span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.parallel_group') }}<x-help-tooltip :text="__('workflows.show.column_tips.parallel_group')" /></span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.skip_below') }}<x-help-tooltip :text="__('workflows.show.column_tips.skip_below')" /></span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('workflows.show.columns.approver_scope') }}<x-help-tooltip :text="__('workflows.show.column_tips.approver_scope')" /></span></span></th>
-                                    <th class="min-w-[100px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
+                                    <th class="min-w-[60px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('workflows.show.columns.order') }}<x-help-tooltip :text="__('workflows.show.column_tips.order')" /></span></span></th>
+                                    <th class="min-w-[180px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('workflows.show.columns.stage_name') }}<x-help-tooltip :text="__('workflows.show.column_tips.stage_name')" /></span></span></th>
+                                    <th class="min-w-[160px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('workflows.show.columns.roles') }}<x-help-tooltip :text="__('workflows.show.column_tips.roles')" /></span></span></th>
+                                    <th class="min-w-[160px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('workflows.show.columns.parallel_group') }}<x-help-tooltip :text="__('workflows.show.column_tips.parallel_group')" /></span></span></th>
+                                    <th class="min-w-[130px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('workflows.show.columns.skip_below') }}<x-help-tooltip :text="__('workflows.show.column_tips.skip_below')" /></span></span></th>
+                                    <th class="min-w-[160px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('workflows.show.columns.approver_scope') }}<x-help-tooltip :text="__('workflows.show.column_tips.approver_scope')" /></span></span></th>
+                                    <th class="min-w-[100px] text-center"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($workflowTemplate->stages->sortBy('display_order') as $stage)
                                     <tr>
-                                        <td><span class="kt-badge kt-badge-sm kt-badge-primary">{{ $stage->display_order }}</span></td>
+                                        <td><span class="fl-badge fl-badge-sm fl-badge-primary">{{ $stage->display_order }}</span></td>
                                         <td><span class="text-sm font-medium text-mono">{{ $stage->name }}</span></td>
                                         <td>
                                             <div class="flex flex-wrap gap-1">
                                                 @forelse($stage->roles as $role)
-                                                    <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $role->name }}</span>
+                                                    <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $role->name }}</span>
                                                 @empty
                                                     <span class="text-xs text-muted-foreground">—</span>
                                                 @endforelse
@@ -165,7 +165,7 @@
                                             @if($stage->parallelGroup)
                                                 <div class="flex items-center gap-1">
                                                     <span class="text-sm text-foreground">{{ $stage->parallelGroup->name }}</span>
-                                                    <span class="kt-badge kt-badge-sm {{ $stage->parallelGroup->require_all ? 'kt-badge-warning' : 'kt-badge-success' }}">
+                                                    <span class="fl-badge fl-badge-sm {{ $stage->parallelGroup->require_all ? 'fl-badge-warning' : 'fl-badge-success' }}">
                                                         {{ $stage->parallelGroup->require_all ? __('workflows.show.and_label') : __('workflows.show.or_label') }}
                                                     </span>
                                                 </div>
@@ -185,10 +185,10 @@
                                         <td>
                                             <div class="flex flex-wrap gap-1">
                                                 @if($stage->scope_to_branch)
-                                                    <span class="kt-badge kt-badge-sm kt-badge-info">{{ __('workflows.show.scope_branch') }}</span>
+                                                    <span class="fl-badge fl-badge-sm fl-badge-info">{{ __('workflows.show.scope_branch') }}</span>
                                                 @endif
                                                 @if($stage->scope_to_department)
-                                                    <span class="kt-badge kt-badge-sm kt-badge-warning">{{ __('workflows.show.scope_department') }}</span>
+                                                    <span class="fl-badge fl-badge-sm fl-badge-warning">{{ __('workflows.show.scope_department') }}</span>
                                                 @endif
                                                 @if(!$stage->scope_to_branch && !$stage->scope_to_department)
                                                     <span class="text-xs text-muted-foreground">—</span>
@@ -197,8 +197,8 @@
                                         </td>
                                         <td class="text-center">
                                             <a href="{{ route('workflow-templates.stages.edit', [$workflowTemplate, $stage]) }}"
-                                               class="kt-btn kt-btn-sm kt-btn-outline">
-                                                <i class="ki-filled ki-pencil"></i>
+                                               class="fl-btn fl-btn-sm fl-btn-outline">
+                                                <x-tabler-pencil-filled />
                                             </a>
                                         </td>
                                     </tr>
@@ -209,9 +209,9 @@
                 </div>
             @endif
 
-            <div class="kt-card-footer p-5">
-                <a href="{{ route('workflow-templates.stages.create', $workflowTemplate) }}" class="kt-btn kt-btn-sm kt-btn-primary">
-                    <i class="ki-filled ki-plus"></i>
+            <div class="fl-card-footer p-5">
+                <a href="{{ route('workflow-templates.stages.create', $workflowTemplate) }}" class="fl-btn fl-btn-sm fl-btn-primary">
+                    <x-tabler-plus-filled />
                     {{ __('workflows.show.add_stage') }}
                 </a>
             </div>

@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('positions.title') }}</h1>
@@ -11,12 +11,12 @@
         </div>
         <div class="flex flex-wrap items-center gap-2.5">
             @can(App\Enums\Tenant\PermissionKey::CreatePosition->value)
-                <a class="kt-btn kt-btn-outline" href="{{ route('positions.import') }}">
-                    <i class="ki-filled ki-file-up"></i>
+                <a class="fl-btn fl-btn-outline" href="{{ route('positions.import') }}">
+                    <x-tabler-file-arrow-left />
                     {{ __('positions.import') }}
                 </a>
-                <a class="kt-btn kt-btn-primary" href="{{ route('positions.create') }}">
-                    <i class="ki-filled ki-plus"></i>
+                <a class="fl-btn fl-btn-primary" href="{{ route('positions.create') }}">
+                    <x-tabler-plus-filled />
                     {{ __('positions.add_new') }}
                 </a>
             @endcan
@@ -24,32 +24,32 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('positions.all') }}</h3>
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('positions.all') }}</h3>
                 <div class="flex items-center gap-2">
-                    <span class="kt-badge kt-badge-sm kt-badge-outline">
+                    <span class="fl-badge fl-badge-sm fl-badge-outline">
                         {{ $positions->count() }} {{ Str::plural('Position', $positions->count()) }}
                     </span>
                 </div>
             </div>
 
             @if($positions->isEmpty())
-                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+                <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
-                        <i class="ki-filled ki-briefcase text-6xl text-muted-foreground mb-4"></i>
+                        <x-tabler-briefcase-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('positions.empty.heading') }}</h3>
                         <p class="text-sm text-secondary-foreground mb-4">{{ __('positions.empty.subtext') }}</p>
                         @can(App\Enums\Tenant\PermissionKey::CreatePosition->value)
                             <div class="flex flex-wrap items-center justify-center gap-2">
-                                <a href="{{ route('positions.import') }}" class="kt-btn kt-btn-outline">
-                                    <i class="ki-filled ki-file-up"></i>
+                                <a href="{{ route('positions.import') }}" class="fl-btn fl-btn-outline">
+                                    <x-tabler-file-arrow-left />
                                     {{ __('positions.import') }}
                                 </a>
-                                <a href="{{ route('positions.create') }}" class="kt-btn kt-btn-primary">
-                                    <i class="ki-filled ki-plus"></i>
+                                <a href="{{ route('positions.create') }}" class="fl-btn fl-btn-primary">
+                                    <x-tabler-plus-filled />
                                     {{ __('positions.buttons.add') }}
                                 </a>
                             </div>
@@ -57,29 +57,29 @@
                     </div>
                 </div>
             @else
-                <div class="kt-card-table">
-                    <div class="kt-scrollable-x-auto border-b border-border">
-                        <table class="kt-table kt-table-border">
+                <div class="fl-card-table">
+                    <div class="fl-scrollable-x-auto border-b border-border">
+                        <table class="fl-table fl-table-border">
                             <thead>
                                 <tr>
                                     <th class="min-w-[80px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('common.columns.id') }}</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">{{ __('common.columns.id') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[250px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('positions.fields.name') }}</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">{{ __('positions.fields.name') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('common.columns.created') }}</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">{{ __('common.columns.created') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[100px] text-center">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('common.columns.actions') }}</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">{{ __('common.columns.actions') }}</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -88,7 +88,7 @@
                                 @foreach($positions as $position)
                                     <tr>
                                         <td>
-                                            <span class="kt-badge kt-badge-sm kt-badge-primary">{{ $position->id }}</span>
+                                            <span class="fl-badge fl-badge-sm fl-badge-primary">{{ $position->id }}</span>
                                         </td>
                                         <td>
                                             <span class="text-sm font-medium leading-none text-mono">{{ $position->name }}</span>
@@ -99,8 +99,8 @@
                                         <td class="text-center">
                                             @can(App\Enums\Tenant\PermissionKey::AccessPositions->value)
                                                 <a href="{{ route('positions.edit', $position) }}"
-                                                   class="kt-btn kt-btn-sm kt-btn-outline">
-                                                    <i class="ki-filled ki-pencil"></i>
+                                                   class="fl-btn fl-btn-sm fl-btn-outline">
+                                                    <x-tabler-pencil-filled />
                                                     {{ __('common.edit') }}
                                                 </a>
                                             @endcan

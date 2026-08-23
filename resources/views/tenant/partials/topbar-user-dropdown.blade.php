@@ -26,7 +26,7 @@
                     </span>
                 </div>
             </div>
-            <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline">
+            <span class="fl-badge fl-badge-sm fl-badge-primary fl-badge-outline">
                 Pro
             </span>
         </div>
@@ -39,8 +39,7 @@
         <div class="mb-2.5 flex flex-col gap-3.5 px-2.5 pt-1.5">
             <div class="flex items-center justify-between gap-2">
                 <span class="flex items-center gap-2">
-                    <i class="ki-filled ki-moon text-base text-muted-foreground">
-                    </i>
+                    <x-tabler-moon-filled class="text-base text-muted-foreground" />
                     <span class="text-2sm font-medium">
                         {{ __('navigation.dark_mode') }}
                     </span>
@@ -50,7 +49,7 @@
             </div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="kt-btn kt-btn-outline w-full justify-center">
+                <button type="submit" class="fl-btn fl-btn-outline w-full justify-center">
                     {{ __('navigation.logout') }}
                 </button>
             </form>

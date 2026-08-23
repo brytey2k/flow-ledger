@@ -4,14 +4,14 @@
     use App\Enums\Tenant\PermissionKey;
 
     $typeColors = [
-        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'kt-badge-primary',
-        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'kt-badge-warning',
-        \App\Enums\Tenant\PaymentRequestType::Retirement->value => 'kt-badge-success',
+        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'fl-badge-primary',
+        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'fl-badge-warning',
+        \App\Enums\Tenant\PaymentRequestType::Retirement->value => 'fl-badge-success',
     ];
 @endphp
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('approvals.title') }}</h1>
@@ -22,38 +22,38 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('approvals.pending_reviews') }}</h3>
-                <span class="kt-badge kt-badge-sm kt-badge-outline">
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('approvals.pending_reviews') }}</h3>
+                <span class="fl-badge fl-badge-sm fl-badge-outline">
                     {{ $instanceStages->total() }} {{ Str::plural('item', $instanceStages->total()) }}
                 </span>
             </div>
 
             @if($instanceStages->isEmpty())
-                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+                <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
-                        <i class="ki-filled ki-shield-tick text-6xl text-muted-foreground mb-4"></i>
+                        <x-tabler-shield-check-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('approvals.empty.heading') }}</h3>
                         <p class="text-sm text-secondary-foreground">{{ __('approvals.empty.subtext') }}</p>
                     </div>
                 </div>
             @else
-                <div class="kt-card-table">
-                    <div class="kt-scrollable-x-auto border-b border-border">
-                        <table class="kt-table kt-table-border">
+                <div class="fl-card-table">
+                    <div class="fl-scrollable-x-auto border-b border-border">
+                        <table class="fl-table fl-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">#</span></span></th>
-                                    <th class="min-w-[160px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.staff') }}</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.branch') }}</span></span></th>
-                                    <th class="min-w-[80px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.type') }}</span></span></th>
-                                    <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
-                                    <th class="min-w-[130px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.stage') }}</span></span></th>
-                                    <th class="min-w-[110px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.submitted') }}</span></span></th>
-                                    <th class="min-w-[90px] text-center"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
+                                    <th class="min-w-[60px]"><span class="fl-table-col"><span class="fl-table-col-label">#</span></span></th>
+                                    <th class="min-w-[160px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.staff') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.branch') }}</span></span></th>
+                                    <th class="min-w-[80px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.type') }}</span></span></th>
+                                    <th class="min-w-[120px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.stage') }}</span></span></th>
+                                    <th class="min-w-[110px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.submitted') }}</span></span></th>
+                                    <th class="min-w-[90px] text-center"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -64,7 +64,7 @@
                                         <td><span class="text-sm font-medium text-mono">{{ $req->staff->full_name ?? '—' }}</span></td>
                                         <td><span class="text-sm text-foreground">{{ $req->branch->name ?? '—' }}</span></td>
                                         <td>
-                                            <span class="kt-badge kt-badge-sm {{ $typeColors[$req->type] ?? 'kt-badge-outline' }}">
+                                            <span class="fl-badge fl-badge-sm {{ $typeColors[$req->type] ?? 'fl-badge-outline' }}">
                                                 {{ ucfirst($req->type) }}
                                             </span>
                                         </td>
@@ -81,8 +81,8 @@
                                         </td>
                                         <td class="text-center">
                                             <a href="{{ route('approvals.show', $instanceStage) }}"
-                                               class="kt-btn kt-btn-sm kt-btn-primary">
-                                                <i class="ki-filled ki-eye"></i>
+                                               class="fl-btn fl-btn-sm fl-btn-primary">
+                                                <x-tabler-eye-filled />
                                                 {{ __('common.review') }}
                                             </a>
                                         </td>
@@ -94,7 +94,7 @@
                 </div>
 
                 @if($instanceStages->hasPages())
-                    <div class="kt-card-footer py-4 px-5 lg:px-7.5">
+                    <div class="fl-card-footer py-4 px-5 lg:px-7.5">
                         {{ $instanceStages->links() }}
                     </div>
                 @endif

@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ $user->name }}</h1>
@@ -15,33 +15,33 @@
         </div>
         <div class="flex items-center gap-2.5">
             @can(App\Enums\Tenant\PermissionKey::AccessUsers->value)
-                <a class="kt-btn kt-btn-outline" href="{{ route('users.edit', $user) }}">
-                    <i class="ki-filled ki-pencil"></i>
+                <a class="fl-btn fl-btn-outline" href="{{ route('users.edit', $user) }}">
+                    <x-tabler-pencil-filled />
                     {{ __('users.edit_title') }}
                 </a>
             @endcan
 
             @can(App\Enums\Tenant\PermissionKey::DeleteUser->value)
-                <button type="button" class="kt-btn kt-btn-danger" onclick="if(confirm('{{ __('users.confirm_delete') }}')) { document.getElementById('delete-user-form').submit(); }">
-                    <i class="ki-filled ki-trash"></i>
+                <button type="button" class="fl-btn fl-btn-danger" onclick="if(confirm('{{ __('users.confirm_delete') }}')) { document.getElementById('delete-user-form').submit(); }">
+                    <x-tabler-trash-filled />
                     {{ __('users.buttons.delete') }}
                 </button>
             @endcan
 
-            <a class="kt-btn kt-btn-outline" href="{{ route('users.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('users.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('common.back') }}
             </a>
         </div>
     </div>
 </div>
 
-<div class="kt-container-fixed">
-    <div class="kt-card">
-        <div class="kt-card-header">
-            <h3 class="kt-card-title">{{ __('users.details_card') ?? 'User Details' }}</h3>
+<div class="fl-container-fixed">
+    <div class="fl-card">
+        <div class="fl-card-header">
+            <h3 class="fl-card-title">{{ __('users.details_card') ?? 'User Details' }}</h3>
         </div>
-        <div class="kt-card-content grid gap-4 p-5 lg:p-7.5">
+        <div class="fl-card-content grid gap-4 p-5 lg:p-7.5">
             <div>
                 <p class="text-sm text-muted-foreground">{{ __('common.columns.name') }}</p>
                 <p class="text-lg font-medium text-mono">{{ $user->first_name }} {{ $user->last_name }}</p>

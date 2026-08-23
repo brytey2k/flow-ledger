@@ -1,12 +1,12 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
                 <a href="{{ route('reports.index') }}" class="hover:text-primary">Reports</a>
-                <i class="ki-filled ki-right text-xs"></i>
+                <x-tabler-chevron-right-filled class="text-xs" />
                 <span>Retirement Turnaround</span>
             </div>
             <h1 class="text-xl font-medium leading-none text-mono">Retirement Turnaround</h1>
@@ -19,50 +19,50 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Filters --}}
-        <div class="kt-card p-5">
+        <div class="fl-card p-5">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">From</label>
-                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="kt-input kt-input-sm" />
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="fl-input fl-input-sm" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">To</label>
-                    <input type="date" name="date_to" value="{{ $dateTo }}" class="kt-input kt-input-sm" />
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="fl-input fl-input-sm" />
                 </div>
-                <button type="submit" class="kt-btn kt-btn-sm kt-btn-primary">Apply</button>
-                <a href="{{ route('reports.retirement-turnaround') }}" class="kt-btn kt-btn-sm kt-btn-light">Reset</a>
+                <button type="submit" class="fl-btn fl-btn-sm fl-btn-primary">Apply</button>
+                <a href="{{ route('reports.retirement-turnaround') }}" class="fl-btn fl-btn-sm fl-btn-light">Reset</a>
             </form>
         </div>
 
         {{-- Table --}}
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">Turnaround by Stage</h3>
-                <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $stages->count() }} stages</span>
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">Turnaround by Stage</h3>
+                <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $stages->count() }} stages</span>
             </div>
 
             @if($stages->isEmpty())
-                <div class="kt-card-content flex flex-col items-center justify-center py-12">
-                    <i class="ki-filled ki-check-circle text-3xl text-secondary-foreground mb-3"></i>
+                <div class="fl-card-content flex flex-col items-center justify-center py-12">
+                    <x-tabler-circle-check-filled class="text-3xl text-secondary-foreground mb-3" />
                     <p class="text-sm text-secondary-foreground">No completed retirement workflow stages in this period.</p>
                 </div>
             @else
-                <div class="kt-card-table">
-                    <div class="kt-scrollable-x-auto border-b border-border">
-                        <table class="kt-table kt-table-border">
+                <div class="fl-card-table">
+                    <div class="fl-scrollable-x-auto border-b border-border">
+                        <table class="fl-table fl-table-border">
                             <thead>
                                 <tr>
-                                    <th><span class="kt-table-col"><span class="kt-table-col-label">Stage</span></span></th>
-                                    <th><span class="kt-table-col kt-table-col-end"><span class="kt-table-col-label">Reviews</span></span></th>
-                                    <th><span class="kt-table-col kt-table-col-end"><span class="kt-table-col-label">Approved</span></span></th>
-                                    <th><span class="kt-table-col kt-table-col-end"><span class="kt-table-col-label">Sent Back</span></span></th>
-                                    <th><span class="kt-table-col kt-table-col-end"><span class="kt-table-col-label">Avg Hours</span></span></th>
-                                    <th><span class="kt-table-col kt-table-col-end"><span class="kt-table-col-label">Min Hours</span></span></th>
-                                    <th><span class="kt-table-col kt-table-col-end"><span class="kt-table-col-label">Max Hours</span></span></th>
+                                    <th><span class="fl-table-col"><span class="fl-table-col-label">Stage</span></span></th>
+                                    <th><span class="fl-table-col fl-table-col-end"><span class="fl-table-col-label">Reviews</span></span></th>
+                                    <th><span class="fl-table-col fl-table-col-end"><span class="fl-table-col-label">Approved</span></span></th>
+                                    <th><span class="fl-table-col fl-table-col-end"><span class="fl-table-col-label">Sent Back</span></span></th>
+                                    <th><span class="fl-table-col fl-table-col-end"><span class="fl-table-col-label">Avg Hours</span></span></th>
+                                    <th><span class="fl-table-col fl-table-col-end"><span class="fl-table-col-label">Min Hours</span></span></th>
+                                    <th><span class="fl-table-col fl-table-col-end"><span class="fl-table-col-label">Max Hours</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -5,63 +5,63 @@
     $retiredPaymentRequest = $req instanceof \App\Models\Tenant\RetirementRequest ? $req->paymentRequest : null;
 
     $statusColors = [
-        'draft'       => 'kt-badge-outline',
-        'in_workflow' => 'kt-badge-primary',
-        'approved'    => 'kt-badge-success',
-        'disbursed'   => 'kt-badge-info',
-        'retired'     => 'kt-badge-neutral',
-        'sent_back'   => 'kt-badge-warning',
-        'cancelled'   => 'kt-badge-danger',
+        'draft'       => 'fl-badge-outline',
+        'in_workflow' => 'fl-badge-primary',
+        'approved'    => 'fl-badge-success',
+        'disbursed'   => 'fl-badge-info',
+        'retired'     => 'fl-badge-neutral',
+        'sent_back'   => 'fl-badge-warning',
+        'cancelled'   => 'fl-badge-danger',
     ];
     $typeColors = [
-        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'kt-badge-primary',
-        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'kt-badge-warning',
+        \App\Enums\Tenant\PaymentRequestType::Advance->value => 'fl-badge-primary',
+        \App\Enums\Tenant\PaymentRequestType::Expense->value => 'fl-badge-warning',
     ];
     $stageStatusIcons = [
-        'approved'  => ['icon' => 'ki-check',         'class' => 'bg-success/20 text-success'],
-        'active'    => ['icon' => 'ki-time',           'class' => 'bg-primary/20 text-primary'],
-        'rejected'  => ['icon' => 'ki-cross',          'class' => 'bg-destructive/20 text-destructive'],
-        'sent_back' => ['icon' => 'ki-arrow-left',     'class' => 'bg-warning/20 text-warning'],
-        'skipped'   => ['icon' => 'ki-minus',          'class' => 'bg-muted text-muted-foreground'],
-        'cancelled' => ['icon' => 'ki-cross-circle',   'class' => 'bg-muted text-muted-foreground'],
+        'approved'  => ['icon' => 'tabler-check-filled',         'class' => 'bg-success/20 text-success'],
+        'active'    => ['icon' => 'tabler-clock-filled',         'class' => 'bg-primary/20 text-primary'],
+        'rejected'  => ['icon' => 'tabler-x-filled',             'class' => 'bg-destructive/20 text-destructive'],
+        'sent_back' => ['icon' => 'tabler-arrow-left',           'class' => 'bg-warning/20 text-warning'],
+        'skipped'   => ['icon' => 'tabler-minus',                'class' => 'bg-muted text-muted-foreground'],
+        'cancelled' => ['icon' => 'tabler-circle-x-filled',      'class' => 'bg-muted text-muted-foreground'],
     ];
 @endphp
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-3">
                 <h1 class="text-xl font-medium leading-none text-mono">
                     Review Request #{{ $req->id }}
                 </h1>
-                <span class="kt-badge kt-badge-sm {{ $typeColors[$req->type] ?? 'kt-badge-outline' }}">
+                <span class="fl-badge fl-badge-sm {{ $typeColors[$req->type] ?? 'fl-badge-outline' }}">
                     {{ ucfirst($req->type) }}
                 </span>
             </div>
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
                 <span>{{ __('common.columns.stage') }}: <span class="font-medium text-mono">{{ $instanceStage->stage->name }}</span></span>
                 @if($instanceStage->instance?->template)
-                    <span class="kt-badge kt-badge-sm kt-badge-outline">
+                    <span class="fl-badge fl-badge-sm fl-badge-outline">
                         {{ __('approvals.show.workflow_version', ['version' => $instanceStage->instance->template->version]) }}
                     </span>
                 @endif
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('approvals.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('approvals.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('approvals.show.back') }}
             </a>
-            <a class="kt-btn kt-btn-outline" href="{{ route('payment-requests.show', $req) }}">
-                <i class="ki-filled ki-eye"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('payment-requests.show', $req) }}">
+                <x-tabler-eye-filled />
                 {{ __('approvals.show.view_request') }}
             </a>
         </div>
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
 
@@ -69,11 +69,11 @@
             <div class="lg:col-span-2 flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Request Details --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('approvals.show.request_details') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('approvals.show.request_details') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
+                    <div class="fl-card-content p-5 lg:p-7.5 lg:pt-4">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.staff_member') }}</dt>
@@ -123,21 +123,21 @@
                 </div>
 
                 {{-- Line Items --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('approvals.show.line_items') }}</h3>
-                        <span class="kt-badge kt-badge-sm kt-badge-outline">
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('approvals.show.line_items') }}</h3>
+                        <span class="fl-badge fl-badge-sm fl-badge-outline">
                             {{ $req->items->count() }} {{ Str::plural('item', $req->items->count()) }}
                         </span>
                     </div>
-                    <div class="kt-card-table">
-                        <div class="kt-scrollable-x-auto border-b border-border">
-                            <table class="kt-table kt-table-border">
+                    <div class="fl-card-table">
+                        <div class="fl-scrollable-x-auto border-b border-border">
+                            <table class="fl-table fl-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
-                                        <th class="w-[180px]"><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
-                                        <th class="w-[160px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th class="w-[180px]"><span class="fl-table-col"><span class="fl-table-col-label">{{ __('payment_requests.fields.cost_code') }}</span></span></th>
+                                        <th class="w-[160px] text-end"><span class="fl-table-col justify-end"><span class="fl-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -175,16 +175,16 @@
 
                 {{-- Prior Actions --}}
                 @if($instanceStage->actions->isNotEmpty())
-                    <div class="kt-card">
-                        <div class="kt-card-header">
-                            <h3 class="kt-card-title">{{ __('approvals.show.action_history') }}</h3>
+                    <div class="fl-card">
+                        <div class="fl-card-header">
+                            <h3 class="fl-card-title">{{ __('approvals.show.action_history') }}</h3>
                         </div>
-                        <div class="kt-card-content p-5 flex flex-col gap-4">
+                        <div class="fl-card-content p-5 flex flex-col gap-4">
                             @foreach($instanceStage->actions as $action)
                                 <div class="flex gap-3">
                                     <div class="shrink-0 flex h-8 w-8 items-center justify-center rounded-full
                                         {{ $action->action === 'approve' ? 'bg-success/20 text-success' : ($action->action === 'reject' ? 'bg-destructive/20 text-destructive' : 'bg-warning/20 text-warning') }}">
-                                        <i class="ki-filled {{ $action->action === 'approve' ? 'ki-check' : ($action->action === 'reject' ? 'ki-cross' : 'ki-arrow-left') }} text-sm"></i>
+                                        <x-dynamic-component :component="$action->action === 'approve' ? 'tabler-check-filled' : ($action->action === 'reject' ? 'tabler-x-filled' : 'tabler-arrow-left')" class="text-sm" />
                                     </div>
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-sm font-medium text-mono">
@@ -208,23 +208,23 @@
             <div class="flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Action Panel --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('approvals.show.your_decision') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('approvals.show.your_decision') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5">
+                    <div class="fl-card-content p-5">
                         @if($instanceStage->isActive())
                             <form method="POST" action="{{ route('approvals.store', $instanceStage) }}" id="approval-form">
                                 @csrf
 
                                 {{-- Comment --}}
                                 <div class="mb-4">
-                                    <label class="kt-form-label block mb-2" for="comment">
+                                    <label class="fl-form-label block mb-2" for="comment">
                                         {{ __('approvals.show.comment_label') }}
                                         <span class="text-secondary-foreground font-normal text-xs">{{ __('approvals.show.comment_required') }}</span>
                                     </label>
                                     <textarea id="comment" name="comment" rows="4"
-                                              class="kt-textarea w-full"
+                                              class="fl-textarea w-full"
                                               placeholder="{{ __('approvals.show.comment_placeholder') }}"
                                               aria-invalid="@error('comment') true @else false @enderror">{{ old('comment') }}</textarea>
                                     @error('comment')
@@ -238,21 +238,21 @@
                                 {{-- Buttons --}}
                                 <div class="flex flex-col gap-2">
                                     <button type="submit" name="action" value="approve"
-                                            class="kt-btn kt-btn-success w-full">
-                                        <i class="ki-filled ki-check-circle"></i>
+                                            class="fl-btn fl-btn-success w-full">
+                                        <x-tabler-circle-check-filled />
                                         {{ __('common.approve') }}
                                     </button>
                                     @if($instanceStage->stage->allow_send_back)
                                         <button type="submit" name="action" value="send_back"
-                                                class="kt-btn kt-btn-warning kt-btn-outline w-full">
-                                            <i class="ki-filled ki-arrow-left"></i>
+                                                class="fl-btn fl-btn-warning fl-btn-outline w-full">
+                                            <x-tabler-arrow-left />
                                             {{ __('common.send_back') }}
                                         </button>
                                     @endif
                                     <button type="submit" name="action" value="reject"
                                             onclick="return confirm('{{ __('approvals.show.reject_confirm') }}')"
-                                            class="kt-btn kt-btn-danger kt-btn-outline w-full">
-                                        <i class="ki-filled ki-cross-circle"></i>
+                                            class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                        <x-tabler-circle-x-filled />
                                         {{ __('common.reject') }}
                                     </button>
                                 </div>
@@ -260,7 +260,7 @@
                         @else
                             <div class="flex flex-col items-center gap-2 py-4 text-center">
                                 <span class="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                    <i class="ki-filled ki-check text-base"></i>
+                                    <x-tabler-check-filled class="text-base" />
                                 </span>
                                 <p class="text-sm font-medium text-mono">{{ __('approvals.show.already_resolved_heading') }}</p>
                                 <p class="text-sm text-secondary-foreground">{{ __('approvals.show.already_resolved_body') }}</p>
@@ -270,20 +270,20 @@
                 </div>
 
                 {{-- Workflow Progress --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('approvals.show.approval_progress') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('approvals.show.approval_progress') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5 flex flex-col gap-3">
+                    <div class="fl-card-content p-5 flex flex-col gap-3">
                         @foreach($instanceStage->instance->instanceStages->sortBy('stage.display_order') as $is)
                             @php
-                                $icon = $stageStatusIcons[$is->status] ?? ['icon' => 'ki-dots-circle', 'class' => 'border-2 border-border bg-background text-muted-foreground'];
+                                $icon = $stageStatusIcons[$is->status] ?? ['icon' => 'tabler-dots-circle-horizontal', 'class' => 'border-2 border-border bg-background text-muted-foreground'];
                                 $isCurrent = $is->id === $instanceStage->id;
                             @endphp
                             <div class="flex items-start gap-3">
                                 <div class="mt-0.5 shrink-0">
                                     <span class="flex h-6 w-6 items-center justify-center rounded-full {{ $icon['class'] }} {{ $isCurrent ? 'ring-2 ring-primary ring-offset-1' : '' }}">
-                                        <i class="ki-filled {{ $icon['icon'] }} text-xs"></i>
+                                        <x-dynamic-component :component="$icon['icon']" class="text-xs" />
                                     </span>
                                 </div>
                                 <div class="flex flex-col gap-0.5">

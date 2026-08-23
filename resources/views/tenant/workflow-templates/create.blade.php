@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('workflows.create_title') }}</h1>
@@ -9,30 +9,30 @@
                 {{ __('workflows.create_subtitle') }}
             </div>
         </div>
-        <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.index') }}">
-            <i class="ki-filled ki-arrow-left"></i>
+        <a class="fl-btn fl-btn-outline" href="{{ route('workflow-templates.index') }}">
+            <x-tabler-arrow-left />
             {{ __('workflows.back') }}
         </a>
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('workflows.details_card') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('workflows.details_card') }}</h3>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 <form method="POST" action="{{ route('workflow-templates.store') }}" class="grid gap-7">
                     @csrf
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div>
-                            <label class="kt-form-label block mb-2" for="name">
+                            <label class="fl-form-label block mb-2" for="name">
                                 {{ __('workflows.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name') }}"
-                                   class="kt-input w-full" placeholder="e.g. Standard Advance Approval"
+                                   class="fl-input w-full" placeholder="e.g. Standard Advance Approval"
                                    aria-invalid="@error('name') true @else false @enderror" />
                             @error('name')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
@@ -40,10 +40,10 @@
                         </div>
 
                         <div>
-                            <label class="kt-form-label block mb-2" for="type">
+                            <label class="fl-form-label block mb-2" for="type">
                                 {{ __('workflows.fields.type') }} <span class="text-destructive">*</span>
                             </label>
-                            <select id="type" name="type" class="kt-select w-full"
+                            <select id="type" name="type" class="fl-select w-full"
                                     aria-invalid="@error('type') true @else false @enderror">
                                 <option value="">{{ __('workflows.fields.select_type') }}</option>
                                 <option value="advance" {{ old('type') === 'advance' ? 'selected' : '' }}>{{ __('workflows.fields.type_advance') }}</option>
@@ -59,10 +59,10 @@
                         </div>
 
                         <div>
-                            <label class="kt-form-label block mb-2" for="branch_id">
+                            <label class="fl-form-label block mb-2" for="branch_id">
                                 {{ __('workflows.fields.branch') }}
                             </label>
-                            <select id="branch_id" name="branch_id" class="kt-select w-full"
+                            <select id="branch_id" name="branch_id" class="fl-select w-full"
                                     aria-invalid="@error('branch_id') true @else false @enderror">
                                 <option value="">{{ __('workflows.fields.branch_master') }}</option>
                                 @foreach($branches as $branch)
@@ -81,11 +81,11 @@
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
-                        <button type="submit" class="kt-btn kt-btn-primary">
-                            <i class="ki-filled ki-plus"></i>
+                        <button type="submit" class="fl-btn fl-btn-primary">
+                            <x-tabler-plus-filled />
                             {{ __('workflows.buttons.create') }}
                         </button>
-                        <a class="kt-btn kt-btn-light" href="{{ route('workflow-templates.index') }}">{{ __('common.cancel') }}</a>
+                        <a class="fl-btn fl-btn-light" href="{{ route('workflow-templates.index') }}">{{ __('common.cancel') }}</a>
                     </div>
                 </form>
             </div>

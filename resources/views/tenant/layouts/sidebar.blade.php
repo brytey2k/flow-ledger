@@ -36,9 +36,9 @@
             @endif
         </a>
         <button
-            class="kt-btn kt-btn-outline kt-btn-icon absolute start-full top-2/4 size-[30px] -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"
+            class="fl-btn fl-btn-outline fl-btn-icon absolute start-full top-2/4 size-[30px] -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"
             data-kt-toggle="body" data-kt-toggle-class="kt-sidebar-collapse" id="sidebar_toggle">
-            <i class="ki-filled ki-black-left-line kt-toggle-active:rotate-180 rtl:translate rtl:kt-toggle-active:rotate-0 transition-all duration-300 rtl:rotate-180"></i>
+            <x-tabler-chevron-left class="kt-toggle-active:rotate-180 rtl:translate rtl:kt-toggle-active:rotate-0 transition-all duration-300 rtl:rotate-180" />
         </button>
     </div>
     <div class="kt-sidebar-content flex shrink-0 grow py-5 pe-2" id="sidebar_content">
@@ -53,7 +53,7 @@
                     <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                        href="{{ route('dashboard') }}">
                         <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                            <i class="ki-filled ki-element-11 text-lg"></i>
+                            <x-tabler-layout-grid-filled class="text-lg" />
                         </span>
                         <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.dashboard') }}</span>
                     </a>
@@ -72,7 +72,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('payment-requests.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-wallet text-lg"></i>
+                                    <x-tabler-wallet class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.payment_requests') }}</span>
                             </a>
@@ -84,7 +84,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('retirement-requests.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-file-up text-lg"></i>
+                                    <x-tabler-file-arrow-left class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.retirements') }}</span>
                             </a>
@@ -106,7 +106,7 @@
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('disbursements.index') }}">
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                <i class="ki-filled ki-bank text-lg"></i>
+                                <x-tabler-building-bank class="text-lg" />
                             </span>
                             <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.disbursements') }}</span>
                         </a>
@@ -118,7 +118,7 @@
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('cashbook.branches') }}">
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                <i class="ki-filled ki-calculator text-lg"></i>
+                                <x-tabler-calculator-filled class="text-lg" />
                             </span>
                             <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.cashbook') }}</span>
                         </a>
@@ -131,7 +131,7 @@
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('approvals.index') }}">
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                <i class="ki-filled ki-shield-tick text-lg"></i>
+                                <x-tabler-shield-check-filled class="text-lg" />
                             </span>
                             <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.approvals') }}</span>
                         </a>
@@ -150,7 +150,7 @@
                         <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                            href="{{ route('reports.index') }}">
                             <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                <i class="ki-filled ki-chart-line-up text-lg"></i>
+                                <x-tabler-chart-line class="text-lg" />
                             </span>
                             <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.reports') }}</span>
                         </a>
@@ -170,7 +170,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('levels.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-element-11 text-lg"></i>
+                                    <x-tabler-layout-grid-filled class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.levels') }}</span>
                             </a>
@@ -182,7 +182,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('branches.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-office-bag text-lg"></i>
+                                    <x-tabler-briefcase-filled class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.branches') }}</span>
                             </a>
@@ -194,7 +194,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('departments.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-people text-lg"></i>
+                                    <x-tabler-users-group class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.departments') }}</span>
                             </a>
@@ -206,7 +206,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('cost-codes.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-book text-lg"></i>
+                                    <x-tabler-book-filled class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.cost_codes') }}</span>
                             </a>
@@ -218,7 +218,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('positions.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-briefcase text-lg"></i>
+                                    <x-tabler-briefcase-filled class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.positions') }}</span>
                             </a>
@@ -230,7 +230,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('staff.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-people text-lg"></i>
+                                    <x-tabler-users-group class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.staff') }}</span>
                             </a>
@@ -251,7 +251,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('users.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-users text-lg"></i>
+                                    <x-tabler-users class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.users') }}</span>
                             </a>
@@ -263,7 +263,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('roles.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-security-user text-lg"></i>
+                                    <x-tabler-shield-check-filled class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.roles') }}</span>
                             </a>
@@ -275,7 +275,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('currencies.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-bank text-lg"></i>
+                                    <x-tabler-building-bank class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.currencies') }}</span>
                             </a>
@@ -287,7 +287,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('cash-balance-thresholds.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-bank text-lg"></i>
+                                    <x-tabler-building-bank class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.cash_balance_thresholds') }}</span>
                             </a>
@@ -296,7 +296,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('settings.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-setting-2 text-lg"></i>
+                                    <x-tabler-settings-filled class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.settings') }}</span>
                             </a>
@@ -308,7 +308,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('workflow-templates.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-arrow-right-left text-lg"></i>
+                                    <x-tabler-arrows-exchange class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.workflows') }}</span>
                             </a>
@@ -320,7 +320,7 @@
                             <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                                href="{{ route('activity-log.index') }}">
                                 <span class="kt-menu-icon w-[20px] items-start text-muted-foreground kt-menu-item-active:text-primary">
-                                    <i class="ki-filled ki-time text-lg"></i>
+                                    <x-tabler-clock-filled class="text-lg" />
                                 </span>
                                 <span class="kt-menu-title text-nowrap text-sm font-medium text-mono kt-menu-item-active:text-primary">{{ __('navigation.activity_log') }}</span>
                             </a>

@@ -1,7 +1,7 @@
 @extends('landlord.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5">
         <div class="flex flex-col gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">Feature Flags</h1>
@@ -10,20 +10,20 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Bulk Actions --}}
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">Bulk Actions</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">Bulk Actions</h3>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 <form method="POST" action="{{ route('landlord.feature-flags.bulk-update') }}" class="flex flex-wrap items-end gap-4">
                     @csrf
                     <div class="flex flex-col gap-1.5">
                         <label class="text-sm font-medium">Feature</label>
-                        <select name="flag" class="kt-select w-60" required>
+                        <select name="flag" class="fl-select w-60" required>
                             @foreach($flagDefinitions as $flag)
                                 <option value="{{ $flag->value }}">{{ $flag->label() }}</option>
                             @endforeach
@@ -31,11 +31,11 @@
                     </div>
                     <div class="flex gap-2">
                         <button type="submit" name="action" value="enable"
-                                class="kt-btn kt-btn-primary">
+                                class="fl-btn fl-btn-primary">
                             Enable for All
                         </button>
                         <button type="submit" name="action" value="disable"
-                                class="kt-btn kt-btn-light">
+                                class="fl-btn fl-btn-light">
                             Disable for All
                         </button>
                     </div>
@@ -44,12 +44,12 @@
         </div>
 
         {{-- Per-tenant --}}
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">Tenants</h3>
-                <p class="kt-card-subtitle">Click a tenant to manage its feature flags individually.</p>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">Tenants</h3>
+                <p class="fl-card-subtitle">Click a tenant to manage its feature flags individually.</p>
             </div>
-            <div class="kt-card-content p-0">
+            <div class="fl-card-content p-0">
                 @if($tenants->isEmpty())
                     <div class="p-8 text-center text-muted-foreground">No tenants yet.</div>
                 @else
@@ -64,12 +64,12 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     @if($tenant->isSuspended())
-                                        <span class="kt-badge kt-badge-danger kt-badge-sm">Suspended</span>
+                                        <span class="fl-badge fl-badge-danger fl-badge-sm">Suspended</span>
                                     @else
-                                        <span class="kt-badge kt-badge-success kt-badge-sm">Active</span>
+                                        <span class="fl-badge fl-badge-success fl-badge-sm">Active</span>
                                     @endif
                                     <a href="{{ route('landlord.tenants.feature-flags.index', $tenant) }}"
-                                       class="kt-btn kt-btn-sm kt-btn-light">
+                                       class="fl-btn fl-btn-sm fl-btn-light">
                                         Manage Flags
                                     </a>
                                 </div>

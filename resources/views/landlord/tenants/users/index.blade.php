@@ -14,7 +14,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
@@ -29,12 +29,12 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
-                <i class="ki-filled ki-security-user"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('landlord.tenants.roles.index', $tenant) }}">
+                <x-tabler-shield-check-filled />
                 Manage Roles
             </a>
-            <a class="kt-btn kt-btn-outline" href="{{ route('landlord.tenants.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('landlord.tenants.index') }}">
+                <x-tabler-arrow-left />
                 Back to Tenants
             </a>
         </div>
@@ -43,11 +43,11 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">
                     Users for {{ $tenantName }}
                 </h3>
                 <div class="flex items-center gap-2">
@@ -56,41 +56,41 @@
                     </span>
                 </div>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 @if($users->isEmpty())
                     <div class="flex flex-col items-center justify-center py-12">
-                        <i class="ki-filled ki-user text-6xl text-muted-foreground mb-4"></i>
+                        <x-tabler-user-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">No users found</h3>
                         <p class="text-sm text-secondary-foreground">This tenant has no staff users yet.</p>
                     </div>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="kt-table kt-table-border table-fixed">
+                        <table class="fl-table fl-table-border table-fixed">
                             <thead>
                                 <tr>
                                     <th class="min-w-[200px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Name</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Name</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Email</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Email</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[200px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Roles</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Roles</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[150px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Direct Permissions</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Direct Permissions</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[180px] text-center">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">Actions</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">Actions</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -122,12 +122,12 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-2">
-                                                <a href="{{ route('landlord.tenants.users.roles.edit', [$tenant, $user]) }}" class="kt-btn kt-btn-sm kt-btn-outline">
-                                                    <i class="ki-filled ki-security-user"></i>
+                                                <a href="{{ route('landlord.tenants.users.roles.edit', [$tenant, $user]) }}" class="fl-btn fl-btn-sm fl-btn-outline">
+                                                    <x-tabler-shield-check-filled />
                                                     Roles
                                                 </a>
-                                                <a href="{{ route('landlord.tenants.users.permissions.edit', [$tenant, $user]) }}" class="kt-btn kt-btn-sm kt-btn-outline">
-                                                    <i class="ki-filled ki-notepad-edit"></i>
+                                                <a href="{{ route('landlord.tenants.users.permissions.edit', [$tenant, $user]) }}" class="fl-btn fl-btn-sm fl-btn-outline">
+                                                    <x-tabler-edit-filled />
                                                     Permissions
                                                 </a>
                                             </div>

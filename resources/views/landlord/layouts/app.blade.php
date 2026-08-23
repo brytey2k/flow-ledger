@@ -54,7 +54,7 @@
         @include('landlord.layouts.sidebar')
 
         <!-- Wrapper -->
-        <div class="kt-wrapper flex grow flex-col">
+        <div class="fl-wrapper flex grow flex-col">
             @include('landlord.layouts.header')
 
             <!-- Content -->

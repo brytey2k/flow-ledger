@@ -28,12 +28,10 @@
                         </span>
                         <span class="kt-menu-arrow flex lg:hidden">
                             <span class="kt-menu-item-show:hidden text-muted-foreground">
-                                <i class="ki-filled ki-plus text-xs">
-                                </i>
+                                <x-tabler-plus-filled class="text-xs" />
                             </span>
                             <span class="kt-menu-item-show:inline-flex hidden">
-                                <i class="ki-filled ki-minus text-xs">
-                                </i>
+                                <x-tabler-minus class="text-xs" />
                             </span>
                         </span>
                     </div>
@@ -43,8 +41,7 @@
                                 href="{{ route('landlord.documentation') }}"
                                 tabindex="0">
                                 <span class="kt-menu-icon">
-                                    <i class="ki-filled ki-questionnaire-tablet">
-                                    </i>
+                                    <x-tabler-device-tablet-question />
                                 </span>
                                 <span class="kt-menu-title grow-0">
                                     Documentation

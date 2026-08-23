@@ -9,7 +9,7 @@
     $avatarInitial = strtoupper(substr($fullName !== '' ? $fullName : 'L', 0, 1));
 @endphp
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">Change Password</h1>
@@ -20,11 +20,11 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-7.5">
         <div class="lg:col-span-1 flex flex-col gap-5">
-            <div class="kt-card">
-                <div class="kt-card-content pt-6 pb-5">
+            <div class="fl-card">
+                <div class="fl-card-content pt-6 pb-5">
                     <div class="flex flex-col items-center gap-3 text-center">
                         <div class="size-16 rounded-full bg-primary flex items-center justify-center text-2xl font-bold text-primary-foreground shrink-0">
                             {{ $avatarInitial }}
@@ -37,29 +37,29 @@
                 </div>
             </div>
 
-            <div class="kt-card">
-                <div class="kt-card-header">
-                    <h3 class="kt-card-title flex items-center gap-2">
-                        <i class="ki-filled ki-shield-tick text-primary"></i>
+            <div class="fl-card">
+                <div class="fl-card-header">
+                    <h3 class="fl-card-title flex items-center gap-2">
+                        <x-tabler-shield-check-filled class="text-primary" />
                         Password Tips
                     </h3>
                 </div>
-                <div class="kt-card-content">
+                <div class="fl-card-content">
                     <ul class="flex flex-col gap-3">
                         <li class="flex items-start gap-2.5 text-sm text-secondary-foreground">
-                            <i class="ki-filled ki-check-circle text-success mt-0.5 shrink-0"></i>
+                            <x-tabler-circle-check-filled class="text-success mt-0.5 shrink-0" />
                             At least 8 characters long
                         </li>
                         <li class="flex items-start gap-2.5 text-sm text-secondary-foreground">
-                            <i class="ki-filled ki-check-circle text-success mt-0.5 shrink-0"></i>
+                            <x-tabler-circle-check-filled class="text-success mt-0.5 shrink-0" />
                             Mix of uppercase and lowercase letters
                         </li>
                         <li class="flex items-start gap-2.5 text-sm text-secondary-foreground">
-                            <i class="ki-filled ki-check-circle text-success mt-0.5 shrink-0"></i>
+                            <x-tabler-circle-check-filled class="text-success mt-0.5 shrink-0" />
                             Include numbers and special characters
                         </li>
                         <li class="flex items-start gap-2.5 text-sm text-secondary-foreground">
-                            <i class="ki-filled ki-check-circle text-success mt-0.5 shrink-0"></i>
+                            <x-tabler-circle-check-filled class="text-success mt-0.5 shrink-0" />
                             Avoid reusing previous passwords
                         </li>
                     </ul>
@@ -68,25 +68,25 @@
         </div>
 
         <div class="lg:col-span-2">
-            <div class="kt-card">
-                <div class="kt-card-header">
-                    <h3 class="kt-card-title flex items-center gap-2">
-                        <i class="ki-filled ki-lock text-primary"></i>
+            <div class="fl-card">
+                <div class="fl-card-header">
+                    <h3 class="fl-card-title flex items-center gap-2">
+                        <x-tabler-lock-filled class="text-primary" />
                         Update Password
                     </h3>
                 </div>
-                <div class="kt-card-content">
+                <div class="fl-card-content">
                     <form action="{{ route('landlord.password.update') }}" class="grid gap-6" method="POST">
                         @csrf
                         @method('PUT')
 
                         <div>
-                            <label class="kt-form-label block mb-2" for="current_password">
+                            <label class="fl-form-label block mb-2" for="current_password">
                                 Current Password
                                 <span class="text-destructive">*</span>
                             </label>
                             <input
-                                class="kt-input w-full"
+                                class="fl-input w-full"
                                 id="current_password"
                                 name="current_password"
                                 type="password"
@@ -103,12 +103,12 @@
                         <div class="border-t border-border"></div>
 
                         <div>
-                            <label class="kt-form-label block mb-2" for="password">
+                            <label class="fl-form-label block mb-2" for="password">
                                 New Password
                                 <span class="text-destructive">*</span>
                             </label>
                             <input
-                                class="kt-input w-full"
+                                class="fl-input w-full"
                                 id="password"
                                 name="password"
                                 type="password"
@@ -123,12 +123,12 @@
                         </div>
 
                         <div>
-                            <label class="kt-form-label block mb-2" for="password_confirmation">
+                            <label class="fl-form-label block mb-2" for="password_confirmation">
                                 Confirm New Password
                                 <span class="text-destructive">*</span>
                             </label>
                             <input
-                                class="kt-input w-full"
+                                class="fl-input w-full"
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 type="password"
@@ -139,8 +139,8 @@
                         </div>
 
                         <div class="pt-2 flex items-center gap-2.5">
-                            <button class="kt-btn kt-btn-primary" type="submit">
-                                <i class="ki-filled ki-lock"></i>
+                            <button class="fl-btn fl-btn-primary" type="submit">
+                                <x-tabler-lock-filled />
                                 Update Password
                             </button>
                         </div>

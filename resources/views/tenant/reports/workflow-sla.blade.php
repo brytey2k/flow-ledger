@@ -1,12 +1,12 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-2 text-sm text-secondary-foreground">
                 <a href="{{ route('reports.index') }}" class="hover:text-primary">Reports</a>
-                <i class="ki-filled ki-right text-xs"></i>
+                <x-tabler-chevron-right-filled class="text-xs" />
                 <span>Workflow SLA</span>
             </div>
             <h1 class="text-xl font-medium leading-none text-mono">Workflow SLA</h1>
@@ -19,51 +19,51 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Filters --}}
-        <div class="kt-card p-5">
+        <div class="fl-card p-5">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">From</label>
-                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="kt-input kt-input-sm" />
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="fl-input fl-input-sm" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">To</label>
-                    <input type="date" name="date_to" value="{{ $dateTo }}" class="kt-input kt-input-sm" />
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="fl-input fl-input-sm" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">SLA Target (days)</label>
-                    <input type="number" name="sla_days" value="{{ $slaDays }}" min="1" max="90" class="kt-input kt-input-sm w-28" />
+                    <input type="number" name="sla_days" value="{{ $slaDays }}" min="1" max="90" class="fl-input fl-input-sm w-28" />
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-medium text-secondary-foreground">Type</label>
-                    <select name="type" class="kt-select kt-select-sm">
+                    <select name="type" class="fl-select fl-select-sm">
                         <option value="">All</option>
                         <option value="{{ \App\Enums\Tenant\PaymentRequestType::Advance->value }}" @selected($type === \App\Enums\Tenant\PaymentRequestType::Advance->value)>Advance</option>
                         <option value="{{ \App\Enums\Tenant\PaymentRequestType::Expense->value }}" @selected($type === \App\Enums\Tenant\PaymentRequestType::Expense->value)>Expense</option>
                     </select>
                 </div>
-                <button type="submit" class="kt-btn kt-btn-primary kt-btn-sm">Apply</button>
+                <button type="submit" class="fl-btn fl-btn-primary fl-btn-sm">Apply</button>
             </form>
         </div>
 
         {{-- KPI cards --}}
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="kt-card p-5">
+            <div class="fl-card p-5">
                 <div class="text-xs text-secondary-foreground mb-1">SLA Compliance Rate</div>
                 <div class="text-3xl font-bold {{ $complianceRate >= 80 ? 'text-success' : ($complianceRate >= 60 ? 'text-warning' : 'text-danger') }}">
                     {{ $complianceRate }}%
                 </div>
                 <div class="text-xs text-secondary-foreground mt-1">within {{ $slaDays }}-day target</div>
             </div>
-            <div class="kt-card p-5">
+            <div class="fl-card p-5">
                 <div class="text-xs text-secondary-foreground mb-1">Average Approval Time</div>
                 <div class="text-3xl font-bold text-mono">{{ $avgDays }}d</div>
                 <div class="text-xs text-secondary-foreground mt-1">from submission to approval</div>
             </div>
-            <div class="kt-card p-5">
+            <div class="fl-card p-5">
                 <div class="text-xs text-secondary-foreground mb-1">Total Requests</div>
                 <div class="text-3xl font-bold text-mono">{{ $total }}</div>
                 <div class="text-xs text-secondary-foreground mt-1">
@@ -73,29 +73,29 @@
         </div>
 
         {{-- Detail table --}}
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">Request Detail</h3>
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">Request Detail</h3>
             </div>
 
             @if($requests->isEmpty())
-                <div class="kt-card-content flex flex-col items-center justify-center py-12">
-                    <i class="ki-filled ki-shield-tick text-5xl text-muted-foreground mb-3"></i>
+                <div class="fl-card-content flex flex-col items-center justify-center py-12">
+                    <x-tabler-shield-check-filled class="text-5xl text-muted-foreground mb-3" />
                     <p class="text-sm text-secondary-foreground">No approved requests in this period.</p>
                 </div>
             @else
-                <div class="kt-card-table">
-                    <div class="kt-scrollable-x-auto border-b border-border">
-                        <table class="kt-table kt-table-border">
+                <div class="fl-card-table">
+                    <div class="fl-scrollable-x-auto border-b border-border">
+                        <table class="fl-table fl-table-border">
                             <thead>
                                 <tr>
-                                    <th class="min-w-[60px]"><span class="kt-table-col"><span class="kt-table-col-label">#</span></span></th>
-                                    <th class="min-w-[150px]"><span class="kt-table-col"><span class="kt-table-col-label">Staff</span></span></th>
-                                    <th class="min-w-[80px]"><span class="kt-table-col"><span class="kt-table-col-label">Type</span></span></th>
-                                    <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">Submitted</span></span></th>
-                                    <th class="min-w-[120px]"><span class="kt-table-col"><span class="kt-table-col-label">Approved</span></span></th>
-                                    <th class="min-w-[100px]"><span class="kt-table-col"><span class="kt-table-col-label">Days Taken</span></span></th>
-                                    <th class="min-w-[100px]"><span class="kt-table-col"><span class="kt-table-col-label">SLA</span></span></th>
+                                    <th class="min-w-[60px]"><span class="fl-table-col"><span class="fl-table-col-label">#</span></span></th>
+                                    <th class="min-w-[150px]"><span class="fl-table-col"><span class="fl-table-col-label">Staff</span></span></th>
+                                    <th class="min-w-[80px]"><span class="fl-table-col"><span class="fl-table-col-label">Type</span></span></th>
+                                    <th class="min-w-[120px]"><span class="fl-table-col"><span class="fl-table-col-label">Submitted</span></span></th>
+                                    <th class="min-w-[120px]"><span class="fl-table-col"><span class="fl-table-col-label">Approved</span></span></th>
+                                    <th class="min-w-[100px]"><span class="fl-table-col"><span class="fl-table-col-label">Days Taken</span></span></th>
+                                    <th class="min-w-[100px]"><span class="fl-table-col"><span class="fl-table-col-label">SLA</span></span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -104,7 +104,7 @@
                                         <td><span class="text-sm text-secondary-foreground">#{{ $row['request']->id }}</span></td>
                                         <td><span class="text-sm font-medium text-mono">{{ $row['request']->staff?->full_name ?? '—' }}</span></td>
                                         <td>
-                                            <span class="kt-badge kt-badge-sm {{ $row['request']->type === 'advance' ? 'kt-badge-primary' : 'kt-badge-warning' }}">
+                                            <span class="fl-badge fl-badge-sm {{ $row['request']->type === 'advance' ? 'fl-badge-primary' : 'fl-badge-warning' }}">
                                                 {{ ucfirst($row['request']->type) }}
                                             </span>
                                         </td>
@@ -117,9 +117,9 @@
                                         </td>
                                         <td>
                                             @if($row['compliant'])
-                                                <span class="kt-badge kt-badge-sm kt-badge-success">On time</span>
+                                                <span class="fl-badge fl-badge-sm fl-badge-success">On time</span>
                                             @else
-                                                <span class="kt-badge kt-badge-sm kt-badge-danger">Over target</span>
+                                                <span class="fl-badge fl-badge-sm fl-badge-danger">Over target</span>
                                             @endif
                                         </td>
                                     </tr>

@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cash_count.show_title') }}</h1>
@@ -10,13 +10,13 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a href="{{ route('cash-count.index', $branch) }}" class="kt-btn kt-btn-light">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a href="{{ route('cash-count.index', $branch) }}" class="fl-btn fl-btn-light">
+                <x-tabler-arrow-left />
                 {{ __('cash_count.buttons.back_to_history') }}
             </a>
             @can(\App\Enums\Tenant\PermissionKey::CreateCashCount->value)
-                <a href="{{ route('cash-count.create', $branch) }}" class="kt-btn kt-btn-primary">
-                    <i class="ki-filled ki-plus"></i>
+                <a href="{{ route('cash-count.create', $branch) }}" class="fl-btn fl-btn-primary">
+                    <x-tabler-plus-filled />
                     {{ __('cash_count.buttons.new_count') }}
                 </a>
             @endcan
@@ -24,18 +24,18 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         <!-- Status Card -->
         @php $status = $cashCount->status(); @endphp
-        <div class="kt-card">
-            <div class="kt-card-content p-6 lg:p-8">
+        <div class="fl-card">
+            <div class="fl-card-content p-6 lg:p-8">
                 <div class="flex flex-wrap items-center justify-between gap-6">
                     <div class="flex items-center gap-4">
                         @if($status === 'equal')
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
-                                <i class="ki-filled ki-check-circle text-3xl text-success"></i>
+                                <x-tabler-circle-check-filled class="text-3xl text-success" />
                             </div>
                             <div>
                                 <p class="text-2xl font-bold text-success">{{ __('cash_count.status.equal') }}</p>
@@ -43,7 +43,7 @@
                             </div>
                         @elseif($status === 'surplus')
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-warning/10">
-                                <i class="ki-filled ki-arrow-up-circle text-3xl text-warning"></i>
+                                <x-tabler-arrow-up-circle-filled class="text-3xl text-warning" />
                             </div>
                             <div>
                                 <p class="text-2xl font-bold text-warning">{{ __('cash_count.status.surplus') }}</p>
@@ -53,7 +53,7 @@
                             </div>
                         @else
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-danger/10">
-                                <i class="ki-filled ki-arrow-down-circle text-3xl text-danger"></i>
+                                <x-tabler-arrow-down-circle-filled class="text-3xl text-danger" />
                             </div>
                             <div>
                                 <p class="text-2xl font-bold text-danger">{{ __('cash_count.status.deficit') }}</p>
@@ -93,36 +93,36 @@
         </div>
 
         <!-- Denomination Breakdown -->
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('cash_count.denominations.title') }}</h3>
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('cash_count.denominations.title') }}</h3>
                 <span class="text-sm text-secondary-foreground">
                     {{ $cashbook->currency->name }} ({{ $cashbook->currency->symbol }})
                 </span>
             </div>
-            <div class="kt-card-table">
-                <div class="kt-scrollable-x-auto border-b border-border">
-                    <table class="kt-table kt-table-border">
+            <div class="fl-card-table">
+                <div class="fl-scrollable-x-auto border-b border-border">
+                    <table class="fl-table fl-table-border">
                         <thead>
                             <tr>
                                 <th class="min-w-[200px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">{{ __('cash_count.labels.denomination') }}</span>
+                                    <span class="fl-table-col">
+                                        <span class="fl-table-col-label">{{ __('cash_count.labels.denomination') }}</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[140px] text-right">
-                                    <span class="kt-table-col justify-end">
-                                        <span class="kt-table-col-label">{{ __('cash_count.denominations.labels.value') }}</span>
+                                    <span class="fl-table-col justify-end">
+                                        <span class="fl-table-col-label">{{ __('cash_count.denominations.labels.value') }}</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[100px] text-right">
-                                    <span class="kt-table-col justify-end">
-                                        <span class="kt-table-col-label">{{ __('cash_count.labels.quantity') }}</span>
+                                    <span class="fl-table-col justify-end">
+                                        <span class="fl-table-col-label">{{ __('cash_count.labels.quantity') }}</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[140px] text-right">
-                                    <span class="kt-table-col justify-end">
-                                        <span class="kt-table-col-label">{{ __('cash_count.labels.subtotal') }}</span>
+                                    <span class="fl-table-col justify-end">
+                                        <span class="fl-table-col-label">{{ __('cash_count.labels.subtotal') }}</span>
                                     </span>
                                 </th>
                             </tr>
@@ -189,8 +189,8 @@
                       onsubmit="return confirm('{{ __('cash_count.confirm_delete') }}');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="kt-btn kt-btn-light text-danger">
-                        <i class="ki-filled ki-trash"></i>
+                    <button type="submit" class="fl-btn fl-btn-light text-danger">
+                        <x-tabler-trash-filled />
                         {{ __('common.delete') }}
                     </button>
                 </form>

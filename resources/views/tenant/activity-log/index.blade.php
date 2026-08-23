@@ -2,7 +2,7 @@
 
 @section('content')
 @php $activityLogRepository = app(\App\Repositories\ActivityLogRepository::class); @endphp
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('activity_log.title') }}</h1>
@@ -13,19 +13,19 @@
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         {{-- Filters --}}
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('activity_log.filters.heading') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('activity_log.filters.heading') }}</h3>
             </div>
-            <div class="kt-card-content p-5">
+            <div class="fl-card-content p-5">
                 <form method="GET" action="{{ route('activity-log.index') }}" class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     <div>
-                        <label class="kt-form-label block mb-1.5" for="subject_type">{{ __('activity_log.filters.subject_type') }}</label>
-                        <select id="subject_type" name="subject_type" class="kt-select w-full">
+                        <label class="fl-form-label block mb-1.5" for="subject_type">{{ __('activity_log.filters.subject_type') }}</label>
+                        <select id="subject_type" name="subject_type" class="fl-select w-full">
                             <option value="">{{ __('activity_log.filters.all_types') }}</option>
                             <option value="user" {{ request('subject_type') === 'user' ? 'selected' : '' }}>{{ __('activity_log.filters.user') }}</option>
                             <option value="staff" {{ request('subject_type') === 'staff' ? 'selected' : '' }}>{{ __('activity_log.filters.staff') }}</option>
@@ -37,24 +37,24 @@
                     </div>
 
                     <div>
-                        <label class="kt-form-label block mb-1.5" for="event">{{ __('activity_log.filters.event') }}</label>
-                        <input id="event" name="event" type="text" class="kt-input w-full"
+                        <label class="fl-form-label block mb-1.5" for="event">{{ __('activity_log.filters.event') }}</label>
+                        <input id="event" name="event" type="text" class="fl-input w-full"
                                placeholder="{{ __('activity_log.filters.event_placeholder') }}" value="{{ request('event') }}">
                     </div>
 
                     <div>
-                        <label class="kt-form-label block mb-1.5" for="causer">{{ __('activity_log.filters.performed_by') }}</label>
-                        <input id="causer" name="causer" type="text" class="kt-input w-full"
+                        <label class="fl-form-label block mb-1.5" for="causer">{{ __('activity_log.filters.performed_by') }}</label>
+                        <input id="causer" name="causer" type="text" class="fl-input w-full"
                                placeholder="{{ __('activity_log.filters.performed_by_placeholder') }}" value="{{ request('causer') }}">
                     </div>
 
                     <div class="flex items-end gap-2">
-                        <button type="submit" class="kt-btn kt-btn-primary">
-                            <i class="ki-filled ki-magnifier"></i>
+                        <button type="submit" class="fl-btn fl-btn-primary">
+                            <x-tabler-search-filled />
                             {{ __('common.filter') }}
                         </button>
                         @if(request()->hasAny(['subject_type', 'event', 'causer']))
-                            <a href="{{ route('activity-log.index') }}" class="kt-btn kt-btn-light">{{ __('common.clear') }}</a>
+                            <a href="{{ route('activity-log.index') }}" class="fl-btn fl-btn-light">{{ __('common.clear') }}</a>
                         @endif
                     </div>
                 </form>
@@ -62,21 +62,21 @@
         </div>
 
         {{-- Log Table --}}
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">
                     {{ __('activity_log.entries_heading') }}
                     <span class="text-sm font-normal text-secondary-foreground ml-2">({{ $logs->total() }} {{ __('activity_log.total') }})</span>
                 </h3>
             </div>
-            <div class="kt-card-content p-0">
+            <div class="fl-card-content p-0">
                 @if($logs->isEmpty())
                     <div class="p-10 text-center text-sm text-secondary-foreground">
                         {{ __('activity_log.no_entries') }}
                     </div>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="kt-table w-full text-sm">
+                        <table class="fl-table w-full text-sm">
                             <thead>
                                 <tr class="border-b border-border">
                                     <th class="text-left px-5 py-3 font-medium text-secondary-foreground">{{ __('common.when') }}</th>
@@ -106,7 +106,7 @@
                                             <span class="text-xs">{{ $log->created_at->format('g:i A') }}</span>
                                         </td>
                                         <td class="px-5 py-3">
-                                            <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $subjectLabel }}</span>
+                                            <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $subjectLabel }}</span>
                                             @if($log->subject)
                                                 <div class="text-xs text-secondary-foreground mt-0.5">
                                                     #{{ $log->subject_id }}
@@ -150,7 +150,7 @@
                                             @endforeach
                                         </td>
                                         <td class="px-5 py-3 text-right whitespace-nowrap">
-                                            <a href="{{ route('activity-log.show', $log) }}" class="kt-btn kt-btn-sm kt-btn-outline">
+                                            <a href="{{ route('activity-log.show', $log) }}" class="fl-btn fl-btn-sm fl-btn-outline">
                                                 {{ __('common.view') }}
                                             </a>
                                         </td>

@@ -3,7 +3,7 @@
 @section('content')
 @php $activityLogRepository = app(\App\Repositories\ActivityLogRepository::class); @endphp
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('activity_log.show.title') }}</h1>
@@ -12,20 +12,20 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('activity-log.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('activity-log.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('common.back') }}
             </a>
         </div>
     </div>
 </div>
 
-<div class="kt-container-fixed">
-    <div class="kt-card">
-        <div class="kt-card-header">
-            <h3 class="kt-card-title">{{ __('activity_log.show.details_card') }}</h3>
+<div class="fl-container-fixed">
+    <div class="fl-card">
+        <div class="fl-card-header">
+            <h3 class="fl-card-title">{{ __('activity_log.show.details_card') }}</h3>
         </div>
-        <div class="kt-card-content grid gap-4 p-5 lg:p-7.5 lg:grid-cols-2">
+        <div class="fl-card-content grid gap-4 p-5 lg:p-7.5 lg:grid-cols-2">
             <div>
                 <p class="text-sm text-muted-foreground">{{ __('common.event') }}</p>
                 <p class="text-sm font-mono text-foreground">{{ $log->event ?? '—' }}</p>
@@ -39,7 +39,7 @@
             <div>
                 <p class="text-sm text-muted-foreground">{{ __('common.subject') }}</p>
                 <p class="text-sm text-foreground">
-                    <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $activityLogRepository->subjectLabel($log->subject_type) }}</span>
+                    <span class="fl-badge fl-badge-sm fl-badge-outline">{{ $activityLogRepository->subjectLabel($log->subject_type) }}</span>
                     @if($log->subject)
                         #{{ $log->subject_id }}
                     @else

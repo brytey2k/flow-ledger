@@ -1,32 +1,32 @@
 @php
     /**
-     * Supported flash keys mapped to Metronic kt-alert variants.
+     * Supported flash keys mapped to Metronic fl-alert variants.
      * status maps to success for legacy usage.
      */
     $flashMap = [
         'success' => [
-            'icon'    => 'ki-check-circle',
-            'variant' => 'kt-alert-success',
+            'icon'    => 'tabler-circle-check-filled',
+            'variant' => 'fl-alert-success',
             'label'   => __('common.alerts.success'),
         ],
         'error' => [
-            'icon'    => 'ki-information',
-            'variant' => 'kt-alert-danger',
+            'icon'    => 'tabler-info-circle-filled',
+            'variant' => 'fl-alert-danger',
             'label'   => __('common.alerts.error'),
         ],
         'warning' => [
-            'icon'    => 'ki-information-4',
-            'variant' => 'kt-alert-warning',
+            'icon'    => 'tabler-info-square-rounded-filled',
+            'variant' => 'fl-alert-warning',
             'label'   => __('common.alerts.warning'),
         ],
         'info' => [
-            'icon'    => 'ki-information',
-            'variant' => 'kt-alert-info',
+            'icon'    => 'tabler-info-circle-filled',
+            'variant' => 'fl-alert-info',
             'label'   => __('common.alerts.info'),
         ],
         'status' => [ // legacy alias used by Laravel redirects
-            'icon'    => 'ki-check-circle',
-            'variant' => 'kt-alert-success',
+            'icon'    => 'tabler-circle-check-filled',
+            'variant' => 'fl-alert-success',
             'label'   => __('common.alerts.success'),
         ],
     ];
@@ -35,7 +35,7 @@
     $structured = session('flash');
 @endphp
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     @php
         $hasFlash = $errors->any()
             || (is_array($structured) && ($structured['message'] ?? false))
@@ -43,8 +43,8 @@
     @endphp
     <div class="{{ $hasFlash ? 'grid gap-3 pb-5' : '' }}">
         @if($errors->any())
-            <div class="kt-alert kt-alert-danger">
-                <i class="ki-filled ki-information"></i>
+            <div class="fl-alert fl-alert-danger">
+                <x-tabler-info-circle-filled />
                 <ul class="list-disc ps-5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -58,8 +58,8 @@
                 $type   = $structured['type'] ?? 'info';
                 $config = $flashMap[$type] ?? $flashMap['info'];
             @endphp
-            <div class="kt-alert {{ $config['variant'] }}">
-                <i class="ki-filled {{ $config['icon'] }}"></i>
+            <div class="fl-alert {{ $config['variant'] }}">
+                <x-dynamic-component :component="$config['icon']" />
                 {!! is_array($structured['message']) ? implode('<br>', array_map('e', $structured['message'])) : e($structured['message']) !!}
             </div>
         @endif
@@ -67,8 +67,8 @@
         @foreach($flashMap as $key => $config)
             @if (session($key))
                 @php $message = session($key); @endphp
-                <div class="kt-alert {{ $config['variant'] }}">
-                    <i class="ki-filled {{ $config['icon'] }}"></i>
+                <div class="fl-alert {{ $config['variant'] }}">
+                    <x-dynamic-component :component="$config['icon']" />
                     @if (is_array($message))
                         <ul class="list-disc ps-5">
                             @foreach ($message as $line)

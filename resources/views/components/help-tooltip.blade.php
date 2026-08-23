@@ -11,7 +11,7 @@
 ])
 
 <span class="inline-flex align-middle" data-kt-tooltip="true" data-kt-tooltip-placement="{{ $placement }}" style="cursor: help">
-    <i class="ki-filled ki-information-2 text-sm leading-none text-muted-foreground"></i>
+    <x-tabler-info-square-filled class="text-sm leading-none text-muted-foreground" />
     <span class="kt-tooltip hidden max-w-64 text-left" data-kt-tooltip-content style="white-space: normal">
         {{ $text }}
     </span>

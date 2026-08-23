@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ $staff->full_name }}</h1>
@@ -15,33 +15,33 @@
         </div>
         <div class="flex items-center gap-2.5">
             @can(App\Enums\Tenant\PermissionKey::AccessStaff->value)
-                <a class="kt-btn kt-btn-outline" href="{{ route('staff.edit', $staff) }}">
-                    <i class="ki-filled ki-pencil"></i>
+                <a class="fl-btn fl-btn-outline" href="{{ route('staff.edit', $staff) }}">
+                    <x-tabler-pencil-filled />
                     {{ __('staff.edit_title') }}
                 </a>
             @endcan
 
             @can(App\Enums\Tenant\PermissionKey::DeleteStaff->value)
-                <button type="button" class="kt-btn kt-btn-danger" onclick="if(confirm('{{ __('staff.confirm_delete') }}')) { document.getElementById('delete-staff-form').submit(); }">
-                    <i class="ki-filled ki-trash"></i>
+                <button type="button" class="fl-btn fl-btn-danger" onclick="if(confirm('{{ __('staff.confirm_delete') }}')) { document.getElementById('delete-staff-form').submit(); }">
+                    <x-tabler-trash-filled />
                     {{ __('staff.buttons.delete') }}
                 </button>
             @endcan
 
-            <a class="kt-btn kt-btn-outline" href="{{ route('staff.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('staff.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('staff.back') }}
             </a>
         </div>
     </div>
 </div>
 
-<div class="kt-container-fixed">
-    <div class="kt-card">
-        <div class="kt-card-header">
-            <h3 class="kt-card-title">{{ __('staff.details_card') }}</h3>
+<div class="fl-container-fixed">
+    <div class="fl-card">
+        <div class="fl-card-header">
+            <h3 class="fl-card-title">{{ __('staff.details_card') }}</h3>
         </div>
-        <div class="kt-card-content grid gap-4 p-5 lg:p-7.5">
+        <div class="fl-card-content grid gap-4 p-5 lg:p-7.5">
             <div>
                 <p class="text-sm text-muted-foreground">{{ __('staff.fields.first_name') }}</p>
                 <p class="text-lg font-medium text-mono">{{ $staff->first_name }} {{ $staff->last_name }}</p>

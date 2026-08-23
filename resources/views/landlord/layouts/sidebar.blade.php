@@ -12,11 +12,9 @@
             <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/flowledger_icon_dark.png') }}" />
         </a>
         <button
-            class="kt-btn kt-btn-outline kt-btn-icon absolute start-full top-2/4 size-[30px] -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"
+            class="fl-btn fl-btn-outline fl-btn-icon absolute start-full top-2/4 size-[30px] -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"
             data-kt-toggle="body" data-kt-toggle-class="kt-sidebar-collapse" id="sidebar_toggle">
-            <i
-                class="ki-filled ki-black-left-line kt-toggle-active:rotate-180 rtl:translate rtl:kt-toggle-active:rotate-0 transition-all duration-300 rtl:rotate-180">
-            </i>
+            <x-tabler-chevron-left class="kt-toggle-active:rotate-180 rtl:translate rtl:kt-toggle-active:rotate-0 transition-all duration-300 rtl:rotate-180" />
         </button>
     </div>
     <div class="kt-sidebar-content flex shrink-0 grow py-5 pe-2" id="sidebar_content">
@@ -37,7 +35,7 @@
                     <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                        href="{{ route('landlord.tenants.index') }}" tabindex="0">
                         <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                            <i class="ki-filled ki-office-bag text-lg"></i>
+                            <x-tabler-briefcase-filled class="text-lg" />
                         </span>
                         <span class="kt-menu-title kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary text-sm font-medium text-foreground">
                             Tenants
@@ -50,7 +48,7 @@
                     <a class="kt-menu-link flex grow items-center gap-[10px] border border-transparent py-[6px] pe-[10px] ps-[10px]"
                        href="{{ route('landlord.feature-flags.index') }}" tabindex="0">
                         <span class="kt-menu-icon w-[20px] items-start text-muted-foreground">
-                            <i class="ki-filled ki-toggle-on text-lg"></i>
+                            <x-tabler-toggle-right-filled class="text-lg" />
                         </span>
                         <span class="kt-menu-title kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary text-sm font-medium text-foreground">
                             Feature Flags

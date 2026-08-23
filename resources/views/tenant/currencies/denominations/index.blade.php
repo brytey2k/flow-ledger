@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('cash_count.denominations.title') }} — {{ $currency->name }}</h1>
@@ -11,13 +11,13 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a href="{{ route('currencies.index') }}" class="kt-btn kt-btn-light">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a href="{{ route('currencies.index') }}" class="fl-btn fl-btn-light">
+                <x-tabler-arrow-left />
                 {{ __('common.back') }}
             </a>
             @can(\App\Enums\Tenant\PermissionKey::ManageCurrencyDenominations->value)
-                <a class="kt-btn kt-btn-primary" href="{{ route('currency.denominations.create', $currency) }}">
-                    <i class="ki-filled ki-plus"></i>
+                <a class="fl-btn fl-btn-primary" href="{{ route('currency.denominations.create', $currency) }}">
+                    <x-tabler-plus-filled />
                     {{ __('cash_count.denominations.add') }}
                 </a>
             @endcan
@@ -27,11 +27,11 @@
 <!-- End of Container -->
 
 <!-- Denominations Table -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card kt-card-grid">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('cash_count.denominations.title') }}</h3>
+        <div class="fl-card fl-card-grid">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('cash_count.denominations.title') }}</h3>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-sm badge-outline">
                         {{ $denominations->count() }} {{ Str::plural('Denomination', $denominations->count()) }}
@@ -40,43 +40,43 @@
             </div>
 
             @if($denominations->isEmpty())
-                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+                <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                     <div class="flex flex-col items-center justify-center py-12">
-                        <i class="ki-filled ki-finance-calculator text-6xl text-muted-foreground mb-4"></i>
+                        <x-tabler-calculator-filled class="text-6xl text-muted-foreground mb-4" />
                         <h3 class="text-lg font-medium text-foreground mb-2">{{ __('cash_count.denominations.empty_title') }}</h3>
                         <p class="text-sm text-secondary-foreground mb-4">{{ __('cash_count.denominations.empty_description') }}</p>
                         @can(\App\Enums\Tenant\PermissionKey::ManageCurrencyDenominations->value)
-                            <a href="{{ route('currency.denominations.create', $currency) }}" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-plus"></i>
+                            <a href="{{ route('currency.denominations.create', $currency) }}" class="fl-btn fl-btn-primary">
+                                <x-tabler-plus-filled />
                                 {{ __('cash_count.denominations.add') }}
                             </a>
                         @endcan
                     </div>
                 </div>
             @else
-                <div class="kt-card-table">
-                    <div class="kt-scrollable-x-auto border-b border-border">
-                        <table class="kt-table kt-table-border">
+                <div class="fl-card-table">
+                    <div class="fl-scrollable-x-auto border-b border-border">
+                        <table class="fl-table fl-table-border">
                             <thead>
                                 <tr>
                                     <th class="min-w-[200px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('cash_count.denominations.labels.label') }}</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">{{ __('cash_count.denominations.labels.label') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[100px]">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('cash_count.denominations.labels.type') }}</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">{{ __('cash_count.denominations.labels.type') }}</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[160px] text-right">
-                                        <span class="kt-table-col justify-end">
-                                            <span class="kt-table-col-label">{{ __('cash_count.denominations.labels.value') }} ({{ $currency->symbol }})</span>
+                                        <span class="fl-table-col justify-end">
+                                            <span class="fl-table-col-label">{{ __('cash_count.denominations.labels.value') }} ({{ $currency->symbol }})</span>
                                         </span>
                                     </th>
                                     <th class="min-w-[100px] text-center">
-                                        <span class="kt-table-col">
-                                            <span class="kt-table-col-label">{{ __('common.columns.actions') }}</span>
+                                        <span class="fl-table-col">
+                                            <span class="fl-table-col-label">{{ __('common.columns.actions') }}</span>
                                         </span>
                                     </th>
                                 </tr>
@@ -101,9 +101,9 @@
                                             <div class="flex items-center justify-center gap-2">
                                                 @can(\App\Enums\Tenant\PermissionKey::ManageCurrencyDenominations->value)
                                                     <a href="{{ route('currency.denominations.edit', [$currency, $denomination]) }}"
-                                                       class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost text-primary"
+                                                       class="fl-btn fl-btn-sm fl-btn-icon fl-btn-ghost text-primary"
                                                        title="{{ __('common.edit') }}">
-                                                        <i class="ki-filled ki-notepad-edit text-lg"></i>
+                                                        <x-tabler-edit-filled class="text-lg" />
                                                     </a>
                                                     <form action="{{ route('currency.denominations.destroy', [$currency, $denomination]) }}"
                                                           method="POST"
@@ -111,8 +111,8 @@
                                                           class="inline">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost text-danger" title="{{ __('common.delete') }}">
-                                                            <i class="ki-filled ki-trash text-lg"></i>
+                                                        <button type="submit" class="fl-btn fl-btn-sm fl-btn-icon fl-btn-ghost text-danger" title="{{ __('common.delete') }}">
+                                                            <x-tabler-trash-filled class="text-lg" />
                                                         </button>
                                                     </form>
                                                 @endcan

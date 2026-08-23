@@ -14,11 +14,11 @@
 </form>
 <div class="shrink-0" data-kt-dropdown="true" data-kt-dropdown-offset="10px, 10px" data-kt-dropdown-offset-rtl="-20px, 10px"
     data-kt-dropdown-placement="bottom-end" data-kt-dropdown-placement-rtl="bottom-start" data-kt-dropdown-trigger="click">
-    <button type="button" class="kt-btn kt-btn-outline kt-btn-sm gap-1.5" data-kt-dropdown-toggle="true"
+    <button type="button" class="fl-btn fl-btn-outline fl-btn-sm gap-1.5" data-kt-dropdown-toggle="true"
         aria-label="{{ __('navigation.language') }}">
         <img alt="" class="inline-block size-4 rounded-full" src="{{ asset('assets/media/flags/'.$currentLocaleFlag) }}" />
         <span class="hidden sm:inline">{{ $currentLocale['native_label'] ?? $currentLocaleCode }}</span>
-        <i class="ki-filled ki-down text-2xs"></i>
+        <x-tabler-chevron-down-filled class="text-2xs" />
     </button>
     <div class="kt-dropdown-menu w-[180px]" data-kt-dropdown-menu="true">
         <ul class="kt-dropdown-menu-sub">
@@ -32,7 +32,7 @@
                             <span class="kt-menu-title">{{ $locale['native_label'] ?? $code }}</span>
                         </span>
                         @if ($currentLocaleCode === $code)
-                            <i class="ki-solid ki-check-circle ms-auto text-base text-green-500"></i>
+                            <x-tabler-circle-check-filled class="ms-auto text-base text-green-500" />
                         @endif
                     </button>
                 </li>

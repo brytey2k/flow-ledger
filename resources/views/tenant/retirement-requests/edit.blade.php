@@ -4,7 +4,7 @@
 @php
     $pr = $retirementRequest->paymentRequest;
 @endphp
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
@@ -14,14 +14,14 @@
                 {{ __('retirements.edit.subtitle') }}
             </div>
         </div>
-        <a class="kt-btn kt-btn-outline" href="{{ route('retirement-requests.show', $retirementRequest) }}">
-            <i class="ki-filled ki-arrow-left"></i>
+        <a class="fl-btn fl-btn-outline" href="{{ route('retirement-requests.show', $retirementRequest) }}">
+            <x-tabler-arrow-left />
             {{ __('retirements.edit.back') }}
         </a>
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <form method="POST" action="{{ route('retirement-requests.update', $retirementRequest) }}" id="retirement-form">
         @csrf
         @method('PUT')
@@ -31,11 +31,11 @@
             <div class="lg:col-span-2 flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Advance Summary (read-only) --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('retirements.fields.advance_summary') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('retirements.fields.advance_summary') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5">
+                    <div class="fl-card-content p-5">
                         <dl class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             <div>
                                 <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('common.columns.staff') }}</dt>
@@ -56,15 +56,15 @@
                 </div>
 
                 {{-- Expenditure Items --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
-                        <div class="kt-alert kt-alert-warning mb-4">
-                            <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
-                            <div class="kt-alert-content">
-                                <div class="kt-alert-title">{{ __('retirements.fields.no_spend_warning') }}</div>
+                    <div class="fl-card-content p-5 lg:p-7.5 lg:pt-4">
+                        <div class="fl-alert fl-alert-warning mb-4">
+                            <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+                            <div class="fl-alert-content">
+                                <div class="fl-alert-title">{{ __('retirements.fields.no_spend_warning') }}</div>
                                 <label class="mt-3 inline-flex items-center gap-2 text-sm font-medium">
                                     <input type="hidden" name="did_not_spend_money" value="0">
                                     <input
@@ -72,7 +72,7 @@
                                         type="checkbox"
                                         name="did_not_spend_money"
                                         value="1"
-                                        class="kt-checkbox"
+                                        class="fl-checkbox"
                                         @checked(old('did_not_spend_money', $retirementRequest->no_money_spent))
                                     >
                                     <span>{{ __('retirements.fields.did_not_spend_money') }}</span>
@@ -103,9 +103,9 @@
                                 @foreach($editItems as $index => $editItem)
                                     <div class="item-row grid grid-cols-1 sm:grid-cols-12 gap-3 p-4 rounded-lg border border-border relative">
                                         <div class="sm:col-span-4">
-                                        <label class="kt-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
+                                        <label class="fl-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
                                         <input type="text" name="items[{{ $index }}][description]"
-                                               class="kt-input w-full"
+                                               class="fl-input w-full"
                                                value="{{ $editItem['description'] ?? '' }}"
                                                placeholder="{{ __('retirements.fields.what_purchased') }}"
                                                aria-invalid="@error('items.{{ $index }}.description') true @else false @enderror">
@@ -114,8 +114,8 @@
                                         @enderror
                                     </div>
                                     <div class="sm:col-span-3">
-                                        <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
-                                        <select name="items[{{ $index }}][cost_code_id]" class="kt-select w-full"
+                                        <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
+                                        <select name="items[{{ $index }}][cost_code_id]" class="fl-select w-full"
                                                 aria-invalid="@error('items.{{ $index }}.cost_code_id') true @else false @enderror">
                                             <option value="">Select…</option>
                                             @foreach($costCodes as $code)
@@ -130,9 +130,9 @@
                                         @enderror
                                     </div>
                                     <div class="sm:col-span-2">
-                                        <label class="kt-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
+                                        <label class="fl-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
                                         <input type="number" name="items[{{ $index }}][amount]"
-                                               class="kt-input w-full item-amount"
+                                               class="fl-input w-full item-amount"
                                                value="{{ $editItem['amount'] ?? '' }}"
                                                step="0.01" min="0.01"
                                                placeholder="0.00"
@@ -142,16 +142,16 @@
                                         @enderror
                                     </div>
                                     <div class="sm:col-span-2">
-                                        <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
+                                        <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
                                         <input type="text" name="items[{{ $index }}][receipt_number]"
-                                               class="kt-input w-full"
+                                               class="fl-input w-full"
                                                value="{{ $editItem['receipt_number'] ?? '' }}"
                                                placeholder="{{ __('common.optional') }}">
                                     </div>
                                     <div class="sm:col-span-1 flex items-start justify-end pt-7">
-                                        <button type="button" class="remove-item kt-btn kt-btn-sm kt-btn-icon kt-btn-danger kt-btn-outline"
+                                        <button type="button" class="remove-item fl-btn fl-btn-sm fl-btn-icon fl-btn-danger fl-btn-outline"
                                                 title="Remove item">
-                                            <i class="ki-filled ki-trash"></i>
+                                            <x-tabler-trash-filled />
                                         </button>
                                     </div>
                                 </div>
@@ -159,8 +159,8 @@
                         </div>
 
                         <button type="button" id="add-item"
-                                class="mt-4 kt-btn kt-btn-sm kt-btn-outline">
-                            <i class="ki-filled ki-plus"></i>
+                                class="mt-4 fl-btn fl-btn-sm fl-btn-outline">
+                            <x-tabler-plus-filled />
                             {{ __('common.add_item') }}
                         </button>
                     </div>
@@ -168,13 +168,13 @@
                 </div>
 
                 {{-- Notes --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('common.notes') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('common.notes') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5">
+                    <div class="fl-card-content p-5">
                         <textarea name="notes" rows="3"
-                                  class="kt-textarea w-full"
+                                  class="fl-textarea w-full"
                                   placeholder="{{ __('retirements.fields.notes_placeholder') }}"
                                   aria-invalid="@error('notes') true @else false @enderror">{{ old('notes', $retirementRequest->notes) }}</textarea>
                         @error('notes')
@@ -187,11 +187,11 @@
 
             {{-- Sidebar --}}
             <div class="flex flex-col gap-5 lg:gap-7.5">
-                <div class="kt-card sticky top-5">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('retirements.fields.summary') }}</h3>
+                <div class="fl-card sticky top-5">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('retirements.fields.summary') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5 flex flex-col gap-4">
+                    <div class="fl-card-content p-5 flex flex-col gap-4">
                         <div class="flex justify-between text-sm">
                             <span class="text-secondary-foreground">{{ __('retirements.fields.advance_amount') }}</span>
                             <span class="font-medium text-mono">
@@ -211,11 +211,11 @@
                         </div>
                         <div class="text-xs text-secondary-foreground" id="difference-label"></div>
 
-                        <button type="submit" class="kt-btn kt-btn-primary w-full mt-2">
-                            <i class="ki-filled ki-floppy-disk"></i>
+                        <button type="submit" class="fl-btn fl-btn-primary w-full mt-2">
+                            <x-tabler-device-floppy-filled />
                             {{ __('retirements.buttons.save_changes') }}
                         </button>
-                        <a class="kt-btn kt-btn-light w-full" href="{{ route('retirement-requests.show', $retirementRequest) }}">
+                        <a class="fl-btn fl-btn-light w-full" href="{{ route('retirement-requests.show', $retirementRequest) }}">
                             {{ __('common.cancel') }}
                         </a>
                     </div>
@@ -229,12 +229,12 @@
 <template id="item-template">
     <div class="item-row grid grid-cols-1 sm:grid-cols-12 gap-3 p-4 rounded-lg border border-border relative">
         <div class="sm:col-span-4">
-            <label class="kt-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
-            <input type="text" name="items[__INDEX__][description]" class="kt-input w-full" placeholder="{{ __('retirements.fields.what_purchased') }}">
+            <label class="fl-form-label block mb-1.5 text-sm">{{ __('common.columns.description') }} <span class="text-destructive">*</span></label>
+            <input type="text" name="items[__INDEX__][description]" class="fl-input w-full" placeholder="{{ __('retirements.fields.what_purchased') }}">
         </div>
         <div class="sm:col-span-3">
-            <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
-            <select name="items[__INDEX__][cost_code_id]" class="kt-select w-full">
+            <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.cost_code') }} <span class="text-destructive">*</span></label>
+            <select name="items[__INDEX__][cost_code_id]" class="fl-select w-full">
                 <option value="">Select…</option>
                 @foreach($costCodes as $code)
                     <option value="{{ $code->id }}">{{ $code->code }} — {{ $code->name }}</option>
@@ -242,16 +242,16 @@
             </select>
         </div>
         <div class="sm:col-span-2">
-            <label class="kt-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
-            <input type="number" name="items[__INDEX__][amount]" class="kt-input w-full item-amount" step="0.01" min="0.01" placeholder="0.00">
+            <label class="fl-form-label block mb-1.5 text-sm">Amount <span class="text-destructive">*</span></label>
+            <input type="number" name="items[__INDEX__][amount]" class="fl-input w-full item-amount" step="0.01" min="0.01" placeholder="0.00">
         </div>
         <div class="sm:col-span-2">
-            <label class="kt-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
-            <input type="text" name="items[__INDEX__][receipt_number]" class="kt-input w-full" placeholder="{{ __('common.optional') }}">
+            <label class="fl-form-label block mb-1.5 text-sm">{{ __('retirements.fields.receipt_no') }}</label>
+            <input type="text" name="items[__INDEX__][receipt_number]" class="fl-input w-full" placeholder="{{ __('common.optional') }}">
         </div>
         <div class="sm:col-span-1 flex items-start justify-end pt-7">
-            <button type="button" class="remove-item kt-btn kt-btn-sm kt-btn-icon kt-btn-danger kt-btn-outline" title="Remove item">
-                <i class="ki-filled ki-trash"></i>
+            <button type="button" class="remove-item fl-btn fl-btn-sm fl-btn-icon fl-btn-danger fl-btn-outline" title="Remove item">
+                <x-tabler-trash-filled />
             </button>
         </div>
     </div>

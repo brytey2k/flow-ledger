@@ -15,12 +15,12 @@
 
 @section('content')
 <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
-    <div class="kt-card max-w-[370px] w-full">
+    <div class="fl-card max-w-[370px] w-full">
         <div class="flex justify-center" style="padding-top: 3.5rem; padding-bottom: 1.25rem;">
             <img class="dark:hidden h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}" alt="{{ config('app.name') }}" />
             <img class="hidden dark:block h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}" alt="{{ config('app.name') }}" />
         </div>
-        <div class="kt-card-content flex flex-col gap-5 p-10">
+        <div class="fl-card-content flex flex-col gap-5 p-10">
             <div class="text-center mb-2.5">
                 <h3 class="text-lg font-medium text-mono leading-none mb-2.5">
                     {{ __('auth.sign_in_heading') }}
@@ -28,10 +28,10 @@
             </div>
 
             @if ($errors->any() || request()->filled('sso_error'))
-                <div class="kt-alert kt-alert-light kt-alert-destructive">
-                    <span class="kt-alert-icon"><i class="ki-filled ki-information-2 text-xl"></i></span>
-                    <div class="kt-alert-content">
-                        <ul class="kt-alert-description list-disc ps-5">
+                <div class="fl-alert fl-alert-light fl-alert-destructive">
+                    <span class="fl-alert-icon"><x-tabler-info-square-filled class="text-xl" /></span>
+                    <div class="fl-alert-content">
+                        <ul class="fl-alert-description list-disc ps-5">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -48,11 +48,11 @@
                     @csrf
 
                     <div class="flex flex-col gap-1">
-                        <label class="kt-form-label font-normal text-mono" for="email">
+                        <label class="fl-form-label font-normal text-mono" for="email">
                             {{ __('auth.email') }}
                         </label>
                         <input
-                            class="kt-input"
+                            class="fl-input"
                             id="email"
                             name="email"
                             placeholder="{{ __('auth.email_placeholder') }}"
@@ -69,16 +69,16 @@
 
                     <div class="flex flex-col gap-1">
                         <div class="flex items-center justify-between gap-1">
-                            <label class="kt-form-label font-normal text-mono" for="password">
+                            <label class="fl-form-label font-normal text-mono" for="password">
                                 {{ __('auth.password') }}
                             </label>
                             @if (! $identityDelegated)
-                                <a class="text-sm kt-link shrink-0" href="{{ route('password.request') }}">
+                                <a class="text-sm fl-link shrink-0" href="{{ route('password.request') }}">
                                     {{ __('auth.forgot_password_link') }}
                                 </a>
                             @endif
                         </div>
-                        <div class="kt-input" data-kt-toggle-password="true" aria-invalid="@error('password') true @else false @enderror">
+                        <div class="fl-input" data-kt-toggle-password="true" aria-invalid="@error('password') true @else false @enderror">
                             <input
                                 id="password"
                                 name="password"
@@ -86,12 +86,12 @@
                                 type="password"
                                 required
                             />
-                            <button class="kt-btn kt-btn-sm kt-btn-ghost kt-btn-icon bg-transparent! -me-1.5" data-kt-toggle-password-trigger="true" type="button">
+                            <button class="fl-btn fl-btn-sm fl-btn-ghost fl-btn-icon bg-transparent! -me-1.5" data-kt-toggle-password-trigger="true" type="button">
                                 <span class="kt-toggle-password-active:hidden">
-                                    <i class="ki-filled ki-eye text-muted-foreground"></i>
+                                    <x-tabler-eye-filled class="text-muted-foreground" />
                                 </span>
                                 <span class="hidden kt-toggle-password-active:block">
-                                    <i class="ki-filled ki-eye-slash text-muted-foreground"></i>
+                                    <x-tabler-eye-closed class="text-muted-foreground" />
                                 </span>
                             </button>
                         </div>
@@ -100,14 +100,14 @@
                         @enderror
                     </div>
 
-                    <label class="kt-label">
-                        <input class="kt-checkbox kt-checkbox-sm" name="remember" type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}/>
-                        <span class="kt-checkbox-label">
+                    <label class="fl-label">
+                        <input class="fl-checkbox fl-checkbox-sm" name="remember" type="checkbox" value="1" {{ old('remember') ? 'checked' : '' }}/>
+                        <span class="fl-checkbox-label">
                             {{ __('auth.remember_me') }}
                         </span>
                     </label>
 
-                    <button class="kt-btn kt-btn-primary flex justify-center grow" type="submit">
+                    <button class="fl-btn fl-btn-primary flex justify-center grow" type="submit">
                         {{ __('auth.sign_in') }}
                     </button>
                 </form>
@@ -128,8 +128,8 @@
                     $ssoPortSuffix = in_array($ssoPort, [80, 443], true) ? '' : ":{$ssoPort}";
                     $ssoUrl = "{$ssoScheme}://" . config('app.central_url') . $ssoPortSuffix . '/auth/sso/redirect?return_to=' . urlencode(route('login'));
                 @endphp
-                <a class="kt-btn kt-btn-light flex justify-center grow gap-2" href="{{ $ssoUrl }}">
-                    <i class="ki-filled ki-shield-tick text-base"></i>
+                <a class="fl-btn fl-btn-light flex justify-center grow gap-2" href="{{ $ssoUrl }}">
+                    <x-tabler-shield-check-filled class="text-base" />
                     {{ __('auth.sign_in_with_sso') }}
                 </a>
             @endif
@@ -149,7 +149,7 @@
                 </select>
             </form>
             <div class="flex items-center gap-2">
-                <i class="ki-filled ki-moon text-base text-muted-foreground"></i>
+                <x-tabler-moon-filled class="text-base text-muted-foreground" />
                 <input class="kt-switch kt-switch-sm" data-kt-theme-switch-state="dark" data-kt-theme-switch-toggle="true" type="checkbox" aria-label="{{ __('navigation.dark_mode') }}" />
             </div>
         </div>

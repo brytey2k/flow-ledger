@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('departments.edit_title') }}</h1>
@@ -11,8 +11,8 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('departments.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('departments.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('departments.back') }}
             </a>
         </div>
@@ -21,24 +21,24 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('departments.details_card') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('departments.details_card') }}</h3>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 <form method="POST" action="{{ route('departments.update', $department) }}" class="grid gap-7">
                     @csrf
                     @method('PUT')
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="kt-form-label block mb-2" for="name">
+                            <label class="fl-form-label block mb-2" for="name">
                                 {{ __('departments.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name', $department->name) }}"
-                                   class="kt-input w-full" placeholder="e.g. Finance" required
+                                   class="fl-input w-full" placeholder="e.g. Finance" required
                                    aria-invalid="@error('name') true @else false @enderror" />
                             <div class="mt-1 text-xs text-muted-foreground">
                                 {{ __('departments.fields.name_hint') }}
@@ -51,16 +51,16 @@
 
                     <div class="pt-5 mt-2 flex justify-between items-center">
                         <div class="flex items-center gap-2.5">
-                            <button type="submit" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-check"></i>
+                            <button type="submit" class="fl-btn fl-btn-primary">
+                                <x-tabler-check-filled />
                                 {{ __('departments.buttons.update') }}
                             </button>
-                            <a class="kt-btn kt-btn-light" href="{{ route('departments.index') }}">{{ __('common.cancel') }}</a>
+                            <a class="fl-btn fl-btn-light" href="{{ route('departments.index') }}">{{ __('common.cancel') }}</a>
                         </div>
                         @can(App\Enums\Tenant\PermissionKey::DeleteDepartment->value)
-                            <button type="button" class="kt-btn kt-btn-danger"
+                            <button type="button" class="fl-btn fl-btn-danger"
                                     onclick="if(confirm('{{ __('departments.confirm_delete') }}')) { document.getElementById('delete-department-form').submit(); }">
-                                <i class="ki-filled ki-trash"></i>
+                                <x-tabler-trash-filled />
                                 {{ __('departments.buttons.delete') }}
                             </button>
                         @endcan

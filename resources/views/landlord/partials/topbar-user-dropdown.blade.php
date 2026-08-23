@@ -25,7 +25,7 @@
                     </span>
                 </div>
             </div>
-            <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline">
+            <span class="fl-badge fl-badge-sm fl-badge-primary fl-badge-outline">
                 Pro
             </span>
         </div>
@@ -36,7 +36,7 @@
             </li>
             <li>
                 <a class="kt-dropdown-menu-link" href="{{ "#" }}">
-                    <i class="ki-filled ki-lock-3"></i>
+                    <x-tabler-lock-filled />
                     Change Password
                 </a>
             </li>
@@ -48,8 +48,7 @@
         <div class="mb-2.5 flex flex-col gap-3.5 px-2.5 pt-1.5">
             <div class="flex items-center justify-between gap-2">
                 <span class="flex items-center gap-2">
-                    <i class="ki-filled ki-moon text-base text-muted-foreground">
-                    </i>
+                    <x-tabler-moon-filled class="text-base text-muted-foreground" />
                     <span class="text-2sm font-medium">
                         Dark Mode
                     </span>
@@ -59,7 +58,7 @@
             </div>
             <form method="POST" action="{{ route('landlord.logout') }}">
                 @csrf
-                <button type="submit" class="kt-btn kt-btn-outline w-full justify-center">
+                <button type="submit" class="fl-btn fl-btn-outline w-full justify-center">
                     Log out
                 </button>
             </form>

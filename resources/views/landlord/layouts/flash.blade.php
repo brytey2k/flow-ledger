@@ -5,27 +5,27 @@
      */
     $flashMap = [
         'success' => [
-            'icon' => 'ki-check',
+            'icon' => 'tabler-check-filled',
             'classes' => 'border-success/30 bg-success/10 text-success',
             'label' => 'Success',
         ],
         'error' => [
-            'icon' => 'ki-information-2',
+            'icon' => 'tabler-info-square-filled',
             'classes' => 'border-destructive/30 bg-destructive/10 text-destructive',
             'label' => 'Error',
         ],
         'warning' => [
-            'icon' => 'ki-information-4',
+            'icon' => 'tabler-info-square-rounded-filled',
             'classes' => 'border-warning/30 bg-warning/10 text-warning',
             'label' => 'Warning',
         ],
         'info' => [
-            'icon' => 'ki-information',
+            'icon' => 'tabler-info-circle-filled',
             'classes' => 'border-info/30 bg-info/10 text-info',
             'label' => 'Info',
         ],
         'status' => [ // legacy alias used by Laravel redirects
-            'icon' => 'ki-check',
+            'icon' => 'tabler-check-filled',
             'classes' => 'border-success/30 bg-success/10 text-success',
             'label' => 'Success',
         ],
@@ -35,7 +35,7 @@
     $structured = session('flash');
 @endphp
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-3">
         @if(is_array($structured) && ($structured['message'] ?? false))
             @php
@@ -44,7 +44,7 @@
             @endphp
             <div class="mb-2 rounded-lg border p-4 {{ $config['classes'] }}">
                 <div class="flex items-start gap-3">
-                    <i class="ki-filled {{ $config['icon'] }} text-xl"></i>
+                    <x-dynamic-component :component="$config['icon']" class="text-xl" />
                     <div class="flex-1">
                         <div class="font-medium">{{ $structured['title'] ?? $config['label'] }}</div>
                         <div class="text-sm">{!! is_array($structured['message']) ? implode('<br>', array_map('e', $structured['message'])) : e($structured['message']) !!}</div>
@@ -60,7 +60,7 @@
                 @endphp
                 <div class="mb-2 rounded-lg border p-4 {{ $config['classes'] }}">
                     <div class="flex items-start gap-3">
-                        <i class="ki-filled {{ $config['icon'] }} text-xl"></i>
+                        <x-dynamic-component :component="$config['icon']" class="text-xl" />
                         <div class="flex-1">
                             <div class="font-medium">{{ $config['label'] }}</div>
                             @if (is_array($message))

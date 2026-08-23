@@ -1,7 +1,7 @@
 @extends('tenant.layouts.base')
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('workflows.edit_title') }}</h1>
@@ -9,31 +9,31 @@
                 {{ $workflowTemplate->name }}
             </div>
         </div>
-        <a class="kt-btn kt-btn-outline" href="{{ route('workflow-templates.show', $workflowTemplate) }}">
-            <i class="ki-filled ki-arrow-left"></i>
+        <a class="fl-btn fl-btn-outline" href="{{ route('workflow-templates.show', $workflowTemplate) }}">
+            <x-tabler-arrow-left />
             {{ __('workflows.back') }}
         </a>
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('workflows.details_card') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('workflows.details_card') }}</h3>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 <form method="POST" action="{{ route('workflow-templates.update', $workflowTemplate) }}" class="grid gap-7">
                     @csrf
                     @method('PUT')
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div>
-                            <label class="kt-form-label block mb-2" for="name">
+                            <label class="fl-form-label block mb-2" for="name">
                                 {{ __('workflows.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name', $workflowTemplate->name) }}"
-                                   class="kt-input w-full"
+                                   class="fl-input w-full"
                                    aria-invalid="@error('name') true @else false @enderror" />
                             @error('name')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
@@ -41,11 +41,11 @@
                         </div>
 
                         <div>
-                            <label class="kt-form-label block mb-2">
+                            <label class="fl-form-label block mb-2">
                                 {{ __('workflows.fields.type') }}
                             </label>
                             <div>
-                                <span class="kt-badge kt-badge-sm kt-badge-outline">
+                                <span class="fl-badge fl-badge-sm fl-badge-outline">
                                     @if($workflowTemplate->type === 'advance') {{ __('workflows.fields.type_advance') }}
                                     @elseif($workflowTemplate->type === 'expense') {{ __('workflows.fields.type_expense') }}
                                     @elseif($workflowTemplate->type === 'retirement') {{ __('workflows.fields.type_retirement') }}
@@ -56,11 +56,11 @@
                         </div>
 
                         <div>
-                            <label class="kt-form-label block mb-2">
+                            <label class="fl-form-label block mb-2">
                                 {{ __('workflows.fields.branch') }}
                             </label>
                             <div>
-                                <span class="kt-badge kt-badge-sm kt-badge-outline">
+                                <span class="fl-badge fl-badge-sm fl-badge-outline">
                                     {{ $workflowTemplate->branch->name ?? __('workflows.fields.branch_master') }}
                                 </span>
                             </div>
@@ -73,16 +73,16 @@
 
                     <div class="pt-5 mt-2 flex justify-between items-center">
                         <div class="flex items-center gap-2.5">
-                            <button type="submit" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-check"></i>
+                            <button type="submit" class="fl-btn fl-btn-primary">
+                                <x-tabler-check-filled />
                                 {{ __('workflows.buttons.update') }}
                             </button>
-                            <a class="kt-btn kt-btn-light" href="{{ route('workflow-templates.show', $workflowTemplate) }}">{{ __('common.cancel') }}</a>
+                            <a class="fl-btn fl-btn-light" href="{{ route('workflow-templates.show', $workflowTemplate) }}">{{ __('common.cancel') }}</a>
                         </div>
                         @can(App\Enums\Tenant\PermissionKey::DeleteWorkflowTemplate->value)
-                            <button type="button" class="kt-btn kt-btn-danger"
+                            <button type="button" class="fl-btn fl-btn-danger"
                                     onclick="if(confirm('{{ __('workflows.confirm_delete') }}')) { document.getElementById('delete-form').submit(); }">
-                                <i class="ki-filled ki-trash"></i>
+                                <x-tabler-trash-filled />
                                 {{ __('workflows.buttons.delete') }}
                             </button>
                         @endcan

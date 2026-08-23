@@ -4,12 +4,12 @@
     use App\Enums\Tenant\PermissionKey;
 
     $statusColors = [
-        'draft'       => 'kt-badge-outline',
-        'in_workflow' => 'kt-badge-primary',
-        'approved'    => 'kt-badge-success',
-        'settled'     => 'kt-badge-info',
-        'sent_back'   => 'kt-badge-warning',
-        'cancelled'   => 'kt-badge-danger',
+        'draft'       => 'fl-badge-outline',
+        'in_workflow' => 'fl-badge-primary',
+        'approved'    => 'fl-badge-success',
+        'settled'     => 'fl-badge-info',
+        'sent_back'   => 'fl-badge-warning',
+        'cancelled'   => 'fl-badge-danger',
     ];
     $diffTypeInfo = [
         'pay_to_staff'      => ['label' => __('retirements.status.pay_to_staff'),   'class' => 'bg-warning/10 text-warning'],
@@ -33,12 +33,12 @@
 @endphp
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <div class="flex items-center gap-3">
                 <h1 class="text-xl font-medium leading-none text-mono">Retirement #{{ $retirementRequest->id }}</h1>
-                <span class="kt-badge kt-badge-sm {{ $statusColors[$retirementRequest->status] ?? 'kt-badge-outline' }}">
+                <span class="fl-badge fl-badge-sm {{ $statusColors[$retirementRequest->status] ?? 'fl-badge-outline' }}">
                     {{ ucwords(str_replace('_', ' ', $retirementRequest->status)) }}
                 </span>
             </div>
@@ -48,15 +48,15 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('retirement-requests.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('retirement-requests.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('retirements.show.back') }}
             </a>
         </div>
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
@@ -65,11 +65,11 @@
             <div class="lg:col-span-2 flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Summary --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('retirements.show.summary_card') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('retirements.show.summary_card') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5 lg:p-7.5 lg:pt-4">
+                    <div class="fl-card-content p-5 lg:p-7.5 lg:pt-4">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('approvals.show.staff_member') }}</dt>
@@ -124,10 +124,10 @@
                         </div>
 
                         @if($retirementRequest->no_money_spent)
-                            <div class="mt-4 kt-alert kt-alert-warning">
-                                <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
-                                <div class="kt-alert-content">
-                                    <div class="kt-alert-title">{{ __('retirements.show.no_spend_notice') }}</div>
+                            <div class="mt-4 fl-alert fl-alert-warning">
+                                <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+                                <div class="fl-alert-content">
+                                    <div class="fl-alert-title">{{ __('retirements.show.no_spend_notice') }}</div>
                                 </div>
                             </div>
                         @endif
@@ -135,22 +135,22 @@
                 </div>
 
                 {{-- Expenditure Items --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
-                        <span class="kt-badge kt-badge-sm kt-badge-outline">
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('retirements.fields.expenditure_items') }}</h3>
+                        <span class="fl-badge fl-badge-sm fl-badge-outline">
                             {{ $retirementRequest->items->count() }} {{ Str::plural('item', $retirementRequest->items->count()) }}
                         </span>
                     </div>
-                    <div class="kt-card-table">
-                        <div class="kt-scrollable-x-auto border-b border-border">
-                            <table class="kt-table kt-table-border">
+                    <div class="fl-card-table">
+                        <div class="fl-scrollable-x-auto border-b border-border">
+                            <table class="fl-table fl-table-border">
                                 <thead>
                                     <tr>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('common.columns.description') }}</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('retirements.fields.cost_code') }}</span></span></th>
-                                        <th><span class="kt-table-col"><span class="kt-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
-                                        <th class="w-[140px] text-end"><span class="kt-table-col justify-end"><span class="kt-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('common.columns.description') }}</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('retirements.fields.cost_code') }}</span></span></th>
+                                        <th><span class="fl-table-col"><span class="fl-table-col-label">{{ __('payment_requests.show.receipt') }}</span></span></th>
+                                        <th class="w-[140px] text-end"><span class="fl-table-col justify-end"><span class="fl-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -190,18 +190,18 @@
                 </div>
 
                 {{-- Attachments --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('retirements.show.attachments_card') }}</h3>
-                        <span class="kt-badge kt-badge-sm kt-badge-outline">
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('retirements.show.attachments_card') }}</h3>
+                        <span class="fl-badge fl-badge-sm fl-badge-outline">
                             {{ $retirementRequest->attachments->count() }} {{ Str::plural('file', $retirementRequest->attachments->count()) }}
                         </span>
                     </div>
-                    <div class="kt-card-content p-5 flex flex-col gap-4">
+                    <div class="fl-card-content p-5 flex flex-col gap-4">
                         @forelse($retirementRequest->attachments as $attachment)
                             <div class="flex items-center justify-between gap-3 p-3 rounded-lg border border-border">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <i class="ki-filled ki-file text-muted-foreground shrink-0"></i>
+                                    <x-tabler-file-filled class="text-muted-foreground shrink-0" />
                                     <div class="min-w-0">
                                         <p class="text-sm font-medium text-mono truncate">{{ $attachment->original_name }}</p>
                                         <p class="text-xs text-secondary-foreground">{{ $attachment->formattedSize() }} &bull; {{ $attachment->created_at->format('M d, Y') }}</p>
@@ -209,14 +209,14 @@
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
                                     <a href="{{ route('attachments.download', $attachment) }}"
-                                       class="kt-btn kt-btn-sm kt-btn-outline">
-                                        <i class="ki-filled ki-cloud-download"></i>
+                                       class="fl-btn fl-btn-sm fl-btn-outline">
+                                        <x-tabler-cloud-download />
                                     </a>
                                     @if(optional($attachment->attachable->paymentRequest->staff)->user_id === auth()->id())
                                         <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('retirements.show.confirm_delete_attachment') }}')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="kt-btn kt-btn-sm kt-btn-outline text-destructive hover:bg-destructive/10">
-                                                <i class="ki-filled ki-trash"></i>
+                                            <button type="submit" class="fl-btn fl-btn-sm fl-btn-outline text-destructive hover:bg-destructive/10">
+                                                <x-tabler-trash-filled />
                                             </button>
                                         </form>
                                     @endif
@@ -231,7 +231,7 @@
                                 <form method="POST" action="{{ route('retirement-requests.attachments.store', $retirementRequest) }}" enctype="multipart/form-data" class="mt-2">
                                     @csrf
                                     <label class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
-                                        <i class="ki-filled ki-cloud-add text-2xl text-muted-foreground"></i>
+                                        <x-tabler-cloud-upload class="text-2xl text-muted-foreground" />
                                         <span class="text-sm font-medium text-foreground">{{ __('common.upload') }}</span>
                                         <span class="text-xs text-secondary-foreground">PDF, JPG, PNG, Word, Excel &mdash; max 10MB</span>
                                         <input type="file" name="file" class="sr-only" onchange="this.closest('form').submit()" />
@@ -256,17 +256,17 @@
                     ]))->sortByDesc('at')->values();
                 @endphp
 
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('payment_requests.show.timeline') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('payment_requests.show.timeline') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5 flex flex-col gap-4">
+                    <div class="fl-card-content p-5 flex flex-col gap-4">
                         @forelse($timelineItems as $entry)
                             @if($entry['type'] === 'activity')
                                 @php $log = $entry['item']; @endphp
                                 <div class="flex gap-3">
                                     <div class="shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                        <i class="ki-filled ki-information text-sm"></i>
+                                        <x-tabler-info-circle-filled class="text-sm" />
                                     </div>
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-sm font-medium text-mono">
@@ -285,7 +285,7 @@
                                 @php $comment = $entry['item']; @endphp
                                 <div class="flex gap-3">
                                     <div class="shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                        <i class="ki-filled ki-message-text text-sm"></i>
+                                        <x-tabler-message-filled class="text-sm" />
                                     </div>
                                     <div class="flex flex-col gap-0.5 flex-1">
                                         <span class="text-sm font-medium text-mono">{{ $comment->user->name ?? 'Unknown' }}</span>
@@ -306,31 +306,31 @@
             <div class="flex flex-col gap-5 lg:gap-7.5">
 
                 {{-- Actions --}}
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="kt-card-title">{{ __('payment_requests.show.actions') }}</h3>
+                <div class="fl-card">
+                    <div class="fl-card-header">
+                        <h3 class="fl-card-title">{{ __('payment_requests.show.actions') }}</h3>
                     </div>
-                    <div class="kt-card-content p-5 flex flex-col gap-3">
+                    <div class="fl-card-content p-5 flex flex-col gap-3">
                         @if($retirementRequest->isDraft())
                             @if($isOwner)
                                 <a href="{{ route('retirement-requests.edit', $retirementRequest) }}"
-                                   class="kt-btn kt-btn-outline w-full">
-                                    <i class="ki-filled ki-pencil"></i>
+                                   class="fl-btn fl-btn-outline w-full">
+                                    <x-tabler-pencil-filled />
                                     {{ __('retirements.buttons.edit_request') }}
                                 </a>
                             @endif
                             <form method="POST" action="{{ route('retirement-requests.submit', $retirementRequest) }}">
                                 @csrf
-                                <button type="submit" class="kt-btn kt-btn-primary w-full">
-                                    <i class="ki-filled ki-send"></i>
+                                <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                    <x-tabler-send-filled />
                                     {{ __('retirements.buttons.submit') }}
                                 </button>
                             </form>
                             @if($isOwner)
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
-                                        <i class="ki-filled ki-close"></i>
+                                    <button type="submit" class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                        <x-tabler-x-filled />
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
                                 </form>
@@ -338,28 +338,28 @@
                         @elseif($retirementRequest->status === 'in_workflow')
                             @if($canActOnActiveStage && $activeInstanceStage)
                                 <a href="{{ route('approvals.show', $activeInstanceStage) }}"
-                                   class="kt-btn kt-btn-primary w-full">
-                                    <i class="ki-filled ki-check-circle"></i>
+                                   class="fl-btn fl-btn-primary w-full">
+                                    <x-tabler-circle-check-filled />
                                     {{ __('payment_requests.buttons.review_and_approve') }}
                                 </a>
                             @else
                                 <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
-                                    <i class="ki-filled ki-time"></i>
+                                    <x-tabler-clock-filled />
                                     {{ __('payment_requests.status.awaiting_approval') }}
                                 </div>
                             @endif
                             @if($isOwner)
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
-                                        <i class="ki-filled ki-close"></i>
+                                    <button type="submit" class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                        <x-tabler-x-filled />
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
                                 </form>
                             @endif
                         @elseif($retirementRequest->status === 'approved')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success text-sm mb-2">
-                                <i class="ki-filled ki-check-circle"></i>
+                                <x-tabler-circle-check-filled />
                                 {{ __('retirements.status.fully_approved') }}
                             </div>
                             @can(App\Enums\Tenant\PermissionKey::SettleRetirements->value)
@@ -367,19 +367,19 @@
                                     <form method="POST" action="{{ route('retirement-requests.settle', $retirementRequest) }}" class="flex flex-col gap-2">
                                         @csrf
                                         <div>
-                                            <label class="kt-form-label text-xs block mb-1">{{ __('retirements.show.settlement_notes') }} <span class="text-muted-foreground">(optional)</span></label>
-                                            <textarea name="settlement_notes" rows="2" class="kt-textarea w-full text-sm" placeholder="e.g. Cheque #1234 issued..."></textarea>
+                                            <label class="fl-form-label text-xs block mb-1">{{ __('retirements.show.settlement_notes') }} <span class="text-muted-foreground">(optional)</span></label>
+                                            <textarea name="settlement_notes" rows="2" class="fl-textarea w-full text-sm" placeholder="e.g. Cheque #1234 issued..."></textarea>
                                         </div>
-                                        <button type="submit" class="kt-btn kt-btn-primary w-full">
-                                            <i class="ki-filled ki-check-circle"></i>
+                                        <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                            <x-tabler-circle-check-filled />
                                             {{ __('retirements.buttons.settle') }}
                                         </button>
                                     </form>
                                 @else
                                     <form method="POST" action="{{ route('retirement-requests.settle', $retirementRequest) }}">
                                         @csrf
-                                        <button type="submit" class="kt-btn kt-btn-primary w-full">
-                                            <i class="ki-filled ki-check-circle"></i>
+                                        <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                            <x-tabler-circle-check-filled />
                                             {{ __('retirements.buttons.settle') }}
                                         </button>
                                     </form>
@@ -387,26 +387,26 @@
                             @endcan
                         @elseif($retirementRequest->isSentBack())
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-warning/10 text-warning text-sm mb-2">
-                                <i class="ki-filled ki-information-2"></i>
+                                <x-tabler-info-square-filled />
                                 {{ __('retirements.show.sent_back_notice') }}
                             </div>
                             @if($isOwner)
                                 <a href="{{ route('retirement-requests.edit', $retirementRequest) }}"
-                                   class="kt-btn kt-btn-outline w-full">
-                                    <i class="ki-filled ki-pencil"></i>
+                                   class="fl-btn fl-btn-outline w-full">
+                                    <x-tabler-pencil-filled />
                                     {{ __('retirements.buttons.edit_request') }}
                                 </a>
                                 <form method="POST" action="{{ route('retirement-requests.resubmit', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="kt-btn kt-btn-primary w-full">
-                                        <i class="ki-filled ki-send"></i>
+                                    <button type="submit" class="fl-btn fl-btn-primary w-full">
+                                        <x-tabler-send-filled />
                                         {{ __('retirements.buttons.resubmit') }}
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
-                                    <button type="submit" class="kt-btn kt-btn-danger kt-btn-outline w-full">
-                                        <i class="ki-filled ki-close"></i>
+                                    <button type="submit" class="fl-btn fl-btn-danger fl-btn-outline w-full">
+                                        <x-tabler-x-filled />
                                         {{ __('payment_requests.buttons.cancel_request') }}
                                     </button>
                                 </form>
@@ -414,7 +414,7 @@
                         @elseif($retirementRequest->status === 'settled')
                             <div class="flex flex-col gap-1 p-3 rounded-lg bg-info/10 text-info text-sm">
                                 <div class="flex items-center gap-2">
-                                    <i class="ki-filled ki-check-circle"></i>
+                                    <x-tabler-circle-check-filled />
                                     {{ __('retirements.status.settled') }}
                                 </div>
                                 @if($retirementRequest->settled_at)
@@ -426,7 +426,7 @@
                             </div>
                         @elseif($retirementRequest->status === 'cancelled')
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                                <i class="ki-filled ki-cross-circle"></i>
+                                <x-tabler-circle-x-filled />
                                 {{ __('retirements.status.cancelled') }}
                             </div>
                         @endif
@@ -436,33 +436,33 @@
                 {{-- Workflow Progress --}}
                 @if($retirementRequest->activeWorkflowInstance)
                     @php $instance = $retirementRequest->activeWorkflowInstance; @endphp
-                    <div class="kt-card">
-                        <div class="kt-card-header">
-                            <h3 class="kt-card-title">{{ __('approvals.show.approval_progress') }}</h3>
+                    <div class="fl-card">
+                        <div class="fl-card-header">
+                            <h3 class="fl-card-title">{{ __('approvals.show.approval_progress') }}</h3>
                         </div>
-                        <div class="kt-card-content p-5 flex flex-col gap-3">
+                        <div class="fl-card-content p-5 flex flex-col gap-3">
                             @foreach($instance->instanceStages->sortBy('stage.display_order') as $instanceStage)
                                 <div class="flex items-start gap-3">
                                     <div class="mt-0.5 shrink-0">
                                         @if($instanceStage->status === 'approved')
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-success/20 text-success">
-                                                <i class="ki-filled ki-check text-xs"></i>
+                                                <x-tabler-check-filled class="text-xs" />
                                             </span>
                                         @elseif($instanceStage->status === 'active')
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
-                                                <i class="ki-filled ki-time text-xs"></i>
+                                                <x-tabler-clock-filled class="text-xs" />
                                             </span>
                                         @elseif($instanceStage->status === 'rejected')
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/20 text-destructive">
-                                                <i class="ki-filled ki-cross text-xs"></i>
+                                                <x-tabler-x-filled class="text-xs" />
                                             </span>
                                         @elseif($instanceStage->status === 'sent_back')
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/20 text-warning">
-                                                <i class="ki-filled ki-arrow-left text-xs"></i>
+                                                <x-tabler-arrow-left class="text-xs" />
                                             </span>
                                         @else
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full border-2 border-border bg-background text-muted-foreground">
-                                                <i class="ki-filled ki-dots-circle text-xs"></i>
+                                                <x-tabler-dots-circle-horizontal class="text-xs" />
                                             </span>
                                         @endif
                                     </div>

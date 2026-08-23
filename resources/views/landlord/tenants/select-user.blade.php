@@ -3,7 +3,7 @@
 @section('title', 'Impersonate User — ' . ($tenant->name ?? $tenant->id))
 
 @section('content')
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center justify-between gap-5 pb-7.5 lg:items-end">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
@@ -14,23 +14,23 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-ghost" href="{{ route('landlord.tenants.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-ghost" href="{{ route('landlord.tenants.index') }}">
+                <x-tabler-arrow-left />
                 Back to Tenants
             </a>
         </div>
     </div>
 </div>
 
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning flex items-center gap-2">
-        <i class="ki-filled ki-information-2"></i>
+        <x-tabler-info-square-filled />
         You are about to impersonate a user in <span class="font-semibold">{{ $tenant->name ?? $tenant->id }}</span>. This will open a new browser tab logged in as that user.
     </div>
 
-    <div class="kt-card kt-card-grid">
-        <div class="kt-card-header">
-            <h3 class="kt-card-title">Select a User</h3>
+    <div class="fl-card fl-card-grid">
+        <div class="fl-card-header">
+            <h3 class="fl-card-title">Select a User</h3>
             <div class="flex items-center gap-2">
                 <span class="badge badge-sm badge-outline">
                     {{ $users->total() }} {{ Str::plural('User', $users->total()) }}
@@ -39,37 +39,37 @@
         </div>
 
         @if($users->isEmpty())
-            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
+            <div class="fl-card-content flex flex-col gap-4 p-5 lg:p-7.5 lg:pt-4">
                 <div class="flex flex-col items-center justify-center py-12">
-                    <i class="ki-filled ki-people text-6xl text-muted-foreground mb-4"></i>
+                    <x-tabler-users-group class="text-6xl text-muted-foreground mb-4" />
                     <h3 class="text-lg font-medium text-foreground mb-2">No users found</h3>
                     <p class="text-sm text-secondary-foreground">This tenant has no users yet.</p>
                 </div>
             </div>
         @else
-            <div class="kt-card-table">
-                <div class="kt-scrollable-x-auto border-b border-border">
-                    <table class="kt-table kt-table-border table-fixed">
+            <div class="fl-card-table">
+                <div class="fl-scrollable-x-auto border-b border-border">
+                    <table class="fl-table fl-table-border table-fixed">
                         <thead>
                             <tr>
                                 <th class="min-w-[200px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Name</span>
+                                    <span class="fl-table-col">
+                                        <span class="fl-table-col-label">Name</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[200px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Email</span>
+                                    <span class="fl-table-col">
+                                        <span class="fl-table-col-label">Email</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[150px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Branch</span>
+                                    <span class="fl-table-col">
+                                        <span class="fl-table-col-label">Branch</span>
                                     </span>
                                 </th>
                                 <th class="min-w-[120px] text-center">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Action</span>
+                                    <span class="fl-table-col">
+                                        <span class="fl-table-col-label">Action</span>
                                     </span>
                                 </th>
                             </tr>
@@ -94,7 +94,7 @@
                                         <form method="POST" action="{{ route('landlord.impersonate', $tenant) }}" target="_blank">
                                             @csrf
                                             <input type="hidden" name="user_identifier" value="{{ $user->id }}">
-                                            <button type="submit" class="kt-btn kt-btn-sm kt-btn-primary">
+                                            <button type="submit" class="fl-btn fl-btn-sm fl-btn-primary">
                                                 Impersonate
                                             </button>
                                         </form>
@@ -107,7 +107,7 @@
             </div>
 
             @if($users->hasPages())
-                <div class="kt-card-footer flex justify-end p-4">
+                <div class="fl-card-footer flex justify-end p-4">
                     {{ $users->links() }}
                 </div>
             @endif

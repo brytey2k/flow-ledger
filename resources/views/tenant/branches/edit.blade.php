@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">{{ __('branches.edit_title') }}</h1>
@@ -11,8 +11,8 @@
             </div>
         </div>
         <div class="flex items-center gap-2.5">
-            <a class="kt-btn kt-btn-outline" href="{{ route('branches.index') }}">
-                <i class="ki-filled ki-arrow-left"></i>
+            <a class="fl-btn fl-btn-outline" href="{{ route('branches.index') }}">
+                <x-tabler-arrow-left />
                 {{ __('branches.back') }}
             </a>
         </div>
@@ -21,13 +21,13 @@
 <!-- End of Container -->
 
 <!-- Container -->
-<div class="kt-container-fixed">
+<div class="fl-container-fixed">
     @if($descendantsCount > 0)
-        <div class="kt-alert kt-alert-light kt-alert-warning mb-5">
-            <span class="kt-alert-icon"><i class="ki-filled ki-information-4 text-xl"></i></span>
-            <div class="kt-alert-content">
-                <h4 class="kt-alert-title">{{ __('branches.descendants_warning') }}</h4>
-                <div class="kt-alert-description">
+        <div class="fl-alert fl-alert-light fl-alert-warning mb-5">
+            <span class="fl-alert-icon"><x-tabler-info-square-rounded-filled class="text-xl" /></span>
+            <div class="fl-alert-content">
+                <h4 class="fl-alert-title">{{ __('branches.descendants_warning') }}</h4>
+                <div class="fl-alert-description">
                     This branch has {{ $descendantsCount }} {{ Str::plural('child branch', $descendantsCount) }}. Changing the parent may affect the hierarchy structure.
                 </div>
             </div>
@@ -35,22 +35,22 @@
     @endif
 
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card">
-            <div class="kt-card-header">
-                <h3 class="kt-card-title">{{ __('branches.details_card') }}</h3>
+        <div class="fl-card">
+            <div class="fl-card-header">
+                <h3 class="fl-card-title">{{ __('branches.details_card') }}</h3>
             </div>
-            <div class="kt-card-content">
+            <div class="fl-card-content">
                 <form method="POST" action="{{ route('branches.update', $branch) }}" class="grid gap-7">
                     @csrf
                     @method('PUT')
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="col-span-1 lg:col-span-2">
-                            <label class="kt-form-label block mb-2" for="name">
+                            <label class="fl-form-label block mb-2" for="name">
                                 {{ __('branches.fields.name') }} <span class="text-destructive">*</span>
                             </label>
                             <input id="name" name="name" type="text" value="{{ old('name', $branch->name) }}"
-                                   class="kt-input w-full" placeholder="e.g. Accra Regional Office" required
+                                   class="fl-input w-full" placeholder="e.g. Accra Regional Office" required
                                    aria-invalid="@error('name') true @else false @enderror" />
                             <div class="mt-1 text-xs text-muted-foreground">
                                 {{ __('branches.fields.name_hint') }}
@@ -61,11 +61,11 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="kt-form-label block mb-2" for="code">
+                            <label class="fl-form-label block mb-2" for="code">
                                 {{ __('branches.fields.code') }}
                             </label>
                             <input id="code" name="code" type="text" value="{{ old('code', $branch->code) }}"
-                                   class="kt-input w-full" placeholder="e.g. ACC-REG"
+                                   class="fl-input w-full" placeholder="e.g. ACC-REG"
                                    aria-invalid="@error('code') true @else false @enderror" />
                             <div class="mt-1 text-xs text-muted-foreground">
                                 {{ __('branches.fields.code_hint') }}
@@ -76,10 +76,10 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="kt-form-label block mb-2" for="level_id">
+                            <label class="fl-form-label block mb-2" for="level_id">
                                 {{ __('branches.fields.level') }} <span class="text-destructive">*</span>
                             </label>
-                            <select id="level_id" name="level_id" class="kt-input w-full" required
+                            <select id="level_id" name="level_id" class="fl-input w-full" required
                                     aria-invalid="@error('level_id') true @else false @enderror">
                                 <option value="">{{ __('branches.fields.select_level') }}</option>
                                 @foreach($levels as $level)
@@ -97,10 +97,10 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="kt-form-label block mb-2" for="currency_id">
+                            <label class="fl-form-label block mb-2" for="currency_id">
                                 {{ __('branches.fields.currency') }} <span class="text-destructive">*</span>
                             </label>
-                            <select id="currency_id" name="currency_id" class="kt-input w-full" required
+                            <select id="currency_id" name="currency_id" class="fl-input w-full" required
                                     @disabled($currencyLocked)
                                     aria-invalid="@error('currency_id') true @else false @enderror">
                                 <option value="">{{ __('branches.fields.select_currency') }}</option>
@@ -122,10 +122,10 @@
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="kt-form-label block mb-2" for="parent_id">
+                            <label class="fl-form-label block mb-2" for="parent_id">
                                 {{ __('branches.fields.parent') }}
                             </label>
-                            <select id="parent_id" name="parent_id" class="kt-input w-full"
+                            <select id="parent_id" name="parent_id" class="fl-input w-full"
                                     aria-invalid="@error('parent_id') true @else false @enderror">
                                 <option value="">{{ __('branches.fields.none_root') }}</option>
                                 @foreach($branches as $b)
@@ -146,16 +146,16 @@
 
                     <div class="pt-5 mt-2 flex justify-between items-center">
                         <div class="flex items-center gap-2.5">
-                            <button type="submit" class="kt-btn kt-btn-primary">
-                                <i class="ki-filled ki-check"></i>
+                            <button type="submit" class="fl-btn fl-btn-primary">
+                                <x-tabler-check-filled />
                                 {{ __('branches.buttons.update') }}
                             </button>
-                            <a class="kt-btn kt-btn-light" href="{{ route('branches.index') }}">{{ __('common.cancel') }}</a>
+                            <a class="fl-btn fl-btn-light" href="{{ route('branches.index') }}">{{ __('common.cancel') }}</a>
                         </div>
                         @can(App\Enums\Tenant\PermissionKey::AccessBranches->value)
-                            <button type="button" class="kt-btn kt-btn-danger"
+                            <button type="button" class="fl-btn fl-btn-danger"
                                     onclick="if(confirm('{{ __('branches.confirm_delete') }}')) { document.getElementById('delete-branch-form').submit(); }">
-                                <i class="ki-filled ki-trash"></i>
+                                <x-tabler-trash-filled />
                                 {{ __('branches.buttons.delete') }}
                             </button>
                         @endcan
