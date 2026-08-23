@@ -9,14 +9,19 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/css/landing.css', 'resources/js/app.js'],
             refresh: true,
             fonts: [
+                bunny('Geist', {
+                    weights: [300, 400, 500, 600, 700],
+                }),
+                bunny('Geist Mono', {
+                    weights: [400, 500, 600],
+                }),
+                // Landing page (resources/css/landing.css) keeps its own Coral-theme
+                // typography, independent of the authenticated app's Steward Teal system.
                 bunny('Sora', {
                     weights: [400, 500, 600, 700],
                 }),
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600, 700],
-                }),
-                bunny('Geist Mono', {
-                    weights: [400, 500, 600],
                 }),
             ],
         }),

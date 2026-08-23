@@ -118,41 +118,49 @@
 @source '../**/*.js';
 
 /*
- * flow-ledger's own design tokens, independent of the legacy Metronic
- * bundle (public/assets/css/styles.css). Values match the app's current
- * dark navy/blue visual identity, carried over 1:1 from the Metronic
- * :root/.dark custom properties so the sgh-* migration introduced zero
- * visual change.
+ * flow-ledger's design tokens — matches church-mgt-system's Steward design
+ * system 1:1 (same teal anchor, same radius, same type scale) so the two
+ * products share one visual identity. Independent of the legacy Metronic
+ * bundle (public/assets/css/styles.css).
  */
 :root {
-    --background: oklch(100% 0 0);
-    --foreground: oklch(14.1% 0.005 285.823);
-    --card: oklch(100% 0 0);
-    --card-foreground: oklch(14.1% 0.005 285.823);
-    --popover: oklch(100% 0 0);
-    --popover-foreground: oklch(14.1% 0.005 285.823);
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.141 0.005 285.823);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.141 0.005 285.823);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.141 0.005 285.823);
 
-    --primary: oklch(62.3% 0.214 259.815);
-    --primary-foreground: #fff;
-    --secondary: oklch(96.7% 0.001 286.375);
-    --secondary-foreground: oklch(21% 0.006 285.885);
-    --muted: oklch(96.7% 0.001 286.375);
-    --muted-foreground: oklch(55.2% 0.016 285.938);
-    --accent: oklch(96.7% 0.001 286.375);
-    --accent-foreground: oklch(21% 0.006 285.885);
-    --destructive: oklch(57.7% 0.245 27.325);
-    --destructive-foreground: #fff;
-    --success: oklch(62.7% 0.194 149.214);
-    --success-foreground: #fff;
-    --info: oklch(55% 0.13 250);
-    --info-foreground: #fff;
-    --warning: oklch(79.5% 0.184 86.047);
+    --primary: oklch(0.5 0.115 168);
+    --primary-foreground: oklch(0.99 0.005 168);
+    --secondary: oklch(0.967 0.001 286.375);
+    --secondary-foreground: oklch(0.21 0.006 285.885);
+    --muted: oklch(0.967 0.001 286.375);
+    --muted-foreground: oklch(0.552 0.016 285.938);
+    --accent: oklch(0.955 0.032 168);
+    --accent-foreground: oklch(0.4 0.11 168);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.99 0.005 168);
+    --success: oklch(0.5 0.12 150);
+    --success-foreground: oklch(0.99 0.005 150);
+    --info: oklch(0.55 0.13 250);
+    --info-foreground: oklch(0.99 0.005 250);
+    --warning: oklch(0.75 0.15 80);
     --warning-foreground: oklch(0.2 0.05 80);
 
-    --border: oklch(94% 0.004 286.32);
-    --input: oklch(92% 0.004 286.32);
-    --ring: oklch(70.5% 0.015 286.067);
-    --radius: 0.5rem;
+    --border: oklch(0.92 0.004 286.32);
+    --input: oklch(0.92 0.004 286.32);
+    --ring: oklch(0.6 0.1 168);
+    --radius: 0.625rem;
+
+    --app-link-color: #0d7a63;
+    --app-link-hover-color: #0a5e4c;
+
+    --auth-panel-background: oklch(0.19 0.012 255);
+    --auth-panel-foreground: oklch(0.985 0.002 255);
+    --auth-panel-muted: oklch(0.74 0.008 255);
+    --auth-panel-border: oklch(0.3 0.012 255);
+    --auth-panel-caption: oklch(0.6 0.01 255);
 
     --sgh-sidebar-width: 280px;
     --sgh-sidebar-width-collapse: 80px;
@@ -160,38 +168,42 @@
 }
 
 .dark {
-    --background: oklch(14.1% 0.005 285.823);
-    --foreground: oklch(98.5% 0 0);
-    --card: oklch(14.1% 0.005 285.823);
-    --card-foreground: oklch(98.5% 0 0);
-    --popover: oklch(14.1% 0.005 285.823);
-    --popover-foreground: oklch(98.5% 0 0);
+    --background: oklch(0.141 0.005 285.823);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.21 0.006 285.885);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.21 0.006 285.885);
+    --popover-foreground: oklch(0.985 0 0);
 
-    --primary: oklch(54.6% 0.245 262.881);
-    --primary-foreground: #fff;
-    --secondary: oklch(27.4% 0.006 286.033);
-    --secondary-foreground: oklch(98.5% 0 0);
-    --muted: oklch(21% 0.006 285.885);
-    --muted-foreground: oklch(55.2% 0.016 285.938);
-    --accent: oklch(21% 0.006 285.885);
-    --accent-foreground: oklch(98.5% 0 0);
-    --destructive: oklch(57.7% 0.245 27.325);
-    --destructive-foreground: #fff;
-    --success: oklch(72.3% 0.219 149.579);
+    --primary: oklch(0.64 0.13 168);
+    --primary-foreground: oklch(0.16 0.02 168);
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.274 0.006 286.033);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --accent: oklch(0.32 0.05 168);
+    --accent-foreground: oklch(0.86 0.06 168);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+    --success: oklch(0.64 0.13 150);
     --success-foreground: oklch(0.16 0.02 150);
-    --info: oklch(64% 0.13 250);
+    --info: oklch(0.64 0.13 250);
     --info-foreground: oklch(0.16 0.02 250);
-    --warning: oklch(79.5% 0.184 86.047);
+    --warning: oklch(0.75 0.15 80);
     --warning-foreground: oklch(0.2 0.05 80);
 
-    --border: oklch(27.4% 0.006 286.033);
-    --input: oklch(27.4% 0.006 286.033);
-    --ring: oklch(44.2% 0.017 285.786);
+    --border: oklch(0.274 0.006 286.033);
+    --input: oklch(0.274 0.006 286.033);
+    --ring: oklch(0.58 0.12 168);
+
+    --app-link-color: #5eead4;
+    --app-link-hover-color: #99f6e4;
 }
 
 @theme inline {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -218,6 +230,12 @@
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
+
+    --color-auth-panel-background: var(--auth-panel-background);
+    --color-auth-panel-foreground: var(--auth-panel-foreground);
+    --color-auth-panel-muted: var(--auth-panel-muted);
+    --color-auth-panel-border: var(--auth-panel-border);
+    --color-auth-panel-caption: var(--auth-panel-caption);
 }
 
 /*
@@ -533,16 +551,6 @@
 }
 
 @layer base {
-    :root {
-        --app-link-color: #2563eb;
-        --app-link-hover-color: #1d4ed8;
-    }
-
-    .dark {
-        --app-link-color: #93c5fd;
-        --app-link-hover-color: #bfdbfe;
-    }
-
     #content a[href]:not(.btn):not(.sgh-btn):not(.kt-btn):not(.kt-menu-link):not([role='button']) {
         color: var(--app-link-color);
         font-weight: 500;
