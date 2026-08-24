@@ -81,4 +81,6 @@ return [
     'all' => 'All',
     'apply_filters' => 'Apply Filters',
     'clear_filters' => 'Clear Filters',
+    'bulk_sms' => 'Bulk SMS',
+    'buy_software' => 'Buy Software',
 ];

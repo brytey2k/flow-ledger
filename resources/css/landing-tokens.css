@@ -1,18 +1,27 @@
-/* Hallmark tokens — Flow Ledger marketing page. Coral catalog theme (editorial genre). */
+/* Hallmark tokens — Flow Ledger marketing page. Signal cyan theme (modern-minimal genre),
+ * anchor hue ~205 — matched to the flowledger logo mark's cyan-blue. */
 :root {
-    /* Colour — warm anchor hue ~45-55, Coral cluster */
-    --color-paper: oklch(97% 0.008 55);
-    --color-paper-2: oklch(99% 0.004 55);
-    --color-paper-3: oklch(94.5% 0.011 55);
-    --color-rule: oklch(89% 0.013 50);
-    --color-rule-2: oklch(84% 0.015 48);
-    --color-ink: oklch(23% 0.014 45);
-    --color-ink-2: oklch(42% 0.016 45);
-    --color-muted: oklch(44% 0.014 50);
-    --color-accent: oklch(56% 0.17 35);
-    --color-accent-strong: oklch(46% 0.16 33);
-    --color-accent-ink: oklch(96% 0.008 40);
-    --color-focus: oklch(64% 0.17 35);
+    /* Colour — cool anchor hue ~205, Cyan/Sky cluster */
+    --color-paper: oklch(97% 0.008 205);
+    --color-paper-2: oklch(99% 0.004 205);
+    --color-paper-3: oklch(94.5% 0.011 205);
+    --color-rule: oklch(89% 0.013 205);
+    --color-rule-2: oklch(84% 0.015 205);
+    --color-ink: oklch(23% 0.014 205);
+    --color-ink-2: oklch(42% 0.016 205);
+    --color-muted: oklch(44% 0.014 205);
+    --color-neutral: oklch(54% 0.014 205);
+    --color-accent: oklch(58% 0.15 205);
+    --color-accent-strong: oklch(48% 0.14 203);
+    --color-accent-ink: oklch(98% 0.006 205);
+    --color-focus: oklch(64% 0.15 205);
+    --color-shadow: oklch(20% 0.02 205 / 0.35);
+
+    /* Fixed-dark surface — stays dark regardless of colour scheme (hero band) */
+    --color-fixed-dark: oklch(15% 0.02 240);
+    --color-fixed-dark-2: oklch(13.5% 0.018 240);
+    --color-fixed-dark-3: oklch(16.5% 0.018 240);
+    --color-fixed-dark-ink: oklch(97% 0.006 205);
 
     /* Type */
     --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
@@ -45,6 +54,9 @@
     --radius-card: 0.875rem;
     --radius-control: 0.625rem;
     --radius-pill: 999px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
 
     /* Motion */
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

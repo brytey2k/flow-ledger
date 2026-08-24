@@ -17,7 +17,7 @@
         aria-label="{{ __('navigation.language') }}">
         <img alt="" class="inline-block size-4 rounded-full" src="{{ asset('assets/media/flags/'.$currentLocaleFlag) }}" />
         <span class="hidden sm:inline">{{ $currentLocale['native_label'] ?? $currentLocaleCode }}</span>
-        <x-tabler-chevron-down-filled class="text-2xs" />
+        <x-tabler-chevron-down-filled class="size-2.5" />
     </button>
     <div x-show="open" x-cloak @click.outside="close()" class="sgh-dropdown-panel w-[180px]">
         <ul>
@@ -31,7 +31,7 @@
                             <span>{{ $locale['native_label'] ?? $code }}</span>
                         </span>
                         @if ($currentLocaleCode === $code)
-                            <x-tabler-circle-check-filled class="ms-auto text-base text-green-500" />
+                            <x-tabler-circle-check-filled class="ms-auto size-4 text-green-500" />
                         @endif
                     </button>
                 </li>

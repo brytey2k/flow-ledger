@@ -22,8 +22,16 @@ return [
         'get_started' => 'Commencer',
         'see_how_it_works' => 'Voir comment ça marche',
         'note' => 'Nouveau sur Flow Ledger ? Demandez à votre administrateur l\'accès à votre espace de travail.',
-        'figure_alt' => "Tableau de bord Flow Ledger affichant le solde de caisse d'une succursale par rapport à son seuil",
-        'figure_caption' => 'Un espace de travail en direct — soldes de succursales, seuils et demandes réunis en une seule vue.',
+        'badge' => "Workflows d'approbation, comptabilisés",
+        'mock_aria' => 'Une maquette du tableau de bord Flow Ledger montrant les soldes de succursales, les demandes et les paiements récents',
+        'mock_nav_dashboard' => 'Tableau de bord',
+        'mock_nav_requests' => 'Demandes',
+        'mock_nav_workflows' => 'Workflows',
+        'mock_nav_cashbook' => 'Journal de caisse',
+        'mock_kpi_pending' => 'Demandes en attente',
+        'mock_kpi_approved' => "Approuvées aujourd'hui",
+        'mock_kpi_disbursed' => 'Décaissé (MDC)',
+        'mock_status_approved' => 'Approuvé',
     ],
 
     'steps' => [

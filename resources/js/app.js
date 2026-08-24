@@ -53,16 +53,6 @@ Alpine.data('sidebarCollapse', () => ({
     },
 }));
 
-Alpine.store('megaMenu', {
-    open: false,
-    toggle() {
-        this.open = !this.open;
-    },
-    hide() {
-        this.open = false;
-    },
-});
-
 Alpine.store('sidebarDrawer', {
     open: false,
     show() {
@@ -114,18 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
-const lightboxTriggers = document.querySelectorAll('.glightbox');
-
-if (lightboxTriggers.length) {
-    Promise.all([import('glightbox'), import('glightbox/dist/css/glightbox.min.css')]).then(([{ default: GLightbox }]) => {
-        GLightbox({
-            selector: '.glightbox',
-            touchNavigation: true,
-            loop: false,
-        });
-    });
-}
 
 const bentoCells = document.querySelectorAll('.bento .cell');
 

@@ -77,7 +77,7 @@ class SyncPermissions extends Command
      * have been intentionally revoked from it previously, and re-adding it
      * here would silently undo that.
      *
-     * @param  list<string>  $newlyCreatedNames
+     * @param list<string> $newlyCreatedNames
      */
     private function grantNewPermissionsToSystemAdmin(array $newlyCreatedNames): void
     {
@@ -95,7 +95,7 @@ class SyncPermissions extends Command
 
         $systemAdminRole->givePermissionTo($newlyCreatedNames);
 
-        $this->info('Granted newly created permissions to the system admin role: '.implode(', ', $newlyCreatedNames));
+        $this->info('Granted newly created permissions to the system admin role: ' . implode(', ', $newlyCreatedNames));
     }
 
     private function pruneOrphaned(PermissionRegistrar $permissionRegistrar): void

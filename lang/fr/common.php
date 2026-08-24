@@ -81,4 +81,6 @@ return [
     'all' => 'Tous',
     'apply_filters' => 'Appliquer les filtres',
     'clear_filters' => 'Effacer les filtres',
+    'bulk_sms' => 'SMS en masse',
+    'buy_software' => 'Acheter le logiciel',
 ];

@@ -23,7 +23,7 @@
 </div>
 
 <div class="sgh-container-fixed">
-    <div class="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning flex items-center gap-2">
+    <div class="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning flex items-center gap-2 mb-5">
         <x-tabler-info-square-filled />
         You are about to impersonate a user in <span class="font-semibold">{{ $tenant->name ?? $tenant->id }}</span>. This will open a new browser tab logged in as that user.
     </div>

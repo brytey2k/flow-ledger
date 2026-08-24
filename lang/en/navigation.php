@@ -27,6 +27,10 @@ return [
     'logout' => 'Logout',
     'dark_mode' => 'Dark Mode',
     'language' => 'Language',
+    'tenant_kind' => 'Tenant',
+    'landlord_kind' => 'Landlord',
+    'need_help' => 'Need a hand?',
+    'need_help_body' => 'Docs, keyboard shortcuts and workflow guides.',
 
     'sections' => [
         'requests' => 'Requests',

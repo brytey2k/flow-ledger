@@ -4,11 +4,12 @@
     $avatarInitial = strtoupper(substr($userName !== '' ? $userName : 'U', 0, 1));
 @endphp
 <div class="relative shrink-0" x-data="dropdown">
-    <div class="shrink-0 cursor-pointer" @click="toggle">
-        <div class="size-9 shrink-0 rounded-full bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
+    <button type="button" class="sgh-btn sgh-btn-outline sgh-btn-sm shrink-0 !rounded-full gap-2 py-1 pe-2.5 ps-1" @click="toggle" :aria-expanded="open">
+        <div class="size-7 shrink-0 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-primary-foreground">
             {{ $avatarInitial }}
         </div>
-    </div>
+        <x-tabler-chevron-down-filled class="size-2.5 text-muted-foreground" />
+    </button>
     <div x-show="open" x-cloak @click.outside="close()" class="sgh-dropdown-panel w-[250px]">
         <div class="flex items-center justify-between gap-1.5 px-2.5 py-1.5">
             <div class="flex items-center gap-2">
@@ -39,7 +40,7 @@
         <div class="mb-2.5 flex flex-col gap-3.5 px-2.5 pt-1.5" x-data="themeToggle">
             <div class="flex items-center justify-between gap-2">
                 <span class="flex items-center gap-2">
-                    <x-tabler-moon-filled class="text-base text-muted-foreground" />
+                    <x-tabler-moon-filled class="size-4 text-muted-foreground" />
                     <span class="text-2sm font-medium">
                         Dark Mode
                     </span>

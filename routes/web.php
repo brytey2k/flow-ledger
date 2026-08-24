@@ -26,8 +26,8 @@ foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('landlord.')->group(static function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
 
-        // Placeholder route for a new organization signing up for Flow Ledger — to be implemented.
-        Route::get('register', static fn() => 'Register page - to be implemented')->name('register');
+        // Self-service sign-up is paused while new organizations are onboarded by hand.
+        Route::view('register', 'landlord.auth.register-halted')->name('register');
 
         Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 

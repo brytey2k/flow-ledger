@@ -22,8 +22,16 @@ return [
         'get_started' => 'Get started',
         'see_how_it_works' => 'See how it works',
         'note' => 'New to Flow Ledger? Ask your administrator for access to your workspace.',
-        'figure_alt' => 'Flow Ledger dashboard showing a branch cash balance against its threshold',
-        'figure_caption' => 'A live workspace — branch balances, thresholds, and requests in one view.',
+        'badge' => 'Approval workflows, accounted for',
+        'mock_aria' => 'A mock of the Flow Ledger dashboard showing branch balances, requests, and recent payments',
+        'mock_nav_dashboard' => 'Dashboard',
+        'mock_nav_requests' => 'Requests',
+        'mock_nav_workflows' => 'Workflows',
+        'mock_nav_cashbook' => 'Cashbook',
+        'mock_kpi_pending' => 'Pending requests',
+        'mock_kpi_approved' => 'Approved today',
+        'mock_kpi_disbursed' => 'Disbursed (MTD)',
+        'mock_status_approved' => 'Approved',
     ],
 
     'steps' => [

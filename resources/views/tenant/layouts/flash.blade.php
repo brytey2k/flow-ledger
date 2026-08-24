@@ -1,6 +1,6 @@
 @php
     /**
-     * Supported flash keys mapped to Metronic sgh-alert variants.
+     * Supported flash keys mapped to sgh-alert variants.
      * status maps to success for legacy usage.
      */
     $flashMap = [

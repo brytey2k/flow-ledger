@@ -1,37 +1,44 @@
 <!DOCTYPE html>
 <html class="h-full" dir="ltr" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <title>@yield('title', 'Sign In') - {{ config('app.name', 'Flow Ledger') }}</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <link href="{{ asset('assets/media/app/apple-touch-icon.png') }}" rel="apple-touch-icon" sizes="180x180"/>
-    <link href="{{ asset('assets/media/app/favicon-32x32.png') }}" rel="icon" sizes="32x32" type="image/png"/>
-    <link href="{{ asset('assets/media/app/favicon-16x16.png') }}" rel="icon" sizes="16x16" type="image/png"/>
-    <link href="{{ asset('assets/media/app/favicon.ico') }}" rel="shortcut icon"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <link href="{{ asset('assets/vendors/apexcharts/apexcharts.css') }}" rel="stylesheet"/>
-
+    @include('landlord.layouts.partials.head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
     @stack('styles')
 </head>
-<body class="antialiased flex h-full text-base text-foreground bg-background">
-    <!-- Theme Mode -->
-    <script>
-        (function () {
-            let themeMode = localStorage.getItem('sgh-theme') || 'light';
-            if (themeMode === 'system') {
-                themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
-            document.documentElement.classList.add(themeMode);
-        })();
-    </script>
-    <!-- End of Theme Mode -->
+<body class="antialiased h-full text-base text-foreground bg-background">
+@include('tenant.partials.theme-toggle')
 
-    @yield('content')
+<div class="grid min-h-full lg:grid-cols-[1fr_1.05fr]">
+    <div class="hidden flex-col bg-auth-panel-background p-12 text-auth-panel-foreground lg:flex">
+        <div class="flex items-center">
+            <img class="h-6 w-auto" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}" alt="{{ config('app.name', 'Flow Ledger') }}" />
+        </div>
+        <div class="mt-auto">
+            <p class="mb-6 max-w-[26ch] text-2xl leading-snug tracking-tight text-balance">{{ __('auth.pitch') }}</p>
+            <div class="grid gap-3.5 text-sm text-auth-panel-muted">
+                @foreach (__('auth.pitch_points') as $point)
+                    <div class="flex items-baseline gap-2.5">
+                        <span class="inline-block size-[5px] shrink-0 rounded-full bg-primary"></span>
+                        {{ $point }}
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        <div class="mt-11 border-t border-auth-panel-border pt-5 font-mono text-[11px] text-auth-panel-caption">
+            {{ __('auth.secured_by') }}
+        </div>
+    </div>
+    <div class="flex flex-col items-center justify-center p-6 lg:p-12">
+        <div class="mb-8 flex items-center justify-center lg:hidden">
+            <img class="h-6 w-auto dark:hidden" src="{{ asset('assets/media/app/flowledger_logo_light.png') }}" alt="{{ config('app.name', 'Flow Ledger') }}" />
+            <img class="hidden h-6 w-auto dark:block" src="{{ asset('assets/media/app/flowledger_logo_dark.png') }}" alt="{{ config('app.name', 'Flow Ledger') }}" />
+        </div>
+        <div class="w-full max-w-[404px]">
+            @yield('content')
+        </div>
+    </div>
+</div>
 
-    @stack('scripts')
+@stack('scripts')
 </body>
 </html>
