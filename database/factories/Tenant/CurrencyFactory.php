@@ -17,7 +17,7 @@ class CurrencyFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->unique()->word() . ' Dollar',
+            'name' => fake()->unique()->words(3, true) . ' Dollar',
             'short_name' => strtoupper(fake()->unique()->lexify('???')),
             'symbol' => fake()->unique()->randomElement(['$', '€', '£', '¥', '₵', '₦', 'Fr']),
         ];
