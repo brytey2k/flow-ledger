@@ -1,7 +1,8 @@
 <!-- Sidebar -->
 <div x-show="$store.sidebarDrawer.open" x-cloak class="fixed inset-0 z-10 bg-foreground/40 lg:hidden" @click="$store.sidebarDrawer.hide()"></div>
 <div class="sgh-sidebar fixed bottom-0 top-0 z-20 hidden shrink-0 flex-col items-stretch border-e border-e-border bg-background pt-3 lg:flex"
-    :class="{ 'flex': $store.sidebarDrawer.open }" id="sidebar">
+    :class="{ 'flex': $store.sidebarDrawer.open, 'is-hover-expanded': collapsed && hovering }"
+    @mouseenter="hovering = true" @mouseleave="hovering = false" id="sidebar">
     <div class="relative hidden shrink-0 items-center justify-between px-3 lg:flex lg:px-6"
         id="sidebar_header">
         <a class="dark:hidden" href="{{ route('landlord.tenants.index') }}">

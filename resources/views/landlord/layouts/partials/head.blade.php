@@ -23,4 +23,5 @@
 <link href="{{ asset('assets/media/app/favicon-48x48.png') }}?v=3" rel="icon" sizes="48x48" type="image/png" />
 <link href="{{ asset('assets/media/app/apple-touch-icon.png') }}?v=3" rel="apple-touch-icon" />
 <link href="{{ asset('site.webmanifest') }}?v=3" rel="manifest" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link href="{{ asset('assets/vendors/apexcharts/apexcharts.css') }}" rel="stylesheet" />

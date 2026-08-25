@@ -11,6 +11,10 @@
 .small-logo   { max-height: 44px; max-width: 44px;  width: auto; height: auto; object-fit: contain; }
 
 #sidebar_header .small-logo { display: none; }
+/* Fixed min-height keeps the collapse toggle button's distance from the top
+   constant — otherwise it drifts up whenever the shown logo variant is
+   shorter than 44px (e.g. a square icon vs. a wide wordmark). */
+#sidebar_header { min-height: 44px; }
 
 /* Tom Select — styled to match KT UI inputs */
 .ts-wrapper {
@@ -550,16 +554,17 @@
     .sgh-shell.is-collapsed .sgh-sidebar {
         width: var(--sgh-sidebar-width-collapse);
     }
-    .sgh-shell.is-collapsed .sgh-sidebar:hover {
+    .sgh-shell.is-collapsed .sgh-sidebar.is-hover-expanded {
         width: var(--sgh-sidebar-width);
     }
-    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .sgh-nav-title,
-    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .sgh-nav-heading,
-    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .default-logo,
-    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .sgh-sidebar-tenant-card {
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-nav-title,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-nav-heading,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .default-logo,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-sidebar-tenant-card,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-sidebar-help-card {
         display: none;
     }
-    .sgh-shell.is-collapsed .sgh-sidebar:not(:hover) .small-logo {
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .small-logo {
         display: flex;
     }
     @media (min-width: 64rem) {

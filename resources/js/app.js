@@ -36,6 +36,7 @@ Alpine.data('tableDropdown', () => ({
 
 Alpine.data('sidebarCollapse', () => ({
     collapsed: false,
+    hovering: false,
     init() {
         try {
             this.collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === '1';
@@ -45,6 +46,9 @@ Alpine.data('sidebarCollapse', () => ({
     },
     toggle() {
         this.collapsed = !this.collapsed;
+        // Reset hover-expand immediately so the sidebar collapses on click even
+        // though the pointer is still resting over it (over the toggle button).
+        this.hovering = false;
         try {
             localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, this.collapsed ? '1' : '0');
         } catch {
