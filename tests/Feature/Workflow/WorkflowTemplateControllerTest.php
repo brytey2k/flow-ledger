@@ -172,7 +172,7 @@ test('show renders help tooltips for stage columns', function () {
     $response = $this->actingAs($this->user)->get(route('workflow-templates.show', $template));
 
     $response->assertOk();
-    $response->assertSee('data-kt-tooltip-content', false);
+    $response->assertSee('sgh-tooltip-panel', false);
     $response->assertSee(__('workflows.show.column_tips.order'));
     $response->assertSee(__('workflows.show.column_tips.parallel_group'));
     $response->assertSee(__('workflows.show.column_tips.skip_below'));
