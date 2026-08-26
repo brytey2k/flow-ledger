@@ -11,7 +11,6 @@ readonly class UpdateUserDto
         public string $firstName,
         public string $lastName,
         public string $email,
-        public string|null $password,
         public array $roles = [],
     ) {}
 }

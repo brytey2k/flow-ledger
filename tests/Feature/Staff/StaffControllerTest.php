@@ -97,8 +97,6 @@ test('cannot create user with existing email on staff create', function () {
         'position_id' => $staff->position_id,
         'user_action' => 'create',
         'user_email' => $existingUser->email,
-        'user_password' => 'Password1!',
-        'user_password_confirmation' => 'Password1!',
     ]);
 
     $response->assertSessionHasErrors('user_email');
@@ -310,8 +308,6 @@ test('can create staff with create user action', function () {
         'position_id' => $position->id,
         'user_action' => 'create',
         'user_email' => 'alice@example.com',
-        'user_password' => 'Password1!',
-        'user_password_confirmation' => 'Password1!',
     ]);
 
     $response->assertRedirect(route('staff.index'));
@@ -328,8 +324,6 @@ test('store fails validation when user action is create but email missing', func
         'department_id' => $department->id,
         'position_id' => $position->id,
         'user_action' => 'create',
-        'user_password' => 'Password1!',
-        'user_password_confirmation' => 'Password1!',
     ]);
 
     $response->assertSessionHasErrors('user_email');
@@ -344,8 +338,6 @@ test('update with create user action links new user to staff', function () {
         'position_id' => $staff->position_id,
         'user_action' => 'create',
         'user_email' => 'newuser@example.com',
-        'user_password' => 'Password1!',
-        'user_password_confirmation' => 'Password1!',
     ]);
 
     $response->assertRedirect(route('staff.index'));
@@ -362,8 +354,6 @@ test('update fails validation when user action is create but email missing', fun
         'department_id' => $staff->department_id,
         'position_id' => $staff->position_id,
         'user_action' => 'create',
-        'user_password' => 'Password1!',
-        'user_password_confirmation' => 'Password1!',
     ]);
 
     $response->assertSessionHasErrors('user_email');

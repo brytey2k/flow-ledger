@@ -70,7 +70,7 @@ Route::middleware([
 
     Route::get('/impersonate/{token}', [ImpersonationController::class, 'impersonate'])->name('impersonate');
 
-    Route::middleware(['auth', 'check.force.logout', 'force.password.change'])->group(function (): void {
+    Route::middleware(['auth', 'check.force.logout'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
         Route::post('/exit-impersonation', [ImpersonationController::class, 'exit'])->name('exit-impersonation');
         Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
@@ -368,6 +368,9 @@ Route::middleware([
         Route::post('/users/{user}/resend-invite', [UsersController::class, 'resendInvite'])
             ->can(PermissionKey::CreateUser->value)
             ->name('users.invite.resend');
+        Route::post('/users/{user}/resend-welcome', [UsersController::class, 'resendWelcome'])
+            ->can(PermissionKey::CreateUser->value)
+            ->name('users.welcome.resend');
         Route::get('/users/{user}', [UsersController::class, 'show'])
             ->can(PermissionKey::AccessUsers->value)
             ->name('users.show');

@@ -31,7 +31,6 @@ class PasswordChangeController extends Controller
 
         $user->update([
             'password' => Hash::make($request->string('password')->toString()),
-            'must_change_password' => false,
         ]);
 
         return redirect()->route('dashboard')->with('success', __('flash.password.changed'));

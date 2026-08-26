@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Enums\Tenant\UserStatus;
 use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
+use App\Models\Tenant\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -94,6 +96,39 @@ test('password reset succeeds and logs in', function () {
     $response->assertRedirect(route('dashboard'));
     $response->assertSessionHas('success');
     expect(Hash::check('newpassword123', $this->user->fresh()->password))->toBeTrue();
+});
+test('password reset for unverified invited user activates account and verifies email', function () {
+    $invitedUser = User::factory()->unverified()->create([
+        'branch_id' => $this->branch->id,
+        'status' => UserStatus::Invited,
+        'invited_at' => now(),
+    ]);
+    $token = Password::createToken($invitedUser);
+
+    $response = $this->post(route('password.update'), [
+        'token' => $token,
+        'email' => $invitedUser->email,
+        'password' => 'newpassword123',
+        'password_confirmation' => 'newpassword123',
+    ]);
+
+    $response->assertRedirect(route('dashboard'));
+    $invitedUser->refresh();
+    expect($invitedUser->status)->toBe(UserStatus::Active);
+    expect($invitedUser->activated_at)->not->toBeNull();
+    expect($invitedUser->hasVerifiedEmail())->toBeTrue();
+});
+test('password reset for an already-active user does not change status', function () {
+    $token = Password::createToken($this->user);
+
+    $this->post(route('password.update'), [
+        'token' => $token,
+        'email' => $this->user->email,
+        'password' => 'newpassword123',
+        'password_confirmation' => 'newpassword123',
+    ]);
+
+    expect($this->user->fresh()->status)->toBe(UserStatus::Active);
 });
 test('password reset fails with invalid token', function () {
     $response = $this->post(route('password.update'), [

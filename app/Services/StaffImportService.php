@@ -14,7 +14,6 @@ use App\Models\Tenant\User;
 use App\Support\PhoneNumberFormatter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Throwable;
 
@@ -228,7 +227,6 @@ class StaffImportService
                                 firstName: $firstName,
                                 lastName: $lastName,
                                 email: $email,
-                                password: Str::password(12),
                                 branchId: $branchId,
                                 operationalBranchId: $branchId,
                                 roles: [],

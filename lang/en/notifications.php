@@ -7,10 +7,9 @@ return [
 
     'welcome' => [
         'subject' => 'Welcome to :app_name',
-        'line_1' => 'An account has been created for you. You can use the credentials below to log in.',
-        'password' => '**Temporary Password:** :password',
-        'line_2' => 'For your security, you will be asked to change your password after your first login.',
-        'action' => 'Log In',
+        'line_1' => 'An account has been created for you. Click the button below to set your password and get started.',
+        'line_2' => 'If you did not expect this invitation, no further action is required.',
+        'action' => 'Set Your Password',
     ],
 
     'low_cash_balance' => [

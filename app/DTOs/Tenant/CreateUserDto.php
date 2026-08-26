@@ -11,7 +11,6 @@ readonly class CreateUserDto
         public string $firstName,
         public string $lastName,
         public string $email,
-        public string $password,
         public int $branchId,
         public int $operationalBranchId,
         public array $roles = [],

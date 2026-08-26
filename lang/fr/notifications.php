@@ -7,10 +7,9 @@ return [
 
     'welcome' => [
         'subject' => 'Bienvenue sur :app_name',
-        'line_1' => 'Un compte a été créé pour vous. Vous pouvez utiliser les identifiants ci-dessous pour vous connecter.',
-        'password' => '**Mot de passe temporaire :** :password',
-        'line_2' => 'Pour votre sécurité, il vous sera demandé de changer votre mot de passe après votre première connexion.',
-        'action' => 'Se connecter',
+        'line_1' => 'Un compte a été créé pour vous. Cliquez sur le bouton ci-dessous pour définir votre mot de passe et commencer.',
+        'line_2' => "Si vous ne vous attendiez pas à cette invitation, aucune action supplémentaire n'est requise.",
+        'action' => 'Définir votre mot de passe',
     ],
 
     'low_cash_balance' => [

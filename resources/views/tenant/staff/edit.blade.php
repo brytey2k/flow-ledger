@@ -210,24 +210,8 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-span-1">
-                                    <label class="sgh-form-label block mb-2" for="user_password">
-                                        {{ __('staff.fields.user_password') }} <span class="text-destructive">*</span>
-                                    </label>
-                                    <input id="user_password" name="user_password" type="password"
-                                           class="sgh-input w-full"
-                                           aria-invalid="@error('user_password') true @else false @enderror" />
-                                    @error('user_password')
-                                        <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <div class="col-span-1">
-                                    <label class="sgh-form-label block mb-2" for="user_password_confirmation">
-                                        {{ __('staff.fields.user_password_confirmation') }} <span class="text-destructive">*</span>
-                                    </label>
-                                    <input id="user_password_confirmation" name="user_password_confirmation" type="password"
-                                           class="sgh-input w-full" />
+                                <div class="col-span-1 lg:col-span-2">
+                                    <p class="text-sm text-muted-foreground">{{ __('users.invite_notice') }}</p>
                                 </div>
                             </div>
 

@@ -13,10 +13,7 @@ class WelcomeNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(
-        public readonly string $temporaryPassword,
-        public readonly string $loginUrl,
-    ) {}
+    public function __construct(public readonly string $token) {}
 
     /** @return list<string> */
     public function via(object $notifiable): array
@@ -29,12 +26,15 @@ class WelcomeNotification extends Notification implements ShouldQueue
         /** @var \App\Models\Tenant\User $recipient */
         $recipient = $notifiable;
 
+        $url = route('password.reset', ['token' => $this->token]) . '?' . http_build_query([
+            'email' => $recipient->email,
+        ]);
+
         return (new MailMessage())
             ->subject(__('notifications.welcome.subject', ['app_name' => config()->string('app.name')]))
             ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
             ->line(__('notifications.welcome.line_1'))
-            ->line(__('notifications.welcome.password', ['password' => $this->temporaryPassword]))
-            ->line(__('notifications.welcome.line_2'))
-            ->action(__('notifications.welcome.action'), $this->loginUrl);
+            ->action(__('notifications.welcome.action'), $url)
+            ->line(__('notifications.welcome.line_2'));
     }
 }

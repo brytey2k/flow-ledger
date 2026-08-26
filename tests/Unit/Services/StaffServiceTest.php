@@ -277,7 +277,6 @@ function makeCreateUserDto(string $email = ''): CreateUserDto
         firstName: 'Staff',
         lastName: 'User',
         email: $email !== '' ? $email : Str::uuid() . '@example.com',
-        password: 'Password123!',
         branchId: test()->branch->id,
         operationalBranchId: test()->branch->id,
     );

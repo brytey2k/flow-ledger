@@ -8,7 +8,6 @@ use App\DTOs\Tenant\CreateUserDto;
 use App\Support\PhoneNumberFormatter;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class StaffStoreRequest extends FormRequest
 {
@@ -52,7 +51,6 @@ class StaffStoreRequest extends FormRequest
 
         if ($userAction === 'create') {
             $rules['user_email'] = ['required', 'email', 'max:255', 'unique:users,email'];
-            $rules['user_password'] = ['required', 'string', 'confirmed', Password::defaults()];
             $rules['user_roles'] = ['nullable', 'array'];
             $rules['user_roles.*'] = ['exists:roles,id'];
         } elseif ($userAction === 'link') {
@@ -82,7 +80,6 @@ class StaffStoreRequest extends FormRequest
                 firstName: $this->string('first_name')->toString(),
                 lastName: $this->string('last_name')->toString(),
                 email: $this->string('user_email')->toString(),
-                password: $this->string('user_password')->toString(),
                 branchId: $branchId,
                 operationalBranchId: $branchId,
                 roles: array_map(fn(int|string $v): int => (int) $v, $rawRoles),

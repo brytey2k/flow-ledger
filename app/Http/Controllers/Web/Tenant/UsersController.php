@@ -14,6 +14,7 @@ use App\Http\Requests\Tenant\UserUpdateRequest;
 use App\Jobs\InviteUserToIamJob;
 use App\Models\Tenant;
 use App\Models\Tenant\User;
+use App\Notifications\WelcomeNotification;
 use App\Repositories\BranchRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\RoleRepository;
@@ -22,6 +23,7 @@ use App\Services\PermissionEscalationGuard;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Laravel\Pennant\Feature;
@@ -72,6 +74,7 @@ class UsersController extends Controller
 
         return view('tenant.users.index', [
             'users' => $users,
+            'identityDelegated' => $this->identityDelegated(),
         ]);
     }
 
@@ -108,7 +111,7 @@ class UsersController extends Controller
         if ($deniedPermissionNames !== []) {
             return redirect()
                 ->route('users.create')
-                ->withInput($request->except(['password', 'password_confirmation']))
+                ->withInput($request->all())
                 ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
         }
 
@@ -153,7 +156,6 @@ class UsersController extends Controller
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'password' => bcrypt(Str::random(32)),
-            'must_change_password' => false,
             'is_oidc_user' => true,
             'status' => UserStatus::Invited,
             'invited_at' => now(),
@@ -184,6 +186,25 @@ class UsersController extends Controller
         abort_unless($user->status === UserStatus::Invited, 404);
 
         InviteUserToIamJob::dispatch($user->id, $this->currentIdpTenantId());
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', __('flash.users.invite_resent'));
+    }
+
+    /**
+     * Resend the onboarding "set password" email to a locally-created user
+     * who has not yet accepted it.
+     *
+     * @param User $user
+     */
+    public function resendWelcome(User $user): RedirectResponse
+    {
+        abort_if($this->identityDelegated(), 403);
+        abort_unless($user->status === UserStatus::Invited, 404);
+
+        $token = Password::broker()->createToken($user);
+        $user->notify(new WelcomeNotification($token));
 
         return redirect()
             ->route('users.index')
@@ -231,7 +252,7 @@ class UsersController extends Controller
         if ($deniedPermissionNames !== []) {
             return redirect()
                 ->route('users.edit', $user)
-                ->withInput($request->except(['password', 'password_confirmation']))
+                ->withInput($request->all())
                 ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
         }
 

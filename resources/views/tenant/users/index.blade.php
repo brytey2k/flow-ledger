@@ -129,7 +129,7 @@
                                             <div class="flex items-center justify-center gap-2">
                                                 @if($user->status === \App\Enums\Tenant\UserStatus::Invited)
                                                     @can(\App\Enums\Tenant\PermissionKey::CreateUser->value)
-                                                        <form action="{{ route('users.invite.resend', $user) }}" method="POST" onsubmit="return confirm('{{ __('users.confirm_resend_invite') }}');" class="inline">
+                                                        <form action="{{ $identityDelegated ? route('users.invite.resend', $user) : route('users.welcome.resend', $user) }}" method="POST" onsubmit="return confirm('{{ __('users.confirm_resend_invite') }}');" class="inline">
                                                             @csrf
                                                             <button type="submit" class="sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-ghost text-primary" title="{{ __('users.resend_invite') }}">
                                                                 <x-tabler-message-circle-filled class="text-lg" />

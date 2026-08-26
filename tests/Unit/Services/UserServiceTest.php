@@ -5,6 +5,7 @@ declare(strict_types=1);
 uses(Tests\TenantAppTestCase::class);
 use App\DTOs\Tenant\CreateUserDto;
 use App\DTOs\Tenant\UpdateUserDto;
+use App\Enums\Tenant\UserStatus;
 use App\Models\Role;
 use App\Models\Tenant\User;
 use App\Notifications\WelcomeNotification;
@@ -32,13 +33,24 @@ test('create persists user to database', function () {
     expect(User::find($user->id))->not->toBeNull();
     expect($user->email)->toBe($dto->email);
 });
-test('create sets must change password to true', function () {
+test('create sets status to invited', function () {
     Notification::fake();
     $dto = makeCreateDto();
+    $actor = $this->user;
 
-    $user = $this->service->create($dto);
+    $user = $this->service->create($dto, $actor);
 
-    expect((bool) $user->must_change_password)->toBeTrue();
+    expect($user->status)->toBe(UserStatus::Invited);
+    expect($user->invited_at)->not->toBeNull();
+    expect($user->invited_by)->toBe($actor->id);
+});
+test('create generates a random password nobody supplies', function () {
+    Notification::fake();
+
+    $userA = $this->service->create(makeCreateDto());
+    $userB = $this->service->create(makeCreateDto());
+
+    expect($userA->password)->not->toBe($userB->password);
 });
 test('create sends welcome notification', function () {
     Notification::fake();
@@ -70,7 +82,6 @@ test('update changes user name', function () {
         firstName: 'UpdatedFirst',
         lastName: 'UpdatedLast',
         email: $this->user->email,
-        password: null,
     );
 
     $this->service->update($this->user, $dto);
@@ -85,7 +96,6 @@ test('update changes user email', function () {
         firstName: $this->user->first_name,
         lastName: $this->user->last_name,
         email: $newEmail,
-        password: null,
     );
 
     $this->service->update($this->user, $dto);
@@ -93,26 +103,12 @@ test('update changes user email', function () {
     $this->user->refresh();
     expect($this->user->email)->toBe($newEmail);
 });
-test('update changes password when provided', function () {
-    $dto = new UpdateUserDto(
-        firstName: $this->user->first_name,
-        lastName: $this->user->last_name,
-        email: $this->user->email,
-        password: 'NewPassword123!',
-    );
-
-    $this->service->update($this->user, $dto);
-
-    $this->user->refresh();
-    expect(Illuminate\Support\Facades\Hash::check('NewPassword123!', $this->user->password))->toBeTrue();
-});
-test('update does not change password when null', function () {
+test('update does not accept an admin-supplied password', function () {
     $originalPassword = $this->user->password;
     $dto = new UpdateUserDto(
         firstName: $this->user->first_name,
         lastName: $this->user->last_name,
         email: $this->user->email,
-        password: null,
     );
 
     $this->service->update($this->user, $dto);
@@ -126,7 +122,6 @@ test('update syncs roles', function () {
         firstName: $this->user->first_name,
         lastName: $this->user->last_name,
         email: $this->user->email,
-        password: null,
         roles: [$newRole->id],
     );
 
@@ -183,7 +178,6 @@ function makeCreateDto(array $roles = []): CreateUserDto
         firstName: 'Test',
         lastName: 'User',
         email: Str::uuid() . '@example.com',
-        password: 'Password123!',
         branchId: test()->branch->id,
         operationalBranchId: test()->branch->id,
         roles: $roles,

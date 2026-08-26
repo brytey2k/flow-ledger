@@ -6,10 +6,13 @@ namespace App\Services;
 
 use App\DTOs\Tenant\CreateUserDto;
 use App\DTOs\Tenant\UpdateUserDto;
+use App\Enums\Tenant\UserStatus;
 use App\Models\Tenant\User;
 use App\Notifications\WelcomeNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class UserService
 {
@@ -20,8 +23,10 @@ class UserService
                 'first_name' => $dto->firstName,
                 'last_name' => $dto->lastName,
                 'email' => $dto->email,
-                'password' => $dto->password,
-                'must_change_password' => true,
+                'password' => bcrypt(Str::random(32)),
+                'status' => UserStatus::Invited,
+                'invited_at' => now(),
+                'invited_by' => $actor?->getKey(),
                 'branch_id' => $dto->branchId,
                 'operational_branch_id' => $dto->operationalBranchId,
             ]);
@@ -41,7 +46,8 @@ class UserService
         });
 
         if (! $user->is_oidc_user) {
-            $user->notify(new WelcomeNotification($dto->password, route('login')));
+            $token = Password::broker()->createToken($user);
+            $user->notify(new WelcomeNotification($token));
         }
 
         return $user;
@@ -55,10 +61,6 @@ class UserService
                 'last_name' => $dto->lastName,
                 'email' => $dto->email,
             ];
-
-            if ($dto->password !== null) {
-                $attributes['password'] = $dto->password;
-            }
 
             $user->update($attributes);
             $user->syncRoles($dto->roles);

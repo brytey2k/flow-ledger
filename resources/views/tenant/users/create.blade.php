@@ -101,25 +101,6 @@
                             @enderror
                         </div>
 
-                        <!-- Password -->
-                        <div>
-                            <label class="sgh-form-label block mb-2" for="password">
-                                {{ __('users.fields.password') }} <span class="text-destructive">*</span>
-                            </label>
-                            <input id="password" name="password" type="password" class="sgh-input w-full" required aria-invalid="@error('password') true @else false @enderror" />
-                            @error('password')
-                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Password Confirmation -->
-                        <div>
-                            <label class="sgh-form-label block mb-2" for="password_confirmation">
-                                {{ __('users.fields.confirm_password') }} <span class="text-destructive">*</span>
-                            </label>
-                            <input id="password_confirmation" name="password_confirmation" type="password" class="sgh-input w-full" required />
-                        </div>
-
                         <!-- Roles -->
                         <div class="col-span-1 lg:col-span-2">
                             <label class="sgh-form-label block mb-2">{{ __('users.fields.roles') }}</label>
@@ -146,6 +127,10 @@
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
                         </div>
+                    </div>
+
+                    <div class="text-sm text-muted-foreground">
+                        {{ __('users.invite_notice') }}
                     </div>
 
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">

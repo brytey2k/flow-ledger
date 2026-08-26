@@ -10,6 +10,9 @@ use App\Jobs\InviteUserToIamJob;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Tenant\User;
+use App\Notifications\WelcomeNotification;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Laravel\Pennant\Feature;
@@ -79,8 +82,6 @@ test('user without create permission cannot store', function () {
         'first_name' => 'John',
         'last_name' => 'Doe',
         'email' => 'john@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
     ])->assertForbidden();
 });
 test('user without delete permission cannot destroy', function () {
@@ -99,14 +100,13 @@ test('authorised user can view create form with roles', function () {
     $response->assertViewHas('roles');
 });
 test('authorised user can store valid user', function () {
+    Notification::fake();
     $email = 'newuser-' . Str::uuid() . '@example.com';
 
     $response = $this->actingAs($this->user)->post(route('users.store'), [
         'first_name' => 'John',
         'last_name' => 'Doe',
         'email' => $email,
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
         'branch_id' => $this->branch->id,
     ]);
 
@@ -115,7 +115,28 @@ test('authorised user can store valid user', function () {
         'first_name' => 'John',
         'last_name' => 'Doe',
         'email' => $email,
+        'status' => UserStatus::Invited->value,
     ]);
+
+    $user = User::query()->where('email', $email)->firstOrFail();
+    expect($user->invited_at)->not->toBeNull();
+    expect($user->invited_by)->toBe($this->user->id);
+    Notification::assertSentTo($user, WelcomeNotification::class);
+});
+test('store does not accept an admin-supplied password', function () {
+    Notification::fake();
+    $email = 'newuser-' . Str::uuid() . '@example.com';
+
+    $this->actingAs($this->user)->post(route('users.store'), [
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'email' => $email,
+        'password' => 'attacker-chosen-password',
+        'branch_id' => $this->branch->id,
+    ]);
+
+    $user = User::query()->where('email', $email)->firstOrFail();
+    expect(Hash::check('attacker-chosen-password', $user->password))->toBeFalse();
 });
 test('store fails validation for duplicate email', function () {
     $existing = User::factory()->create();
@@ -124,22 +145,9 @@ test('store fails validation for duplicate email', function () {
         'first_name' => 'Jane',
         'last_name' => 'Doe',
         'email' => $existing->email,
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
     ]);
 
     $response->assertSessionHasErrors('email');
-});
-test('store fails validation when passwords do not match', function () {
-    $response = $this->actingAs($this->user)->post(route('users.store'), [
-        'first_name' => 'John',
-        'last_name' => 'Doe',
-        'email' => 'mismatch-' . Str::uuid() . '@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'different456',
-    ]);
-
-    $response->assertSessionHasErrors('password');
 });
 test('authorised user can view edit form', function () {
     $user = User::factory()->create();
@@ -251,8 +259,6 @@ test('store rejects role that grants permission actor lacks', function () {
         'first_name' => 'Escalate',
         'last_name' => 'Attempt',
         'email' => $email,
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
         'branch_id' => $this->branch->id,
         'roles' => [$adminRole->id],
     ]);
@@ -448,4 +454,32 @@ test('resend invite returns not found for a user who already accepted', function
     $user = User::factory()->create(['branch_id' => $this->branch->id, 'status' => UserStatus::Active]);
 
     $this->actingAs($this->user)->post(route('users.invite.resend', $user))->assertNotFound();
+});
+
+test('resend welcome sends notification for an invited user', function () {
+    Notification::fake();
+
+    $user = User::factory()->create([
+        'branch_id' => $this->branch->id,
+        'status' => UserStatus::Invited,
+    ]);
+
+    $response = $this->actingAs($this->user)->post(route('users.welcome.resend', $user));
+
+    $response->assertRedirect(route('users.index'));
+    Notification::assertSentTo($user, WelcomeNotification::class);
+});
+
+test('resend welcome is forbidden when identity is delegated', function () {
+    Feature::for($this->tenant)->activate(DelegateIdentityToIdp::class);
+
+    $user = User::factory()->create(['branch_id' => $this->branch->id, 'status' => UserStatus::Invited]);
+
+    $this->actingAs($this->user)->post(route('users.welcome.resend', $user))->assertForbidden();
+});
+
+test('resend welcome returns not found for a user who already accepted', function () {
+    $user = User::factory()->create(['branch_id' => $this->branch->id, 'status' => UserStatus::Active]);
+
+    $this->actingAs($this->user)->post(route('users.welcome.resend', $user))->assertNotFound();
 });

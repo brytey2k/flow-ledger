@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web\Tenant\Auth;
 
+use App\Enums\Tenant\UserStatus;
 use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\User;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,10 +52,24 @@ class ResetPasswordController extends Controller
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password): void {
+                $isOnboarding = ! $user->hasVerifiedEmail();
+
                 $user->forceFill(['password' => Hash::make($password)])
                     ->setRememberToken(Str::random(60));
 
+                if ($isOnboarding) {
+                    $user->forceFill([
+                        'status' => UserStatus::Active,
+                        'activated_at' => now(),
+                    ]);
+                }
+
                 $user->save();
+
+                if ($isOnboarding) {
+                    $user->markEmailAsVerified();
+                    event(new Verified($user));
+                }
 
                 event(new PasswordReset($user));
             },
@@ -64,6 +80,7 @@ class ResetPasswordController extends Controller
             $resetUser = Password::broker()->getUser($request->only('email'));
             if ($resetUser instanceof User) {
                 Auth::login($resetUser);
+                $request->session()->regenerate();
             }
 
             return redirect()->route('dashboard')->with('success', __('Your password has been reset.'));

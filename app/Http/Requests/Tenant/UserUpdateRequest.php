@@ -6,7 +6,6 @@ namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class UserUpdateRequest extends FormRequest
 {
@@ -24,7 +23,6 @@ class UserUpdateRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user)],
-            'password' => ['nullable', 'string', 'confirmed', Password::defaults()],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['exists:roles,id'],
         ];
@@ -39,7 +37,6 @@ class UserUpdateRequest extends FormRequest
             firstName: $this->string('first_name')->toString(),
             lastName: $this->string('last_name')->toString(),
             email: $this->string('email')->toString(),
-            password: $this->filled('password') ? $this->string('password')->toString() : null,
             roles: array_map(fn(int|string $v): int => (int) $v, $rawRoles),
         );
     }
