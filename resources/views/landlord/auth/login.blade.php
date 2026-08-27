@@ -97,4 +97,16 @@
         {{ __('auth.sign_in') }}
     </button>
 </form>
+
+<div class="mt-6 flex flex-col gap-3">
+    <div class="flex items-center gap-3">
+        <span class="border-t border-border flex-grow"></span>
+        <span class="text-xs text-muted-foreground">{{ __('auth.or') }}</span>
+        <span class="border-t border-border flex-grow"></span>
+    </div>
+    <a class="sgh-btn sgh-btn-outline flex justify-center gap-2" href="{{ route('sso.redirect') }}">
+        <x-tabler-shield-check-filled />
+        {{ __('auth.sign_in_with_sso') }}
+    </a>
+</div>
 @endsection

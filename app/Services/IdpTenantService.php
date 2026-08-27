@@ -14,11 +14,41 @@ class IdpTenantService
 
     private const TENANTS_CACHE_SECONDS = 300;
 
+    private const TENANT_NAMES_CACHE_KEY = 'idp_tenant_names_by_id';
+
+    private const TENANT_NAMES_CACHE_SECONDS = 3600;
+
     private const TOKEN_CACHE_MINUTES = 55;
 
     private const SCOPE = 'tenant:read';
 
     public function __construct(private readonly SsoClientService $ssoClient) {}
+
+    /**
+     * Map of IDP tenant id => name, cached for an hour so tenant list pages
+     * can display the IDP-side name without hitting the IDP on every request.
+     *
+     * @return array<string, string>
+     */
+    public function getTenantNamesById(): array
+    {
+        /** @var array<string, string>|null $cached */
+        $cached = Cache::get(self::TENANT_NAMES_CACHE_KEY);
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $names = [];
+
+        foreach ($this->listTenants() as $tenant) {
+            $names[(string) $tenant['id']] = $tenant['name'];
+        }
+
+        Cache::put(self::TENANT_NAMES_CACHE_KEY, $names, self::TENANT_NAMES_CACHE_SECONDS);
+
+        return $names;
+    }
 
     /** @return list<array{id: int|string, name: string, slug: string}> */
     public function listTenants(): array

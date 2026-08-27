@@ -25,11 +25,12 @@ use Throwable;
 
 class TenantsController extends Controller
 {
-    public function index(): View
+    public function index(IdpTenantService $idpTenantService): View
     {
         $tenants = Tenant::with('domains')->orderByDesc('created_at')->get();
+        $idpTenantNames = $this->fetchIdpTenantNames($idpTenantService);
 
-        return view('landlord.tenants.index', compact('tenants'));
+        return view('landlord.tenants.index', compact('tenants', 'idpTenantNames'));
     }
 
     public function create(IdpTenantService $idpTenantService): View
@@ -83,6 +84,16 @@ class TenantsController extends Controller
     {
         try {
             return $idpTenantService->listTenants();
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    /** @return array<string, string> */
+    private function fetchIdpTenantNames(IdpTenantService $idpTenantService): array
+    {
+        try {
+            return $idpTenantService->getTenantNamesById();
         } catch (Throwable) {
             return [];
         }

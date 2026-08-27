@@ -33,7 +33,7 @@
                     All Tenants
                 </h3>
                 <div class="flex items-center gap-2">
-                    <span class="badge badge-sm badge-outline">
+                    <span class="sgh-badge sgh-badge-outline">
                         {{ $tenants->count() }} {{ Str::plural('Tenant', $tenants->count()) }}
                     </span>
                 </div>
@@ -114,7 +114,7 @@
                                         <td>
                                             <div class="flex flex-wrap items-center gap-1.5">
                                                 @forelse($tenant->domains as $domain)
-                                                    <span class="badge badge-sm badge-outline">{{ $domain->domain }}</span>
+                                                    <span class="sgh-badge sgh-badge-outline">{{ $domain->domain }}</span>
                                                 @empty
                                                     <span class="text-2sm text-muted-foreground">No domains</span>
                                                 @endforelse
@@ -128,16 +128,21 @@
                                         </td>
                                         <td>
                                             @if($isSuspended)
-                                                <span class="badge badge-sm badge-warning">Suspended</span>
+                                                <span class="sgh-badge sgh-badge-warning">Suspended</span>
                                             @else
-                                                <span class="badge badge-sm badge-success">Active</span>
+                                                <span class="sgh-badge sgh-badge-success">Active</span>
                                             @endif
                                         </td>
                                         <td>
                                             @if(filled($tenant->idp_tenant_id))
-                                                <span class="badge badge-sm badge-success">Yes</span>
+                                                <div class="flex flex-col gap-1">
+                                                    <span class="sgh-badge sgh-badge-success w-fit">Yes</span>
+                                                    @if(filled($idpTenantNames[(string) $tenant->idp_tenant_id] ?? null))
+                                                        <span class="text-2sm font-normal leading-3 text-secondary-foreground">{{ $idpTenantNames[(string) $tenant->idp_tenant_id] }}</span>
+                                                    @endif
+                                                </div>
                                             @else
-                                                <span class="badge badge-sm badge-outline">No</span>
+                                                <span class="sgh-badge sgh-badge-outline">No</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
