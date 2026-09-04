@@ -12,6 +12,10 @@ test('login form is accessible to guests', function () {
 test('login form renders correct view', function () {
     $this->get(route('landlord.login'))->assertViewIs('landlord.auth.login');
 });
+test('guest is redirected to the landlord login from a protected landlord page', function () {
+    $this->get(route('landlord.tenants.index'))
+        ->assertRedirect(route('landlord.login'));
+});
 test('landlord can login with valid credentials', function () {
     $user = User::factory()->create([
         'password' => Hash::make('Password1!'),

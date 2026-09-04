@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_PORT
                 | Request::HEADER_X_FORWARDED_PROTO,
         );
+        $middleware->redirectGuestsTo(static fn(Request $request): string => $request->routeIs('landlord.*')
+            ? route('landlord.login')
+            : route('login'));
         $middleware->validateCsrfTokens(except: [
             'auth/sso/backchannel-logout',
         ]);

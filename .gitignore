@@ -29,3 +29,5 @@ Homestead.yaml
 Thumbs.db
 .phpstan.cache
 coverage-report
+# CocoIndex Code (ccc)
+/.cocoindex_code/
