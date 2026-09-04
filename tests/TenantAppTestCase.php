@@ -116,7 +116,7 @@ abstract class TenantAppTestCase extends BaseTestCase
         // domain-agnostic tenant routes such as "dashboard".
         $domain = $this->tenant->domains()->first()?->domain;
         if ($domain) {
-            URL::forceRootUrl('http://' . $domain);
+            URL::useOrigin('http://' . $domain);
         }
     }
 
