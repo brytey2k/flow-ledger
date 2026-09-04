@@ -107,7 +107,7 @@
                                             <span class="text-sm font-medium leading-none text-mono">{{ $costCode->name }}</span>
                                         </td>
                                         <td>
-                                            <span class="text-sm text-foreground">{{ $costCode->department->name }}</span>
+                                            <span class="text-sm text-foreground">{{ $costCode->department?->name }}</span>
                                         </td>
                                         <td>
                                             <span class="text-sm text-foreground">{{ $costCode->created_at->format('M d, Y') }}</span>
