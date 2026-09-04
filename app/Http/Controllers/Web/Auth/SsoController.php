@@ -166,7 +166,7 @@ class SsoController extends Controller
             return $this->failRedirect('Your organisation is not registered in this application.');
         }
 
-        $domain = $tenant->domains()->first()?->domain;
+        $domain = $tenant->domains()->exists() ? $tenant->primary_domain_hostname : null;
 
         if ($domain === null) {
             return $this->failRedirect('Your organisation does not have a configured domain.');

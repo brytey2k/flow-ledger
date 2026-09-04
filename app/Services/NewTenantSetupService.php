@@ -345,6 +345,7 @@ class NewTenantSetupService
         $tenant = Tenant::create(['id' => $subdomain, 'name' => $name, 'idp_tenant_id' => $idpTenantId]);
         $tenant->domains()->create([
             'domain' => $subdomain . '.' . parse_url(config()->string('app.url'), PHP_URL_HOST),
+            'is_primary' => true,
         ]);
 
         $tenant->run(fn() => $this->handle($tenant, $adminEmail, $adminPassword));

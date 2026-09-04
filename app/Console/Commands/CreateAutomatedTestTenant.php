@@ -35,7 +35,7 @@ class CreateAutomatedTestTenant extends Command
         $tenant = Tenant::create(['id' => $id, 'name' => 'Automated Test Tenant']);
         /** @var \Illuminate\Database\Eloquent\Relations\HasMany<\Stancl\Tenancy\Database\Models\Domain, Tenant> $domainsRelation */
         $domainsRelation = $tenant->domains();
-        $domainsRelation->create(['domain' => $id . '.' . $centralDomain]);
+        $domainsRelation->create(['domain' => $id . '.' . $centralDomain, 'is_primary' => true]);
 
         $tenant->run(function () {
             app(PermissionRegistrar::class)->forgetCachedPermissions();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\CapturesTenantDomain;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -12,9 +13,13 @@ use Illuminate\Notifications\Notification;
 
 class RequestDisbursedNotification extends Notification implements ShouldQueue
 {
+    use CapturesTenantDomain;
     use Queueable;
 
-    public function __construct(public readonly Model $subject) {}
+    public function __construct(public readonly Model $subject)
+    {
+        $this->domain = tenant_current_domain();
+    }
 
     /** @return list<string> */
     public function via(object $notifiable): array
@@ -24,7 +29,7 @@ class RequestDisbursedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = route('payment-requests.show', $this->subject);
+        $url = tenant_route_url($this->domain, 'payment-requests.show', $this->subject);
         $rawId = $this->subject->getKey();
         $id = is_scalar($rawId) ? $rawId : 0;
         /** @var \App\Models\Tenant\User $recipient */

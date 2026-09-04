@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\CapturesTenantDomain;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -11,9 +12,13 @@ use Illuminate\Notifications\Notification;
 
 class WelcomeNotification extends Notification implements ShouldQueue
 {
+    use CapturesTenantDomain;
     use Queueable;
 
-    public function __construct(public readonly string $token) {}
+    public function __construct(public readonly string $token)
+    {
+        $this->domain = tenant_current_domain();
+    }
 
     /** @return list<string> */
     public function via(object $notifiable): array
@@ -26,7 +31,7 @@ class WelcomeNotification extends Notification implements ShouldQueue
         /** @var \App\Models\Tenant\User $recipient */
         $recipient = $notifiable;
 
-        $url = route('password.reset', ['token' => $this->token]) . '?' . http_build_query([
+        $url = tenant_route_url($this->domain, 'password.reset', ['token' => $this->token]) . '?' . http_build_query([
             'email' => $recipient->email,
         ]);
 

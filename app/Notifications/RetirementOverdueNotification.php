@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Tenant\PaymentRequest;
+use App\Notifications\Concerns\CapturesTenantDomain;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,12 +13,15 @@ use Illuminate\Notifications\Notification;
 
 class RetirementOverdueNotification extends Notification implements ShouldQueue
 {
+    use CapturesTenantDomain;
     use Queueable;
 
     public function __construct(
         public readonly PaymentRequest $paymentRequest,
         public readonly string $recipientType,
-    ) {}
+    ) {
+        $this->domain = tenant_current_domain();
+    }
 
     /** @return list<string> */
     public function via(object $notifiable): array
@@ -36,7 +40,7 @@ class RetirementOverdueNotification extends Notification implements ShouldQueue
         $symbol = is_object($currency) ? ($currency->getAttribute('symbol') ?? '') : '';
         $rawAmount = $this->paymentRequest->getAttribute('total_amount') ?? 0.0;
         $totalAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
-        $url = route('payment-requests.show', $this->paymentRequest);
+        $url = tenant_route_url($this->domain, 'payment-requests.show', $this->paymentRequest);
         $formattedAmount = $symbol . ' ' . number_format($totalAmount, 2);
 
         $greeting = __('notifications.greeting', ['name' => $recipient->first_name]);
@@ -51,7 +55,7 @@ class RetirementOverdueNotification extends Notification implements ShouldQueue
                 ->greeting($greeting)
                 ->line(__("notifications.retirement_overdue.{$key}.line1", ['id' => $id]))
                 ->line(__("notifications.retirement_overdue.{$key}.amount", ['amount' => $formattedAmount]))
-                ->action(__("notifications.retirement_overdue.{$key}.action"), route('retirement-requests.create', $this->paymentRequest))
+                ->action(__("notifications.retirement_overdue.{$key}.action"), tenant_route_url($this->domain, 'retirement-requests.create', $this->paymentRequest))
                 ->line(__("notifications.retirement_overdue.{$key}.reminder")),
             default => (new MailMessage())
                 ->subject(__("notifications.retirement_overdue.{$key}.subject", ['id' => $id]))

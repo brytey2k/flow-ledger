@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Tenant\WorkflowInstanceStage;
+use App\Notifications\Concerns\CapturesTenantDomain;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,9 +13,13 @@ use Illuminate\Notifications\Notification;
 
 class StageReadyForApprovalNotification extends Notification implements ShouldQueue
 {
+    use CapturesTenantDomain;
     use Queueable;
 
-    public function __construct(public readonly WorkflowInstanceStage $instanceStage) {}
+    public function __construct(public readonly WorkflowInstanceStage $instanceStage)
+    {
+        $this->domain = tenant_current_domain();
+    }
 
     /** @return list<string> */
     public function via(object $notifiable): array
@@ -30,7 +35,7 @@ class StageReadyForApprovalNotification extends Notification implements ShouldQu
         /** @var \App\Models\Tenant\WorkflowStage|null $stage */
         $stage = $this->instanceStage->stage;
         $stageName = $stage !== null ? $stage->name : 'Stage';
-        $url = route('approvals.show', $this->instanceStage);
+        $url = tenant_route_url($this->domain, 'approvals.show', $this->instanceStage);
         /** @var \App\Models\Tenant\User $recipient */
         $recipient = $notifiable;
         $rawId = $workflowable?->getKey();

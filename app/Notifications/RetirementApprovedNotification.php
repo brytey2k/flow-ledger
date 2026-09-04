@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Tenant\RetirementRequest;
+use App\Notifications\Concerns\CapturesTenantDomain;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,9 +13,13 @@ use Illuminate\Notifications\Notification;
 
 class RetirementApprovedNotification extends Notification implements ShouldQueue
 {
+    use CapturesTenantDomain;
     use Queueable;
 
-    public function __construct(public readonly RetirementRequest $retirement) {}
+    public function __construct(public readonly RetirementRequest $retirement)
+    {
+        $this->domain = tenant_current_domain();
+    }
 
     /** @return list<string> */
     public function via(object $notifiable): array
@@ -24,7 +29,7 @@ class RetirementApprovedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = route('retirement-requests.show', $this->retirement);
+        $url = tenant_route_url($this->domain, 'retirement-requests.show', $this->retirement);
         /** @var \App\Models\Tenant\User $recipient */
         $recipient = $notifiable;
         $pr = $this->retirement->paymentRequest;
