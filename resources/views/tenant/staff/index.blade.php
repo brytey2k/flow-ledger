@@ -108,10 +108,10 @@
                                             <a href="{{ route('staff.show', $member) }}" class="text-sm font-medium text-primary hover:underline">{{ $member->full_name }}</a>
                                         </td>
                                         <td>
-                                            <span class="text-sm text-foreground">{{ $member->department->name }}</span>
+                                            <span class="text-sm text-foreground">{{ $member->department->name ?? '' }}</span>
                                         </td>
                                         <td>
-                                            <span class="text-sm text-foreground">{{ $member->position->name }}</span>
+                                            <span class="text-sm text-foreground">{{ $member->position->name ?? '' }}</span>
                                         </td>
                                         <td>
                                             <span class="text-sm text-foreground">{{ $member->email ?? '—' }}</span>
