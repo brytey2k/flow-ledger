@@ -17,6 +17,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xls;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Settings as WordSettings;
@@ -88,7 +89,10 @@ function createSpreadsheetForAttachmentPreview(string $path): void
 
     $spreadsheet->setActiveSheetIndex(0);
 
-    (new Xlsx($spreadsheet))->save(Storage::disk('local')->path($path));
+    $writer = str_ends_with($path, '.xls')
+        ? new Xls($spreadsheet)
+        : new Xlsx($spreadsheet);
+    $writer->save(Storage::disk('local')->path($path));
     $spreadsheet->disconnectWorksheets();
 }
 
@@ -310,6 +314,33 @@ test('authenticated user can preview attachment inline', function () {
         ->assertHeader('x-content-type-options', 'nosniff')
         ->assertHeader('content-disposition', 'inline; filename=test.pdf');
 });
+test('authenticated user can preview supported images inline', function (string $extension, string $mimeType) {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    $path = "retirements/{$retirement->id}/attachments/receipt.{$extension}";
+    Storage::disk('local')->put($path, 'image content');
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => $path,
+        'original_name' => "receipt.{$extension}",
+        'mime_type' => $mimeType,
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertOk()
+        ->assertHeader('content-type', $mimeType)
+        ->assertHeader('x-content-type-options', 'nosniff')
+        ->assertHeader('content-disposition', "inline; filename=receipt.{$extension}");
+})->with([
+    'JPEG using jpg extension' => ['jpg', 'image/jpeg'],
+    'JPEG using jpeg extension' => ['jpeg', 'image/jpeg'],
+    'PNG' => ['png', 'image/png'],
+    'WebP' => ['webp', 'image/webp'],
+]);
 test('spreadsheet preview renders visible worksheets and excludes hidden worksheets', function () {
     Storage::fake('local');
     $retirement = draftRetirementForAttachmentsController();
@@ -341,6 +372,30 @@ test('spreadsheet preview renders visible worksheets and excludes hidden workshe
         ->assertDontSee('Dropdown-only secret')
         ->assertDontSee('Internal Data')
         ->assertDontSee('Very-hidden secret');
+});
+test('legacy xls spreadsheet can be previewed', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    $path = "retirements/{$retirement->id}/attachments/report.xls";
+    createSpreadsheetForAttachmentPreview($path);
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => $path,
+        'original_name' => 'report.xls',
+        'mime_type' => 'application/vnd.ms-excel',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertOk()
+        ->assertHeader('content-type', 'text/html; charset=UTF-8')
+        ->assertHeader('x-content-type-options', 'nosniff')
+        ->assertSee('data-spreadsheet-preview', false)
+        ->assertSee('Invoice Number')
+        ->assertSee('INV-001');
 });
 test('authenticated user can preview a docx document as sandboxed html', function () {
     Storage::fake('local');
