@@ -143,6 +143,8 @@ return [
     'approvals' => [
         'action_recorded' => 'Action recorded successfully.',
         'send_back_not_allowed' => 'This stage does not allow sending the request back for revision.',
+        'retry_activated' => 'The stage is active and independent approvers have been notified.',
+        'retry_still_blocked' => 'The stage is still blocked because no independent approver is available.',
     ],
     'tenants' => [
         'created' => 'Tenant created successfully.',

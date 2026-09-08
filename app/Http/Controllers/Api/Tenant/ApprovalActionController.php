@@ -61,4 +61,14 @@ class ApprovalActionController extends BaseApiController
 
         return response()->json(['data' => $workflowInstanceStage->refresh()->load('instance.workflowable')]);
     }
+
+    public function retry(WorkflowInstanceStage $workflowInstanceStage): JsonResponse
+    {
+        $this->authorize(PermissionKey::EditWorkflowTemplate->value);
+
+        abort_unless($workflowInstanceStage->isBlocked(), 422, 'This stage is not blocked.');
+        abort_unless($this->engine->retryBlockedStage($workflowInstanceStage), 422, 'No independent approver is available.');
+
+        return response()->json(['data' => $workflowInstanceStage->refresh()->load('instance.workflowable')]);
+    }
 }

@@ -81,6 +81,7 @@ return [
         'or_label' => 'OR',
         'scope_branch' => 'Branch',
         'scope_department' => 'Department',
+        'fallback_label' => 'Fallback',
     ],
 
     'empty' => [
@@ -89,6 +90,12 @@ return [
     ],
 
     'confirm_delete' => 'Delete this template? All stages will be removed.',
+
+    'separation' => [
+        'no_independent_approver' => 'No independent approver is currently available for this stage.',
+        'cannot_disburse' => 'You cannot disburse a request you submitted or approved.',
+        'retry' => 'Retry approver resolution',
+    ],
 
     'stages' => [
         'add_title' => 'Add Stage',
@@ -108,6 +115,8 @@ return [
             'any_approves' => 'ANY one approves',
             'roles_label' => 'Roles that can approve this stage',
             'roles_hint' => 'Any user with one of these roles will see this stage in their approvals inbox.',
+            'fallback_roles_label' => 'Fallback approver roles',
+            'fallback_roles_hint' => 'Used only when every primary approver is excluded. Department and branch restrictions still apply.',
             'scope_to_department' => 'Restrict approvers to submitter\'s department',
             'scope_to_branch' => 'Restrict approvers to request\'s branch',
             'allow_send_back' => 'Allow send-back at this stage',
@@ -118,6 +127,9 @@ return [
             'delete' => 'Delete Stage',
         ],
         'confirm_delete' => 'Delete this stage?',
+        'validation' => [
+            'fallback_must_differ' => 'Fallback roles must differ from the primary approver roles.',
+        ],
         'sync_warning' => [
             'heading' => 'This will reorder other stages too',
             'body' => 'To keep this parallel group running together, {names} will also be updated to display order {order}.',

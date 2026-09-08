@@ -35,6 +35,7 @@ class WorkflowTemplateVersioningService
         return DB::transaction(function () use ($current): WorkflowForkResult {
             /** @var WorkflowTemplate $current */
             $current = WorkflowTemplate::lockForUpdate()->findOrFail($current->id);
+            $current->loadMissing(['parallelGroups', 'stages.roles', 'stages.fallbackRoles']);
 
             /** @var WorkflowTemplate $newTemplate */
             $newTemplate = WorkflowTemplate::create([
@@ -75,6 +76,7 @@ class WorkflowTemplateVersioningService
                     'allow_send_back' => $stage->allow_send_back,
                 ]);
                 $newStage->roles()->sync($stage->roles()->pluck('roles.id'));
+                $newStage->fallbackRoles()->sync($stage->fallbackRoles()->pluck('roles.id'));
 
                 $stageIdMap[$stage->id] = $newStage->id;
             }

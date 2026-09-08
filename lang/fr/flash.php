@@ -142,6 +142,8 @@ return [
     'approvals' => [
         'action_recorded' => 'Action enregistree avec succes.',
         'send_back_not_allowed' => 'Cette etape ne permet pas de renvoyer la demande pour revision.',
+        'retry_activated' => 'L etape est active et les approbateurs independants ont ete informes.',
+        'retry_still_blocked' => 'L etape reste bloquee car aucun approbateur independant n est disponible.',
     ],
     'tenants' => [
         'created' => 'Locataire cree avec succes.',

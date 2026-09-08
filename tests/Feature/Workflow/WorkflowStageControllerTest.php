@@ -123,6 +123,41 @@ test('user can create stage with roles', function () {
         'role_id' => $role->id,
     ]);
 });
+test('user can configure a separate fallback approver role', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $primaryRole = Role::create(['name' => 'primary_' . uniqid(), 'guard_name' => 'web']);
+    $fallbackRole = Role::create(['name' => 'fallback_' . uniqid(), 'guard_name' => 'web']);
+
+    $response = $this->actingAs($this->user)
+        ->post(route('workflow-templates.stages.store', $template), [
+            'name' => 'Finance Review',
+            'display_order' => 1,
+            'role_ids' => [$primaryRole->id],
+            'fallback_role_ids' => [$fallbackRole->id],
+        ]);
+
+    $response->assertSessionHasNoErrors();
+    $stage = WorkflowStage::where('name', 'Finance Review')->firstOrFail();
+    $this->assertDatabaseHas('workflow_stage_fallback_roles', [
+        'workflow_stage_id' => $stage->id,
+        'role_id' => $fallbackRole->id,
+    ]);
+});
+test('fallback approver roles cannot overlap primary roles', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $primaryRole = Role::create(['name' => 'overlap_' . uniqid(), 'guard_name' => 'web']);
+    $fallbackRole = Role::create(['name' => 'other_' . uniqid(), 'guard_name' => 'web']);
+
+    $response = $this->actingAs($this->user)
+        ->post(route('workflow-templates.stages.store', $template), [
+            'name' => 'Finance Review',
+            'display_order' => 1,
+            'role_ids' => [$primaryRole->id],
+            'fallback_role_ids' => [$primaryRole->id, $fallbackRole->id],
+        ]);
+
+    $response->assertSessionHasErrors('fallback_role_ids');
+});
 test('store defaults allow_send_back to true when omitted', function () {
     $template = WorkflowTemplate::factory()->create();
     $role = Role::create(['name' => 'default_send_back_role_' . uniqid(), 'guard_name' => 'web']);

@@ -7,6 +7,8 @@ use App\Enums\Tenant\PaymentMethod;
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\WorkflowInstance;
+use App\Models\Tenant\WorkflowTemplate;
 
 test('guest is redirected from index', function () {
     $response = $this->get(route('disbursements.index'));
@@ -59,6 +61,22 @@ test('index only shows approved requests', function () {
     $response->assertViewHas('requests', fn($requests) => $requests->contains($approved));
     $response->assertViewHas('requests', fn($requests) => $requests->total() === 1);
 });
+test('index excludes a request submitted by the disbursement user', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $template = WorkflowTemplate::factory()->advance()->create();
+    WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $paymentRequest->id,
+        'submitter_user_id' => $this->user->id,
+        'status' => 'completed',
+    ]);
+
+    $response = $this->actingAs($this->user)->get(route('disbursements.index'));
+
+    $response->assertOk();
+    $response->assertViewHas('requests', fn($requests) => $requests->total() === 0);
+});
 test('authorised user can disburse approved request', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
 
@@ -77,6 +95,23 @@ test('authorised user can disburse approved request', function () {
         'disbursement_reference' => 'TXN-001',
         'disbursed_by_user_id' => $this->user->id,
     ]);
+});
+test('request submitter cannot disburse the same request', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $template = WorkflowTemplate::factory()->advance()->create();
+    WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $paymentRequest->id,
+        'submitter_user_id' => $this->user->id,
+        'status' => 'completed',
+    ]);
+
+    $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::Cash->value,
+    ])->assertForbidden();
+
+    expect($paymentRequest->fresh()->status)->toBe('approved');
 });
 test('disburse without reference is allowed', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);

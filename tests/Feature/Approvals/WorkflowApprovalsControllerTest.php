@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Models\Role;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Department;
 use App\Models\Tenant\PaymentRequest;
@@ -111,10 +112,10 @@ test('index includes branch scoped stage when user branch matches', function () 
         'status' => 'draft',
         'branch_id' => $this->branch->id,
     ]);
-    app(PaymentRequestService::class)->submit($paymentRequest);
 
     // User's staff branch matches the request's branch
     Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+    app(PaymentRequestService::class)->submit($paymentRequest);
 
     $response = $this->actingAs($this->user)->get(route('approvals.index'));
 
@@ -168,17 +169,17 @@ test('index includes department scoped stage when user department matches', func
     Staff::factory()->withUser($submitter)->create(['department_id' => $dept->id]);
 
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
-    app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
 
     // User's department matches the submitter's department
     Staff::factory()->withUser($this->user)->create(['department_id' => $dept->id]);
+    app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
 
     $response = $this->actingAs($this->user)->get(route('approvals.index'));
 
     $response->assertOk();
     expect($response->viewData('instanceStages'))->toHaveCount(1);
 });
-test('index includes branch scoped stage for user without staff profile', function () {
+test('index excludes branch scoped stage for user without staff profile', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $stage = WorkflowStage::factory()->create([
         'workflow_template_id' => $template->id,
@@ -193,13 +194,13 @@ test('index includes branch scoped stage for user without staff profile', functi
     ]);
     app(PaymentRequestService::class)->submit($paymentRequest);
 
-    // User has no staff profile — should bypass branch scope and see all scoped stages
+    // A missing staff profile fails closed for scoped approvals.
     $response = $this->actingAs($this->user)->get(route('approvals.index'));
 
     $response->assertOk();
-    expect($response->viewData('instanceStages'))->toHaveCount(1);
+    expect($response->viewData('instanceStages'))->toHaveCount(0);
 });
-test('index includes department scoped stage for user without staff profile', function () {
+test('index excludes department scoped stage for user without staff profile', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $stage = WorkflowStage::factory()->create([
         'workflow_template_id' => $template->id,
@@ -219,11 +220,32 @@ test('index includes department scoped stage for user without staff profile', fu
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
     app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
 
-    // User has no staff profile — should bypass department scope and see all scoped stages
+    // A missing staff profile fails closed for scoped approvals.
     $response = $this->actingAs($this->user)->get(route('approvals.index'));
 
     $response->assertOk();
-    expect($response->viewData('instanceStages'))->toHaveCount(1);
+    expect($response->viewData('instanceStages'))->toHaveCount(0);
+});
+test('workflow administrator can retry a blocked stage after adding a fallback approver', function () {
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $fallbackRole = Role::create(['name' => 'web_fallback_' . uniqid(), 'guard_name' => 'web']);
+    $stage = WorkflowStage::factory()->create([
+        'workflow_template_id' => $template->id,
+        'display_order' => 1,
+    ]);
+    $stage->roles()->attach($this->role->id);
+    $stage->fallbackRoles()->attach($fallbackRole->id);
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
+    app(PaymentRequestService::class)->submit($paymentRequest, $this->user);
+    $instanceStage = WorkflowInstanceStage::latest()->firstOrFail();
+    User::factory()->create()->assignRole($fallbackRole);
+
+    $response = $this->actingAs($this->user)->post(route('approvals.retry', $instanceStage));
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+    expect($instanceStage->fresh()->status)->toBe('active')
+        ->and($instanceStage->fresh()->approver_pool)->toBe('fallback');
 });
 test('review screen renders for eligible approver', function () {
     [, $instanceStage] = submitRequestWithTemplate();

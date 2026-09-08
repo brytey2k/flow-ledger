@@ -11,6 +11,7 @@ use App\Models\Tenant\PaymentRequest;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
+use App\Services\WorkflowApproverResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,13 +22,17 @@ class DisbursementsController extends Controller
         private readonly PaymentRequestService $service,
         private readonly PaymentRequestRepository $repository,
         private readonly BranchScopeService $branchScope,
+        private readonly WorkflowApproverResolver $approvers,
     ) {}
 
     public function index(Request $request): View
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
-        $requests = $this->repository->pendingDisbursement($this->branchScope->allowedBranchIds($user));
+        $requests = $this->repository->pendingDisbursement(
+            $this->branchScope->allowedBranchIds($user),
+            user: $user,
+        );
 
         return view('tenant.disbursements.index', compact('requests'));
     }
@@ -43,6 +48,8 @@ class DisbursementsController extends Controller
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.disburse_only_approved'));
         }
+
+        abort_unless($this->approvers->canDisburse($paymentRequest, $user), 403);
 
         try {
             $this->service->disburse($paymentRequest, $request->toDto(), $user);

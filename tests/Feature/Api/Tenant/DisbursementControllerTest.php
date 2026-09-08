@@ -8,6 +8,11 @@ use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
+use App\Models\Tenant\WorkflowInstance;
+use App\Models\Tenant\WorkflowInstanceActorClaim;
+use App\Models\Tenant\WorkflowInstanceStage;
+use App\Models\Tenant\WorkflowStage;
+use App\Models\Tenant\WorkflowTemplate;
 
 function initForDisbursementController(): void
 {
@@ -35,6 +40,33 @@ test('index returns approved requests', function () {
         ->assertOk()
         ->assertJsonPath('meta.total', 2);
 });
+test('index excludes requests submitted by the disbursement user', function () {
+    $participated = PaymentRequest::factory()->create([
+        'staff_id' => $this->staff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+        'status' => 'approved',
+    ]);
+    $eligible = PaymentRequest::factory()->create([
+        'staff_id' => $this->staff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+        'status' => 'approved',
+    ]);
+    $template = WorkflowTemplate::factory()->advance()->create();
+    WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $participated->id,
+        'submitter_user_id' => $this->user->id,
+        'status' => 'completed',
+    ]);
+
+    $this->getJson('/api/disbursements')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.id', $eligible->id);
+});
 test('index requires disburse permission', function () {
     $this->role->revokePermissionTo(PermissionKey::DisburseRequests->value);
     $this->user->unsetRelation('roles')->unsetRelation('permissions');
@@ -54,6 +86,39 @@ test('store disburses approved request', function () {
         'disbursement_reference' => 'REF-001',
     ])->assertOk()
         ->assertJsonPath('data.status', 'disbursed');
+});
+test('store rejects an approver attempting to disburse the same request', function () {
+    $paymentRequest = PaymentRequest::factory()->create([
+        'staff_id' => $this->staff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+        'status' => 'approved',
+    ]);
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+    $instance = WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $paymentRequest->id,
+        'status' => 'completed',
+    ]);
+    $instanceStage = WorkflowInstanceStage::create([
+        'workflow_instance_id' => $instance->id,
+        'workflow_stage_id' => $stage->id,
+        'status' => 'approved',
+        'completed_at' => now(),
+    ]);
+    WorkflowInstanceActorClaim::create([
+        'workflow_instance_id' => $instance->id,
+        'workflow_instance_stage_id' => $instanceStage->id,
+        'user_id' => $this->user->id,
+    ]);
+
+    $this->postJson("/api/disbursements/{$paymentRequest->id}", [
+        'disbursement_method' => 'cash',
+    ])->assertForbidden();
+
+    expect($paymentRequest->fresh()->status)->toBe('approved');
 });
 test('store rejects non approved request', function () {
     $pr = PaymentRequest::factory()->create([

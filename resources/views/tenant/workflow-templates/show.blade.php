@@ -160,6 +160,12 @@
                                                     <span class="text-xs text-muted-foreground">—</span>
                                                 @endforelse
                                             </div>
+                                            @if($stage->fallbackRoles->isNotEmpty())
+                                                <div class="mt-2 text-xs text-muted-foreground">
+                                                    {{ __('workflows.show.fallback_label') }}:
+                                                    {{ $stage->fallbackRoles->pluck('name')->join(', ') }}
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>
                                             @if($stage->parallelGroup)

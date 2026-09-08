@@ -23,6 +23,9 @@ class WorkflowStageFactory extends Factory
             'name' => fake()->words(2, true),
             'display_order' => fake()->numberBetween(1, 10),
             'skip_below_amount' => null,
+            'scope_to_department' => false,
+            'scope_to_branch' => false,
+            'allow_send_back' => true,
         ];
     }
 

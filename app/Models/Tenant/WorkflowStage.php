@@ -61,6 +61,12 @@ class WorkflowStage extends Model
         return $this->belongsToMany(Role::class, 'workflow_stage_roles', 'workflow_stage_id', 'role_id');
     }
 
+    /** @return BelongsToMany<Role, $this> */
+    public function fallbackRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'workflow_stage_fallback_roles', 'workflow_stage_id', 'role_id');
+    }
+
     /** @return HasMany<WorkflowInstanceStage, $this> */
     public function instanceStages(): HasMany
     {

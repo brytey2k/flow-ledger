@@ -141,6 +141,24 @@
                         </div>
                     </div>
 
+                    <div class="rounded-lg border border-border p-4">
+                        <label class="sgh-form-label block mb-2">
+                            {{ __('workflows.stages.fields.fallback_roles_label') }}
+                        </label>
+                        <div class="mb-3 text-xs text-muted-foreground">{{ __('workflows.stages.fields.fallback_roles_hint') }}</div>
+                        @error('fallback_role_ids') <p class="mb-2 text-sm text-destructive">{{ $message }}</p> @enderror
+                        <div class="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
+                            @foreach($roles as $role)
+                                <label class="flex cursor-pointer items-center gap-2">
+                                    <input type="checkbox" name="fallback_role_ids[]" value="{{ $role->id }}"
+                                           {{ in_array($role->id, old('fallback_role_ids', [])) ? 'checked' : '' }}
+                                           class="sgh-checkbox" />
+                                    <span class="text-sm text-foreground">{{ $role->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
                     <div class="pt-5 mt-2 flex justify-start items-center gap-2.5">
                         <button type="submit" class="sgh-btn sgh-btn-primary">
                             <x-tabler-plus-filled />

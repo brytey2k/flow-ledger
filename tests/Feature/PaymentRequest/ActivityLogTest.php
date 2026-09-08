@@ -43,7 +43,8 @@ test('submitting request logs submitted event', function () {
 });
 test('approving stage logs stage approved event', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
-    WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+    $stage->roles()->attach($this->role->id);
 
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
     app(PaymentRequestService::class)->submit($paymentRequest);
@@ -59,7 +60,8 @@ test('approving stage logs stage approved event', function () {
 });
 test('full approval logs request approved event', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
-    WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+    $stage->roles()->attach($this->role->id);
 
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
     app(PaymentRequestService::class)->submit($paymentRequest);
@@ -75,7 +77,8 @@ test('full approval logs request approved event', function () {
 });
 test('send back logs stage sent back event', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
-    WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+    $stage->roles()->attach($this->role->id);
 
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
     app(PaymentRequestService::class)->submit($paymentRequest);

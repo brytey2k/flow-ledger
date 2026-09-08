@@ -13,13 +13,17 @@ use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class WorkflowEngineService
 {
-    public function __construct(private readonly NotificationService $notifications) {}
+    public function __construct(
+        private readonly NotificationService $notifications,
+        private readonly WorkflowApproverResolver $approvers,
+    ) {}
 
     public function startWorkflow(Model $subject, WorkflowTemplate $template, User|null $submitter = null): WorkflowInstance
     {
@@ -82,9 +86,6 @@ class WorkflowEngineService
         $workflowable = $instance->workflowable;
         $requestAmount = $this->resolveRequestAmount($workflowable);
 
-        /** @var User|null $submitter */
-        $submitter = $instance->submitter;
-
         $anyActivated = false;
         $activatedStages = new Collection();
 
@@ -94,19 +95,15 @@ class WorkflowEngineService
             $threshold = $stageDef->skip_below_amount;
 
             $belowThreshold = $threshold !== null && $requestAmount < (float) $threshold;
-            $submitterIsApprover = $submitter !== null
-                && $this->submitterQualifiesAsApprover($submitter, $stageDef, $instance);
-
-            if ($belowThreshold || $submitterIsApprover) {
+            if ($belowThreshold) {
                 $instanceStage->update(['status' => 'skipped', 'completed_at' => now()]);
-            } else {
-                $instanceStage->update(['status' => 'active', 'started_at' => now()]);
+            } elseif ($this->approvers->resolvePool($instanceStage)) {
                 $activatedStages->push($instanceStage);
                 $anyActivated = true;
             }
         }
 
-        if (! $anyActivated) {
+        if (! $anyActivated && $nextBatch->every(fn(WorkflowInstanceStage $stage): bool => $stage->status === 'skipped')) {
             /** @var WorkflowInstance $freshInstance */
             $freshInstance = $instance->fresh();
             $this->advanceWorkflow($freshInstance);
@@ -124,12 +121,15 @@ class WorkflowEngineService
     public function approve(WorkflowInstanceStage $instanceStage, User $user, string|null $comment = null): void
     {
         DB::transaction(function () use ($instanceStage, $user, $comment): void {
+            WorkflowInstance::lockForUpdate()->findOrFail($instanceStage->workflow_instance_id);
             /** @var WorkflowInstanceStage $fresh */
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
             if (! $fresh->isActive()) {
                 return;
             }
+
+            $this->authorizeAndClaim($fresh, $user);
 
             WorkflowAction::create([
                 'workflow_instance_stage_id' => $fresh->id,
@@ -163,6 +163,16 @@ class WorkflowEngineService
                     ->where('id', '!=', $fresh->id)
                     ->get();
 
+                $siblings
+                    ->where('status', 'active')
+                    ->each(function (WorkflowInstanceStage $sibling): void {
+                        $previousPool = $sibling->approver_pool;
+
+                        if ($this->approvers->resolvePool($sibling) && $sibling->approver_pool !== $previousPool) {
+                            $this->notifications->notifyStageApprovers($sibling->load(['stage.roles', 'stage.fallbackRoles']));
+                        }
+                    });
+
                 if ($group->require_all) {
                     $allResolved = $siblings->every(
                         fn(WorkflowInstanceStage $s) => in_array($s->status, ['approved', 'skipped', 'cancelled'], true),
@@ -172,7 +182,7 @@ class WorkflowEngineService
                     }
                 } else {
                     $siblings->each(function (WorkflowInstanceStage $sibling): void {
-                        if (in_array($sibling->status, ['pending', 'active'], true)) {
+                        if (in_array($sibling->status, ['pending', 'active', 'blocked'], true)) {
                             $sibling->update(['status' => 'cancelled', 'completed_at' => now()]);
                         }
                     });
@@ -188,6 +198,7 @@ class WorkflowEngineService
     public function reject(WorkflowInstanceStage $instanceStage, User $user, string $comment): void
     {
         $workflowable = DB::transaction(function () use ($instanceStage, $user, $comment): Model {
+            WorkflowInstance::lockForUpdate()->findOrFail($instanceStage->workflow_instance_id);
             /** @var WorkflowInstanceStage $fresh */
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
@@ -197,6 +208,8 @@ class WorkflowEngineService
 
                 return $workflowable;
             }
+
+            $this->authorizeAndClaim($fresh, $user);
 
             WorkflowAction::create([
                 'workflow_instance_stage_id' => $fresh->id,
@@ -210,7 +223,7 @@ class WorkflowEngineService
             /** @var WorkflowInstance $instance */
             $instance = $fresh->instance;
             $instance->instanceStages()
-                ->whereIn('status', ['pending', 'active'])
+                ->whereIn('status', ['pending', 'active', 'blocked'])
                 ->update(['status' => 'cancelled', 'completed_at' => now()]);
 
             $instance->update(['status' => 'cancelled']);
@@ -242,6 +255,7 @@ class WorkflowEngineService
     public function sendBack(WorkflowInstanceStage $instanceStage, User $user, string $comment): void
     {
         $workflowable = DB::transaction(function () use ($instanceStage, $user, $comment): Model {
+            WorkflowInstance::lockForUpdate()->findOrFail($instanceStage->workflow_instance_id);
             /** @var WorkflowInstanceStage $fresh */
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
@@ -251,6 +265,8 @@ class WorkflowEngineService
 
                 return $workflowable;
             }
+
+            $this->authorizeAndClaim($fresh, $user);
 
             /** @var WorkflowStage $stage */
             $stage = $fresh->stage;
@@ -275,7 +291,7 @@ class WorkflowEngineService
                 $instance->instanceStages()
                     ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $stage->parallel_group_id))
                     ->where('id', '!=', $fresh->id)
-                    ->whereIn('status', ['active', 'pending'])
+                    ->whereIn('status', ['active', 'pending', 'blocked'])
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
             }
 
@@ -312,11 +328,7 @@ class WorkflowEngineService
 
             $sentBackStage = WorkflowInstanceStage::findOrFail($instance->sent_back_to_stage_id);
 
-            $sentBackStage->update([
-                'status' => 'active',
-                'started_at' => now(),
-                'completed_at' => null,
-            ]);
+            $this->approvers->resolvePool($sentBackStage);
 
             /** @var WorkflowStage $sentBackWorkflowStage */
             $sentBackWorkflowStage = $sentBackStage->stage;
@@ -326,7 +338,8 @@ class WorkflowEngineService
                     ->whereHas('stage', fn($q) => $q->where('parallel_group_id', $sentBackWorkflowStage->parallel_group_id))
                     ->where('id', '!=', $sentBackStage->id)
                     ->where('status', 'cancelled')
-                    ->update(['status' => 'active', 'started_at' => now(), 'completed_at' => null]);
+                    ->get()
+                    ->each(fn(WorkflowInstanceStage $stage) => $this->approvers->resolvePool($stage));
             }
 
             $instance->update(['sent_back_to_stage_id' => null]);
@@ -343,46 +356,29 @@ class WorkflowEngineService
 
     public function canUserActOnStage(WorkflowInstanceStage $instanceStage, User $user): bool
     {
-        /** @var WorkflowStage $stage */
-        $stage = $instanceStage->stage;
-        $roleIds = $stage->roles()->pluck('roles.id');
+        return $this->approvers->canAct($instanceStage, $user);
+    }
 
-        if (! $user->roles()->whereIn('id', $roleIds)->exists()) {
-            return false;
-        }
+    public function retryBlockedStage(WorkflowInstanceStage $instanceStage): bool
+    {
+        $activated = DB::transaction(function () use ($instanceStage): bool {
+            WorkflowInstance::lockForUpdate()->findOrFail($instanceStage->workflow_instance_id);
+            /** @var WorkflowInstanceStage $fresh */
+            $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
-        /** @var WorkflowInstance $instance */
-        $instance = $instanceStage->instance;
-
-        $staffProfile = $user->staffProfile;
-
-        if ($staffProfile !== null) {
-            if ($stage->scope_to_department) {
-                $submitterDepartmentId = $instance->department_id;
-                $approverDepartmentId = $staffProfile->department_id;
-
-                if ($submitterDepartmentId === null || $approverDepartmentId === null) { // @phpstan-ignore identical.alwaysFalse
-                    return false;
-                }
-                if ($approverDepartmentId !== $submitterDepartmentId) {
-                    return false;
-                }
+            if (! $fresh->isBlocked()) {
+                return false;
             }
 
-            if ($stage->scope_to_branch) {
-                $requestBranchId = $instance->branch_id;
-                $approverBranchId = $staffProfile->branch_id;
+            return $this->approvers->resolvePool($fresh);
+        });
 
-                if ($requestBranchId === null || $approverBranchId === null) {
-                    return false;
-                }
-                if ($approverBranchId !== $requestBranchId) {
-                    return false;
-                }
-            }
+        if ($activated) {
+            $instanceStage->refresh()->load(['stage.roles', 'stage.fallbackRoles']);
+            $this->notifications->notifyStageApprovers($instanceStage);
         }
 
-        return true;
+        return $activated;
     }
 
     public function userIsInApprovalChain(PaymentRequest|RetirementRequest $workflowable, User $user): bool
@@ -404,41 +400,15 @@ class WorkflowEngineService
             ->exists();
     }
 
-    private function submitterQualifiesAsApprover(
-        User $submitter,
-        WorkflowStage $stageDef,
-        WorkflowInstance $instance,
-    ): bool {
-        $submitterRoleIds = $submitter->roles()->pluck('roles.id');
-
-        if (! $stageDef->roles()->whereIn('roles.id', $submitterRoleIds)->exists()) {
-            return false;
-        }
-
-        // Submitter IS the requester so dept always matches — deny only if no staff profile.
-        if ($stageDef->scope_to_department && $submitter->staffProfile === null) {
-            return false;
-        }
-
-        if ($stageDef->scope_to_branch) {
-            $requestBranchId = $instance->branch_id;
-            $approverBranchId = $submitter->staffProfile?->branch_id;
-
-            if ($requestBranchId === null || $approverBranchId === null) {
-                return false;
-            }
-            if ($approverBranchId !== $requestBranchId) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private function advanceWorkflow(WorkflowInstance $instance): void
     {
         $activeCount = $instance->instanceStages()->where('status', 'active')->count();
         $pendingCount = $instance->instanceStages()->where('status', 'pending')->count();
+        $blockedCount = $instance->instanceStages()->where('status', 'blocked')->count();
+
+        if ($blockedCount > 0) {
+            return;
+        }
 
         if ($activeCount === 0 && $pendingCount === 0) {
             $this->markInstanceCompleted($instance);
@@ -476,5 +446,15 @@ class WorkflowEngineService
         $amount = $subject->getAttribute('total_amount');
 
         return is_numeric($amount) ? (float) $amount : 0.0;
+    }
+
+    /** @throws AuthorizationException */
+    private function authorizeAndClaim(WorkflowInstanceStage $instanceStage, User $user): void
+    {
+        if (! $this->approvers->canAct($instanceStage, $user)) {
+            throw new AuthorizationException('You are not authorised to act on this stage.');
+        }
+
+        $this->approvers->claim($instanceStage, $user);
     }
 }

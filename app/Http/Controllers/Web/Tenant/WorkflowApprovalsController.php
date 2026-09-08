@@ -88,4 +88,15 @@ class WorkflowApprovalsController extends Controller
 
         return redirect($route)->with('success', __('flash.approvals.action_recorded'));
     }
+
+    public function retry(WorkflowInstanceStage $instanceStage): RedirectResponse
+    {
+        abort_unless($instanceStage->isBlocked(), 422);
+
+        if (! $this->engine->retryBlockedStage($instanceStage)) {
+            return back()->with('error', __('flash.approvals.retry_still_blocked'));
+        }
+
+        return back()->with('success', __('flash.approvals.retry_activated'));
+    }
 }

@@ -582,6 +582,9 @@ Route::middleware([
         Route::post('/approvals/{instanceStage}', [WorkflowApprovalsController::class, 'store'])
             ->can(PermissionKey::ApproveRequests->value)
             ->name('approvals.store');
+        Route::post('/approvals/{instanceStage}/retry', [WorkflowApprovalsController::class, 'retry'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('approvals.retry');
 
         // Currencies
         Route::get('/currencies', [CurrenciesController::class, 'index'])

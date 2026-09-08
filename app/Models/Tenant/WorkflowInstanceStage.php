@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property \Carbon\Carbon $started_at
  * @property \Carbon\Carbon|null $completed_at
+ * @property \Carbon\Carbon|null $blocked_at
+ * @property string|null $approver_pool
+ * @property string|null $blocked_reason
  */
 class WorkflowInstanceStage extends Model
 {
@@ -18,6 +21,9 @@ class WorkflowInstanceStage extends Model
         'workflow_instance_id',
         'workflow_stage_id',
         'status',
+        'approver_pool',
+        'blocked_reason',
+        'blocked_at',
         'started_at',
         'completed_at',
     ];
@@ -27,6 +33,7 @@ class WorkflowInstanceStage extends Model
         return [
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'blocked_at' => 'datetime',
         ];
     }
 
@@ -48,6 +55,12 @@ class WorkflowInstanceStage extends Model
         return $this->hasMany(WorkflowAction::class)->latest();
     }
 
+    /** @return HasMany<WorkflowInstanceActorClaim, $this> */
+    public function actorClaims(): HasMany
+    {
+        return $this->hasMany(WorkflowInstanceActorClaim::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
@@ -56,5 +69,10 @@ class WorkflowInstanceStage extends Model
     public function isTerminal(): bool
     {
         return in_array($this->status, ['approved', 'rejected', 'sent_back', 'skipped', 'cancelled'], true);
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === 'blocked';
     }
 }

@@ -60,6 +60,7 @@ Route::prefix('api')
         Route::post('approvals/{workflowInstanceStage}/approve', [ApprovalActionController::class, 'approve'])->name('api.approvals.approve');
         Route::post('approvals/{workflowInstanceStage}/reject', [ApprovalActionController::class, 'reject'])->name('api.approvals.reject');
         Route::post('approvals/{workflowInstanceStage}/send-back', [ApprovalActionController::class, 'sendBack'])->name('api.approvals.send-back');
+        Route::post('approvals/{workflowInstanceStage}/retry', [ApprovalActionController::class, 'retry'])->name('api.approvals.retry');
 
         // Disbursements
         Route::get('disbursements', [DisbursementController::class, 'index'])->name('api.disbursements.index');

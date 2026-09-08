@@ -76,12 +76,18 @@ return [
         'or_label' => 'OU',
         'scope_branch' => 'Succursale',
         'scope_department' => 'Departement',
+        'fallback_label' => 'Suppleants',
     ],
     'empty' => [
         'heading' => 'Aucun modele pour le moment',
         'subtext' => 'Creez votre premier modele de workflow',
     ],
     'confirm_delete' => 'Supprimer ce modele ? Toutes les etapes seront supprimees.',
+    'separation' => [
+        'no_independent_approver' => 'Aucun approbateur independant n est actuellement disponible pour cette etape.',
+        'cannot_disburse' => 'Vous ne pouvez pas decaisser une demande que vous avez soumise ou approuvee.',
+        'retry' => 'Reessayer la resolution des approbateurs',
+    ],
     'stages' => [
         'add_title' => 'Ajouter une etape',
         'edit_title' => 'Modifier l etape',
@@ -100,6 +106,8 @@ return [
             'any_approves' => 'N importe qui approuve',
             'roles_label' => 'Roles pouvant approuver cette etape',
             'roles_hint' => 'Tout utilisateur avec un de ces roles verra cette etape.',
+            'fallback_roles_label' => 'Roles des approbateurs suppleants',
+            'fallback_roles_hint' => 'Utilises seulement lorsque tous les approbateurs principaux sont exclus. Les restrictions de departement et d’agence restent applicables.',
             'scope_to_department' => 'Restreindre les approbateurs au departement du demandeur',
             'scope_to_branch' => 'Restreindre les approbateurs a la succursale de la demande',
             'allow_send_back' => 'Autoriser le renvoi a cette etape',
@@ -110,6 +118,9 @@ return [
             'delete' => 'Supprimer l etape',
         ],
         'confirm_delete' => 'Supprimer cette etape ?',
+        'validation' => [
+            'fallback_must_differ' => 'Les roles suppleants doivent etre differents des roles d’approbateurs principaux.',
+        ],
         'sync_warning' => [
             'heading' => 'Ceci reordonnera aussi d autres etapes',
             'body' => 'Pour que ce groupe parallele continue de fonctionner ensemble, {names} sera aussi mis a jour a l ordre d affichage {order}.',

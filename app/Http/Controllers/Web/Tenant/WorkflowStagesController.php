@@ -61,7 +61,7 @@ class WorkflowStagesController extends Controller
         $roles = $this->roleRepository->allOrderedByName();
         $parallelGroups = $workflowTemplate->parallelGroups()->with('stages')->orderBy('name')->get();
         $parallelGroupStages = $this->parallelGroupStagesForJs($parallelGroups);
-        $workflowStage->load('roles');
+        $workflowStage->load(['roles', 'fallbackRoles']);
 
         return view('tenant.workflow-stages.edit', compact('workflowTemplate', 'workflowStage', 'roles', 'parallelGroups', 'parallelGroupStages'));
     }
@@ -120,8 +120,10 @@ class WorkflowStagesController extends Controller
             skipBelowAmount: $dto->skipBelowAmount,
             parallelGroupId: $groupIdMap[$dto->parallelGroupId] ?? null,
             roleIds: $dto->roleIds,
+            fallbackRoleIds: $dto->fallbackRoleIds,
             scopeToDepartment: $dto->scopeToDepartment,
             scopeToBranch: $dto->scopeToBranch,
+            allowSendBack: $dto->allowSendBack,
         );
     }
 

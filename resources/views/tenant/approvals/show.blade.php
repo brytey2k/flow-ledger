@@ -20,6 +20,7 @@
     $stageStatusIcons = [
         'approved'  => ['icon' => 'tabler-check-filled',         'class' => 'bg-success/20 text-success'],
         'active'    => ['icon' => 'tabler-clock-filled',         'class' => 'bg-primary/20 text-primary'],
+        'blocked'   => ['icon' => 'tabler-alert-triangle',       'class' => 'bg-warning/20 text-warning'],
         'rejected'  => ['icon' => 'tabler-x-filled',             'class' => 'bg-destructive/20 text-destructive'],
         'sent_back' => ['icon' => 'tabler-arrow-left',           'class' => 'bg-warning/20 text-warning'],
         'skipped'   => ['icon' => 'tabler-minus',                'class' => 'bg-muted text-muted-foreground'],
@@ -294,6 +295,9 @@
                                     <span class="text-xs text-secondary-foreground capitalize">
                                         {{ str_replace('_', ' ', $is->status) }}
                                     </span>
+                                    @if($is->status === 'blocked')
+                                        <span class="text-xs text-warning">{{ __('workflows.separation.no_independent_approver') }}</span>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach

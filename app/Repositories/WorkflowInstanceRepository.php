@@ -14,39 +14,11 @@ use Illuminate\Support\Facades\DB;
 
 class WorkflowInstanceRepository
 {
+    public function __construct(private readonly WorkflowApproverRepository $approvers) {}
+
     public function pendingApprovalsCountForUser(User $user): int
     {
-        $roleIds = $user->roles()->pluck('id');
-        $staffProfile = $user->staffProfile;
-        $staffBranchId = $staffProfile?->branch_id;
-        $staffDepartmentId = $staffProfile?->department_id;
-
-        return WorkflowInstanceStage::query()
-            ->join('workflow_stages as ws', 'workflow_instance_stages.workflow_stage_id', '=', 'ws.id')
-            ->join('workflow_instances as wi', 'workflow_instance_stages.workflow_instance_id', '=', 'wi.id')
-            ->where('workflow_instance_stages.status', 'active')
-            ->whereHas('stage.roles', fn($q) => $q->whereIn('roles.id', $roleIds))
-            ->when($staffProfile !== null, function ($q) use ($staffDepartmentId): void {
-                $q->where(function ($inner) use ($staffDepartmentId): void {
-                    $inner->where('ws.scope_to_department', false)
-                        ->orWhere(function ($nested) use ($staffDepartmentId): void {
-                            $nested->where('ws.scope_to_department', true)
-                                ->whereNotNull('wi.department_id')
-                                ->where('wi.department_id', $staffDepartmentId);
-                        });
-                });
-            })
-            ->when($staffProfile !== null, function ($q) use ($staffBranchId): void {
-                $q->where(function ($inner) use ($staffBranchId): void {
-                    $inner->where('ws.scope_to_branch', false)
-                        ->orWhere(function ($nested) use ($staffBranchId): void {
-                            $nested->where('ws.scope_to_branch', true)
-                                ->whereNotNull('wi.branch_id')
-                                ->where('wi.branch_id', $staffBranchId);
-                        });
-                });
-            })
-            ->count();
+        return $this->approvers->eligibleStagesForUser($user)->count();
     }
 
     /**
@@ -128,37 +100,10 @@ class WorkflowInstanceRepository
     /** @return LengthAwarePaginator<int, WorkflowInstanceStage> */
     public function activeStagesForUser(User $user, int $perPage = 20): LengthAwarePaginator
     {
-        $roleIds = $user->roles()->pluck('id');
-        $staffProfile = $user->staffProfile;
-        $staffBranchId = $staffProfile?->branch_id;
-        $staffDepartmentId = $staffProfile?->department_id;
-
-        return WorkflowInstanceStage::query()
-            ->join('workflow_stages as ws', 'workflow_instance_stages.workflow_stage_id', '=', 'ws.id')
-            ->join('workflow_instances as wi', 'workflow_instance_stages.workflow_instance_id', '=', 'wi.id')
-            ->select('workflow_instance_stages.*')
-            ->where('workflow_instance_stages.status', 'active')
-            ->whereHas('stage.roles', fn($q) => $q->whereIn('roles.id', $roleIds))
-            ->when($staffProfile !== null, function ($q) use ($staffDepartmentId): void {
-                $q->where(function ($q) use ($staffDepartmentId): void {
-                    $q->where('ws.scope_to_department', false)
-                        ->orWhere(fn($inner) => $inner
-                            ->where('ws.scope_to_department', true)
-                            ->whereNotNull('wi.department_id')
-                            ->where('wi.department_id', $staffDepartmentId));
-                });
-            })
-            ->when($staffProfile !== null, function ($q) use ($staffBranchId): void {
-                $q->where(function ($q) use ($staffBranchId): void {
-                    $q->where('ws.scope_to_branch', false)
-                        ->orWhere(fn($inner) => $inner
-                            ->where('ws.scope_to_branch', true)
-                            ->whereNotNull('wi.branch_id')
-                            ->where('wi.branch_id', $staffBranchId));
-                });
-            })
+        return $this->approvers->eligibleStagesForUser($user)
             ->with([
-                'stage',
+                'stage.roles',
+                'stage.fallbackRoles',
                 'instance.workflowable.staff',
                 'instance.workflowable.branch',
                 'instance.workflowable.currency',
