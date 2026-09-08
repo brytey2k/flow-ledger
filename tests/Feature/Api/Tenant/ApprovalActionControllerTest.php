@@ -99,6 +99,35 @@ test('workflow administrator can retry a blocked stage after adding a fallback a
         ->assertJsonPath('data.status', 'active')
         ->assertJsonPath('data.approver_pool', 'fallback');
 });
+test('workflow administrator can apply an api recovery fallback', function () {
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $stage = WorkflowStage::factory()->create([
+        'workflow_template_id' => $template->id,
+        'display_order' => 1,
+    ]);
+    $stage->roles()->attach($this->role->id);
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'branch_id' => $this->branch->id,
+        'status' => 'draft',
+    ]);
+    app(PaymentRequestService::class)->submit($paymentRequest, $this->user);
+    $instanceStage = WorkflowInstanceStage::latest()->firstOrFail();
+    $recoveryRole = Role::create(['name' => 'api_recovery_' . uniqid(), 'guard_name' => 'web']);
+    User::factory()->create()->assignRole($recoveryRole);
+
+    $this->postJson("/api/approvals/{$instanceStage->id}/recovery", [
+        'role_id' => $recoveryRole->id,
+        'reason' => 'No fallback was configured on the pinned version.',
+    ])->assertOk()
+        ->assertJsonPath('data.status', 'active')
+        ->assertJsonPath('data.approver_pool', 'fallback')
+        ->assertJsonPath('meta.template_update_required', true);
+
+    $this->assertDatabaseHas('workflow_instance_stage_recovery_roles', [
+        'workflow_instance_stage_id' => $instanceStage->id,
+        'role_id' => $recoveryRole->id,
+    ]);
+});
 test('reject cancels the workflow', function () {
     $instanceStage = submitRequestForApprovalForApprovalActionController();
 

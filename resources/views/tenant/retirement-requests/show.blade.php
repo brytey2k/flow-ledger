@@ -476,15 +476,9 @@
                                             {{ str_replace('_', ' ', $instanceStage->status) }}
                                         </span>
                                         @if($instanceStage->status === 'blocked')
-                                            <span class="text-xs text-warning">{{ __('workflows.separation.no_independent_approver') }}</span>
-                                            @can(PermissionKey::EditWorkflowTemplate->value)
-                                                <form method="POST" action="{{ route('approvals.retry', $instanceStage) }}" class="mt-1">
-                                                    @csrf
-                                                    <button type="submit" class="sgh-btn sgh-btn-sm sgh-btn-outline">
-                                                        {{ __('workflows.separation.retry') }}
-                                                    </button>
-                                                </form>
-                                            @endcan
+                                            <x-workflow-stage-recovery :instance-stage="$instanceStage" />
+                                        @elseif($instanceStage->recoveryRoles->isNotEmpty())
+                                            <x-workflow-stage-recovery :instance-stage="$instanceStage" />
                                         @endif
                                     </div>
                                 </div>

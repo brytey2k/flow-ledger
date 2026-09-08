@@ -59,7 +59,10 @@ class WorkflowApproverRepository
                         ->whereHas('stage.roles', fn(Builder $roles) => $roles->whereIn('roles.id', $roleIds));
                 })->orWhere(function (Builder $fallback) use ($roleIds): void {
                     $fallback->where('workflow_instance_stages.approver_pool', 'fallback')
-                        ->whereHas('stage.fallbackRoles', fn(Builder $roles) => $roles->whereIn('roles.id', $roleIds));
+                        ->where(function (Builder $rolesQuery) use ($roleIds): void {
+                            $rolesQuery->whereHas('stage.fallbackRoles', fn(Builder $roles) => $roles->whereIn('roles.id', $roleIds))
+                                ->orWhereHas('recoveryRoles', fn(Builder $roles) => $roles->whereIn('roles.id', $roleIds));
+                        });
                 });
             })
             ->where(function (Builder $query) use ($user): void {
@@ -105,7 +108,9 @@ class WorkflowApproverRepository
         /** @var \App\Models\Tenant\WorkflowStage $stage */
         $stage = $instanceStage->stage;
         $roleIds = $pool === 'fallback'
-            ? $stage->fallbackRoles()->pluck('roles.id')
+            ? $stage->fallbackRoles()->pluck('roles.id')->merge(
+                $instanceStage->recoveryRoles()->pluck('roles.id'),
+            )->unique()
             : $stage->roles()->pluck('roles.id');
 
         if ($roleIds->isEmpty()) {

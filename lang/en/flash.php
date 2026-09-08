@@ -145,6 +145,10 @@ return [
         'send_back_not_allowed' => 'This stage does not allow sending the request back for revision.',
         'retry_activated' => 'The stage is active and independent approvers have been notified.',
         'retry_still_blocked' => 'The stage is still blocked because no independent approver is available.',
+        'recovery_activated' => 'The one-request fallback was applied and the stage is active. Update the main workflow template to prevent this issue from happening again.',
+        'recovery_still_blocked' => 'The one-request fallback was saved, but the stage is still blocked because no independent approver is available.',
+        'template_repair_draft_ready' => 'The fallback role was added to a workflow draft. Review and publish the draft to protect future requests.',
+        'template_repair_already_applied' => 'The current main workflow already uses this role at the matching stage.',
     ],
     'tenants' => [
         'created' => 'Tenant created successfully.',
