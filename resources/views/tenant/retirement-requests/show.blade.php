@@ -452,6 +452,10 @@
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
                                                 <x-tabler-clock-filled class="text-xs" />
                                             </span>
+                                        @elseif($instanceStage->status === 'blocked')
+                                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/20 text-warning">
+                                                <x-tabler-alert-triangle class="text-xs" />
+                                            </span>
                                         @elseif($instanceStage->status === 'rejected')
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/20 text-destructive">
                                                 <x-tabler-x-filled class="text-xs" />
@@ -471,6 +475,11 @@
                                         <span class="text-xs text-secondary-foreground capitalize">
                                             {{ str_replace('_', ' ', $instanceStage->status) }}
                                         </span>
+                                        @if($instanceStage->status === 'blocked')
+                                            <x-workflow-stage-recovery :instance-stage="$instanceStage" />
+                                        @elseif($instanceStage->recoveryRoles->isNotEmpty())
+                                            <x-workflow-stage-recovery :instance-stage="$instanceStage" />
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

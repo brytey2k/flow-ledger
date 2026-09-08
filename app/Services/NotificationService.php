@@ -8,7 +8,6 @@ use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
-use App\Models\Tenant\WorkflowStage;
 use App\Notifications\RequestApprovedNotification;
 use App\Notifications\RequestDisbursedNotification;
 use App\Notifications\RequestRejectedNotification;
@@ -21,44 +20,12 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 class NotificationService
 {
+    public function __construct(private readonly WorkflowApproverResolver $approvers) {}
+
     public function notifyStageApprovers(WorkflowInstanceStage $instanceStage): void
     {
-        /** @var WorkflowStage $stage */
-        $stage = $instanceStage->stage;
-        $roleIds = $stage->roles()->pluck('roles.id');
-
-        if ($roleIds->isEmpty()) {
-            return;
-        }
-
-        /** @var \App\Models\Tenant\WorkflowInstance $instance */
-        $instance = $instanceStage->instance;
-
-        $users = User::whereHas('roles', fn($q) => $q->whereIn('id', $roleIds))
-            ->whereNotNull('email')
-            ->when(
-                $stage->scope_to_department,
-                function ($query) use ($instance): void {
-                    $deptId = $instance->submitter?->staffProfile?->department_id;
-                    if ($deptId !== null) {
-                        $query->whereHas('staffProfile', fn($q) => $q->where('department_id', $deptId));
-                    } else {
-                        $query->whereRaw('0 = 1');
-                    }
-                },
-            )
-            ->when(
-                $stage->scope_to_branch,
-                function ($query) use ($instance): void {
-                    $branchId = $instance->workflowable?->getAttribute('branch_id');
-                    if ($branchId !== null) {
-                        $query->whereHas('staffProfile', fn($q) => $q->where('branch_id', $branchId));
-                    } else {
-                        $query->whereRaw('0 = 1');
-                    }
-                },
-            )
-            ->get();
+        $users = $this->approvers->eligibleUsers($instanceStage)
+            ->filter(fn(User $user): bool => $user->email !== '');
 
         NotificationFacade::send($users, new StageReadyForApprovalNotification($instanceStage));
     }

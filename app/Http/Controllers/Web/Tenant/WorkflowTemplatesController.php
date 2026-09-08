@@ -58,7 +58,7 @@ class WorkflowTemplatesController extends Controller
 
     public function show(WorkflowTemplate $workflowTemplate): View
     {
-        $workflowTemplate->load(['stages.roles', 'stages.parallelGroup', 'parallelGroups']);
+        $workflowTemplate->load(['stages.roles', 'stages.fallbackRoles', 'stages.parallelGroup', 'parallelGroups']);
 
         return view('tenant.workflow-templates.show', compact('workflowTemplate'));
     }

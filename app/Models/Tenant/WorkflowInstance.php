@@ -70,6 +70,12 @@ class WorkflowInstance extends Model
         return $this->hasMany(WorkflowInstanceStage::class);
     }
 
+    /** @return HasMany<WorkflowInstanceActorClaim, $this> */
+    public function actorClaims(): HasMany
+    {
+        return $this->hasMany(WorkflowInstanceActorClaim::class);
+    }
+
     /** @return HasMany<WorkflowInstanceStage, $this> */
     public function activeInstanceStages(): HasMany
     {

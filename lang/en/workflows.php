@@ -81,6 +81,7 @@ return [
         'or_label' => 'OR',
         'scope_branch' => 'Branch',
         'scope_department' => 'Department',
+        'fallback_label' => 'Fallback',
     ],
 
     'empty' => [
@@ -89,6 +90,37 @@ return [
     ],
 
     'confirm_delete' => 'Delete this template? All stages will be removed.',
+
+    'separation' => [
+        'no_independent_approver' => 'No independent approver is currently available for this stage.',
+        'cannot_disburse' => 'You cannot disburse a request you submitted or approved.',
+        'retry' => 'Retry approver resolution',
+        'add_recovery_fallback' => 'Add one-request fallback',
+        'contact_workflow_admin' => 'Ask a workflow administrator to repair the approver assignment.',
+        'recovery_title' => 'Resolve Blocked Approval',
+        'recovery_scope_heading' => 'This change applies only to this request',
+        'recovery_scope_body' => 'The selected role will be added as a recovery fallback for this approval stage and approver resolution will be retried. The main workflow template will not be changed automatically.',
+        'recovery_form_heading' => 'One-request fallback',
+        'recovery_role' => 'Recovery fallback role',
+        'select_recovery_role' => 'Select a role',
+        'recovery_role_hint' => 'Choose a role with at least one independent user who also matches this stage\'s department and branch restrictions.',
+        'recovery_reason' => 'Reason for recovery',
+        'recovery_reason_hint' => 'Explain why this override is needed. The reason is kept in the activity history.',
+        'apply_recovery_and_retry' => 'Apply fallback and retry',
+        'recovery_stage_not_blocked' => 'Only a blocked approval stage can receive a recovery fallback.',
+        'recovery_role_already_configured' => 'This role is already configured on the stage. Assign an eligible user to it, then retry approver resolution.',
+        'template_repair_required_heading' => 'Main workflow update required',
+        'template_repair_required_body' => 'This fallback applies only to this request. Add it to the main workflow template and publish the new version to prevent future requests from becoming blocked.',
+        'update_main_workflow' => 'Update main workflow with :role',
+        'contact_workflow_admin_for_template' => 'Ask a workflow administrator to add this fallback role to the main workflow and publish the updated version.',
+        'template_repair_draft_heading' => 'Workflow draft update pending publication',
+        'template_repair_draft_body' => 'The fallback role is in a workflow draft. Review and publish the draft before it can protect future requests.',
+        'review_workflow_draft' => 'Review workflow draft',
+        'template_repair_complete_heading' => 'Main workflow updated',
+        'template_repair_complete_body' => 'The fallback role is now part of the published main workflow for future requests.',
+        'template_role_not_recovery' => 'That role is not a recovery fallback for this request.',
+        'template_stage_not_found' => 'The matching stage could not be identified in the current workflow draft. Update the workflow stage manually.',
+    ],
 
     'stages' => [
         'add_title' => 'Add Stage',
@@ -108,6 +140,8 @@ return [
             'any_approves' => 'ANY one approves',
             'roles_label' => 'Roles that can approve this stage',
             'roles_hint' => 'Any user with one of these roles will see this stage in their approvals inbox.',
+            'fallback_roles_label' => 'Fallback approver roles',
+            'fallback_roles_hint' => 'Used only when every primary approver is excluded. Department and branch restrictions still apply.',
             'scope_to_department' => 'Restrict approvers to submitter\'s department',
             'scope_to_branch' => 'Restrict approvers to request\'s branch',
             'allow_send_back' => 'Allow send-back at this stage',
@@ -118,6 +152,9 @@ return [
             'delete' => 'Delete Stage',
         ],
         'confirm_delete' => 'Delete this stage?',
+        'validation' => [
+            'fallback_must_differ' => 'Fallback roles must differ from the primary approver roles.',
+        ],
         'sync_warning' => [
             'heading' => 'This will reorder other stages too',
             'body' => 'To keep this parallel group running together, {names} will also be updated to display order {order}.',

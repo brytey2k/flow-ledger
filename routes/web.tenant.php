@@ -582,6 +582,18 @@ Route::middleware([
         Route::post('/approvals/{instanceStage}', [WorkflowApprovalsController::class, 'store'])
             ->can(PermissionKey::ApproveRequests->value)
             ->name('approvals.store');
+        Route::post('/approvals/{instanceStage}/retry', [WorkflowApprovalsController::class, 'retry'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('approvals.retry');
+        Route::get('/approvals/{instanceStage}/recovery', [WorkflowApprovalsController::class, 'createRecovery'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('approvals.recovery.create');
+        Route::post('/approvals/{instanceStage}/recovery', [WorkflowApprovalsController::class, 'recover'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('approvals.recovery.store');
+        Route::post('/approvals/{instanceStage}/recovery/template', [WorkflowApprovalsController::class, 'repairTemplate'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('approvals.recovery.template');
 
         // Currencies
         Route::get('/currencies', [CurrenciesController::class, 'index'])

@@ -7,10 +7,16 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Exceptions\SendBackNotAllowedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\ApprovalActionRequest;
+use App\Http\Requests\Tenant\WorkflowStageRecoveryRequest;
+use App\Http\Requests\Tenant\WorkflowTemplateRecoveryRequest;
+use App\Models\Role;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowInstanceStage;
+use App\Models\Tenant\WorkflowStage;
+use App\Repositories\RoleRepository;
 use App\Repositories\WorkflowInstanceRepository;
 use App\Services\WorkflowEngineService;
+use App\Services\WorkflowStageRecoveryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,6 +26,8 @@ class WorkflowApprovalsController extends Controller
     public function __construct(
         private readonly WorkflowEngineService $engine,
         private readonly WorkflowInstanceRepository $repository,
+        private readonly RoleRepository $roles,
+        private readonly WorkflowStageRecoveryService $recovery,
     ) {}
 
     public function index(Request $request): View
@@ -87,5 +95,71 @@ class WorkflowApprovalsController extends Controller
             : route('payment-requests.show', $subject);
 
         return redirect($route)->with('success', __('flash.approvals.action_recorded'));
+    }
+
+    public function retry(WorkflowInstanceStage $instanceStage): RedirectResponse
+    {
+        abort_unless($instanceStage->isBlocked(), 422);
+
+        if (! $this->engine->retryBlockedStage($instanceStage)) {
+            return back()->with('error', __('flash.approvals.retry_still_blocked'));
+        }
+
+        return back()->with('success', __('flash.approvals.retry_activated'));
+    }
+
+    public function createRecovery(WorkflowInstanceStage $instanceStage): View
+    {
+        abort_unless($instanceStage->isBlocked(), 422);
+
+        $instanceStage->load(['stage.roles', 'stage.fallbackRoles', 'instance.template', 'instance.workflowable']);
+        /** @var WorkflowStage $stage */
+        $stage = $instanceStage->stage;
+        $configuredRoleIds = $stage->roles
+            ->merge($stage->fallbackRoles)
+            ->pluck('id');
+        $roles = $this->roles->allOrderedByName()
+            ->reject(fn(Role $role): bool => $configuredRoleIds->contains($role->id));
+
+        return view('tenant.approvals.recovery', compact('instanceStage', 'roles'));
+    }
+
+    public function recover(
+        WorkflowStageRecoveryRequest $request,
+        WorkflowInstanceStage $instanceStage,
+    ): RedirectResponse {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $role = Role::findOrFail($request->roleId());
+        $activated = $this->recovery->applyAndRetry($instanceStage, $role, $user, $request->reason());
+
+        return redirect($this->requestUrl($instanceStage))
+            ->with($activated ? 'success' : 'error', $activated
+                ? __('flash.approvals.recovery_activated')
+                : __('flash.approvals.recovery_still_blocked'));
+    }
+
+    public function repairTemplate(
+        WorkflowTemplateRecoveryRequest $request,
+        WorkflowInstanceStage $instanceStage,
+    ): RedirectResponse {
+        /** @var \App\Models\Tenant\User $user */
+        $user = $request->user();
+        $role = Role::findOrFail($request->roleId());
+        $template = $this->recovery->prepareTemplateRepair($instanceStage, $role, $user);
+
+        return redirect()->route('workflow-templates.show', $template)
+            ->with($template->isDraft() ? 'warning' : 'success', $template->isDraft()
+                ? __('flash.approvals.template_repair_draft_ready')
+                : __('flash.approvals.template_repair_already_applied'));
+    }
+
+    private function requestUrl(WorkflowInstanceStage $instanceStage): string
+    {
+        $subject = $instanceStage->instance?->workflowable;
+
+        return $subject instanceof RetirementRequest
+            ? route('retirement-requests.show', $subject)
+            : route('payment-requests.show', $subject);
     }
 }

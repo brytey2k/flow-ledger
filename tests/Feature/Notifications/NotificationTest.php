@@ -33,6 +33,8 @@ function makeAdvanceRequestInWorkflow(): array
     ]);
     $approverRole = Role::create(['name' => 'approver_' . Str::uuid(), 'guard_name' => 'web']);
     $stage->roles()->attach($approverRole->id);
+    $approver = User::factory()->create();
+    $approver->assignRole($approverRole);
 
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
 
@@ -40,7 +42,7 @@ function makeAdvanceRequestInWorkflow(): array
 
     $instanceStage = WorkflowInstanceStage::where('status', 'active')->latest()->first();
 
-    return [$paymentRequest, $instanceStage];
+    return [$paymentRequest, $instanceStage, $approver];
 }
 test('stage approvers are notified when workflow starts', function () {
     Notification::fake();
@@ -72,6 +74,8 @@ test('next stage approvers are notified on advance', function () {
     ]);
     $stage1->roles()->attach($this->role->id);
     $stage2->roles()->attach($this->role->id);
+    $nextApprover = User::factory()->create();
+    $nextApprover->assignRole($this->role);
 
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
     $submitter = User::factory()->create();
@@ -83,14 +87,15 @@ test('next stage approvers are notified on advance', function () {
 
     app(WorkflowEngineService::class)->approve($instanceStage, $this->user);
 
-    Notification::assertSentTo($this->user, StageReadyForApprovalNotification::class);
+    Notification::assertNotSentTo($this->user, StageReadyForApprovalNotification::class);
+    Notification::assertSentTo($nextApprover, StageReadyForApprovalNotification::class);
 });
 test('submitter is notified when request is fully approved', function () {
-    [$paymentRequest, $instanceStage] = makeAdvanceRequestInWorkflow();
+    [$paymentRequest, $instanceStage, $approver] = makeAdvanceRequestInWorkflow();
 
     Notification::fake();
 
-    app(WorkflowEngineService::class)->approve($instanceStage, $this->user);
+    app(WorkflowEngineService::class)->approve($instanceStage, $approver);
 
     Notification::assertSentTo($this->user, RequestApprovedNotification::class);
 });
@@ -111,6 +116,8 @@ test('submitter is notified when retirement is fully approved', function () {
     ]);
     $approverRole = Role::create(['name' => 'approver_' . Str::uuid(), 'guard_name' => 'web']);
     $stage->roles()->attach($approverRole->id);
+    $approver = User::factory()->create();
+    $approver->assignRole($approverRole);
 
     app(RetirementService::class)->submit($retirement, $this->user);
 
@@ -118,25 +125,25 @@ test('submitter is notified when retirement is fully approved', function () {
 
     Notification::fake();
 
-    app(WorkflowEngineService::class)->approve($instanceStage, $this->user);
+    app(WorkflowEngineService::class)->approve($instanceStage, $approver);
 
     Notification::assertSentTo($this->user, RetirementApprovedNotification::class);
 });
 test('submitter is notified when request is rejected', function () {
-    [$paymentRequest, $instanceStage] = makeAdvanceRequestInWorkflow();
+    [$paymentRequest, $instanceStage, $approver] = makeAdvanceRequestInWorkflow();
 
     Notification::fake();
 
-    app(WorkflowEngineService::class)->reject($instanceStage, $this->user, 'Insufficient documentation.');
+    app(WorkflowEngineService::class)->reject($instanceStage, $approver, 'Insufficient documentation.');
 
     Notification::assertSentTo($this->user, RequestRejectedNotification::class);
 });
 test('submitter is notified when request is sent back', function () {
-    [$paymentRequest, $instanceStage] = makeAdvanceRequestInWorkflow();
+    [$paymentRequest, $instanceStage, $approver] = makeAdvanceRequestInWorkflow();
 
     Notification::fake();
 
-    app(WorkflowEngineService::class)->sendBack($instanceStage, $this->user, 'Please add receipts.');
+    app(WorkflowEngineService::class)->sendBack($instanceStage, $approver, 'Please add receipts.');
 
     Notification::assertSentTo($this->user, RequestSentBackNotification::class);
 });

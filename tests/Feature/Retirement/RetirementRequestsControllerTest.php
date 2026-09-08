@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
+use App\Models\Role;
 use App\Models\Tenant\CostCode;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\PaymentRequestItem;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\RetirementRequestItem;
 use App\Models\Tenant\Staff;
+use App\Models\Tenant\User;
+use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\RetirementService;
@@ -53,6 +56,39 @@ test('index renders', function () {
 
     $response->assertOk();
     $response->assertViewIs('tenant.retirement-requests.index');
+});
+test('blocked retirement stage supports one-request recovery and shows the template warning', function () {
+    $template = WorkflowTemplate::factory()->retirement()->create();
+    $stage = WorkflowStage::factory()->create([
+        'workflow_template_id' => $template->id,
+        'display_order' => 1,
+    ]);
+    $stage->roles()->attach($this->role->id);
+    $paymentRequest = disbursedAdvanceForRetirementRequestsController();
+    $retirement = RetirementRequest::factory()->create([
+        'payment_request_id' => $paymentRequest->id,
+        'status' => 'draft',
+    ]);
+    app(RetirementService::class)->submit($retirement, $this->user);
+    $instanceStage = WorkflowInstanceStage::latest()->firstOrFail();
+    $recoveryRole = Role::create(['name' => 'retirement_recovery_' . uniqid(), 'guard_name' => 'web']);
+    User::factory()->create()->assignRole($recoveryRole);
+
+    $this->actingAs($this->user)
+        ->post(route('approvals.recovery.store', $instanceStage), [
+            'role_id' => $recoveryRole->id,
+            'reason' => 'Retirement approval needs an independent fallback.',
+        ])
+        ->assertRedirect(route('retirement-requests.show', $retirement))
+        ->assertSessionHas('success');
+
+    expect($instanceStage->fresh()->status)->toBe('active')
+        ->and($instanceStage->fresh()->approver_pool)->toBe('fallback');
+
+    $this->actingAs($this->user)
+        ->get(route('retirement-requests.show', $retirement))
+        ->assertOk()
+        ->assertSee(__('workflows.separation.template_repair_required_heading'));
 });
 test('create renders for disbursed advance', function () {
     $paymentRequest = disbursedAdvanceForRetirementRequestsController();

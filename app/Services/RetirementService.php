@@ -220,10 +220,12 @@ class RetirementService
             $activeInstance = $retirement->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
-                $activeStage = $activeInstance->activeInstanceStages()->first();
+                $activeStage = $activeInstance->instanceStages()
+                    ->whereIn('status', ['active', 'blocked'])
+                    ->first();
 
                 $activeInstance->instanceStages()
-                    ->whereIn('status', ['pending', 'active'])
+                    ->whereIn('status', ['pending', 'active', 'blocked'])
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
 
                 $activeInstance->update([

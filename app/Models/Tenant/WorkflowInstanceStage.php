@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property \Carbon\Carbon $started_at
  * @property \Carbon\Carbon|null $completed_at
+ * @property \Carbon\Carbon|null $blocked_at
+ * @property string|null $approver_pool
+ * @property string|null $blocked_reason
  */
 class WorkflowInstanceStage extends Model
 {
@@ -18,6 +23,9 @@ class WorkflowInstanceStage extends Model
         'workflow_instance_id',
         'workflow_stage_id',
         'status',
+        'approver_pool',
+        'blocked_reason',
+        'blocked_at',
         'started_at',
         'completed_at',
     ];
@@ -27,6 +35,7 @@ class WorkflowInstanceStage extends Model
         return [
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'blocked_at' => 'datetime',
         ];
     }
 
@@ -48,6 +57,36 @@ class WorkflowInstanceStage extends Model
         return $this->hasMany(WorkflowAction::class)->latest();
     }
 
+    /** @return HasMany<WorkflowInstanceActorClaim, $this> */
+    public function actorClaims(): HasMany
+    {
+        return $this->hasMany(WorkflowInstanceActorClaim::class);
+    }
+
+    /** @return BelongsToMany<Role, $this> */
+    public function recoveryRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'workflow_instance_stage_recovery_roles',
+            'workflow_instance_stage_id',
+            'role_id',
+        )->withPivot([
+            'applied_by_user_id',
+            'prepared_workflow_template_id',
+            'reason',
+            'template_repair_status',
+            'template_repair_prepared_at',
+            'template_repair_published_at',
+        ])->withTimestamps();
+    }
+
+    /** @return HasMany<WorkflowInstanceStageRecoveryRole, $this> */
+    public function recoveryAssignments(): HasMany
+    {
+        return $this->hasMany(WorkflowInstanceStageRecoveryRole::class, 'workflow_instance_stage_id');
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
@@ -56,5 +95,10 @@ class WorkflowInstanceStage extends Model
     public function isTerminal(): bool
     {
         return in_array($this->status, ['approved', 'rejected', 'sent_back', 'skipped', 'cancelled'], true);
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === 'blocked';
     }
 }

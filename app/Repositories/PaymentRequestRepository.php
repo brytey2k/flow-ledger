@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentRequestRepository
 {
+    public function __construct(private readonly WorkflowApproverRepository $workflowApprovers) {}
+
     public function countByStaffAndStatus(int|null $staffId, string $status): int
     {
         if ($staffId === null) {
@@ -29,13 +32,19 @@ class PaymentRequestRepository
 
     /**
      * @param array<int, int> $allowedBranchIds
+     * @param User|null $user
      */
-    public function countPendingDisbursements(array $allowedBranchIds): int
+    public function countPendingDisbursements(array $allowedBranchIds, User|null $user = null): int
     {
-        return PaymentRequest::query()
+        $query = PaymentRequest::query()
             ->whereIn('branch_id', $allowedBranchIds)
-            ->where('status', 'approved')
-            ->count();
+            ->where('status', 'approved');
+
+        if ($user !== null) {
+            $this->workflowApprovers->excludePaymentRequestsParticipatedIn($query, $user);
+        }
+
+        return $query->count();
     }
 
     /**
@@ -211,16 +220,22 @@ class PaymentRequestRepository
     /**
      * @param array<int, int> $branchIds
      * @param int $perPage
+     * @param User|null $user
      *
      * @return LengthAwarePaginator<int, PaymentRequest>
      */
-    public function pendingDisbursement(array $branchIds, int $perPage = 20): LengthAwarePaginator
+    public function pendingDisbursement(array $branchIds, int $perPage = 20, User|null $user = null): LengthAwarePaginator
     {
-        return PaymentRequest::with(['staff', 'branch', 'currency'])
+        $query = PaymentRequest::with(['staff', 'branch', 'currency'])
             ->whereIn('branch_id', $branchIds)
             ->where('status', 'approved')
-            ->orderBy('approved_at', 'asc')
-            ->paginate($perPage);
+            ->orderBy('approved_at', 'asc');
+
+        if ($user !== null) {
+            $this->workflowApprovers->excludePaymentRequestsParticipatedIn($query, $user);
+        }
+
+        return $query->paginate($perPage);
     }
 
     public function findWithDetails(int|string $id): PaymentRequest
@@ -232,6 +247,8 @@ class PaymentRequestRepository
             'items.costCode',
             'activeWorkflowInstance.template',
             'activeWorkflowInstance.instanceStages.stage.roles',
+            'activeWorkflowInstance.instanceStages.stage.fallbackRoles',
+            'activeWorkflowInstance.instanceStages.recoveryRoles',
             'activities.causer',
             'comments.user',
         ])->findOrFail($id);

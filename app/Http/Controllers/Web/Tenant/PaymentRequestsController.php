@@ -16,6 +16,7 @@ use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
 use App\Services\SettingsService;
+use App\Services\WorkflowApproverResolver;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class PaymentRequestsController extends Controller
         private readonly WorkflowEngineService $workflowEngine,
         private readonly BranchScopeService $branchScope,
         private readonly SettingsService $settingsService,
+        private readonly WorkflowApproverResolver $workflowApprovers,
     ) {}
 
     public function index(Request $request): View
@@ -113,9 +115,10 @@ class PaymentRequestsController extends Controller
         }
 
         $isOwner = $user->staffProfile?->id === $paymentRequest->staff_id;
+        $canDisburse = $this->workflowApprovers->canDisburse($paymentRequest, $user);
         $requireSourceDocuments = $this->settingsService->isExpenseSourceDocumentRequired();
 
-        return view('tenant.payment-requests.show', compact('paymentRequest', 'activeInstanceStage', 'canActOnActiveStage', 'isOwner', 'requireSourceDocuments'));
+        return view('tenant.payment-requests.show', compact('paymentRequest', 'activeInstanceStage', 'canActOnActiveStage', 'isOwner', 'canDisburse', 'requireSourceDocuments'));
     }
 
     public function edit(PaymentRequest $paymentRequest, Request $request): RedirectResponse|View

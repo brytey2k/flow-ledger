@@ -8,8 +8,10 @@ use App\Enums\Tenant\PermissionKey;
 use App\Exceptions\InsufficientCashbookBalanceException;
 use App\Http\Requests\Tenant\DisbursementStoreRequest;
 use App\Models\Tenant\PaymentRequest;
+use App\Repositories\WorkflowApproverRepository;
 use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
+use App\Services\WorkflowApproverResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,6 +20,8 @@ class DisbursementController extends BaseApiController
     public function __construct(
         private readonly PaymentRequestService $service,
         private readonly BranchScopeService $branchScope,
+        private readonly WorkflowApproverRepository $approvers,
+        private readonly WorkflowApproverResolver $approverResolver,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -28,11 +32,14 @@ class DisbursementController extends BaseApiController
         $branchIds = $this->branchScope->allowedBranchIds($user);
         $perPage = min((int) $request->query('per_page', 20), 50);
 
-        $paginator = PaymentRequest::query()
+        $query = PaymentRequest::query()
             ->where('status', 'approved')
             ->whereIn('branch_id', $branchIds)
             ->with(['staff', 'currency', 'branch'])
-            ->latest()
+            ->latest();
+        $this->approvers->excludePaymentRequestsParticipatedIn($query, $user);
+
+        $paginator = $query
             ->paginate($perPage);
 
         return response()->json([
@@ -54,6 +61,7 @@ class DisbursementController extends BaseApiController
         $branchIds = $this->branchScope->allowedBranchIds($user);
         abort_unless(in_array($paymentRequest->branch_id, $branchIds, true), 403);
         abort_unless($paymentRequest->status === 'approved', 422, 'Only approved requests can be disbursed.');
+        abort_unless($this->approverResolver->canDisburse($paymentRequest, $user), 403, 'A requester or approver cannot disburse the same request.');
 
         try {
             $this->service->disburse($paymentRequest, $request->toDto(), $user);

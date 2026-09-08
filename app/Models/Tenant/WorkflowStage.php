@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * @property bool $scope_to_department
  * @property bool $scope_to_branch
  * @property bool $allow_send_back
+ * @property string|null $lineage_id
  */
 class WorkflowStage extends Model
 {
@@ -23,6 +25,7 @@ class WorkflowStage extends Model
 
     protected $fillable = [
         'workflow_template_id',
+        'lineage_id',
         'parallel_group_id',
         'name',
         'display_order',
@@ -31,6 +34,13 @@ class WorkflowStage extends Model
         'scope_to_branch',
         'allow_send_back',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $stage): void {
+            $stage->lineage_id ??= (string) Str::uuid();
+        });
+    }
 
     protected function casts(): array
     {
@@ -59,6 +69,12 @@ class WorkflowStage extends Model
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'workflow_stage_roles', 'workflow_stage_id', 'role_id');
+    }
+
+    /** @return BelongsToMany<Role, $this> */
+    public function fallbackRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'workflow_stage_fallback_roles', 'workflow_stage_id', 'role_id');
     }
 
     /** @return HasMany<WorkflowInstanceStage, $this> */

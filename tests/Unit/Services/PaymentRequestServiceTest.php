@@ -10,6 +10,7 @@ use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\PaymentRequestService;
+use Illuminate\Auth\Access\AuthorizationException;
 
 function makeServiceForPaymentRequestService(): PaymentRequestService
 {
@@ -68,7 +69,7 @@ test('cancel with active instance cancels instance and stages', function () {
         'status' => 'cancelled',
     ]);
 });
-test('cancel with active instance cancels both pending and active stages', function () {
+test('cancel with active instance cancels pending active and blocked stages', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $stageDef = WorkflowStage::factory()->create([
         'workflow_template_id' => $template->id,
@@ -96,6 +97,14 @@ test('cancel with active instance cancels both pending and active stages', funct
         'workflow_stage_id' => $stageDef->id,
         'status' => 'pending',
     ]);
+    WorkflowInstanceStage::create([
+        'workflow_instance_id' => $instance->id,
+        'workflow_stage_id' => $stageDef->id,
+        'status' => 'blocked',
+        'approver_pool' => null,
+        'blocked_reason' => 'no_independent_approver',
+        'blocked_at' => now(),
+    ]);
 
     makeServiceForPaymentRequestService()->cancel($request, $this->user);
 
@@ -103,7 +112,7 @@ test('cancel with active instance cancels both pending and active stages', funct
         ->where('status', 'cancelled')
         ->count();
 
-    expect($cancelledCount)->toEqual(2);
+    expect($cancelledCount)->toEqual(3);
 });
 test('submit uses branch specific template when available', function () {
     $branch = Branch::factory()->create();
@@ -203,6 +212,26 @@ test('disburse logs activity', function () {
         'subject_id' => $request->id,
         'event' => 'request.disbursed',
     ]);
+});
+test('disburse rejects the request submitter', function () {
+    $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    $template = WorkflowTemplate::factory()->advance()->create();
+    WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $request->id,
+        'submitter_user_id' => $this->user->id,
+        'status' => 'completed',
+    ]);
+    $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
+        method: App\Enums\Tenant\PaymentMethod::Cash,
+        reference: null,
+    );
+
+    expect(fn() => makeServiceForPaymentRequestService()->disburse($request, $dto, $this->user))
+        ->toThrow(AuthorizationException::class);
+
+    expect($request->fresh()->status)->toBe('approved');
 });
 test('decline sets status to denied', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'draft']);

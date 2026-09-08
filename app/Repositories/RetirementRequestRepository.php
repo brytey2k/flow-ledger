@@ -49,6 +49,8 @@ class RetirementRequestRepository
             'items.costCode',
             'attachments.user',
             'activeWorkflowInstance.instanceStages.stage.roles',
+            'activeWorkflowInstance.instanceStages.stage.fallbackRoles',
+            'activeWorkflowInstance.instanceStages.recoveryRoles',
             'activities.causer',
             'comments.user',
         ])->findOrFail($id);

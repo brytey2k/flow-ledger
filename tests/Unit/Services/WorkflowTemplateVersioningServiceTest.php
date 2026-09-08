@@ -141,6 +141,27 @@ test('fork draft clones stage role pivots', function () {
     $clonedStage = $fork->newTemplate->stages()->firstOrFail();
     expect($clonedStage->roles->pluck('id')->contains($role->id))->toBeTrue();
 });
+test('fork draft clones stage fallback role pivots', function () {
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $fallbackRole = Role::create(['name' => 'fork_fallback_role_pivot', 'guard_name' => 'web']);
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+    $stage->fallbackRoles()->sync([$fallbackRole->id]);
+
+    $fork = makeServiceForWorkflowTemplateVersioningService()->forkDraft($template);
+
+    $clonedStage = $fork->newTemplate->stages()->firstOrFail();
+    expect($clonedStage->fallbackRoles->pluck('id')->contains($fallbackRole->id))->toBeTrue();
+});
+test('fork draft preserves stable stage lineage', function () {
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+
+    $fork = makeServiceForWorkflowTemplateVersioningService()->forkDraft($template);
+
+    $clonedStage = $fork->newTemplate->stages()->firstOrFail();
+    expect($stage->fresh()->lineage_id)->not->toBeNull()
+        ->and($clonedStage->lineage_id)->toBe($stage->fresh()->lineage_id);
+});
 test('fork draft returns stage id map covering every original stage', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $stageOne = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);

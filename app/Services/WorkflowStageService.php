@@ -25,6 +25,7 @@ class WorkflowStageService
                 'allow_send_back' => $dto->allowSendBack,
             ]);
             $stage->roles()->sync($dto->roleIds);
+            $stage->fallbackRoles()->sync($dto->fallbackRoleIds);
             $this->syncParallelGroupDisplayOrder($stage);
 
             return $stage;
@@ -44,6 +45,7 @@ class WorkflowStageService
                 'allow_send_back' => $dto->allowSendBack,
             ]);
             $stage->roles()->sync($dto->roleIds);
+            $stage->fallbackRoles()->sync($dto->fallbackRoleIds);
             $this->syncParallelGroupDisplayOrder($stage);
         });
     }

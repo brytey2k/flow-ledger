@@ -1,6 +1,8 @@
 @import 'tom-select/dist/css/tom-select.default.min.css';
 @import 'tailwindcss';
 
+/* Hallmark · pre-emit critique: P4 H4 E5 S5 R5 V4 */
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 .text-success { color: var(--color-green-500); }
@@ -242,6 +244,13 @@
     --color-auth-panel-caption: var(--auth-panel-caption);
 }
 
+@layer base {
+    html,
+    body {
+        @apply overflow-x-clip;
+    }
+}
+
 /*
  * sgh-* Tailwind component classes replacing the legacy kt-* markup.
  * Mirrors the sibling church-mgt-system project sgh-* design system for
@@ -322,32 +331,33 @@
     }
 
     .sgh-card {
-        @apply rounded-2xl border border-border bg-card text-card-foreground;
+        @apply min-w-0 rounded-2xl border border-border bg-card text-card-foreground;
     }
     .sgh-card-hover {
         @apply transition-shadow hover:shadow-md;
     }
     .sgh-card-header {
-        @apply flex items-center justify-between gap-3 border-b border-border p-5;
+        @apply flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-border p-5;
     }
     .sgh-card-title {
-        @apply text-sm font-semibold text-foreground;
+        @apply min-w-0 text-sm font-semibold text-foreground;
+        overflow-wrap: anywhere;
     }
     .sgh-card-subtitle {
         @apply mt-1 text-xs text-muted-foreground;
     }
     .sgh-card-content,
     .sgh-card-body {
-        @apply p-5;
+        @apply min-w-0 p-5;
     }
     .sgh-card-footer {
         @apply flex items-center justify-between gap-3 border-t border-border p-5;
     }
     .sgh-card-grid {
-        @apply grid;
+        @apply min-w-0 grid;
     }
     .sgh-card-table {
-        @apply p-0;
+        @apply min-w-0 max-w-full p-0;
     }
 
     .sgh-badge {
@@ -434,13 +444,13 @@
     }
 
     .sgh-container-fixed {
-        @apply mx-auto w-full px-4 lg:px-7.5;
+        @apply mx-auto min-w-0 w-full max-w-full px-4 lg:px-7.5;
     }
     .sgh-wrapper {
-        @apply flex grow flex-col;
+        @apply flex min-w-0 w-full grow flex-col;
     }
     .sgh-scrollable-x-auto {
-        @apply overflow-x-auto;
+        @apply min-w-0 max-w-full overflow-x-auto overscroll-x-contain;
     }
 
     .sgh-switch {
@@ -528,7 +538,7 @@
     }
 
     .sgh-shell {
-        @apply flex grow;
+        @apply flex min-w-0 w-full grow;
     }
     .sgh-sidebar {
         width: var(--sgh-sidebar-width);

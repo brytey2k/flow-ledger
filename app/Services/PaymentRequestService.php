@@ -13,6 +13,7 @@ use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 class PaymentRequestService
@@ -22,6 +23,7 @@ class PaymentRequestService
         private readonly NotificationService $notifications,
         private readonly CashbookService $cashbook,
         private readonly SettingsService $settingsService,
+        private readonly WorkflowApproverResolver $approvers,
     ) {}
 
     public function createDraft(CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
@@ -95,6 +97,10 @@ class PaymentRequestService
 
     public function disburse(PaymentRequest $request, DisbursePaymentRequestDto $dto, User|null $user = null): void
     {
+        if ($user !== null && ! $this->approvers->canDisburse($request, $user)) {
+            throw new AuthorizationException('A requester or approver cannot disburse the same request.');
+        }
+
         DB::transaction(function () use ($request, $dto, $user): void {
             $request->update([
                 'status' => PaymentRequestStatus::Disbursed->value,
@@ -194,11 +200,13 @@ class PaymentRequestService
             $activeInstance = $request->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
-                $activeStage = $activeInstance->activeInstanceStages()->first();
+                $activeStage = $activeInstance->instanceStages()
+                    ->whereIn('status', ['active', 'blocked'])
+                    ->first();
 
-                // Only mark completed_at for stages that were active. Pending stages are cancelled without completed_at.
+                // Pending stages are cancelled without a completion timestamp.
                 $activeInstance->instanceStages()
-                    ->where('status', 'active')
+                    ->whereIn('status', ['active', 'blocked'])
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
 
                 $activeInstance->instanceStages()
@@ -229,9 +237,9 @@ class PaymentRequestService
             $activeInstance = $request->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
-                // Only mark completed_at for stages that were active. Pending stages are cancelled without completed_at.
+                // Pending stages are cancelled without a completion timestamp.
                 $activeInstance->instanceStages()
-                    ->where('status', 'active')
+                    ->whereIn('status', ['active', 'blocked'])
                     ->update(['status' => 'cancelled', 'completed_at' => now()]);
 
                 $activeInstance->instanceStages()

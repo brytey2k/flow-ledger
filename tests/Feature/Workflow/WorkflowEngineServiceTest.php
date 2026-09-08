@@ -16,6 +16,7 @@ use App\Models\Tenant\WorkflowParallelGroup;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\WorkflowEngineService;
+use Illuminate\Auth\Access\AuthorizationException;
 
 beforeEach(function () {
     $this->engine = app(WorkflowEngineService::class);
@@ -39,10 +40,11 @@ function makePaymentRequestForWorkflowEngineService(array $overrides = []): Paym
  * Build a sequential template with N stages at consecutive display_order values.
  *
  * @param int $stageCount
+ * @param bool $assignDefaultApprovers
  *
  * @return array{template: WorkflowTemplate, stages: WorkflowStage[], role: Role}
  */
-function makeSequentialTemplate(int $stageCount = 2): array
+function makeSequentialTemplate(int $stageCount = 2, bool $assignDefaultApprovers = true): array
 {
     $template = WorkflowTemplate::factory()->advance()->create();
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
@@ -58,6 +60,11 @@ function makeSequentialTemplate(int $stageCount = 2): array
     }
 
     $template->load('stages');
+
+    if ($assignDefaultApprovers) {
+        test()->user->assignRole($role);
+        User::factory()->create()->assignRole($role);
+    }
 
     return ['template' => $template, 'stages' => $stages, 'role' => $role];
 }
@@ -91,6 +98,8 @@ test('start workflow activates all stages in first parallel group', function () 
     $template = WorkflowTemplate::factory()->advance()->create();
     $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
+    User::factory()->create()->assignRole($role);
 
     // Two stages in the same parallel group at the same display_order
     foreach ([1, 2] as $n) {
@@ -120,6 +129,9 @@ test('start workflow activates all stages in first parallel group', function () 
 test('stage below threshold is skipped and next is activated', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
+    $secondApprover = User::factory()->create();
+    $secondApprover->assignRole($role);
 
     // Stage 1: skip if amount < 5000
     $s1 = WorkflowStage::factory()->withThreshold(5000)->create([
@@ -149,6 +161,7 @@ test('stage below threshold is skipped and next is activated', function () {
 test('stage meeting threshold is not skipped', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
 
     $stage = WorkflowStage::factory()->withThreshold(500)->create([
         'workflow_template_id' => $template->id,
@@ -223,6 +236,9 @@ test('parallel and group waits for all siblings before advancing', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
+    $secondApprover = User::factory()->create();
+    $secondApprover->assignRole($role);
 
     $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
     $s1->roles()->sync([$role->id]);
@@ -244,7 +260,7 @@ test('parallel and group waits for all siblings before advancing', function () {
 
     // Now approve the second sibling
     $secondActive = $instance->instanceStages()->where('workflow_stage_id', $s2->id)->firstOrFail();
-    $this->engine->approve($secondActive, $this->user);
+    $this->engine->approve($secondActive, $secondApprover);
 
     $instance->refresh();
     expect($instance->status)->toEqual('completed');
@@ -253,6 +269,8 @@ test('parallel or group cancels siblings on first approval', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $group = WorkflowParallelGroup::factory()->requireAny()->create(['workflow_template_id' => $template->id]);
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
+    User::factory()->create()->assignRole($role);
 
     $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
     $s1->roles()->sync([$role->id]);
@@ -325,6 +343,7 @@ test('send back records action and stores sent back stage id', function () {
 test('send back throws when the stage disallows it and leaves state unchanged', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $role = Role::create(['name' => 'no_send_back_engine_role_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
     $stage = WorkflowStage::factory()->create([
         'workflow_template_id' => $template->id,
         'display_order' => 1,
@@ -351,6 +370,8 @@ test('send back in parallel group cancels sibling stages', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
+    User::factory()->create()->assignRole($role);
 
     $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
     $s1->roles()->sync([$role->id]);
@@ -403,6 +424,8 @@ test('resubmit after fix reactivates cancelled parallel siblings', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
     $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    $this->user->assignRole($role);
+    User::factory()->create()->assignRole($role);
 
     $s1 = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'parallel_group_id' => $group->id, 'display_order' => 1]);
     $s1->roles()->sync([$role->id]);
@@ -434,7 +457,7 @@ test('resubmit after fix reactivates cancelled parallel siblings', function () {
     $instance->refresh();
     expect($instance->sent_back_to_stage_id)->toBeNull();
 });
-test('stage is auto skipped when submitter has stage role', function () {
+test('submitter cannot act and does not cause stage to be skipped', function () {
     ['template' => $template, 'role' => $role, 'stages' => $stages] = makeSequentialTemplate(1);
     $subject = makePaymentRequestForWorkflowEngineService();
     $this->user->assignRole($role);
@@ -442,33 +465,63 @@ test('stage is auto skipped when submitter has stage role', function () {
     $instance = $this->engine->startWorkflow($subject, $template, $this->user);
 
     $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
-    expect($instanceStage->status)->toEqual('skipped');
-    expect($instanceStage->completed_at)->not->toBeNull();
+    expect($instanceStage->status)->toEqual('active')
+        ->and($instanceStage->completed_at)->toBeNull()
+        ->and($this->engine->canUserActOnStage($instanceStage, $this->user))->toBeFalse();
+});
+test('submitter cannot approve their own request', function () {
+    ['template' => $template, 'stages' => $stages] = makeSequentialTemplate(1);
+    $subject = makePaymentRequestForWorkflowEngineService();
+    $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+    $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
+
+    expect(fn() => $this->engine->approve($instanceStage, $this->user))
+        ->toThrow(AuthorizationException::class);
+
+    expect($instanceStage->fresh()->status)->toBe('active');
+    $this->assertDatabaseCount('workflow_actions', 0);
+    $this->assertDatabaseCount('workflow_instance_actor_claims', 0);
+});
+test('one user cannot approve more than one stage in the same workflow', function () {
+    ['template' => $template] = makeSequentialTemplate(2);
+    $subject = makePaymentRequestForWorkflowEngineService();
+    $instance = $this->engine->startWorkflow($subject, $template);
+
+    $firstStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $this->engine->approve($firstStage, $this->user);
+    $secondStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+
+    expect($this->engine->canUserActOnStage($secondStage, $this->user))->toBeFalse()
+        ->and(fn() => $this->engine->approve($secondStage, $this->user))
+        ->toThrow(AuthorizationException::class);
+
+    expect($secondStage->fresh()->status)->toBe('active');
+    $this->assertDatabaseCount('workflow_actions', 1);
+    $this->assertDatabaseCount('workflow_instance_actor_claims', 1);
 });
 test('stage is not auto skipped when submitter lacks stage role', function () {
     ['template' => $template, 'stages' => $stages] = makeSequentialTemplate(1);
     $subject = makePaymentRequestForWorkflowEngineService();
+    $submitter = User::factory()->create();
 
-    $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+    $instance = $this->engine->startWorkflow($subject, $template, $submitter);
 
     $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
     expect($instanceStage->status)->toEqual('active');
 });
-test('all stages auto skipped completes workflow', function () {
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(2);
+test('workflow blocks when submitter is the only approver', function () {
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(2, false);
     $subject = makePaymentRequestForWorkflowEngineService(['type' => App\Enums\Tenant\PaymentRequestType::Advance->value]);
     $this->user->assignRole($role);
 
     $instance = $this->engine->startWorkflow($subject, $template, $this->user);
 
     $instance->refresh();
-    expect($instance->status)->toEqual('completed');
-
-    $subject->refresh();
-    expect($subject->status)->toEqual('approved');
-    expect($subject->approved_at)->not->toBeNull();
+    expect($instance->status)->toEqual('in_progress')
+        ->and($instance->instanceStages()->where('status', 'blocked')->count())->toEqual(1)
+        ->and($instance->instanceStages()->where('status', 'pending')->count())->toEqual(1);
 });
-test('submitter skip advances to next sequential stage', function () {
+test('submitter conflict activates configured fallback pool', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $role1 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
     $role2 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
@@ -482,16 +535,45 @@ test('submitter skip advances to next sequential stage', function () {
     $template->load('stages');
     $subject = makePaymentRequestForWorkflowEngineService();
     $this->user->assignRole($role1);
+    $fallbackApprover = User::factory()->create();
+    $fallbackApprover->assignRole($role2);
+    $s1->fallbackRoles()->sync([$role2->id]);
 
     $instance = $this->engine->startWorkflow($subject, $template, $this->user);
 
     $instanceStage1 = $instance->instanceStages()->where('workflow_stage_id', $s1->id)->firstOrFail();
     $instanceStage2 = $instance->instanceStages()->where('workflow_stage_id', $s2->id)->firstOrFail();
 
-    expect($instanceStage1->status)->toEqual('skipped');
-    expect($instanceStage2->status)->toEqual('active');
+    expect($instanceStage1->status)->toEqual('active')
+        ->and($instanceStage1->approver_pool)->toEqual('fallback')
+        ->and($instanceStage2->status)->toEqual('pending')
+        ->and($this->engine->canUserActOnStage($instanceStage1, $fallbackApprover))->toBeTrue();
 });
-test('submitter skip in parallel group', function () {
+test('blocked stage can be retried after an independent fallback approver is assigned', function () {
+    ['template' => $template, 'role' => $primaryRole, 'stages' => $stages] = makeSequentialTemplate(1, false);
+    $fallbackRole = Role::create(['name' => 'fallback_' . uniqid(), 'guard_name' => 'web']);
+    $stages[0]->fallbackRoles()->sync([$fallbackRole->id]);
+    $this->user->assignRole($primaryRole);
+
+    $subject = makePaymentRequestForWorkflowEngineService();
+    $instance = $this->engine->startWorkflow($subject, $template, $this->user);
+    $instanceStage = $instance->instanceStages()->firstOrFail();
+
+    expect($instanceStage->status)->toBe('blocked')
+        ->and($this->engine->retryBlockedStage($instanceStage))->toBeFalse();
+
+    $fallbackApprover = User::factory()->create();
+    $fallbackApprover->assignRole($fallbackRole);
+
+    expect($this->engine->retryBlockedStage($instanceStage->fresh()))->toBeTrue();
+
+    $instanceStage->refresh();
+    expect($instanceStage->status)->toBe('active')
+        ->and($instanceStage->approver_pool)->toBe('fallback')
+        ->and($instanceStage->blocked_reason)->toBeNull()
+        ->and($this->engine->canUserActOnStage($instanceStage, $fallbackApprover))->toBeTrue();
+});
+test('submitter conflict blocks only its parallel stage', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $group = WorkflowParallelGroup::factory()->requireAll()->create(['workflow_template_id' => $template->id]);
     $role1 = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
@@ -506,13 +588,14 @@ test('submitter skip in parallel group', function () {
     $template->load('stages');
     $subject = makePaymentRequestForWorkflowEngineService();
     $this->user->assignRole($role1);
+    User::factory()->create()->assignRole($role2);
 
     $instance = $this->engine->startWorkflow($subject, $template, $this->user);
 
     $instanceStage1 = $instance->instanceStages()->where('workflow_stage_id', $s1->id)->firstOrFail();
     $instanceStage2 = $instance->instanceStages()->where('workflow_stage_id', $s2->id)->firstOrFail();
 
-    expect($instanceStage1->status)->toEqual('skipped');
+    expect($instanceStage1->status)->toEqual('blocked');
     expect($instanceStage2->status)->toEqual('active');
 });
 test('no submitter preserves existing behavior', function () {
@@ -553,7 +636,7 @@ test('department scoped stage allows approver in same department', function () {
     $submitter = makeUserWithStaff(departmentId: $dept->id);
     $approver = makeUserWithStaff(departmentId: $dept->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
     $approver->assignRole($role);
 
@@ -567,50 +650,51 @@ test('department scoped stage blocks approver in different department', function
     $submitter = makeUserWithStaff(departmentId: Department::factory()->create()->id);
     $approver = makeUserWithStaff(departmentId: Department::factory()->create()->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
     $approver->assignRole($role);
 
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
-    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $activeStage = $instance->instanceStages()->firstOrFail();
 
-    expect($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
+    expect($activeStage->status)->toBe('blocked')
+        ->and($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
 });
-test('department scoped stage allows approver with no staff profile', function () {
+test('department scoped stage blocks approver with no staff profile', function () {
     $submitter = makeUserWithStaff(departmentId: Department::factory()->create()->id);
     $approver = User::factory()->create();
 
-    // no Staff record — bypasses scope filters
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
     $approver->assignRole($role);
 
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
-    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $activeStage = $instance->instanceStages()->firstOrFail();
 
-    expect($this->engine->canUserActOnStage($activeStage, $approver))->toBeTrue();
+    expect($activeStage->status)->toBe('blocked')
+        ->and($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
 });
-test('department scoped stage blocks when submitter has no staff profile', function () {
+test('department scoped stage blocks when submitter without staff is the only role holder', function () {
     $submitter = User::factory()->create();
     // no Staff record
     $approver = makeUserWithStaff(departmentId: Department::factory()->create()->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
     $approver->assignRole($role);
 
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
-    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $activeStage = $instance->instanceStages()->firstOrFail();
 
     expect($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
 });
 test('branch scoped stage allows approver in same branch', function () {
     $approver = makeUserWithStaff(branchId: $this->branch->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
     $approver->assignRole($role);
 
@@ -625,14 +709,14 @@ test('branch scoped stage blocks approver in different branch', function () {
     $otherBranch = Branch::factory()->create();
     $approver = makeUserWithStaff(branchId: $otherBranch->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
     $approver->assignRole($role);
 
     // Request is in $this->branch (different from approver's branch)
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template);
-    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $activeStage = $instance->instanceStages()->firstOrFail();
 
     expect($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
 });
@@ -640,13 +724,13 @@ test('branch scoped stage blocks approver with no branch', function () {
     $approver = makeUserWithStaff(branchId: null);
 
     // staff exists but no branch
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
     $approver->assignRole($role);
 
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template);
-    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $activeStage = $instance->instanceStages()->firstOrFail();
 
     expect($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
 });
@@ -655,7 +739,7 @@ test('both scopes allow when department and branch match', function () {
     $submitter = makeUserWithStaff(departmentId: $dept->id, branchId: $this->branch->id);
     $approver = makeUserWithStaff(departmentId: $dept->id, branchId: $this->branch->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update([
         'scope_to_department' => true,
         'scope_to_branch' => true,
@@ -674,7 +758,7 @@ test('both scopes block when branch mismatches', function () {
     $otherBranch = Branch::factory()->create();
     $approver = makeUserWithStaff(departmentId: $dept->id, branchId: $otherBranch->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update([
         'scope_to_department' => true,
         'scope_to_branch' => true,
@@ -683,7 +767,7 @@ test('both scopes block when branch mismatches', function () {
 
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
-    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $activeStage = $instance->instanceStages()->firstOrFail();
 
     expect($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
 });
@@ -692,7 +776,7 @@ test('both scopes block when department mismatches', function () {
     $submitter = makeUserWithStaff(departmentId: $dept->id, branchId: $this->branch->id);
     $approver = makeUserWithStaff(departmentId: Department::factory()->create()->id, branchId: $this->branch->id);
 
-    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update([
         'scope_to_department' => true,
         'scope_to_branch' => true,
@@ -701,15 +785,15 @@ test('both scopes block when department mismatches', function () {
 
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
-    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $activeStage = $instance->instanceStages()->firstOrFail();
 
     expect($this->engine->canUserActOnStage($activeStage, $approver))->toBeFalse();
 });
-test('branch scoped submitter not auto skipped when branch differs', function () {
+test('branch scoped stage blocks when submitter is only role holder in another branch', function () {
     $otherBranch = Branch::factory()->create();
     $submitter = makeUserWithStaff(branchId: $otherBranch->id);
 
-    ['template' => $template, 'role' => $role, 'stages' => $stages] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role, 'stages' => $stages] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
     $submitter->assignRole($role);
 
@@ -718,12 +802,12 @@ test('branch scoped submitter not auto skipped when branch differs', function ()
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
     $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
 
-    expect($instanceStage->status)->toEqual('active');
+    expect($instanceStage->status)->toEqual('blocked');
 });
-test('branch scoped submitter is auto skipped when branch matches', function () {
+test('branch scoped stage blocks rather than skipping when submitter is only approver', function () {
     $submitter = makeUserWithStaff(branchId: $this->branch->id);
 
-    ['template' => $template, 'role' => $role, 'stages' => $stages] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role, 'stages' => $stages] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_branch' => true]);
     $submitter->assignRole($role);
 
@@ -732,13 +816,13 @@ test('branch scoped submitter is auto skipped when branch matches', function () 
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
     $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
 
-    expect($instanceStage->status)->toEqual('skipped');
+    expect($instanceStage->status)->toEqual('blocked');
 });
-test('department scoped submitter not auto skipped when no staff profile', function () {
+test('department scoped stage blocks when submitter has no staff profile', function () {
     $submitter = User::factory()->create();
 
     // no Staff record
-    ['template' => $template, 'role' => $role, 'stages' => $stages] = makeSequentialTemplate(1);
+    ['template' => $template, 'role' => $role, 'stages' => $stages] = makeSequentialTemplate(1, false);
     WorkflowStage::where('workflow_template_id', $template->id)->update(['scope_to_department' => true]);
     $submitter->assignRole($role);
 
@@ -746,7 +830,7 @@ test('department scoped submitter not auto skipped when no staff profile', funct
     $instance = $this->engine->startWorkflow($subject, $template, $submitter);
     $instanceStage = $instance->instanceStages()->where('workflow_stage_id', $stages[0]->id)->firstOrFail();
 
-    expect($instanceStage->status)->toEqual('active');
+    expect($instanceStage->status)->toEqual('blocked');
 });
 // ── Helpers ───────────────────────────────────────────────────────────────
 function makeUserWithStaff(int|null $departmentId = null, int|null $branchId = null): User

@@ -142,6 +142,12 @@ return [
     'approvals' => [
         'action_recorded' => 'Action enregistree avec succes.',
         'send_back_not_allowed' => 'Cette etape ne permet pas de renvoyer la demande pour revision.',
+        'retry_activated' => 'L etape est active et les approbateurs independants ont ete informes.',
+        'retry_still_blocked' => 'L etape reste bloquee car aucun approbateur independant n est disponible.',
+        'recovery_activated' => 'Le suppleant pour cette demande a ete applique et l etape est active. Mettez a jour le modele principal pour eviter que le probleme se reproduise.',
+        'recovery_still_blocked' => 'Le suppleant a ete enregistre, mais l etape reste bloquee car aucun approbateur independant n est disponible.',
+        'template_repair_draft_ready' => 'Le role suppleant a ete ajoute a un brouillon. Verifiez et publiez le brouillon pour proteger les futures demandes.',
+        'template_repair_already_applied' => 'Le workflow principal actuel utilise deja ce role a l etape correspondante.',
     ],
     'tenants' => [
         'created' => 'Locataire cree avec succes.',

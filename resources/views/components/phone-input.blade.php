@@ -61,13 +61,12 @@
         @endif
     </label>
 
-    <div class="flex gap-2">
+    <div class="flex flex-col gap-2 sm:flex-row">
         {{-- Country code dropdown --}}
         <select
             name="{{ $nameCountry }}"
             id="{{ $nameCountry }}"
-            class="sgh-select"
-            style="min-width:9rem;max-width:10rem;flex-shrink:0"
+            class="sgh-select w-full sm:w-40 sm:shrink-0"
             aria-label="Country code"
         >
             @foreach ($countries as $country)
@@ -86,7 +85,7 @@
             name="{{ $nameNumber }}"
             type="tel"
             value="{{ $selectedNumber }}"
-            class="sgh-input w-full"
+            class="sgh-input min-w-0 w-full"
             placeholder="246227810"
             @if ($required) required @endif
             @if ($autofocus) autofocus @endif

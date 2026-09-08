@@ -104,6 +104,23 @@ test('create syncs multiple roles to stage', function () {
     expect($roleIds->contains($this->role->id))->toBeTrue();
     expect($roleIds->contains($extraRole->id))->toBeTrue();
 });
+test('create syncs fallback roles separately from primary roles', function () {
+    $template = makeTemplate();
+    $fallbackRole = App\Models\Role::create(['name' => 'fallback_role_' . Illuminate\Support\Str::uuid(), 'guard_name' => 'web']);
+    $dto = new WorkflowStageDto(
+        name: 'Review',
+        displayOrder: 1,
+        skipBelowAmount: null,
+        parallelGroupId: null,
+        roleIds: [$this->role->id],
+        fallbackRoleIds: [$fallbackRole->id],
+    );
+
+    $stage = makeServiceForWorkflowStageService()->create($template, $dto);
+
+    expect($stage->roles->pluck('id')->all())->toBe([$this->role->id])
+        ->and($stage->fallbackRoles->pluck('id')->all())->toBe([$fallbackRole->id]);
+});
 test('create sets skip below amount', function () {
     $template = makeTemplate();
     $dto = new WorkflowStageDto(
@@ -227,6 +244,25 @@ test('update syncs role from tenant test case', function () {
     makeServiceForWorkflowStageService()->update($stage, $dto);
 
     expect($stage->fresh()->roles->pluck('id')->contains($this->role->id))->toBeTrue();
+});
+test('update replaces fallback roles', function () {
+    $template = makeTemplate();
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+    $oldFallbackRole = App\Models\Role::create(['name' => 'old_fallback_' . Illuminate\Support\Str::uuid(), 'guard_name' => 'web']);
+    $newFallbackRole = App\Models\Role::create(['name' => 'new_fallback_' . Illuminate\Support\Str::uuid(), 'guard_name' => 'web']);
+    $stage->fallbackRoles()->sync([$oldFallbackRole->id]);
+    $dto = new WorkflowStageDto(
+        name: $stage->name,
+        displayOrder: $stage->display_order,
+        skipBelowAmount: null,
+        parallelGroupId: null,
+        roleIds: [$this->role->id],
+        fallbackRoleIds: [$newFallbackRole->id],
+    );
+
+    makeServiceForWorkflowStageService()->update($stage, $dto);
+
+    expect($stage->fresh()->fallbackRoles->pluck('id')->all())->toBe([$newFallbackRole->id]);
 });
 test('update sets skip below amount', function () {
     $template = makeTemplate();

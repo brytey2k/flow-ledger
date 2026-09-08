@@ -82,7 +82,7 @@ class DashboardAnalyticsService
                     : [];
 
                 $pendingApprovals = $this->workflowInstanceRepository->pendingApprovalsCountForUser($user);
-                $pendingDisbursements = $this->paymentRequestRepository->countPendingDisbursements($allowedBranchIds);
+                $pendingDisbursements = $this->paymentRequestRepository->countPendingDisbursements($allowedBranchIds, $user);
                 $myDraftRequests = $this->paymentRequestRepository->countByStaffAndStatus($staffId, 'draft');
                 $myInWorkflowRequests = $this->paymentRequestRepository->countByStaffAndStatus($staffId, 'in_workflow');
                 $myDraftRetirements = $this->retirementRequestRepository->countByStaffAndStatus($staffId, 'draft');

@@ -531,7 +531,8 @@
                                 {{ __('payment_requests.status.approved_awaiting') }}
                             </div>
                             @can(PermissionKey::DisburseRequests->value)
-                                <form method="POST" action="{{ route('disbursements.store', $paymentRequest) }}" class="flex flex-col gap-3">
+                                @if($canDisburse)
+                                    <form method="POST" action="{{ route('disbursements.store', $paymentRequest) }}" class="flex flex-col gap-3">
                                     @csrf
                                     <div>
                                         <label class="sgh-form-label block mb-1.5 text-sm" for="disbursement_method">{{ __('payment_requests.show.payment_method') }} <span class="text-destructive">*</span></label>
@@ -565,7 +566,13 @@
                                         <x-tabler-currency-dollar />
                                         {{ __('payment_requests.buttons.disburse') }}
                                     </button>
-                                </form>
+                                    </form>
+                                @else
+                                    <div class="flex items-start gap-2 rounded-lg bg-warning/10 p-3 text-sm text-warning">
+                                        <x-tabler-alert-triangle class="mt-0.5 shrink-0" />
+                                        {{ __('workflows.separation.cannot_disburse') }}
+                                    </div>
+                                @endif
                             @endcan
                             @if($isOwner)
                                 <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
@@ -663,6 +670,10 @@
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
                                                 <x-tabler-clock-filled class="text-xs" />
                                             </span>
+                                        @elseif($instanceStage->status === 'blocked')
+                                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/20 text-warning">
+                                                <x-tabler-alert-triangle class="text-xs" />
+                                            </span>
                                         @elseif($instanceStage->status === 'rejected')
                                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/20 text-destructive">
                                                 <x-tabler-x-filled class="text-xs" />
@@ -685,10 +696,20 @@
                                         <span class="text-sm font-medium text-mono">{{ $instanceStage->stage->name }}</span>
                                         <span class="text-xs text-secondary-foreground capitalize">
                                             {{ str_replace('_', ' ', $instanceStage->status) }}
-                                            @if($instanceStage->stage->roles->isNotEmpty())
-                                                · {{ $instanceStage->stage->roles->pluck('name')->join(', ') }}
+                                            @php
+                                                $displayRoles = $instanceStage->approver_pool === 'fallback'
+                                                    ? $instanceStage->stage->fallbackRoles
+                                                    : $instanceStage->stage->roles;
+                                            @endphp
+                                            @if($displayRoles->isNotEmpty())
+                                                · {{ $displayRoles->pluck('name')->join(', ') }}
                                             @endif
                                         </span>
+                                        @if($instanceStage->status === 'blocked')
+                                            <x-workflow-stage-recovery :instance-stage="$instanceStage" />
+                                        @elseif($instanceStage->recoveryRoles->isNotEmpty())
+                                            <x-workflow-stage-recovery :instance-stage="$instanceStage" />
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
