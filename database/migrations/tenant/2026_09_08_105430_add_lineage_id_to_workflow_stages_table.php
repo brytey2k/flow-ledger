@@ -11,14 +11,14 @@ return new class extends Migration {
     {
         Schema::table('workflow_stages', static function (Blueprint $table): void {
             $table->uuid('lineage_id')->nullable()->after('workflow_template_id');
-            $table->index(['workflow_template_id', 'lineage_id']);
+            $table->unique(['workflow_template_id', 'lineage_id']);
         });
     }
 
     public function down(): void
     {
         Schema::table('workflow_stages', static function (Blueprint $table): void {
-            $table->dropIndex(['workflow_template_id', 'lineage_id']);
+            $table->dropUnique(['workflow_template_id', 'lineage_id']);
             $table->dropColumn('lineage_id');
         });
     }

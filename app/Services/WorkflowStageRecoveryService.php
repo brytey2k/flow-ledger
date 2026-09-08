@@ -184,6 +184,13 @@ class WorkflowStageRecoveryService
 
         /** @var WorkflowStage $matchingStage */
         $matchingStage = $structuralMatches->first();
+
+        if ($matchingStage->lineage_id !== null && $matchingStage->lineage_id !== $lineageId) {
+            throw ValidationException::withMessages([
+                'role_id' => __('workflows.separation.template_stage_not_found'),
+            ]);
+        }
+
         $matchingStage->update(['lineage_id' => $lineageId]);
 
         return $matchingStage;
