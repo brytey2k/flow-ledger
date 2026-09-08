@@ -10,7 +10,6 @@ use App\Http\Requests\Tenant\PaymentRequestStoreRequest;
 use App\Http\Requests\Tenant\PaymentRequestUpdateRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
-use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\CostCodeRepository;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
@@ -102,14 +101,22 @@ class PaymentRequestsController extends Controller
 
         $activeInstanceStage = null;
         $canActOnActiveStage = false;
+        $activeStageEligibility = [];
 
         /** @var \App\Models\Tenant\WorkflowInstance|null $activeInstance */
         $activeInstance = $paymentRequest->activeWorkflowInstance;
         if ($activeInstance !== null) {
-            $activeInstanceStage = $activeInstance->instanceStages()
-                ->where('status', 'active')
-                ->get()
-                ->first(fn(WorkflowInstanceStage $s) => $this->workflowEngine->canUserActOnStage($s, $user));
+            foreach ($activeInstance->instanceStages->where('status', 'active') as $instanceStage) {
+                $canCurrentUserAct = $this->workflowEngine->canUserActOnStage($instanceStage, $user);
+                $activeStageEligibility[$instanceStage->id] = [
+                    'eligible_count' => $this->workflowApprovers->eligibleUserCount($instanceStage),
+                    'can_current_user_act' => $canCurrentUserAct,
+                ];
+
+                if ($canCurrentUserAct && $activeInstanceStage === null) {
+                    $activeInstanceStage = $instanceStage;
+                }
+            }
 
             $canActOnActiveStage = $activeInstanceStage !== null;
         }
@@ -118,7 +125,7 @@ class PaymentRequestsController extends Controller
         $canDisburse = $this->workflowApprovers->canDisburse($paymentRequest, $user);
         $requireSourceDocuments = $this->settingsService->isExpenseSourceDocumentRequired();
 
-        return view('tenant.payment-requests.show', compact('paymentRequest', 'activeInstanceStage', 'canActOnActiveStage', 'isOwner', 'canDisburse', 'requireSourceDocuments'));
+        return view('tenant.payment-requests.show', compact('paymentRequest', 'activeInstanceStage', 'activeStageEligibility', 'canActOnActiveStage', 'isOwner', 'canDisburse', 'requireSourceDocuments'));
     }
 
     public function edit(PaymentRequest $paymentRequest, Request $request): RedirectResponse|View

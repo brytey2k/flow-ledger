@@ -10,6 +10,7 @@ use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\WorkflowApproverRepository;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class WorkflowApproverResolver
 {
@@ -30,8 +31,32 @@ class WorkflowApproverResolver
 
     public function canAct(WorkflowInstanceStage $instanceStage, User $user): bool
     {
-        return $this->eligibleUsers($instanceStage)->contains(
-            fn(User $eligibleUser): bool => $eligibleUser->is($user),
+        return $this->repository->userIsEligible(
+            $instanceStage,
+            $instanceStage->approver_pool ?? self::PrimaryPool,
+            $user,
+        );
+    }
+
+    public function eligibleUserCount(WorkflowInstanceStage $instanceStage): int
+    {
+        return $this->repository->eligibleUserCount(
+            $instanceStage,
+            $instanceStage->approver_pool ?? self::PrimaryPool,
+        );
+    }
+
+    /** @return LengthAwarePaginator<int, User> */
+    public function paginatedEligibleUsers(
+        WorkflowInstanceStage $instanceStage,
+        string|null $search = null,
+        int $perPage = 25,
+    ): LengthAwarePaginator {
+        return $this->repository->paginatedEligibleUsers(
+            $instanceStage,
+            $instanceStage->approver_pool ?? self::PrimaryPool,
+            $search,
+            $perPage,
         );
     }
 

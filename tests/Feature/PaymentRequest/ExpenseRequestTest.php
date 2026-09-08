@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Models\Tenant\Attachment;
 use App\Models\Tenant\CostCode;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
@@ -132,6 +133,11 @@ test('show renders expense request', function () {
         'cost_code_id' => $costCode->id,
         'receipt_number' => 'FL-001',
     ]);
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => PaymentRequest::class,
+        'attachable_id' => $paymentRequest->id,
+        'user_id' => $this->user->id,
+    ]);
 
     $response = $this->actingAs($this->user)->get(route('payment-requests.show', $paymentRequest));
 
@@ -139,6 +145,8 @@ test('show renders expense request', function () {
     $response->assertSee('FL-001');
     $response->assertSee($costCode->code);
     $response->assertSee('colspan="3"', false);
+    $response->assertSee(route('attachments.preview', $attachment), false);
+    $response->assertDontSee('sandbox=', false);
 });
 test('show does not offer retirement action for disbursed expense', function () {
     $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();

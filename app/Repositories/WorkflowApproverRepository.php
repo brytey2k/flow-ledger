@@ -11,6 +11,7 @@ use App\Models\Tenant\WorkflowInstanceStage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class WorkflowApproverRepository
 {
@@ -103,6 +104,49 @@ class WorkflowApproverRepository
     /** @return Collection<int, User> */
     public function eligibleUsers(WorkflowInstanceStage $instanceStage, string $pool): Collection
     {
+        return $this->eligibleUsersQuery($instanceStage, $pool)->get();
+    }
+
+    public function eligibleUserCount(WorkflowInstanceStage $instanceStage, string $pool): int
+    {
+        return $this->eligibleUsersQuery($instanceStage, $pool)->count();
+    }
+
+    public function userIsEligible(WorkflowInstanceStage $instanceStage, string $pool, User $user): bool
+    {
+        return $this->eligibleUsersQuery($instanceStage, $pool)
+            ->whereKey($user->id)
+            ->exists();
+    }
+
+    /** @return LengthAwarePaginator<int, User> */
+    public function paginatedEligibleUsers(
+        WorkflowInstanceStage $instanceStage,
+        string $pool,
+        string|null $search = null,
+        int $perPage = 25,
+    ): LengthAwarePaginator {
+        return $this->eligibleUsersQuery($instanceStage, $pool)
+            ->select(['id', 'first_name', 'last_name', 'email'])
+            ->when($search !== null, function (Builder $query) use ($search): void {
+                $query->where(function (Builder $searchQuery) use ($search): void {
+                    $pattern = "%{$search}%";
+
+                    $searchQuery->whereLike('first_name', $pattern)
+                        ->orWhereLike('last_name', $pattern)
+                        ->orWhereLike('email', $pattern);
+                });
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->orderBy('id')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /** @return Builder<User> */
+    private function eligibleUsersQuery(WorkflowInstanceStage $instanceStage, string $pool): Builder
+    {
         /** @var \App\Models\Tenant\WorkflowInstance $instance */
         $instance = $instanceStage->instance;
         /** @var \App\Models\Tenant\WorkflowStage $stage */
@@ -114,7 +158,7 @@ class WorkflowApproverRepository
             : $stage->roles()->pluck('roles.id');
 
         if ($roleIds->isEmpty()) {
-            return new Collection();
+            return User::query()->whereRaw('0 = 1');
         }
 
         return User::query()
@@ -149,8 +193,7 @@ class WorkflowApproverRepository
                     ->whereColumn('actor_claims.user_id', 'users.id')
                     ->where('actor_claims.workflow_instance_id', $instance->id)
                     ->where('actor_claims.workflow_instance_stage_id', '!=', $instanceStage->id);
-            })
-            ->get();
+            });
     }
 
     public function findClaim(WorkflowInstanceStage $instanceStage, User $user): WorkflowInstanceActorClaim|null

@@ -261,6 +261,7 @@ test('show renders payment request', function () {
 test('show passes active stage data when workflow is in progress', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $stageDef = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);
+    $stageDef->roles()->attach($this->role);
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'branch_id' => $this->branch->id]);
 
     $instance = WorkflowInstance::create([
@@ -275,12 +276,18 @@ test('show passes active stage data when workflow is in progress', function () {
         'status' => 'active',
         'started_at' => now(),
     ]);
+    $this->role->revokePermissionTo('edit workflow template');
+    $this->user->unsetRelation('roles')->unsetRelation('permissions');
 
     $response = $this->actingAs($this->user)->get(route('payment-requests.show', $paymentRequest));
 
     $response->assertOk();
     $response->assertViewHas('canActOnActiveStage');
     $response->assertSee(__('payment_requests.show.workflow_version', ['version' => $template->version]));
+    $response->assertSee(__('workflows.separation.primary_approvers', ['roles' => $this->role->name]));
+    $response->assertSee(trans_choice('workflows.separation.eligible_approver_count', 1, ['count' => 1]));
+    $response->assertSee(__('workflows.separation.you_can_act'));
+    $response->assertDontSee(route('approvals.eligible-approvers', WorkflowInstanceStage::latest()->firstOrFail()), false);
 });
 test('edit renders for sent back request owner', function () {
     $staff = Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();

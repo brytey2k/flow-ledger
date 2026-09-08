@@ -559,6 +559,8 @@ Route::middleware([
         Route::post('/retirements/{retirementRequest}/attachments', [AttachmentsController::class, 'store'])
             ->can(PermissionKey::CreateRetirementRequest->value)
             ->name('retirement-requests.attachments.store');
+        Route::get('/attachments/{attachment}/preview', [AttachmentsController::class, 'preview'])
+            ->name('attachments.preview');
         Route::get('/attachments/{attachment}/download', [AttachmentsController::class, 'download'])
             ->name('attachments.download');
         Route::delete('/attachments/{attachment}', [AttachmentsController::class, 'destroy'])
@@ -579,6 +581,9 @@ Route::middleware([
         Route::get('/approvals/{instanceStage}', [WorkflowApprovalsController::class, 'show'])
             ->can(PermissionKey::ApproveRequests->value)
             ->name('approvals.show');
+        Route::get('/approvals/{instanceStage}/eligible-approvers', [WorkflowApprovalsController::class, 'eligibleApprovers'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('approvals.eligible-approvers');
         Route::post('/approvals/{instanceStage}', [WorkflowApprovalsController::class, 'store'])
             ->can(PermissionKey::ApproveRequests->value)
             ->name('approvals.store');

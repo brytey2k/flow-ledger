@@ -9,18 +9,22 @@ use App\Models\Tenant\Attachment;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
+use App\Services\AttachmentPreviewService;
 use App\Services\AttachmentService;
 use App\Services\BranchScopeService;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttachmentsController extends Controller
 {
     public function __construct(
         private readonly AttachmentService $service,
+        private readonly AttachmentPreviewService $previewService,
         private readonly WorkflowEngineService $engine,
         private readonly BranchScopeService $branchScope,
     ) {}
@@ -52,10 +56,20 @@ class AttachmentsController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        abort_unless($this->canDownload($attachment, $user), 403);
+        abort_unless($this->canAccess($attachment, $user), 403);
         abort_unless(Storage::disk('local')->exists($attachment->path), 404);
 
         return Storage::disk('local')->download($attachment->path, $attachment->original_name);
+    }
+
+    public function preview(Request $request, Attachment $attachment): BinaryFileResponse|Response
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        abort_unless($this->canAccess($attachment, $user), 403);
+
+        return $this->previewService->response($attachment);
     }
 
     public function destroy(Request $request, Attachment $attachment): RedirectResponse
@@ -70,7 +84,7 @@ class AttachmentsController extends Controller
         return redirect()->back()->with('success', __('flash.attachments.deleted'));
     }
 
-    private function canDownload(Attachment $attachment, User $user): bool
+    private function canAccess(Attachment $attachment, User $user): bool
     {
         if ($attachment->user_id === $user->id) {
             return true;

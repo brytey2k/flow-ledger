@@ -15,6 +15,13 @@ use App\Models\Tenant\WorkflowTemplate;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\Settings as WordSettings;
+use PhpOffice\PhpWord\Writer\Word2007;
+use PHPUnit\Framework\Assert;
 
 function draftRetirementForAttachmentsController(): RetirementRequest
 {
@@ -51,6 +58,68 @@ function makeApprovalStageForAttachmentsController(int $displayOrder = 1): array
     $stage->roles()->sync([$role->id]);
 
     return ['template' => $template, 'stage' => $stage->fresh(), 'role' => $role];
+}
+
+function createSpreadsheetForAttachmentPreview(string $path): void
+{
+    Storage::disk('local')->makeDirectory(dirname($path));
+
+    $spreadsheet = new Spreadsheet();
+    $spreadsheet->getActiveSheet()
+        ->setTitle('Report')
+        ->setCellValue('A1', 'Invoice Number')
+        ->setCellValue('B1', 'Amount')
+        ->setCellValue('A2', 'INV-001')
+        ->setCellValue('B2', 1250);
+
+    $spreadsheet->createSheet()
+        ->setTitle('Summary')
+        ->setCellValue('A1', 'Visible Summary Value');
+
+    $spreadsheet->createSheet()
+        ->setTitle('Dropdown Data')
+        ->setCellValue('A1', 'Dropdown-only secret')
+        ->setSheetState(Worksheet::SHEETSTATE_HIDDEN);
+
+    $spreadsheet->createSheet()
+        ->setTitle('Internal Data')
+        ->setCellValue('A1', 'Very-hidden secret')
+        ->setSheetState(Worksheet::SHEETSTATE_VERYHIDDEN);
+
+    $spreadsheet->setActiveSheetIndex(0);
+
+    (new Xlsx($spreadsheet))->save(Storage::disk('local')->path($path));
+    $spreadsheet->disconnectWorksheets();
+}
+
+function createWordDocumentForAttachmentPreview(string $path): void
+{
+    Storage::disk('local')->makeDirectory(dirname($path));
+
+    $document = new PhpWord();
+    $section = $document->addSection();
+    $section->addTitle('Quarterly report', 1);
+    $section->addText('DOCX preview content');
+    $section->addText('HOSTILE_TEXT');
+
+    $outputEscapingWasEnabled = WordSettings::isOutputEscapingEnabled();
+
+    try {
+        WordSettings::setOutputEscapingEnabled(true);
+        (new Word2007($document))->save(Storage::disk('local')->path($path));
+    } finally {
+        WordSettings::setOutputEscapingEnabled($outputEscapingWasEnabled);
+    }
+
+    $archive = new ZipArchive();
+    Assert::assertTrue($archive->open(Storage::disk('local')->path($path)) === true);
+    $documentXml = $archive->getFromName('word/document.xml');
+    Assert::assertIsString($documentXml);
+    $archive->addFromString(
+        'word/document.xml',
+        str_replace('HOSTILE_TEXT', '&lt;script&gt;alert(&quot;docx&quot;)&lt;/script&gt;', $documentXml),
+    );
+    $archive->close();
 }
 test('guest cannot upload', function () {
     Storage::fake('local');
@@ -207,6 +276,171 @@ test('authenticated user can download attachment', function () {
         ->get(route('attachments.download', $attachment))
         ->assertOk()
         ->assertDownload('test.pdf');
+});
+test('guest cannot preview attachment', function () {
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => draftRetirementForAttachmentsController()->id,
+        'user_id' => $this->user->id,
+        'path' => 'retirements/1/attachments/test.pdf',
+        'original_name' => 'test.pdf',
+    ]);
+
+    $this->get(route('attachments.preview', $attachment))
+        ->assertRedirect(route('login'));
+});
+test('authenticated user can preview attachment inline', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    Storage::disk('local')->put("retirements/{$retirement->id}/attachments/test.pdf", 'file content');
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => "retirements/{$retirement->id}/attachments/test.pdf",
+        'original_name' => 'test.pdf',
+        'mime_type' => 'application/pdf',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertOk()
+        ->assertHeader('content-type', 'application/pdf')
+        ->assertHeader('x-content-type-options', 'nosniff')
+        ->assertHeader('content-disposition', 'inline; filename=test.pdf');
+});
+test('spreadsheet preview renders visible worksheets and excludes hidden worksheets', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    $path = "retirements/{$retirement->id}/attachments/report.xlsx";
+    createSpreadsheetForAttachmentPreview($path);
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => $path,
+        'original_name' => 'report.xlsx',
+        'mime_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertOk()
+        ->assertHeader('content-type', 'text/html; charset=UTF-8')
+        ->assertHeader('x-content-type-options', 'nosniff')
+        ->assertHeader('content-security-policy', "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'")
+        ->assertSee('data-spreadsheet-preview', false)
+        ->assertSee(__('common.spreadsheet_preview_hint'))
+        ->assertSee('Invoice Number')
+        ->assertSee('INV-001')
+        ->assertSee('Summary')
+        ->assertSee('Visible Summary Value')
+        ->assertDontSee('Dropdown Data')
+        ->assertDontSee('Dropdown-only secret')
+        ->assertDontSee('Internal Data')
+        ->assertDontSee('Very-hidden secret');
+});
+test('authenticated user can preview a docx document as sandboxed html', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    $path = "retirements/{$retirement->id}/attachments/report.docx";
+    createWordDocumentForAttachmentPreview($path);
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => $path,
+        'original_name' => 'report.docx',
+        'mime_type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertOk()
+        ->assertHeader('content-type', 'text/html; charset=UTF-8')
+        ->assertHeader('x-content-type-options', 'nosniff')
+        ->assertHeader('content-security-policy', "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'")
+        ->assertSee('Quarterly report')
+        ->assertSee('DOCX preview content')
+        ->assertSee('&lt;script&gt;alert("docx")&lt;/script&gt;', false)
+        ->assertDontSee('<script>alert("docx")</script>', false);
+});
+test('malformed docx documents return an unprocessable response', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    $path = "retirements/{$retirement->id}/attachments/malformed.docx";
+    Storage::disk('local')->put($path, 'not a valid docx archive');
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => $path,
+        'original_name' => 'malformed.docx',
+        'mime_type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertUnprocessable();
+});
+test('legacy doc documents remain download only', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    $path = "retirements/{$retirement->id}/attachments/report.doc";
+    Storage::disk('local')->put($path, 'legacy document content');
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => $path,
+        'original_name' => 'report.doc',
+        'mime_type' => 'application/msword',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertStatus(415);
+});
+test('preview returns 404 when file missing from storage', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => 'retirements/99/attachments/nonexistent.pdf',
+        'original_name' => 'nonexistent.pdf',
+        'mime_type' => 'application/pdf',
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('attachments.preview', $attachment))
+        ->assertNotFound();
+});
+test('unrelated user cannot preview attachment', function () {
+    Storage::fake('local');
+    $retirement = draftRetirementForAttachmentsController();
+    Storage::disk('local')->put("retirements/{$retirement->id}/attachments/test.pdf", 'file content');
+
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+        'path' => "retirements/{$retirement->id}/attachments/test.pdf",
+        'original_name' => 'test.pdf',
+    ]);
+
+    $unrelatedUser = User::factory()->create();
+
+    $this->actingAs($unrelatedUser)
+        ->get(route('attachments.preview', $attachment))
+        ->assertForbidden();
 });
 test('download returns 404 when file missing from storage', function () {
     Storage::fake('local');

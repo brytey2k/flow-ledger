@@ -9,6 +9,7 @@ use App\Models\Tenant\Department;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\User;
+use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
@@ -265,7 +266,12 @@ test('workflow administrator can recover a pinned stage and prepare the main wor
     app(PaymentRequestService::class)->submit($paymentRequest, $this->user);
     $instanceStage = WorkflowInstanceStage::latest()->firstOrFail();
     $recoveryRole = Role::create(['name' => 'recovery_' . uniqid(), 'guard_name' => 'web']);
-    User::factory()->create()->assignRole($recoveryRole);
+    $eligibleApprover = User::factory()->create([
+        'first_name' => 'Eligible',
+        'last_name' => 'Approver',
+        'email' => 'eligible.approver@example.test',
+    ]);
+    $eligibleApprover->assignRole($recoveryRole);
 
     $fork = app(WorkflowTemplateVersioningService::class)->forkDraft($template);
     $draftStage = WorkflowStage::findOrFail($fork->stageIdMap[$stage->id]);
@@ -293,7 +299,28 @@ test('workflow administrator can recover a pinned stage and prepare the main wor
     $this->actingAs($this->user)
         ->get(route('payment-requests.show', $paymentRequest))
         ->assertOk()
-        ->assertSee(__('workflows.separation.template_repair_required_heading'));
+        ->assertSee(__('workflows.separation.template_repair_required_heading'))
+        ->assertSee(__('workflows.separation.recovery_approvers', ['roles' => $recoveryRole->name]))
+        ->assertSee(trans_choice('workflows.separation.eligible_approver_count', 1, ['count' => 1]))
+        ->assertSee(__('workflows.separation.you_cannot_act'))
+        ->assertSee(route('approvals.eligible-approvers', $instanceStage), false)
+        ->assertDontSee($eligibleApprover->email);
+
+    $this->actingAs($this->user)
+        ->get(route('approvals.eligible-approvers', [$instanceStage, 'q' => 'Eligible']))
+        ->assertOk()
+        ->assertViewIs('tenant.approvals.eligible-approvers')
+        ->assertViewHas('eligibleApprovers', fn($approvers) => $approvers->total() === 1
+            && $approvers->perPage() === 25
+            && $approvers->first()->is($eligibleApprover))
+        ->assertSee($eligibleApprover->name)
+        ->assertSee($eligibleApprover->email);
+
+    $this->actingAs($this->user)
+        ->get(route('approvals.eligible-approvers', [$instanceStage, 'q' => 'Nobody']))
+        ->assertOk()
+        ->assertSee(__('workflows.separation.no_eligible_approvers'))
+        ->assertDontSee($eligibleApprover->email);
 
     $this->actingAs($this->user)
         ->post(route('approvals.recovery.template', $instanceStage), ['role_id' => $recoveryRole->id])
@@ -352,10 +379,44 @@ test('workflow recovery routes require workflow template edit permission', funct
         ->get(route('approvals.recovery.create', $instanceStage))
         ->assertForbidden();
     $this->actingAs($this->user)
+        ->get(route('approvals.eligible-approvers', $instanceStage))
+        ->assertForbidden();
+    $this->actingAs($this->user)
         ->post(route('approvals.recovery.store', $instanceStage), [
             'role_id' => $recoveryRole->id,
             'reason' => 'Should not be accepted.',
         ])
+        ->assertForbidden();
+});
+test('eligible approver names cannot be viewed outside the administrators branch scope', function () {
+    $otherBranch = Branch::factory()->create();
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $stage = WorkflowStage::factory()->create([
+        'workflow_template_id' => $template->id,
+        'display_order' => 1,
+    ]);
+    $stage->roles()->attach($this->role);
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'branch_id' => $otherBranch->id,
+        'status' => 'in_workflow',
+    ]);
+    $instance = WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $paymentRequest->id,
+        'status' => 'in_progress',
+        'branch_id' => $otherBranch->id,
+    ]);
+    $instanceStage = WorkflowInstanceStage::create([
+        'workflow_instance_id' => $instance->id,
+        'workflow_stage_id' => $stage->id,
+        'status' => 'active',
+        'approver_pool' => 'primary',
+        'started_at' => now(),
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('approvals.eligible-approvers', $instanceStage))
         ->assertForbidden();
 });
 test('review screen renders for eligible approver', function () {

@@ -95,6 +95,30 @@ Alpine.store('modal', {
     },
 });
 
+Alpine.store('attachmentPreview', {
+    open: false,
+    loading: false,
+    url: '',
+    name: '',
+    show(url, name) {
+        this.url = url;
+        this.name = name;
+        this.loading = true;
+        this.open = true;
+        document.body.classList.add('overflow-hidden');
+    },
+    loaded() {
+        this.loading = false;
+    },
+    hide() {
+        this.open = false;
+        this.loading = false;
+        this.url = '';
+        this.name = '';
+        document.body.classList.remove('overflow-hidden');
+    },
+});
+
 window.Alpine = Alpine;
 Alpine.start();
 

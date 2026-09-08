@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Attachment extends Model
 {
@@ -57,5 +58,39 @@ class Attachment extends Model
         }
 
         return $bytes . ' B';
+    }
+
+    public function isPreviewable(): bool
+    {
+        return $this->isSpreadsheetPreviewable() || $this->isWordPreviewable() || $this->isNativePreviewable();
+    }
+
+    public function isSpreadsheetPreviewable(): bool
+    {
+        return in_array($this->previewExtension(), ['xls', 'xlsx'], true);
+    }
+
+    public function isWordPreviewable(): bool
+    {
+        return $this->mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            && $this->previewExtension() === 'docx';
+    }
+
+    private function previewExtension(): string
+    {
+        return Str::lower(pathinfo($this->original_name, PATHINFO_EXTENSION));
+    }
+
+    private function isNativePreviewable(): bool
+    {
+        $extension = $this->previewExtension();
+
+        return match ($this->mime_type) {
+            'application/pdf' => $extension === 'pdf',
+            'image/jpeg' => in_array($extension, ['jpg', 'jpeg'], true),
+            'image/png' => $extension === 'png',
+            'image/webp' => $extension === 'webp',
+            default => false,
+        };
     }
 }

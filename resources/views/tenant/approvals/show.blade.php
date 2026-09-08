@@ -161,7 +161,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td class="text-end text-sm font-medium text-secondary-foreground">{{ __('common.total') }}</td>
+                                        <td colspan="2" class="text-end text-sm font-medium text-secondary-foreground">{{ __('common.total') }}</td>
                                         <td class="text-end">
                                             <span class="text-base font-semibold text-mono">
                                                 {{ $req->currency->symbol ?? '' }} {{ number_format((float) $req->total_amount, 2) }}

@@ -9,11 +9,11 @@ use App\Http\Requests\Tenant\RetirementRequestStoreRequest;
 use App\Http\Requests\Tenant\RetirementRequestUpdateRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
-use App\Models\Tenant\WorkflowInstanceStage;
 use App\Repositories\CostCodeRepository;
 use App\Repositories\RetirementRequestRepository;
 use App\Services\BranchScopeService;
 use App\Services\RetirementService;
+use App\Services\WorkflowApproverResolver;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +26,7 @@ class RetirementRequestsController extends Controller
         private readonly RetirementService $service,
         private readonly CostCodeRepository $costCodeRepository,
         private readonly WorkflowEngineService $workflowEngine,
+        private readonly WorkflowApproverResolver $workflowApprovers,
         private readonly BranchScopeService $branchScope,
     ) {}
 
@@ -85,19 +86,27 @@ class RetirementRequestsController extends Controller
 
         $activeInstanceStage = null;
         $canActOnActiveStage = false;
+        $activeStageEligibility = [];
 
         /** @var \App\Models\Tenant\WorkflowInstance|null $activeInstance */
         $activeInstance = $retirementRequest->activeWorkflowInstance;
         if ($activeInstance !== null) {
-            $activeInstanceStage = $activeInstance->instanceStages()
-                ->where('status', 'active')
-                ->get()
-                ->first(fn(WorkflowInstanceStage $s) => $this->workflowEngine->canUserActOnStage($s, $user));
+            foreach ($activeInstance->instanceStages->where('status', 'active') as $instanceStage) {
+                $canCurrentUserAct = $this->workflowEngine->canUserActOnStage($instanceStage, $user);
+                $activeStageEligibility[$instanceStage->id] = [
+                    'eligible_count' => $this->workflowApprovers->eligibleUserCount($instanceStage),
+                    'can_current_user_act' => $canCurrentUserAct,
+                ];
+
+                if ($canCurrentUserAct && $activeInstanceStage === null) {
+                    $activeInstanceStage = $instanceStage;
+                }
+            }
 
             $canActOnActiveStage = $activeInstanceStage !== null;
         }
 
-        return view('tenant.retirement-requests.show', compact('retirementRequest', 'isOwner', 'activeInstanceStage', 'canActOnActiveStage'));
+        return view('tenant.retirement-requests.show', compact('retirementRequest', 'isOwner', 'activeInstanceStage', 'activeStageEligibility', 'canActOnActiveStage'));
     }
 
     public function edit(RetirementRequest $retirementRequest, Request $request): RedirectResponse|View

@@ -427,7 +427,8 @@
         @apply w-full border-collapse text-sm;
     }
     .sgh-table-border thead th,
-    .sgh-table-border tbody td {
+    .sgh-table-border tbody td,
+    .sgh-table-border tfoot td {
         @apply border-b border-border px-4 py-3 align-middle text-left;
     }
     .sgh-table-col {

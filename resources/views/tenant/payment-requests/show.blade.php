@@ -295,7 +295,22 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2 shrink-0">
+                                        @if($attachment->isPreviewable())
+                                            <button
+                                                type="button"
+                                                data-preview-url="{{ route('attachments.preview', $attachment) }}"
+                                                data-preview-name="{{ $attachment->original_name }}"
+                                                title="{{ __('common.preview') }}"
+                                                aria-label="{{ __('common.preview') }}"
+                                                class="sgh-btn sgh-btn-sm sgh-btn-outline"
+                                                @click="$store.attachmentPreview.show($el.dataset.previewUrl, $el.dataset.previewName)"
+                                            >
+                                                <x-tabler-eye-filled />
+                                            </button>
+                                        @endif
                                         <a href="{{ route('attachments.download', $attachment) }}"
+                                           title="{{ __('common.download') }}"
+                                           aria-label="{{ __('common.download') }}"
                                            class="sgh-btn sgh-btn-sm sgh-btn-outline">
                                             <x-tabler-cloud-download />
                                         </a>
@@ -694,17 +709,11 @@
                                     </div>
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-sm font-medium text-mono">{{ $instanceStage->stage->name }}</span>
-                                        <span class="text-xs text-secondary-foreground capitalize">
-                                            {{ str_replace('_', ' ', $instanceStage->status) }}
-                                            @php
-                                                $displayRoles = $instanceStage->approver_pool === 'fallback'
-                                                    ? $instanceStage->stage->fallbackRoles
-                                                    : $instanceStage->stage->roles;
-                                            @endphp
-                                            @if($displayRoles->isNotEmpty())
-                                                · {{ $displayRoles->pluck('name')->join(', ') }}
-                                            @endif
-                                        </span>
+                                        <span class="text-xs text-secondary-foreground capitalize">{{ str_replace('_', ' ', $instanceStage->status) }}</span>
+                                        <x-workflow-stage-approver-summary
+                                            :instance-stage="$instanceStage"
+                                            :eligibility="$activeStageEligibility[$instanceStage->id] ?? null"
+                                        />
                                         @if($instanceStage->status === 'blocked')
                                             <x-workflow-stage-recovery :instance-stage="$instanceStage" />
                                         @elseif($instanceStage->recoveryRoles->isNotEmpty())
@@ -722,4 +731,5 @@
 
     </div>
 </div>
+<x-attachment-preview-modal />
 @endsection

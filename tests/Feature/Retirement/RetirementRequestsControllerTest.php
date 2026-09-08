@@ -5,6 +5,7 @@ declare(strict_types=1);
 uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PermissionKey;
 use App\Models\Role;
+use App\Models\Tenant\Attachment;
 use App\Models\Tenant\CostCode;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\PaymentRequestItem;
@@ -256,11 +257,18 @@ test('show renders', function () {
     $retirement = RetirementRequest::factory()->create([
         'payment_request_id' => PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => now(), 'branch_id' => $this->branch->id])->id,
     ]);
+    $attachment = Attachment::factory()->create([
+        'attachable_type' => RetirementRequest::class,
+        'attachable_id' => $retirement->id,
+        'user_id' => $this->user->id,
+    ]);
 
     $response = $this->actingAs($this->user)->get(route('retirement-requests.show', $retirement));
 
     $response->assertOk();
     $response->assertViewIs('tenant.retirement-requests.show');
+    $response->assertSee(route('attachments.preview', $attachment), false);
+    $response->assertDontSee('sandbox=', false);
 });
 test('show passes active instance stage when workflow is in progress', function () {
     $template = WorkflowTemplate::factory()->retirement()->create();
