@@ -327,7 +327,10 @@ test('workflow administrator can recover a pinned stage and prepare the main wor
         'status' => 'draft',
     ]);
     app(PaymentRequestService::class)->submit($futureRequest, $this->user);
-    $futureInstanceStage = WorkflowInstanceStage::latest()->firstOrFail();
+    $futureInstanceStage = $futureRequest->activeWorkflowInstance()
+        ->firstOrFail()
+        ->instanceStages()
+        ->firstOrFail();
 
     expect($futureInstanceStage->instance->workflow_template_id)->toBe($fork->newTemplate->id)
         ->and($futureInstanceStage->status)->toBe('active')
