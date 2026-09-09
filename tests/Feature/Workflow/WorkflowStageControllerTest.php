@@ -556,6 +556,37 @@ test('destroy forks new version when template has active instances', function ()
     $this->assertDatabaseHas('workflow_stages', ['id' => $stage->id, 'workflow_template_id' => $template->id]);
     $this->assertDatabaseMissing('workflow_stages', ['workflow_template_id' => $draft->id, 'name' => $stage->name]);
 });
+test('destroy forks new version when completed instance history references the stage', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $stage = WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+    $subject = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+    $instance = WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $subject->id,
+        'status' => 'completed',
+    ]);
+    $instanceStage = $instance->instanceStages()->create([
+        'workflow_stage_id' => $stage->id,
+        'status' => 'approved',
+        'started_at' => now()->subMinute(),
+        'completed_at' => now(),
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->delete(route('workflow-templates.stages.destroy', [$template, $stage]));
+
+    $draft = WorkflowTemplate::where('template_group_id', $template->template_group_id)
+        ->where('status', 'draft')->firstOrFail();
+    $response->assertRedirect(route('workflow-templates.show', $draft));
+
+    $this->assertDatabaseHas('workflow_stages', ['id' => $stage->id, 'workflow_template_id' => $template->id]);
+    $this->assertDatabaseHas('workflow_instance_stages', [
+        'id' => $instanceStage->id,
+        'workflow_stage_id' => $stage->id,
+    ]);
+    $this->assertDatabaseMissing('workflow_stages', ['workflow_template_id' => $draft->id, 'name' => $stage->name]);
+});
 test('repeated structural edits during active instances reuse a single draft', function () {
     $template = WorkflowTemplate::factory()->create();
     $role = Role::create(['name' => 'draft_reuse_role', 'guard_name' => 'web']);

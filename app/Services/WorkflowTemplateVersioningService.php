@@ -18,7 +18,7 @@ class WorkflowTemplateVersioningService
 {
     public function shouldFork(WorkflowTemplate $template, bool $isStructuralChange): bool
     {
-        return $isStructuralChange && $template->hasActiveInstances();
+        return $isStructuralChange && $template->instances()->exists();
     }
 
     public function draftFor(WorkflowTemplate $template): WorkflowTemplate|null

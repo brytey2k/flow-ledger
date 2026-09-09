@@ -22,7 +22,19 @@ test('should fork returns true when structural and has active instances', functi
 
     expect(makeServiceForWorkflowTemplateVersioningService()->shouldFork($template, isStructuralChange: true))->toBeTrue();
 });
-test('should fork returns false when structural but no active instances', function () {
+test('should fork returns true when structural and has completed instance history', function () {
+    $template = WorkflowTemplate::factory()->advance()->create();
+    $subject = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+    WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $subject->id,
+        'status' => 'completed',
+    ]);
+
+    expect(makeServiceForWorkflowTemplateVersioningService()->shouldFork($template, isStructuralChange: true))->toBeTrue();
+});
+test('should fork returns false when structural but has no instance history', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
 
     expect(makeServiceForWorkflowTemplateVersioningService()->shouldFork($template, isStructuralChange: true))->toBeFalse();
