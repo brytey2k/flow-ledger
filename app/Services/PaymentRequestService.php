@@ -196,10 +196,17 @@ class PaymentRequestService
     public function cancel(PaymentRequest $request, User|null $user = null): void
     {
         DB::transaction(function () use ($request, $user): void {
+            $request = PaymentRequest::lockForUpdate()->findOrFail($request->id);
             $oldStatus = $request->status;
             $activeInstance = $request->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
+                $activeInstance = \App\Models\Tenant\WorkflowInstance::lockForUpdate()->findOrFail($activeInstance->id);
+                if ($activeInstance->hasDocumentHold()) {
+                    throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException(
+                        'Cancel the document window before cancelling this request.',
+                    );
+                }
                 $activeStage = $activeInstance->instanceStages()
                     ->whereIn('status', ['active', 'blocked'])
                     ->first();
@@ -233,10 +240,17 @@ class PaymentRequestService
     public function decline(PaymentRequest $request, User|null $user = null): void
     {
         DB::transaction(function () use ($request, $user): void {
+            $request = PaymentRequest::lockForUpdate()->findOrFail($request->id);
             $oldStatus = $request->status;
             $activeInstance = $request->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
+                $activeInstance = \App\Models\Tenant\WorkflowInstance::lockForUpdate()->findOrFail($activeInstance->id);
+                if ($activeInstance->hasDocumentHold()) {
+                    throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException(
+                        'This workflow is frozen while additional documents or advisory reviews are outstanding.',
+                    );
+                }
                 // Pending stages are cancelled without a completion timestamp.
                 $activeInstance->instanceStages()
                     ->whereIn('status', ['active', 'blocked'])

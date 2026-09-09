@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tenant\AttachmentUploadRequest;
 use App\Models\Tenant\Attachment;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Services\AttachmentPreviewService;
 use App\Services\AttachmentService;
-use App\Services\BranchScopeService;
 use App\Services\WorkflowEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,26 +26,16 @@ class AttachmentsController extends Controller
         private readonly AttachmentService $service,
         private readonly AttachmentPreviewService $previewService,
         private readonly WorkflowEngineService $engine,
-        private readonly BranchScopeService $branchScope,
     ) {}
 
-    public function store(Request $request, RetirementRequest $retirementRequest): RedirectResponse
+    public function store(AttachmentUploadRequest $request, RetirementRequest $retirementRequest): RedirectResponse
     {
-        $request->validate([
-            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx'],
-        ]);
-
-        /** @var \Illuminate\Http\UploadedFile $file */
         $file = $request->file('file');
+        abort_unless($file instanceof \Illuminate\Http\UploadedFile, 422);
         /** @var User $user */
         $user = $request->user();
 
-        $branchIds = $this->branchScope->allowedBranchIds($user);
-        $paymentBranchId = $retirementRequest->paymentRequest?->branch_id;
-        abort_unless($paymentBranchId !== null && in_array($paymentBranchId, $branchIds, true), 403);
-        abort_unless($retirementRequest->paymentRequest->staff?->user_id === $user->id, 403);
-
-        $this->service->store($retirementRequest, $file, $user);
+        $this->service->storeEditableRequestAttachment($retirementRequest, $file, $user);
 
         return redirect()->route('retirement-requests.show', $retirementRequest)
             ->with('success', __('flash.attachments.uploaded'));
@@ -77,9 +67,7 @@ class AttachmentsController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        abort_unless($attachment->user_id === $user->id, 403);
-
-        $this->service->delete($attachment);
+        $this->service->deleteEditableRequestAttachment($attachment, $user);
 
         return redirect()->back()->with('success', __('flash.attachments.deleted'));
     }

@@ -79,6 +79,7 @@ class WorkflowTemplateVersioningService
                     'scope_to_department' => $stage->scope_to_department,
                     'scope_to_branch' => $stage->scope_to_branch,
                     'allow_send_back' => $stage->allow_send_back,
+                    'allow_document_requests' => $stage->allow_document_requests,
                 ]);
                 $newStage->roles()->sync($stage->roles()->pluck('roles.id'));
                 $newStage->fallbackRoles()->sync($stage->fallbackRoles()->pluck('roles.id'));

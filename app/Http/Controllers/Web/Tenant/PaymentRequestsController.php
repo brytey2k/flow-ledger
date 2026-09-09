@@ -124,8 +124,9 @@ class PaymentRequestsController extends Controller
         $isOwner = $user->staffProfile?->id === $paymentRequest->staff_id;
         $canDisburse = $this->workflowApprovers->canDisburse($paymentRequest, $user);
         $requireSourceDocuments = $this->settingsService->isExpenseSourceDocumentRequired();
+        $documentRequest = $paymentRequest->activeWorkflowInstance?->unresolvedDocumentRequests->first();
 
-        return view('tenant.payment-requests.show', compact('paymentRequest', 'activeInstanceStage', 'activeStageEligibility', 'canActOnActiveStage', 'isOwner', 'canDisburse', 'requireSourceDocuments'));
+        return view('tenant.payment-requests.show', compact('paymentRequest', 'activeInstanceStage', 'activeStageEligibility', 'canActOnActiveStage', 'isOwner', 'canDisburse', 'requireSourceDocuments', 'documentRequest'));
     }
 
     public function edit(PaymentRequest $paymentRequest, Request $request): RedirectResponse|View

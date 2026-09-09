@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
  * @property bool $scope_to_department
  * @property bool $scope_to_branch
  * @property bool $allow_send_back
+ * @property bool $allow_document_requests
  * @property string|null $lineage_id
  */
 class WorkflowStage extends Model
@@ -33,6 +34,11 @@ class WorkflowStage extends Model
         'scope_to_department',
         'scope_to_branch',
         'allow_send_back',
+        'allow_document_requests',
+    ];
+
+    protected $attributes = [
+        'allow_document_requests' => true,
     ];
 
     protected static function booted(): void
@@ -50,6 +56,7 @@ class WorkflowStage extends Model
             'scope_to_department' => 'boolean',
             'scope_to_branch' => 'boolean',
             'allow_send_back' => 'boolean',
+            'allow_document_requests' => 'boolean',
         ];
     }
 

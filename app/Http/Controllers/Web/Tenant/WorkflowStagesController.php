@@ -124,6 +124,7 @@ class WorkflowStagesController extends Controller
             scopeToDepartment: $dto->scopeToDepartment,
             scopeToBranch: $dto->scopeToBranch,
             allowSendBack: $dto->allowSendBack,
+            allowDocumentRequests: $dto->allowDocumentRequests,
         );
     }
 

@@ -38,6 +38,30 @@ test('store for payment request requires file', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['file']);
 });
+test('store for payment request rejects unsupported file contents and extension', function () {
+    $file = UploadedFile::fake()->create('payload.exe', 100, 'application/octet-stream');
+
+    $this->postJson("/api/payment-requests/{$this->paymentRequest->id}/attachments", [
+        'file' => $file,
+    ])->assertUnprocessable()->assertJsonValidationErrors(['file']);
+});
+test('store for payment request requires ownership and an editable lifecycle', function () {
+    $otherStaff = Staff::factory()->create(['branch_id' => $this->branch->id]);
+    $otherRequest = PaymentRequest::factory()->create([
+        'staff_id' => $otherStaff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+    ]);
+
+    $this->postJson("/api/payment-requests/{$otherRequest->id}/attachments", [
+        'file' => UploadedFile::fake()->create('receipt.pdf', 10, 'application/pdf'),
+    ])->assertForbidden();
+
+    $this->paymentRequest->update(['status' => 'in_workflow']);
+    $this->postJson("/api/payment-requests/{$this->paymentRequest->id}/attachments", [
+        'file' => UploadedFile::fake()->create('receipt.pdf', 10, 'application/pdf'),
+    ])->assertForbidden();
+});
 test('store for payment request rejects out of scope branch', function () {
     $otherBranch = App\Models\Tenant\Branch::factory()->create(['level_id' => $this->level->id]);
     $otherPr = PaymentRequest::factory()->create([

@@ -278,6 +278,7 @@
                             </span>
                         </div>
                         <div class="sgh-card-content p-5 flex flex-col gap-4">
+                            <x-document-request-owner-panel :document-request="$documentRequest" />
                             @if($requireSourceDocuments && $paymentRequest->attachments->isEmpty() && ($paymentRequest->isDraft() || $paymentRequest->isSentBack()))
                                 <div class="flex items-center gap-2 p-3 rounded-lg bg-warning/10 text-warning text-sm">
                                     <x-tabler-info-square-filled />
@@ -314,7 +315,7 @@
                                            class="sgh-btn sgh-btn-sm sgh-btn-outline">
                                             <x-tabler-cloud-download />
                                         </a>
-                                        @if($isOwner && ($paymentRequest->isDraft() || $paymentRequest->isSentBack()))
+                                        @if($isOwner && $attachment->workflow_document_request_id === null && ($paymentRequest->isDraft() || $paymentRequest->isSentBack()))
                                             <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('payment_requests.show.confirm_delete_attachment') }}')">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="sgh-btn sgh-btn-sm sgh-btn-outline text-destructive hover:bg-destructive/10">
@@ -516,6 +517,7 @@
                                     <x-tabler-circle-check-filled />
                                     {{ __('payment_requests.buttons.review_and_approve') }}
                                 </a>
+                                @if(!$documentRequest)
                                 <form method="POST" action="{{ route('payment-requests.decline', $paymentRequest) }}">
                                     @csrf
                                     <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full"
@@ -524,12 +526,13 @@
                                         {{ __('payment_requests.buttons.decline_request') }}
                                     </button>
                                 </form>
+                                @endif
                             @else
                                 <div class="flex items-center gap-2 p-3 rounded-lg bg-primary/10 text-primary text-sm">
                                     <x-tabler-clock-filled />
                                     {{ __('payment_requests.status.awaiting_approval') }}
                                 </div>
-                                @if($isOwner)
+                                @if($isOwner && !$documentRequest)
                                     <form method="POST" action="{{ route('payment-requests.cancel', $paymentRequest) }}">
                                         @csrf
                                         <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full"

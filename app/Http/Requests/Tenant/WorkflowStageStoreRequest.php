@@ -29,6 +29,7 @@ class WorkflowStageStoreRequest extends FormRequest
             'scope_to_department' => ['nullable', 'boolean'],
             'scope_to_branch' => ['nullable', 'boolean'],
             'allow_send_back' => ['nullable', 'boolean'],
+            'allow_document_requests' => ['nullable', 'boolean'],
         ];
     }
 
@@ -65,6 +66,7 @@ class WorkflowStageStoreRequest extends FormRequest
             scopeToDepartment: (bool) $this->input('scope_to_department', false),
             scopeToBranch: (bool) $this->input('scope_to_branch', false),
             allowSendBack: (bool) $this->input('allow_send_back', true),
+            allowDocumentRequests: (bool) $this->input('allow_document_requests', true),
         );
     }
 }

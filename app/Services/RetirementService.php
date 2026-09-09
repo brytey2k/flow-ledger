@@ -216,10 +216,17 @@ class RetirementService
     public function cancel(RetirementRequest $retirement, User|null $user = null): void
     {
         DB::transaction(function () use ($retirement, $user): void {
+            $retirement = RetirementRequest::lockForUpdate()->findOrFail($retirement->id);
             $oldStatus = $retirement->status;
             $activeInstance = $retirement->activeWorkflowInstance;
 
             if ($activeInstance instanceof \App\Models\Tenant\WorkflowInstance) {
+                $activeInstance = \App\Models\Tenant\WorkflowInstance::lockForUpdate()->findOrFail($activeInstance->id);
+                if ($activeInstance->hasDocumentHold()) {
+                    throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException(
+                        'Cancel the document window before cancelling this request.',
+                    );
+                }
                 $activeStage = $activeInstance->instanceStages()
                     ->whereIn('status', ['active', 'blocked'])
                     ->first();

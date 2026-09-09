@@ -27,7 +27,7 @@ class NotificationService
         $users = $this->approvers->eligibleUsers($instanceStage)
             ->filter(fn(User $user): bool => $user->email !== '');
 
-        NotificationFacade::send($users, new StageReadyForApprovalNotification($instanceStage));
+        NotificationFacade::send($users, (new StageReadyForApprovalNotification($instanceStage))->afterCommit());
     }
 
     public function notifyFullyApproved(Model $subject): void
@@ -35,9 +35,9 @@ class NotificationService
         $submitter = $this->resolveSubmitter($subject);
         if ($submitter) {
             if ($subject instanceof RetirementRequest) {
-                $submitter->notify(new RetirementApprovedNotification($subject));
+                $submitter->notify((new RetirementApprovedNotification($subject))->afterCommit());
             } else {
-                $submitter->notify(new RequestApprovedNotification($subject));
+                $submitter->notify((new RequestApprovedNotification($subject))->afterCommit());
             }
         }
     }
@@ -45,23 +45,23 @@ class NotificationService
     public function notifyRejected(Model $subject, string $comment): void
     {
         $submitter = $this->resolveSubmitter($subject);
-        $submitter?->notify(new RequestRejectedNotification($subject, $comment));
+        $submitter?->notify((new RequestRejectedNotification($subject, $comment))->afterCommit());
     }
 
     public function notifySentBack(Model $subject, string $comment): void
     {
         $submitter = $this->resolveSubmitter($subject);
-        $submitter?->notify(new RequestSentBackNotification($subject, $comment));
+        $submitter?->notify((new RequestSentBackNotification($subject, $comment))->afterCommit());
     }
 
     public function notifyDisbursed(Model $subject): void
     {
         $submitter = $this->resolveSubmitter($subject);
         if ($submitter) {
-            $submitter->notify(new RequestDisbursedNotification($subject));
+            $submitter->notify((new RequestDisbursedNotification($subject))->afterCommit());
 
             if ($subject instanceof PaymentRequest && $subject->isAdvance()) {
-                $submitter->notify(new RetirementRequiredNotification($subject));
+                $submitter->notify((new RetirementRequiredNotification($subject))->afterCommit());
             }
         }
     }

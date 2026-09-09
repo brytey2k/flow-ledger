@@ -26,6 +26,7 @@ class WorkflowStageFactory extends Factory
             'scope_to_department' => false,
             'scope_to_branch' => false,
             'allow_send_back' => true,
+            'allow_document_requests' => true,
         ];
     }
 

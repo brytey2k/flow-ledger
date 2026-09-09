@@ -249,6 +249,10 @@ class PaymentRequestRepository
             'activeWorkflowInstance.instanceStages.stage.roles',
             'activeWorkflowInstance.instanceStages.stage.fallbackRoles',
             'activeWorkflowInstance.instanceStages.recoveryRoles',
+            'activeWorkflowInstance.unresolvedDocumentRequests.attachments.user',
+            'activeWorkflowInstance.unresolvedDocumentRequests.openingStage.stage',
+            'activeWorkflowInstance.unresolvedDocumentRequests.referrals.reviewer',
+            'attachments.user',
             'activities.causer',
             'comments.user',
         ])->findOrFail($id);

@@ -63,6 +63,12 @@ class WorkflowInstanceStage extends Model
         return $this->hasMany(WorkflowInstanceActorClaim::class);
     }
 
+    /** @return HasMany<WorkflowDocumentRequest, $this> */
+    public function openedDocumentRequests(): HasMany
+    {
+        return $this->hasMany(WorkflowDocumentRequest::class, 'opening_instance_stage_id');
+    }
+
     /** @return BelongsToMany<Role, $this> */
     public function recoveryRoles(): BelongsToMany
     {

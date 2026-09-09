@@ -45,6 +45,7 @@ use App\Http\Controllers\Web\Tenant\StaffController;
 use App\Http\Controllers\Web\Tenant\StaffImportController;
 use App\Http\Controllers\Web\Tenant\UsersController;
 use App\Http\Controllers\Web\Tenant\WorkflowApprovalsController;
+use App\Http\Controllers\Web\Tenant\WorkflowDocumentRequestsController;
 use App\Http\Controllers\Web\Tenant\WorkflowParallelGroupsController;
 use App\Http\Controllers\Web\Tenant\WorkflowStagesController;
 use App\Http\Controllers\Web\Tenant\WorkflowTemplatesController;
@@ -587,6 +588,26 @@ Route::middleware([
         Route::post('/approvals/{instanceStage}', [WorkflowApprovalsController::class, 'store'])
             ->can(PermissionKey::ApproveRequests->value)
             ->name('approvals.store');
+        Route::post('/approvals/{instanceStage}/document-requests', [WorkflowDocumentRequestsController::class, 'open'])
+            ->can(PermissionKey::ApproveRequests->value)
+            ->name('document-requests.open');
+        Route::post('/document-requests/{documentRequest}/attachments', [WorkflowDocumentRequestsController::class, 'upload'])
+            ->name('document-requests.attachments.store');
+        Route::delete('/document-requests/{documentRequest}/attachments/{attachment}', [WorkflowDocumentRequestsController::class, 'delete'])
+            ->name('document-requests.attachments.destroy');
+        Route::post('/document-requests/{documentRequest}/submit', [WorkflowDocumentRequestsController::class, 'submit'])
+            ->name('document-requests.submit');
+        Route::post('/document-requests/{documentRequest}/referrals', [WorkflowDocumentRequestsController::class, 'refer'])
+            ->can(PermissionKey::ApproveRequests->value)
+            ->name('document-requests.referrals.store');
+        Route::post('/document-review-referrals/{referral}/respond', [WorkflowDocumentRequestsController::class, 'respond'])
+            ->name('document-review-referrals.respond');
+        Route::post('/document-requests/{documentRequest}/resolve', [WorkflowDocumentRequestsController::class, 'resolve'])
+            ->can(PermissionKey::ApproveRequests->value)
+            ->name('document-requests.resolve');
+        Route::post('/document-requests/{documentRequest}/cancel', [WorkflowDocumentRequestsController::class, 'cancel'])
+            ->can(PermissionKey::EditWorkflowTemplate->value)
+            ->name('document-requests.cancel');
         Route::post('/approvals/{instanceStage}/retry', [WorkflowApprovalsController::class, 'retry'])
             ->can(PermissionKey::EditWorkflowTemplate->value)
             ->name('approvals.retry');

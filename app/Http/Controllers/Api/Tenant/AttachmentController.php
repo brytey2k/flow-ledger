@@ -4,41 +4,40 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\Tenant;
 
+use App\Http\Requests\Tenant\AttachmentUploadRequest;
 use App\Models\Tenant\Attachment;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Services\AttachmentService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
 class AttachmentController extends BaseApiController
 {
     public function __construct(private readonly AttachmentService $service) {}
 
-    public function storeForPaymentRequest(Request $request, PaymentRequest $paymentRequest): JsonResponse
+    public function storeForPaymentRequest(AttachmentUploadRequest $request, PaymentRequest $paymentRequest): JsonResponse
     {
-        $request->validate(['file' => ['required', 'file', 'max:10240']]);
-
         $user = $this->apiUser();
         $branchIds = $this->resolveAllowedBranchIds($user);
         abort_unless(in_array($paymentRequest->branch_id, $branchIds, true), 403);
 
-        $attachment = $this->service->store($paymentRequest, $request->file('file'), $user);
+        $file = $request->file('file');
+        abort_unless($file instanceof UploadedFile, 422);
+        $attachment = $this->service->storeEditableRequestAttachment($paymentRequest, $file, $user);
 
         return response()->json(['data' => $attachment], 201);
     }
 
-    public function storeForRetirementRequest(Request $request, RetirementRequest $retirementRequest): JsonResponse
+    public function storeForRetirementRequest(AttachmentUploadRequest $request, RetirementRequest $retirementRequest): JsonResponse
     {
-        $request->validate(['file' => ['required', 'file', 'max:10240']]);
-
         $user = $this->apiUser();
         $branchIds = $this->resolveAllowedBranchIds($user);
         $paymentBranchId = $retirementRequest->paymentRequest?->branch_id;
         abort_unless($paymentBranchId !== null && in_array($paymentBranchId, $branchIds, true), 403);
-        abort_unless($retirementRequest->paymentRequest->staff?->user_id === $user->id, 403, 'You do not own this request.');
-
-        $attachment = $this->service->store($retirementRequest, $request->file('file'), $user);
+        $file = $request->file('file');
+        abort_unless($file instanceof UploadedFile, 422);
+        $attachment = $this->service->storeEditableRequestAttachment($retirementRequest, $file, $user);
 
         return response()->json(['data' => $attachment], 201);
     }
@@ -46,9 +45,7 @@ class AttachmentController extends BaseApiController
     public function destroy(Attachment $attachment): JsonResponse
     {
         $user = $this->apiUser();
-        abort_unless($attachment->user_id === $user->id, 403, 'You may only delete your own attachments.');
-
-        $this->service->delete($attachment);
+        $this->service->deleteEditableRequestAttachment($attachment, $user);
 
         return response()->json(null, 204);
     }

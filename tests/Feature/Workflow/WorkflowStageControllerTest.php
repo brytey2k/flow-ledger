@@ -117,6 +117,7 @@ test('user can create stage with roles', function () {
         'workflow_template_id' => $template->id,
         'name' => 'Finance Review',
         'display_order' => 1,
+        'allow_document_requests' => true,
     ]);
     $this->assertDatabaseHas('workflow_stage_roles', [
         'workflow_stage_id' => $stage->id,

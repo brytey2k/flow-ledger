@@ -106,7 +106,9 @@ class RetirementRequestsController extends Controller
             $canActOnActiveStage = $activeInstanceStage !== null;
         }
 
-        return view('tenant.retirement-requests.show', compact('retirementRequest', 'isOwner', 'activeInstanceStage', 'activeStageEligibility', 'canActOnActiveStage'));
+        $documentRequest = $retirementRequest->activeWorkflowInstance?->unresolvedDocumentRequests->first();
+
+        return view('tenant.retirement-requests.show', compact('retirementRequest', 'isOwner', 'activeInstanceStage', 'activeStageEligibility', 'canActOnActiveStage', 'documentRequest'));
     }
 
     public function edit(RetirementRequest $retirementRequest, Request $request): RedirectResponse|View

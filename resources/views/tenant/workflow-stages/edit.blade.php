@@ -119,6 +119,13 @@
                                    {{ old('allow_send_back', $workflowStage->allow_send_back) ? 'checked' : '' }} />
                             <span class="sgh-form-label mb-0">{{ __('workflows.stages.fields.allow_send_back') }}</span>
                         </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="hidden" name="allow_document_requests" value="0" />
+                            <input type="checkbox" id="allow_document_requests" name="allow_document_requests" value="1"
+                                   class="sgh-checkbox"
+                                   {{ old('allow_document_requests', $workflowStage->allow_document_requests) ? 'checked' : '' }} />
+                            <span class="sgh-form-label mb-0">{{ __('workflows.stages.fields.allow_document_requests') }}</span>
+                        </label>
                     </div>
 
                     <div>

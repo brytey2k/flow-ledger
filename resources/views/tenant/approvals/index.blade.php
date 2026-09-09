@@ -24,6 +24,40 @@
 
 <div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
+        @if($actionableReferrals->isNotEmpty())
+            <div class="sgh-card">
+                <div class="sgh-card-header">
+                    <h3 class="sgh-card-title">Advisory document reviews</h3>
+                    <span class="sgh-badge sgh-badge-sm sgh-badge-warning">{{ $actionableReferrals->count() }}</span>
+                </div>
+                <div class="sgh-card-content flex flex-col gap-4 p-5">
+                    @foreach($actionableReferrals as $referral)
+                        @php
+                            $subject = $referral->documentRequest->instance->workflowable;
+                            $subjectRoute = $subject instanceof \App\Models\Tenant\RetirementRequest ? 'retirement-requests.show' : 'payment-requests.show';
+                        @endphp
+                        <div class="rounded-lg border border-border p-4">
+                            <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
+                                <div>
+                                    <p class="text-sm font-medium text-mono">Request #{{ $subject->id }}</p>
+                                    <p class="text-xs text-secondary-foreground">Prior stage: {{ $referral->referredStage->stage->name }}</p>
+                                </div>
+                                <a href="{{ route($subjectRoute, $subject) }}" class="sgh-btn sgh-btn-sm sgh-btn-outline">View documents</a>
+                            </div>
+                            <form method="POST" action="{{ route('document-review-referrals.respond', $referral) }}" class="grid gap-3 sm:grid-cols-[160px_1fr_auto]">
+                                @csrf
+                                <select name="decision" class="sgh-select w-full" required>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="concern">Concern</option>
+                                </select>
+                                <input name="comment" class="sgh-input w-full" placeholder="Comment (required for a concern)" />
+                                <button type="submit" class="sgh-btn sgh-btn-primary">Submit review</button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">
                 <h3 class="sgh-card-title">{{ __('approvals.pending_reviews') }}</h3>

@@ -51,6 +51,9 @@ class RetirementRequestRepository
             'activeWorkflowInstance.instanceStages.stage.roles',
             'activeWorkflowInstance.instanceStages.stage.fallbackRoles',
             'activeWorkflowInstance.instanceStages.recoveryRoles',
+            'activeWorkflowInstance.unresolvedDocumentRequests.attachments.user',
+            'activeWorkflowInstance.unresolvedDocumentRequests.openingStage.stage',
+            'activeWorkflowInstance.unresolvedDocumentRequests.referrals.reviewer',
             'activities.causer',
             'comments.user',
         ])->findOrFail($id);

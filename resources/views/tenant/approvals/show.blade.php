@@ -54,7 +54,7 @@
                 <x-tabler-arrow-left />
                 {{ __('approvals.show.back') }}
             </a>
-            <a class="sgh-btn sgh-btn-outline" href="{{ route('payment-requests.show', $req) }}">
+            <a class="sgh-btn sgh-btn-outline" href="{{ $req instanceof \App\Models\Tenant\RetirementRequest ? route('retirement-requests.show', $req) : route('payment-requests.show', $req) }}">
                 <x-tabler-eye-filled />
                 {{ __('approvals.show.view_request') }}
             </a>
@@ -215,6 +215,78 @@
                     </div>
                     <div class="sgh-card-content p-5">
                         @if($instanceStage->isActive())
+                            @if($documentRequest)
+                                <div class="flex flex-col gap-4">
+                                    <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-foreground">
+                                        <p class="font-medium text-mono">Approval actions are temporarily frozen</p>
+                                        <p class="mt-1 text-secondary-foreground">{{ $documentRequest->reason }}</p>
+                                        <p class="mt-2 text-xs capitalize text-secondary-foreground">Status: {{ str_replace('_', ' ', $documentRequest->status->value) }}</p>
+                                    </div>
+
+                                    @if($documentRequest->opened_by_user_id === auth()->id() && $documentRequest->status === \App\Enums\Tenant\WorkflowDocumentRequestStatus::Submitted)
+                                        @if($eligibleReferralActions->isNotEmpty())
+                                            <form method="POST" action="{{ route('document-requests.referrals.store', $documentRequest) }}" class="flex flex-col gap-3">
+                                                @csrf
+                                                <p class="text-sm font-medium text-mono">Optional advisory re-review</p>
+                                                @foreach($eligibleReferralActions as $action)
+                                                    <label class="flex items-start gap-2 text-sm text-foreground">
+                                                        <input type="checkbox" name="workflow_action_ids[]" value="{{ $action->id }}" class="sgh-checkbox mt-0.5" />
+                                                        <span>{{ $action->user->name }} — {{ $action->instanceStage->stage->name }}</span>
+                                                    </label>
+                                                @endforeach
+                                                <button type="submit" class="sgh-btn sgh-btn-outline w-full">Request advisory review</button>
+                                            </form>
+                                        @endif
+                                        <form method="POST" action="{{ route('document-requests.resolve', $documentRequest) }}">
+                                            @csrf
+                                            <input type="hidden" name="resolution" value="resume" />
+                                            <button type="submit" class="sgh-btn sgh-btn-primary w-full">Resume my review</button>
+                                        </form>
+                                    @endif
+
+                                    @if($documentRequest->opened_by_user_id === auth()->id() && $documentRequest->status === \App\Enums\Tenant\WorkflowDocumentRequestStatus::AwaitingReReview)
+                                        @php
+                                            $pendingReferrals = $documentRequest->referrals->whereNull('responded_at');
+                                            $hasConcern = $documentRequest->referrals->contains(fn($referral) => $referral->decision === \App\Enums\Tenant\WorkflowReviewDecision::Concern);
+                                        @endphp
+                                        <div class="flex flex-col gap-2 text-sm">
+                                            @foreach($documentRequest->referrals as $referral)
+                                                <div class="rounded-lg border border-border p-3">
+                                                    <p class="font-medium text-mono">{{ $referral->reviewer->name }}</p>
+                                                    <p class="capitalize text-secondary-foreground">{{ $referral->decision?->value ?? 'awaiting response' }}</p>
+                                                    @if($referral->comment)<p class="mt-1 text-foreground">{{ $referral->comment }}</p>@endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        @if($pendingReferrals->isEmpty())
+                                            <form method="POST" action="{{ route('document-requests.resolve', $documentRequest) }}" class="flex flex-col gap-3">
+                                                @csrf
+                                                @if($hasConcern)
+                                                    <select name="resolution" class="sgh-select w-full" required>
+                                                        <option value="">Choose concern resolution</option>
+                                                        <option value="request_more_documents">Request another attachment cycle</option>
+                                                        @if($instanceStage->stage->allow_send_back)<option value="send_back">Send back for broader corrections</option>@endif
+                                                        <option value="reject">Reject request</option>
+                                                        <option value="override">Override concern and resume</option>
+                                                    </select>
+                                                    <textarea name="comment" class="sgh-textarea w-full" rows="3" required placeholder="Required resolution or override justification"></textarea>
+                                                @else
+                                                    <input type="hidden" name="resolution" value="resume" />
+                                                @endif
+                                                <button type="submit" class="sgh-btn sgh-btn-primary w-full">Resolve hold</button>
+                                            </form>
+                                        @endif
+                                    @endif
+
+                                    @can(\App\Enums\Tenant\PermissionKey::EditWorkflowTemplate->value)
+                                        <form method="POST" action="{{ route('document-requests.cancel', $documentRequest) }}" class="flex flex-col gap-2 border-t border-border pt-4">
+                                            @csrf
+                                            <textarea name="reason" class="sgh-textarea w-full" rows="2" required placeholder="Administrative cancellation reason"></textarea>
+                                            <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full">Cancel abandoned window</button>
+                                        </form>
+                                    @endcan
+                                </div>
+                            @else
                             <form method="POST" action="{{ route('approvals.store', $instanceStage) }}" id="approval-form">
                                 @csrf
 
@@ -258,6 +330,15 @@
                                     </button>
                                 </div>
                             </form>
+                            @if($instanceStage->stage->allow_document_requests)
+                                <form method="POST" action="{{ route('document-requests.open', $instanceStage) }}" class="mt-4 flex flex-col gap-2 border-t border-border pt-4">
+                                    @csrf
+                                    <label for="document-request-reason" class="sgh-form-label">Request additional source documents</label>
+                                    <textarea id="document-request-reason" name="reason" class="sgh-textarea w-full" rows="3" required placeholder="Explain which documents are needed"></textarea>
+                                    <button type="submit" class="sgh-btn sgh-btn-outline w-full">Request Documents</button>
+                                </form>
+                            @endif
+                            @endif
                         @else
                             <div class="flex flex-col items-center gap-2 py-4 text-center">
                                 <span class="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">

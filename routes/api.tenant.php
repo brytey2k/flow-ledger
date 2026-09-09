@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Tenant\PaymentRequestActionController;
 use App\Http\Controllers\Api\Tenant\PaymentRequestController;
 use App\Http\Controllers\Api\Tenant\RetirementRequestActionController;
 use App\Http\Controllers\Api\Tenant\RetirementRequestController;
+use App\Http\Controllers\Api\Tenant\WorkflowDocumentRequestController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -62,6 +63,14 @@ Route::prefix('api')
         Route::post('approvals/{workflowInstanceStage}/send-back', [ApprovalActionController::class, 'sendBack'])->name('api.approvals.send-back');
         Route::post('approvals/{workflowInstanceStage}/retry', [ApprovalActionController::class, 'retry'])->name('api.approvals.retry');
         Route::post('approvals/{workflowInstanceStage}/recovery', [ApprovalActionController::class, 'recover'])->name('api.approvals.recovery');
+        Route::post('approvals/{workflowInstanceStage}/document-requests', [WorkflowDocumentRequestController::class, 'open'])->name('api.document-requests.open');
+        Route::post('document-requests/{documentRequest}/attachments', [WorkflowDocumentRequestController::class, 'upload'])->name('api.document-requests.attachments.store');
+        Route::delete('document-requests/{documentRequest}/attachments/{attachment}', [WorkflowDocumentRequestController::class, 'delete'])->name('api.document-requests.attachments.destroy');
+        Route::post('document-requests/{documentRequest}/submit', [WorkflowDocumentRequestController::class, 'submit'])->name('api.document-requests.submit');
+        Route::post('document-requests/{documentRequest}/referrals', [WorkflowDocumentRequestController::class, 'refer'])->name('api.document-requests.referrals.store');
+        Route::post('document-review-referrals/{referral}/respond', [WorkflowDocumentRequestController::class, 'respond'])->name('api.document-review-referrals.respond');
+        Route::post('document-requests/{documentRequest}/resolve', [WorkflowDocumentRequestController::class, 'resolve'])->name('api.document-requests.resolve');
+        Route::post('document-requests/{documentRequest}/cancel', [WorkflowDocumentRequestController::class, 'cancel'])->name('api.document-requests.cancel');
 
         // Disbursements
         Route::get('disbursements', [DisbursementController::class, 'index'])->name('api.disbursements.index');

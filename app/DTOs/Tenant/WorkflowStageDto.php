@@ -16,6 +16,7 @@ readonly class WorkflowStageDto
      * @param bool $scopeToDepartment
      * @param bool $scopeToBranch
      * @param bool $allowSendBack
+     * @param bool $allowDocumentRequests
      */
     public function __construct(
         public string $name,
@@ -27,5 +28,6 @@ readonly class WorkflowStageDto
         public bool $scopeToDepartment = false,
         public bool $scopeToBranch = false,
         public bool $allowSendBack = true,
+        public bool $allowDocumentRequests = true,
     ) {}
 }

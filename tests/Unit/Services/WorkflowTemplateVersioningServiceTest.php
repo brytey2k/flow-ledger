@@ -90,6 +90,7 @@ test('fork draft clones all stages with correct attributes', function () {
         'name' => 'Finance Review',
         'display_order' => 2,
         'skip_below_amount' => 250.00,
+        'allow_document_requests' => false,
     ]);
     $stage->roles()->sync([$role->id]);
 
@@ -99,6 +100,7 @@ test('fork draft clones all stages with correct attributes', function () {
     expect($clonedStage->name)->toBe('Finance Review');
     expect($clonedStage->display_order)->toBe(2);
     expect((float) $clonedStage->skip_below_amount)->toEqualWithDelta(250.00, 0.01);
+    expect($clonedStage->allow_document_requests)->toBeFalse();
     $this->assertNotSame($stage->id, $clonedStage->id);
 });
 test('fork draft clones all parallel groups', function () {

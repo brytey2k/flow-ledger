@@ -198,6 +198,7 @@
                         </span>
                     </div>
                     <div class="sgh-card-content p-5 flex flex-col gap-4">
+                        <x-document-request-owner-panel :document-request="$documentRequest" />
                         @forelse($retirementRequest->attachments as $attachment)
                             <div class="flex items-center justify-between gap-3 p-3 rounded-lg border border-border">
                                 <div class="flex items-center gap-3 min-w-0">
@@ -227,7 +228,7 @@
                                        class="sgh-btn sgh-btn-sm sgh-btn-outline">
                                         <x-tabler-cloud-download />
                                     </a>
-                                    @if(optional($attachment->attachable->paymentRequest->staff)->user_id === auth()->id())
+                                    @if($attachment->workflow_document_request_id === null && $isOwner && ($retirementRequest->isDraft() || $retirementRequest->isSentBack()))
                                         <form method="POST" action="{{ route('attachments.destroy', $attachment) }}" onsubmit="return confirm('{{ __('retirements.show.confirm_delete_attachment') }}')">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="sgh-btn sgh-btn-sm sgh-btn-outline text-destructive hover:bg-destructive/10">
@@ -242,7 +243,7 @@
                         @endforelse
 
                         @can(App\Enums\Tenant\PermissionKey::CreateRetirementRequest->value)
-                            @if(!in_array($retirementRequest->status, ['settled', 'cancelled']))
+                            @if($retirementRequest->isDraft() || $retirementRequest->isSentBack())
                                 <form method="POST" action="{{ route('retirement-requests.attachments.store', $retirementRequest) }}" enctype="multipart/form-data" class="mt-2">
                                     @csrf
                                     <label class="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
@@ -341,7 +342,7 @@
                                     {{ __('retirements.buttons.submit') }}
                                 </button>
                             </form>
-                            @if($isOwner)
+                            @if($isOwner && !$documentRequest)
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
                                     <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full">
@@ -363,7 +364,7 @@
                                     {{ __('payment_requests.status.awaiting_approval') }}
                                 </div>
                             @endif
-                            @if($isOwner)
+                            @if($isOwner && !$documentRequest)
                                 <form method="POST" action="{{ route('retirement-requests.cancel', $retirementRequest) }}">
                                     @csrf
                                     <button type="submit" class="sgh-btn sgh-btn-danger sgh-btn-outline w-full">

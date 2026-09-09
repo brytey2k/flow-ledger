@@ -76,6 +76,24 @@ class WorkflowInstance extends Model
         return $this->hasMany(WorkflowInstanceActorClaim::class);
     }
 
+    /** @return HasMany<WorkflowDocumentRequest, $this> */
+    public function documentRequests(): HasMany
+    {
+        return $this->hasMany(WorkflowDocumentRequest::class);
+    }
+
+    /** @return HasMany<WorkflowDocumentRequest, $this> */
+    public function unresolvedDocumentRequests(): HasMany
+    {
+        return $this->hasMany(WorkflowDocumentRequest::class)
+            ->whereIn('status', ['awaiting_uploads', 'submitted', 'awaiting_re_review']);
+    }
+
+    public function hasDocumentHold(): bool
+    {
+        return $this->unresolvedDocumentRequests()->exists();
+    }
+
     /** @return HasMany<WorkflowInstanceStage, $this> */
     public function activeInstanceStages(): HasMany
     {

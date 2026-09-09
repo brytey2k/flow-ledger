@@ -23,6 +23,7 @@ class WorkflowStageService
                 'scope_to_department' => $dto->scopeToDepartment,
                 'scope_to_branch' => $dto->scopeToBranch,
                 'allow_send_back' => $dto->allowSendBack,
+                'allow_document_requests' => $dto->allowDocumentRequests,
             ]);
             $stage->roles()->sync($dto->roleIds);
             $stage->fallbackRoles()->sync($dto->fallbackRoleIds);
@@ -43,6 +44,7 @@ class WorkflowStageService
                 'scope_to_department' => $dto->scopeToDepartment,
                 'scope_to_branch' => $dto->scopeToBranch,
                 'allow_send_back' => $dto->allowSendBack,
+                'allow_document_requests' => $dto->allowDocumentRequests,
             ]);
             $stage->roles()->sync($dto->roleIds);
             $stage->fallbackRoles()->sync($dto->fallbackRoleIds);

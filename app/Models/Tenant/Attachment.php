@@ -22,6 +22,7 @@ class Attachment extends Model
         'attachable_type',
         'attachable_id',
         'user_id',
+        'workflow_document_request_id',
         'path',
         'original_name',
         'mime_type',
@@ -45,6 +46,12 @@ class Attachment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<WorkflowDocumentRequest, $this> */
+    public function documentRequest(): BelongsTo
+    {
+        return $this->belongsTo(WorkflowDocumentRequest::class, 'workflow_document_request_id');
     }
 
     public function formattedSize(): string

@@ -161,6 +161,7 @@ return [
             'scope_to_department' => 'Restrict approvers to submitter\'s department',
             'scope_to_branch' => 'Restrict approvers to request\'s branch',
             'allow_send_back' => 'Allow send-back at this stage',
+            'allow_document_requests' => 'Allow attachment-only document requests',
         ],
         'buttons' => [
             'add' => 'Add Stage',

@@ -125,6 +125,8 @@ class WorkflowEngineService
             /** @var WorkflowInstanceStage $fresh */
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
+            $this->assertNoDocumentHold($fresh);
+
             if (! $fresh->isActive()) {
                 return;
             }
@@ -202,6 +204,8 @@ class WorkflowEngineService
             /** @var WorkflowInstanceStage $fresh */
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
 
+            $this->assertNoDocumentHold($fresh);
+
             if (! $fresh->isActive()) {
                 /** @var Model $workflowable */
                 $workflowable = $fresh->instance?->workflowable;
@@ -258,6 +262,8 @@ class WorkflowEngineService
             WorkflowInstance::lockForUpdate()->findOrFail($instanceStage->workflow_instance_id);
             /** @var WorkflowInstanceStage $fresh */
             $fresh = WorkflowInstanceStage::lockForUpdate()->findOrFail($instanceStage->id);
+
+            $this->assertNoDocumentHold($fresh);
 
             if (! $fresh->isActive()) {
                 /** @var Model $workflowable */
@@ -456,5 +462,14 @@ class WorkflowEngineService
         }
 
         $this->approvers->claim($instanceStage, $user);
+    }
+
+    private function assertNoDocumentHold(WorkflowInstanceStage $instanceStage): void
+    {
+        if ($instanceStage->instance?->hasDocumentHold()) {
+            throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException(
+                'Approval actions are frozen while additional documents or advisory reviews are outstanding.',
+            );
+        }
     }
 }

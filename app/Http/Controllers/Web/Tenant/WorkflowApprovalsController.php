@@ -20,6 +20,7 @@ use App\Repositories\RoleRepository;
 use App\Repositories\WorkflowInstanceRepository;
 use App\Services\BranchScopeService;
 use App\Services\WorkflowApproverResolver;
+use App\Services\WorkflowDocumentRequestService;
 use App\Services\WorkflowEngineService;
 use App\Services\WorkflowStageRecoveryService;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +36,7 @@ class WorkflowApprovalsController extends Controller
         private readonly WorkflowStageRecoveryService $recovery,
         private readonly WorkflowApproverResolver $approvers,
         private readonly BranchScopeService $branchScope,
+        private readonly WorkflowDocumentRequestService $documentRequests,
     ) {}
 
     public function index(Request $request): View
@@ -42,8 +44,9 @@ class WorkflowApprovalsController extends Controller
         /** @var User $user */
         $user = $request->user();
         $instanceStages = $this->repository->activeStagesForUser($user);
+        $actionableReferrals = $this->documentRequests->actionableReferrals($user);
 
-        return view('tenant.approvals.index', compact('instanceStages'));
+        return view('tenant.approvals.index', compact('instanceStages', 'actionableReferrals'));
     }
 
     public function show(WorkflowInstanceStage $instanceStage): View
@@ -58,6 +61,8 @@ class WorkflowApprovalsController extends Controller
             'actions.user',
             'instance.template',
             'instance.instanceStages.stage',
+            'instance.unresolvedDocumentRequests.attachments.user',
+            'instance.unresolvedDocumentRequests.referrals.reviewer',
             'instance.workflowable.staff',
             'instance.workflowable.branch',
             'instance.workflowable.currency',
@@ -70,7 +75,12 @@ class WorkflowApprovalsController extends Controller
             $workflowable->load('paymentRequest.currency');
         }
 
-        return view('tenant.approvals.show', compact('instanceStage'));
+        $documentRequest = $instanceStage->instance?->unresolvedDocumentRequests->first();
+        $eligibleReferralActions = $documentRequest === null
+            ? collect()
+            : $this->documentRequests->eligibleReferralActions($documentRequest);
+
+        return view('tenant.approvals.show', compact('instanceStage', 'documentRequest', 'eligibleReferralActions'));
     }
 
     public function eligibleApprovers(
