@@ -559,7 +559,7 @@ test('cash position renders with cashbook and entry data', function () {
 
     App\Models\Tenant\CashbookEntry::create([
         'cashbook_id' => $cashbook->id,
-        'type' => 'credit',
+        'type' => 'debit',
         'amount' => '500.00',
         'description' => 'Opening balance',
         'entry_date' => now()->toDateString(),
@@ -567,7 +567,7 @@ test('cash position renders with cashbook and entry data', function () {
 
     App\Models\Tenant\CashbookEntry::create([
         'cashbook_id' => $cashbook->id,
-        'type' => 'debit',
+        'type' => 'credit',
         'amount' => '200.00',
         'description' => 'Expense payment',
         'entry_date' => now()->toDateString(),
@@ -580,8 +580,8 @@ test('cash position renders with cashbook and entry data', function () {
     $cashbooks = $response->viewData('cashbooks');
     expect($cashbooks)->not->toBeEmpty();
     $first = $cashbooks->first();
-    expect($first['period_credits'])->toEqual('500.00');
-    expect($first['period_debits'])->toEqual('200.00');
+    expect($first['period_receipts'])->toEqual(500.0);
+    expect($first['period_payments'])->toEqual(200.0);
     expect($first['entry_count'])->toEqual(2);
 });
 test('workflow sla calculates compliance rate correctly', function () {

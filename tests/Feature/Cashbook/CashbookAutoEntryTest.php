@@ -57,6 +57,19 @@ test('disbursement decrements cashbook balance', function () {
     $cashbook = Cashbook::where('branch_id', $request->branch_id)->first();
     expect((float) $cashbook->balance)->toEqualWithDelta(-300.00, 0.01);
 });
+test('non cash disbursement does not change the physical cashbook', function () {
+    $request = approvedAdvanceForCashbookAutoEntry(300.00);
+    $request->update(['planned_disbursement_method' => PaymentMethod::BankTransfer]);
+
+    $this->actingAs($this->user)
+        ->post(route('disbursements.store', $request), ['disbursement_method' => PaymentMethod::BankTransfer->value]);
+
+    expect(Cashbook::where('branch_id', $request->branch_id)->first())->toBeNull();
+    $this->assertDatabaseMissing('cashbook_entries', [
+        'sourceable_type' => PaymentRequest::class,
+        'sourceable_id' => $request->id,
+    ]);
+});
 test('disbursement auto creates cashbook for branch', function () {
     $request = approvedAdvanceForCashbookAutoEntry(200.00);
     expect(Cashbook::where('branch_id', $request->branch_id)->first())->toBeNull();

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\DTOs\Tenant\CreatePaymentRequestDto;
 use App\DTOs\Tenant\DisbursePaymentRequestDto;
+use App\Enums\Tenant\PaymentMethod;
 use App\Enums\Tenant\PaymentRequestStatus;
 use App\Enums\Tenant\PaymentRequestType;
 use App\Exceptions\BranchCurrencyNotConfiguredException;
@@ -45,6 +46,7 @@ class PaymentRequestService
                 'branch_id' => $dto->branchId,
                 'currency_id' => $branch->currency_id,
                 'type' => $dto->type,
+                'planned_disbursement_method' => $dto->plannedDisbursementMethod,
                 'notes' => $dto->notes,
                 'total_amount' => $totalAmount,
                 'status' => PaymentRequestStatus::Draft->value,
@@ -76,6 +78,10 @@ class PaymentRequestService
 
     public function submit(PaymentRequest $request, User|null $user = null): void
     {
+        if (! $request->planned_disbursement_method instanceof PaymentMethod) {
+            throw new \InvalidArgumentException('A planned payment method must be selected before submission.');
+        }
+
         DB::transaction(function () use ($request, $user): void {
             $template = WorkflowTemplate::resolveForBranch($request->type, $request->branch_id);
 
@@ -102,21 +108,27 @@ class PaymentRequestService
         }
 
         DB::transaction(function () use ($request, $dto, $user): void {
+            $method = $request->planned_disbursement_method instanceof PaymentMethod
+                ? $request->planned_disbursement_method
+                : $dto->method;
+
             $request->update([
                 'status' => PaymentRequestStatus::Disbursed->value,
                 'disbursed_at' => now(),
                 'disbursed_by_user_id' => $user?->id,
-                'disbursement_method' => $dto->method,
+                'disbursement_method' => $method,
                 'disbursement_reference' => $dto->reference,
             ]);
 
-            $this->cashbook->recordDisbursement($request, $user);
+            if ($method === PaymentMethod::Cash) {
+                $this->cashbook->recordDisbursement($request, $user);
+            }
 
             activity()
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.disbursed')
-                ->withProperties(['old_status' => PaymentRequestStatus::Approved->value, 'new_status' => PaymentRequestStatus::Disbursed->value, 'method' => $dto->method->value])
+                ->withProperties(['old_status' => PaymentRequestStatus::Approved->value, 'new_status' => PaymentRequestStatus::Disbursed->value, 'method' => $method->value])
                 ->log('Disbursed');
         });
 
@@ -133,6 +145,7 @@ class PaymentRequestService
 
             $paymentRequest->update([
                 'notes' => $dto->notes,
+                'planned_disbursement_method' => $dto->plannedDisbursementMethod,
                 'total_amount' => $totalAmount,
             ]);
 
@@ -168,6 +181,7 @@ class PaymentRequestService
 
             $paymentRequest->update([
                 'notes' => $dto->notes,
+                'planned_disbursement_method' => $dto->plannedDisbursementMethod,
                 'total_amount' => $totalAmount,
             ]);
 

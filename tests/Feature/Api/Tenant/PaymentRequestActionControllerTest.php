@@ -32,6 +32,19 @@ test('submit transitions draft to in workflow', function () {
         ->assertOk()
         ->assertJsonPath('data.status', 'in_workflow');
 });
+test('submit requires a planned payment method', function () {
+    $pr = PaymentRequest::factory()->create([
+        'staff_id' => $this->staff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+        'type' => 'advance',
+        'planned_disbursement_method' => null,
+    ]);
+
+    $this->postJson("/api/payment-requests/{$pr->id}/submit")
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'A planned payment method is required before submission.');
+});
 test('submit fails if not draft', function () {
     $pr = PaymentRequest::factory()->create([
         'staff_id' => $this->staff->id,
@@ -94,4 +107,17 @@ test('resubmit fails if not sent back', function () {
     ]);
 
     $this->postJson("/api/payment-requests/{$pr->id}/resubmit")->assertStatus(422);
+});
+test('resubmit requires a planned payment method', function () {
+    $pr = PaymentRequest::factory()->create([
+        'staff_id' => $this->staff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+        'status' => 'sent_back',
+        'planned_disbursement_method' => null,
+    ]);
+
+    $this->postJson("/api/payment-requests/{$pr->id}/resubmit")
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'A planned payment method is required before resubmission.');
 });

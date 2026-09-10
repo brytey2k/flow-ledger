@@ -17,6 +17,8 @@ use Spatie\Activitylog\Models\Concerns\HasActivity;
  * @property \Carbon\Carbon|null $submitted_at
  * @property \Carbon\Carbon|null $approved_at
  * @property \Carbon\Carbon|null $disbursed_at
+ * @property \App\Enums\Tenant\PaymentMethod|null $planned_disbursement_method
+ * @property \App\Enums\Tenant\PaymentMethod|null $disbursement_method
  */
 class PaymentRequest extends Model
 {
@@ -37,6 +39,7 @@ class PaymentRequest extends Model
         'approved_at',
         'disbursed_at',
         'disbursed_by_user_id',
+        'planned_disbursement_method',
         'disbursement_method',
         'disbursement_reference',
     ];
@@ -48,6 +51,7 @@ class PaymentRequest extends Model
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
             'disbursed_at' => 'datetime',
+            'planned_disbursement_method' => \App\Enums\Tenant\PaymentMethod::class,
             'disbursement_method' => \App\Enums\Tenant\PaymentMethod::class,
         ];
     }

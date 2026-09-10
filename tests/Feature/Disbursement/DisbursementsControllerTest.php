@@ -78,7 +78,11 @@ test('index excludes a request submitted by the disbursement user', function () 
     $response->assertViewHas('requests', fn($requests) => $requests->total() === 0);
 });
 test('authorised user can disburse approved request', function () {
-    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'approved',
+        'branch_id' => $this->branch->id,
+        'planned_disbursement_method' => PaymentMethod::BankTransfer,
+    ]);
 
     $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
         'disbursement_method' => PaymentMethod::BankTransfer->value,
@@ -150,7 +154,11 @@ test('disbursement method is required', function () {
     $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
 });
 test('disburse logs activity', function () {
-    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'approved',
+        'branch_id' => $this->branch->id,
+        'planned_disbursement_method' => PaymentMethod::MobileMoney,
+    ]);
 
     $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
         'disbursement_method' => PaymentMethod::MobileMoney->value,
@@ -187,7 +195,11 @@ test('cannot disburse when insufficient cashbook balance', function () {
     $this->assertDatabaseHas('payment_requests', ['id' => $paymentRequest->id, 'status' => 'approved']);
 });
 test('authorised user can disburse approved expense', function () {
-    $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $paymentRequest = PaymentRequest::factory()->expense()->create([
+        'status' => 'approved',
+        'branch_id' => $this->branch->id,
+        'planned_disbursement_method' => PaymentMethod::BankTransfer,
+    ]);
 
     $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
         'disbursement_method' => PaymentMethod::BankTransfer->value,
@@ -202,4 +214,31 @@ test('authorised user can disburse approved expense', function () {
         'status' => 'disbursed',
         'disbursement_method' => PaymentMethod::BankTransfer->value,
     ]);
+});
+test('cannot change the approved payment method at release', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'approved',
+        'branch_id' => $this->branch->id,
+        'planned_disbursement_method' => PaymentMethod::Cash,
+    ]);
+
+    $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::BankTransfer->value,
+    ]);
+
+    $response->assertSessionHasErrors('disbursement_method');
+    expect($paymentRequest->fresh()->status)->toBe('approved');
+});
+test('legacy approved request can select its payment method at release', function () {
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'status' => 'approved',
+        'branch_id' => $this->branch->id,
+        'planned_disbursement_method' => null,
+    ]);
+
+    $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
+        'disbursement_method' => PaymentMethod::BankTransfer->value,
+    ])->assertSessionHas('success');
+
+    expect($paymentRequest->fresh()->disbursement_method)->toBe(PaymentMethod::BankTransfer);
 });

@@ -15,6 +15,8 @@ return [
 
     'columns' => [
         'approved' => 'Approuve',
+        'payment_method' => 'Mode de paiement',
+        'legacy_method' => 'Selectionner au decaissement',
     ],
 
     'buttons' => [

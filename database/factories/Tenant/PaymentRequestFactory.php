@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories\Tenant;
 
+use App\Enums\Tenant\PaymentMethod;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\PaymentRequest;
@@ -26,6 +27,7 @@ class PaymentRequestFactory extends Factory
             'type' => fake()->randomElement([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value]),
             'status' => 'draft',
             'total_amount' => fake()->randomFloat(2, 100, 10000),
+            'planned_disbursement_method' => PaymentMethod::Cash,
             'notes' => null,
         ];
     }

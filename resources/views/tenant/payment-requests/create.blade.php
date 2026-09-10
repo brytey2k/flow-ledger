@@ -76,6 +76,26 @@
                             </div>
                         </div>
 
+                        {{-- Planned payment method --}}
+                        <div>
+                            <label class="sgh-form-label block mb-2" for="planned_disbursement_method">
+                                {{ __('payment_requests.fields.planned_disbursement_method') }}
+                            </label>
+                            <select id="planned_disbursement_method" name="planned_disbursement_method" class="sgh-select w-full"
+                                    aria-invalid="@error('planned_disbursement_method') true @else false @enderror">
+                                <option value="">{{ __('payment_requests.fields.select_payment_method') }}</option>
+                                @foreach(\App\Enums\Tenant\PaymentMethod::cases() as $method)
+                                    <option value="{{ $method->value }}" @selected(old('planned_disbursement_method') === $method->value)>
+                                        {{ $method->label() }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-secondary-foreground">{{ __('payment_requests.fields.planned_disbursement_method_hint') }}</p>
+                            @error('planned_disbursement_method')
+                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         {{-- Notes --}}
                         <div class="lg:col-span-3">
                             <label class="sgh-form-label block mb-2" for="notes">{{ __('payment_requests.fields.notes') }}</label>

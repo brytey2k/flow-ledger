@@ -49,6 +49,7 @@
                                     <th class="min-w-[130px]"><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('common.columns.branch') }}</span></span></th>
                                     <th class="min-w-[80px]"><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('common.columns.type') }}</span></span></th>
                                     <th class="min-w-[140px]"><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('common.columns.amount') }}</span></span></th>
+                                    <th class="min-w-[130px]"><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('disbursements.columns.payment_method') }}</span></span></th>
                                     <th class="min-w-[130px]"><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('disbursements.columns.approved') }}</span></span></th>
                                     <th class="min-w-[90px] text-center"><span class="sgh-table-col"><span class="sgh-table-col-label">{{ __('common.columns.actions') }}</span></span></th>
                                 </tr>
@@ -71,6 +72,7 @@
                                                 {{ $req->currency->symbol ?? '' }} {{ number_format((float) $req->total_amount, 2) }}
                                             </span>
                                         </td>
+                                        <td><span class="text-sm text-foreground">{{ $req->planned_disbursement_method?->label() ?? __('disbursements.columns.legacy_method') }}</span></td>
                                         <td>
                                             <span class="text-sm text-foreground">
                                                 {{ $req->approved_at?->format('M d, Y') ?? '—' }}

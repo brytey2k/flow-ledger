@@ -119,7 +119,7 @@ class ReportService
      * @param string $dateTo
      *
      * @return array{
-     *     cashbooks: Collection<int, array{cashbook: Cashbook, current_balance: float, period_debits: float, period_credits: float, entry_count: int<0, max>}>,
+     *     cashbooks: Collection<int, array{cashbook: Cashbook, current_balance: float, period_receipts: float, period_payments: float, entry_count: int<0, max>}>,
      *     dateFrom: string,
      *     dateTo: string,
      * }
@@ -139,8 +139,8 @@ class ReportService
             return [
                 'cashbook' => $book,
                 'current_balance' => (float) $balance,
-                'period_debits' => (float) $debits,
-                'period_credits' => (float) $credits,
+                'period_receipts' => (float) $debits,
+                'period_payments' => (float) $credits,
                 'entry_count' => $entries->count(),
             ];
         });

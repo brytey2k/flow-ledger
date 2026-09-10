@@ -70,6 +70,15 @@ test('submit starts workflow and redirects', function () {
     expect($request->submitted_at)->not->toBeNull();
     expect($request->activeWorkflowInstance)->toBeInstanceOf(WorkflowInstance::class);
 });
+test('cannot submit without a planned payment method', function () {
+    $request = ownedDraftRequest(['planned_disbursement_method' => null]);
+
+    $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
+
+    $response->assertRedirect(route('payment-requests.show', $request));
+    $response->assertSessionHas('error', __('flash.requests.planned_disbursement_method_required'));
+    expect($request->fresh()->status)->toBe('draft');
+});
 test('cannot submit non draft request', function () {
     $request = ownedDraftRequest(['status' => 'in_workflow']);
 

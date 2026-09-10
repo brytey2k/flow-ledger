@@ -105,6 +105,7 @@ return [
         'resubmitted' => 'Request resubmitted for approval.',
         'updated' => 'Request updated successfully.',
         'submit_only_draft' => 'Only draft requests can be submitted.',
+        'planned_disbursement_method_required' => 'Select a planned payment method before submitting this request for approval.',
         'resubmit_only_sent_back' => 'Only sent-back requests can be resubmitted.',
         'resubmit_not_owner' => 'You can only resubmit your own requests.',
         'edit_only_sent_back' => 'Only draft or sent-back requests can be edited.',

@@ -66,13 +66,13 @@
                             <div>
                                 <div class="text-xs text-secondary-foreground mb-0.5">Period Receipts</div>
                                 <div class="text-sm font-semibold text-success">
-                                    + {{ number_format((float) $row['period_credits'], 2) }}
+                                    + {{ number_format((float) $row['period_receipts'], 2) }}
                                 </div>
                             </div>
                             <div>
                                 <div class="text-xs text-secondary-foreground mb-0.5">Period Payments</div>
                                 <div class="text-sm font-semibold text-danger">
-                                    − {{ number_format((float) $row['period_debits'], 2) }}
+                                    − {{ number_format((float) $row['period_payments'], 2) }}
                                 </div>
                             </div>
                         </div>

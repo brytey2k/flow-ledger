@@ -38,6 +38,11 @@ class PaymentRequestSubmitController extends Controller
                 ->with('error', __('flash.requests.submit_only_draft'));
         }
 
+        if ($paymentRequest->planned_disbursement_method === null) {
+            return redirect()->route('payment-requests.show', $paymentRequest)
+                ->with('error', __('flash.requests.planned_disbursement_method_required'));
+        }
+
         if ($paymentRequest->type === PaymentRequestType::Expense->value) {
             if ($this->settingsService->isExpenseSourceDocumentRequired() && $paymentRequest->attachments()->doesntExist()) {
                 return redirect()->route('payment-requests.show', $paymentRequest)

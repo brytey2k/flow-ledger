@@ -91,6 +91,10 @@
                                     {{ number_format((float) $paymentRequest->total_amount, 2) }}
                                 </dd>
                             </div>
+                            <div>
+                                <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.show.planned_payment_method') }}</dt>
+                                <dd class="text-sm text-foreground">{{ $paymentRequest->planned_disbursement_method?->label() ?? '—' }}</dd>
+                            </div>
                             @if($paymentRequest->submitted_at)
                                 <div>
                                     <dt class="text-xs font-medium text-secondary-foreground uppercase mb-1">{{ __('payment_requests.show.submitted') }}</dt>
@@ -554,16 +558,24 @@
                                     @csrf
                                     <div>
                                         <label class="sgh-form-label block mb-1.5 text-sm" for="disbursement_method">{{ __('payment_requests.show.payment_method') }} <span class="text-destructive">*</span></label>
-                                        <select id="disbursement_method" name="disbursement_method"
-                                                class="sgh-select w-full"
-                                                aria-invalid="@error('disbursement_method') true @else false @enderror">
-                                            <option value="">— Select method —</option>
-                                            @foreach(PaymentMethod::cases() as $method)
-                                                <option value="{{ $method->value }}" @selected(old('disbursement_method') === $method->value)>
-                                                    {{ $method->label() }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        @if($paymentRequest->planned_disbursement_method)
+                                            <input type="hidden" name="disbursement_method" value="{{ $paymentRequest->planned_disbursement_method->value }}">
+                                            <div id="disbursement_method" class="sgh-input w-full bg-muted/40 flex items-center px-4 py-3 rounded-md">
+                                                <span class="font-medium text-mono">{{ $paymentRequest->planned_disbursement_method->label() }}</span>
+                                            </div>
+                                            <p class="mt-1 text-xs text-secondary-foreground">{{ __('payment_requests.show.approved_payment_method_hint') }}</p>
+                                        @else
+                                            <select id="disbursement_method" name="disbursement_method"
+                                                    class="sgh-select w-full"
+                                                    aria-invalid="@error('disbursement_method') true @else false @enderror">
+                                                <option value="">— Select method —</option>
+                                                @foreach(PaymentMethod::cases() as $method)
+                                                    <option value="{{ $method->value }}" @selected(old('disbursement_method') === $method->value)>
+                                                        {{ $method->label() }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                         @error('disbursement_method')
                                             <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                                         @enderror
