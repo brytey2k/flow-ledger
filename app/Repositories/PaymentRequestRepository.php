@@ -217,16 +217,27 @@ class PaymentRequestRepository
      * @param int $perPage
      * @param string|null $status
      * @param int|null $staffId
+     * @param string|null|null $search
+     * @param int|null|null $branchId
      *
      * @return LengthAwarePaginator<int, PaymentRequest>
      */
-    public function paginated(array $branchIds, int $perPage = 20, string|null $status = null, int|null $staffId = null): LengthAwarePaginator
+    public function paginated(array $branchIds, int $perPage = 20, string|null $status = null, int|null $staffId = null, string|null $search = null, int|null $branchId = null): LengthAwarePaginator
     {
         return PaymentRequest::with([
             'staff', 'branch', 'currency',
             'retirementRequests' => fn(HasMany $q) => $q->whereIn('status', ['draft', 'in_workflow', 'approved', 'sent_back']),
         ])
             ->whereIn('branch_id', $branchIds)
+            ->when($search, fn(EloquentBuilder $q) => $q->where(
+                fn(EloquentBuilder $q) => $q
+                    ->when(ctype_digit($search), fn(EloquentBuilder $q) => $q->orWhere('id', (int) $search))
+                    ->orWhere('notes', 'ilike', "%{$search}%")
+                    ->orWhere('disbursement_reference', 'ilike', "%{$search}%")
+                    ->orWhereHas('staff', fn(EloquentBuilder $q) => $q->where('first_name', 'ilike', "%{$search}%")
+                        ->orWhere('last_name', 'ilike', "%{$search}%")),
+            ))
+            ->when($branchId, fn(EloquentBuilder $q) => $q->where('branch_id', $branchId))
             ->when($staffId, fn(EloquentBuilder $q) => $q->where('staff_id', $staffId))
             ->when($status === 'pending_retirement', fn(EloquentBuilder $q) => $q
                 ->where('type', 'advance')
@@ -243,14 +254,25 @@ class PaymentRequestRepository
      * @param array<int, int> $branchIds
      * @param int $perPage
      * @param User|null $user
+     * @param array{q?: string, branch_id?: int} $filters
      *
      * @return LengthAwarePaginator<int, PaymentRequest>
      */
-    public function pendingDisbursement(array $branchIds, int $perPage = 20, User|null $user = null): LengthAwarePaginator
+    public function pendingDisbursement(array $branchIds, int $perPage = 20, User|null $user = null, array $filters = []): LengthAwarePaginator
     {
+        $search = $filters['q'] ?? null;
+        $branchId = $filters['branch_id'] ?? null;
+
         $query = PaymentRequest::with(['staff', 'branch', 'currency'])
             ->whereIn('branch_id', $branchIds)
             ->where('status', 'approved')
+            ->when($search, fn(EloquentBuilder $q) => $q->where(
+                fn(EloquentBuilder $q) => $q
+                    ->when(ctype_digit($search), fn(EloquentBuilder $q) => $q->orWhere('id', (int) $search))
+                    ->orWhereHas('staff', fn(EloquentBuilder $q) => $q->where('first_name', 'ilike', "%{$search}%")
+                        ->orWhere('last_name', 'ilike', "%{$search}%")),
+            ))
+            ->when($branchId, fn(EloquentBuilder $q) => $q->where('branch_id', $branchId))
             ->orderBy('approved_at', 'asc')
             ->orderBy('id');
 
@@ -258,7 +280,7 @@ class PaymentRequestRepository
             $this->workflowApprovers->excludePaymentRequestsParticipatedIn($query, $user);
         }
 
-        return $query->paginate($perPage);
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function findWithDetails(int|string $id): PaymentRequest

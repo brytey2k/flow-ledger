@@ -15,9 +15,23 @@ class CurrencyRepository
         return Currency::orderBy('name')->get();
     }
 
-    /** @return Collection<int, Currency> */
-    public function allOrderedByShortName(): Collection
+    /**
+     * @param array{q?: string} $filters
+     *
+     * @return Collection<int, Currency>
+     */
+    public function allOrderedByShortName(array $filters = []): Collection
     {
-        return Currency::orderBy('short_name')->orderBy('id')->get();
+        $search = $filters['q'] ?? null;
+
+        return Currency::query()
+            ->when($search, fn($query) => $query->where(
+                fn($query) => $query->where('name', 'ilike', "%{$search}%")
+                    ->orWhere('short_name', 'ilike', "%{$search}%")
+                    ->orWhere('symbol', 'ilike', "%{$search}%"),
+            ))
+            ->orderBy('short_name')
+            ->orderBy('id')
+            ->get();
     }
 }

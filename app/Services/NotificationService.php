@@ -77,7 +77,9 @@ class NotificationService
                 ->latest()
                 ->first();
 
-            return $activity?->causer instanceof User ? $activity->causer : null;
+            $submitter = $activity?->causer;
+
+            return $submitter instanceof User && $submitter->isActive() ? $submitter : null;
         }
 
         return null;

@@ -28,6 +28,18 @@
 
 <!-- Denominations Table -->
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('currency.denominations.index', $currency)" :reset-url="route('currency.denominations.index', $currency)" :filters="$filters" search-placeholder="Search denomination labels…">
+        <div class="flex flex-col gap-1">
+            <label for="type" class="sgh-form-label">{{ __('common.columns.type') }}</label>
+            <select id="type" name="type" class="sgh-select w-full">
+                <option value="">{{ __('common.all_types') }}</option>
+                @foreach(\App\Enums\Tenant\CurrencyDenominationType::cases() as $denominationType)
+                    <option value="{{ $denominationType->value }}" @selected(($filters['type'] ?? null) === $denominationType->value)>{{ $denominationType->label() }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

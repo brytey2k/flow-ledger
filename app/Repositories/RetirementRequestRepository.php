@@ -29,16 +29,29 @@ class RetirementRequestRepository
     /**
      * @param array<int, int> $branchIds
      * @param int $perPage
+     * @param array{q?: string, status?: string} $filters
      *
      * @return LengthAwarePaginator<int, RetirementRequest>
      */
-    public function paginated(array $branchIds, int $perPage = 20): LengthAwarePaginator
+    public function paginated(array $branchIds, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
+        $search = $filters['q'] ?? null;
+        $status = $filters['status'] ?? null;
+
         return RetirementRequest::with(['paymentRequest.staff', 'paymentRequest.currency'])
             ->whereHas('paymentRequest', fn($q) => $q->whereIn('branch_id', $branchIds))
+            ->when($search, fn($query) => $query->where(
+                fn($query) => $query
+                    ->when(ctype_digit($search), fn($query) => $query->orWhere('id', (int) $search)
+                        ->orWhere('payment_request_id', (int) $search))
+                    ->orWhereHas('paymentRequest.staff', fn($query) => $query->where('first_name', 'ilike', "%{$search}%")
+                        ->orWhere('last_name', 'ilike', "%{$search}%")),
+            ))
+            ->when($status, fn($query) => $query->where('status', $status))
             ->orderBy('created_at', 'desc')
             ->orderByDesc('id')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     public function findWithDetails(int|string $id): RetirementRequest

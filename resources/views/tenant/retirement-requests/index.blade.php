@@ -29,6 +29,18 @@
 </div>
 
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('retirement-requests.index')" :reset-url="route('retirement-requests.index')" :filters="$filters" search-placeholder="Search retirement ID, advance ID, or staff…">
+        <div class="flex flex-col gap-1">
+            <label for="status" class="sgh-form-label">{{ __('common.columns.status') }}</label>
+            <select id="status" name="status" class="sgh-select w-full">
+                <option value="">{{ __('common.all_statuses') }}</option>
+                @foreach(array_keys($statusColors) as $status)
+                    <option value="{{ $status }}" @selected(($filters['status'] ?? null) === $status)>{{ Str::headline($status) }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
 
         <div class="sgh-card sgh-card-grid">

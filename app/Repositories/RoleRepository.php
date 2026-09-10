@@ -15,9 +15,19 @@ class RoleRepository
         return Role::orderBy('name')->orderBy('id')->get();
     }
 
-    /** @return Collection<int, Role> */
-    public function allWithCounts(): Collection
+    /**
+     * @param array{q?: string} $filters
+     *
+     * @return Collection<int, Role>
+     */
+    public function allWithCounts(array $filters = []): Collection
     {
-        return Role::withCount(['users', 'permissions'])->orderBy('name')->orderBy('id')->get();
+        $search = $filters['q'] ?? null;
+
+        return Role::withCount(['users', 'permissions'])
+            ->when($search, fn($query) => $query->where('name', 'ilike', "%{$search}%"))
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get();
     }
 }

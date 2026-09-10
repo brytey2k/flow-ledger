@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\WorkflowTemplateStoreRequest;
 use App\Http\Requests\Tenant\WorkflowTemplateUpdateRequest;
 use App\Models\Tenant\WorkflowTemplate;
@@ -29,11 +30,13 @@ class WorkflowTemplatesController extends Controller
         return view('tenant.workflow-templates.versions', compact('workflowTemplate', 'versions'));
     }
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $templates = $this->repository->allWithStageCount();
+        $filters = $request->filters();
+        $templates = $this->repository->allWithStageCount($filters);
+        $branches = $this->branches->allOrderedByName();
 
-        return view('tenant.workflow-templates.index', compact('templates'));
+        return view('tenant.workflow-templates.index', compact('templates', 'branches', 'filters'));
     }
 
     public function create(): View

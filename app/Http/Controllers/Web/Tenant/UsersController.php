@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Enums\Tenant\UserStatus;
 use App\Features\DelegateIdentityToIdp;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\PermissionsSyncRequest;
 use App\Http\Requests\Tenant\UserInviteRequest;
 use App\Http\Requests\Tenant\UserStoreRequest;
@@ -68,12 +69,16 @@ class UsersController extends Controller
         return $currentTenant?->idp_tenant_id;
     }
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $users = $this->repository->allWithRoles();
+        $filters = $request->filters();
+        $users = $this->repository->allWithRoles($filters);
+        $roles = $this->roleRepository->allOrderedByName();
 
         return view('tenant.users.index', [
             'users' => $users,
+            'roles' => $roles,
+            'filters' => $filters,
             'identityDelegated' => $this->identityDelegated(),
         ]);
     }

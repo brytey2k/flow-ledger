@@ -24,6 +24,8 @@
 
 <!-- Container -->
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('currencies.index')" :reset-url="route('currencies.index')" :filters="$filters" search-placeholder="Search currency name, code, or symbol…" />
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

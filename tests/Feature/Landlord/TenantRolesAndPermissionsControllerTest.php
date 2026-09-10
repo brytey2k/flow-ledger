@@ -77,11 +77,11 @@ test('landlord can view roles index', function () {
     $this->mock(LandlordTenantAccessControlService::class, function (MockInterface $mock) use ($roles): void {
         $mock->shouldReceive('listRoles')
             ->once()
-            ->with(Mockery::on(fn($arg) => $arg->id === $this->tenant->id))
+            ->with(Mockery::on(fn($arg) => $arg->id === $this->tenant->id), ['q' => 'admin'])
             ->andReturn($roles);
     });
 
-    $response = $this->get(route('landlord.tenants.roles.index', $this->tenant));
+    $response = $this->get(route('landlord.tenants.roles.index', [$this->tenant, 'q' => 'admin']));
 
     $response->assertOk();
     $response->assertViewIs('landlord.tenants.roles.index');
@@ -146,12 +146,29 @@ test('landlord can view users permissions index', function () {
     actingAsLandlord();
 
     $users = new LengthAwarePaginator([makeTenantUser(1)], 1, 15);
+    $roles = new Collection([makeRole(1, 'admin')]);
 
-    $this->mock(LandlordTenantAccessControlService::class, function (MockInterface $mock) use ($users): void {
-        $mock->shouldReceive('listUsersPaginated')->once()->andReturn($users);
+    $this->mock(LandlordTenantAccessControlService::class, function (MockInterface $mock) use ($roles, $users): void {
+        $mock->shouldReceive('listUsersPaginated')
+            ->once()
+            ->with(
+                Mockery::on(fn($arg) => $arg->id === $this->tenant->id),
+                15,
+                1,
+                ['q' => 'jane', 'role_id' => 1],
+            )
+            ->andReturn($users);
+        $mock->shouldReceive('listRoles')
+            ->once()
+            ->with(Mockery::on(fn($arg) => $arg->id === $this->tenant->id))
+            ->andReturn($roles);
     });
 
-    $response = $this->get(route('landlord.tenants.users-permissions.index', $this->tenant));
+    $response = $this->get(route('landlord.tenants.users-permissions.index', [
+        $this->tenant,
+        'q' => 'jane',
+        'role_id' => 1,
+    ]));
 
     $response->assertOk();
     $response->assertViewIs('landlord.tenants.users.index');

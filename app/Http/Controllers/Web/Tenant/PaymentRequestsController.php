@@ -6,10 +6,12 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Exceptions\BranchCurrencyNotConfiguredException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\PaymentRequestStoreRequest;
 use App\Http\Requests\Tenant\PaymentRequestUpdateRequest;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
+use App\Repositories\BranchRepository;
 use App\Repositories\CostCodeRepository;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
@@ -31,21 +33,30 @@ class PaymentRequestsController extends Controller
         private readonly BranchScopeService $branchScope,
         private readonly SettingsService $settingsService,
         private readonly WorkflowApproverResolver $workflowApprovers,
+        private readonly BranchRepository $branchRepository,
     ) {}
 
-    public function index(Request $request): View
+    public function index(IndexFilterRequest $request): View
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
+        $filters = $request->filters();
         $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
-        $scope = $request->string('scope')->value() === 'mine' ? 'mine' : 'branch';
-        $status = $request->string('status')->value() ?: null;
+        $scope = ($filters['scope'] ?? null) === 'mine' ? 'mine' : 'branch';
+        $status = $filters['status'] ?? null;
         $currentStaffId = $user->staffProfile?->id;
         $staffId = $scope === 'mine' ? $currentStaffId : null;
 
-        $requests = $this->repository->paginated($allowedBranchIds, status: $status, staffId: $staffId);
+        $requests = $this->repository->paginated(
+            $allowedBranchIds,
+            status: $status,
+            staffId: $staffId,
+            search: $filters['q'] ?? null,
+            branchId: $filters['branch_id'] ?? null,
+        );
+        $branches = $this->branchRepository->allByIdsOrderedByName($allowedBranchIds);
 
-        return view('tenant.payment-requests.index', compact('requests', 'status', 'scope', 'currentStaffId'));
+        return view('tenant.payment-requests.index', compact('requests', 'status', 'scope', 'currentStaffId', 'branches', 'filters'));
     }
 
     public function create(Request $request): RedirectResponse|View

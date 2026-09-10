@@ -162,6 +162,7 @@ class WorkflowApproverRepository
         }
 
         return User::query()
+            ->active()
             ->whereHas('roles', fn(Builder $query) => $query->whereIn('roles.id', $roleIds))
             ->when(
                 $instance->submitter_user_id !== null,

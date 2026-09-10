@@ -125,7 +125,10 @@ class RetirementReminderService
             $recipients = $recipients->merge($roleUsers);
         }
 
-        return $recipients->unique('id')->values();
+        return $recipients
+            ->filter(fn(User $user): bool => $user->isActive() && $user->email !== '')
+            ->unique('id')
+            ->values();
     }
 
     private function resolveSubmitter(PaymentRequest $paymentRequest): User|null

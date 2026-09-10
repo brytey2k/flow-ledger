@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
 
+use App\Enums\Tenant\UserStatus;
 use App\Enums\Tenant\WorkflowDocumentRequestStatus;
 use App\Models\Role;
 use App\Models\Tenant\Attachment;
@@ -125,7 +126,7 @@ test('only actual earlier approvers can be referred and concern override resumes
     $priorApprover = User::factory()->create([
         'branch_id' => test()->branch->id,
         'operational_branch_id' => test()->branch->id,
-        'status' => App\Enums\Tenant\UserStatus::Active,
+        'status' => UserStatus::Active,
     ]);
     $priorDefinition = WorkflowStage::factory()->create([
         'workflow_template_id' => $workflow['instance']->workflow_template_id,
@@ -141,6 +142,16 @@ test('only actual earlier approvers can be referred and concern override resumes
     $action = WorkflowAction::create([
         'workflow_instance_stage_id' => $priorStage->id,
         'user_id' => $priorApprover->id,
+        'action' => 'approve',
+    ]);
+    $invitedPriorApprover = User::factory()->create([
+        'branch_id' => test()->branch->id,
+        'operational_branch_id' => test()->branch->id,
+        'status' => UserStatus::Invited,
+    ]);
+    WorkflowAction::create([
+        'workflow_instance_stage_id' => $priorStage->id,
+        'user_id' => $invitedPriorApprover->id,
         'action' => 'approve',
     ]);
     $request = $this->documents->open($workflow['stage'], $workflow['approver'], 'Provide evidence.');
@@ -160,6 +171,7 @@ test('only actual earlier approvers can be referred and concern override resumes
         },
     );
     Notification::assertNotSentTo($workflow['requester'], WorkflowDocumentsSubmittedNotification::class);
+    Notification::assertNotSentTo($invitedPriorApprover, WorkflowDocumentsSubmittedNotification::class);
 
     $this->documents->createReferrals($request, $workflow['approver'], [$action->id]);
     $referral = $request->referrals()->firstOrFail();

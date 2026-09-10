@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\PositionImportRequest;
 use App\Http\Requests\Tenant\PositionStoreRequest;
 use App\Http\Requests\Tenant\PositionUpdateRequest;
@@ -23,11 +24,12 @@ class PositionsController extends Controller
         private readonly PositionImportService $importService,
     ) {}
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $positions = $this->repository->allOrderedByName();
+        $filters = $request->filters();
+        $positions = $this->repository->allOrderedByName($filters);
 
-        return view('tenant.positions.index', compact('positions'));
+        return view('tenant.positions.index', compact('positions', 'filters'));
     }
 
     public function create(): View

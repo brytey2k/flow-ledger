@@ -44,6 +44,8 @@
 
 <!-- Container -->
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('landlord.tenants.roles.index', $tenant)" :reset-url="route('landlord.tenants.roles.index', $tenant)" :filters="$filters" search-placeholder="Search tenant roles…" />
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card">
             <div class="sgh-card-header">

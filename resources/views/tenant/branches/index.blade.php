@@ -19,6 +19,18 @@
 </div>
 
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('branches.index')" :reset-url="route('branches.index')" :filters="$filters" search-placeholder="Search branch names or codes…">
+        <div class="flex flex-col gap-1">
+            <label for="level_id" class="sgh-form-label">{{ __('common.columns.level') }}</label>
+            <select id="level_id" name="level_id" class="sgh-select w-full">
+                <option value="">{{ __('common.all') }}</option>
+                @foreach($levels as $level)
+                    <option value="{{ $level->id }}" @selected(($filters['level_id'] ?? null) === $level->id)>{{ $level->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

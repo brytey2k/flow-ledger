@@ -33,15 +33,19 @@ class LandlordTenantAccessControlService
 {
     /**
      * @param TenantContract $tenant
+     * @param array{q?: string} $filters
      *
      * @return Collection<int, Role>
      */
-    public function listRoles(TenantContract $tenant): Collection
+    public function listRoles(TenantContract $tenant, array $filters = []): Collection
     {
+        $search = $filters['q'] ?? null;
+
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         /** @var Collection<int, Role> $roles */
         $roles = $tenant->run(fn(): Collection => Role::withCount(['users', 'permissions'])
+            ->when($search, fn($query) => $query->where('name', 'ilike', "%{$search}%"))
             ->orderBy('name')
             ->orderBy('id')
             ->get());
@@ -111,15 +115,25 @@ class LandlordTenantAccessControlService
      * @param TenantContract $tenant
      * @param int $perPage
      * @param int $page
+     * @param array{q?: string, role_id?: int} $filters
      *
      * @return LengthAwarePaginator<int, TenantUser>
      */
-    public function listUsersPaginated(TenantContract $tenant, int $perPage = 15, int $page = 1): LengthAwarePaginator
+    public function listUsersPaginated(TenantContract $tenant, int $perPage = 15, int $page = 1, array $filters = []): LengthAwarePaginator
     {
+        $search = $filters['q'] ?? null;
+        $roleId = $filters['role_id'] ?? null;
+
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         /** @var LengthAwarePaginator<int, TenantUser> $paginator */
         $paginator = $tenant->run(fn(): LengthAwarePaginator => TenantUser::with(['roles', 'permissions', 'branch'])
+            ->when($search, fn($query) => $query->where(
+                fn($query) => $query->where('first_name', 'ilike', "%{$search}%")
+                    ->orWhere('last_name', 'ilike', "%{$search}%")
+                    ->orWhere('email', 'ilike', "%{$search}%"),
+            ))
+            ->when($roleId, fn($query) => $query->whereHas('roles', fn($query) => $query->whereKey($roleId)))
             ->orderBy('first_name')
             ->orderBy('id')
             ->paginate($perPage, ['*'], 'page', $page));

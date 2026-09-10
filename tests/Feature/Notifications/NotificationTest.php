@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Enums\Tenant\UserStatus;
 use App\Models\Role;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
@@ -52,6 +53,8 @@ test('stage approvers are notified when workflow starts', function () {
         'display_order' => 1,
     ]);
     $stage->roles()->attach($this->role->id);
+    $invitedApprover = User::factory()->create(['status' => UserStatus::Invited]);
+    $invitedApprover->assignRole($this->role);
 
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'draft']);
 
@@ -60,6 +63,7 @@ test('stage approvers are notified when workflow starts', function () {
     app(PaymentRequestService::class)->submit($paymentRequest, $submitter);
 
     Notification::assertSentTo($this->user, StageReadyForApprovalNotification::class);
+    Notification::assertNotSentTo($invitedApprover, StageReadyForApprovalNotification::class);
 });
 test('next stage approvers are notified on advance', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
@@ -97,6 +101,16 @@ test('submitter is notified when request is fully approved', function () {
     app(WorkflowEngineService::class)->approve($instanceStage, $approver);
 
     Notification::assertSentTo($this->user, RequestApprovedNotification::class);
+});
+test('invited submitter is not notified when request is fully approved', function () {
+    [$paymentRequest, $instanceStage, $approver] = makeAdvanceRequestInWorkflow();
+    $this->user->update(['status' => UserStatus::Invited]);
+
+    Notification::fake();
+
+    app(WorkflowEngineService::class)->approve($instanceStage, $approver);
+
+    Notification::assertNotSentTo($this->user, RequestApprovedNotification::class);
 });
 test('submitter is notified when retirement is fully approved', function () {
     $advanceRequest = PaymentRequest::factory()->advance()->create([

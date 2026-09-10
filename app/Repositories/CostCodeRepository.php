@@ -9,10 +9,25 @@ use Illuminate\Database\Eloquent\Collection;
 
 class CostCodeRepository
 {
-    /** @return Collection<int, CostCode> */
-    public function allWithDepartment(): Collection
+    /**
+     * @param array{q?: string, department_id?: int} $filters
+     *
+     * @return Collection<int, CostCode>
+     */
+    public function allWithDepartment(array $filters = []): Collection
     {
-        return CostCode::with('department')->orderBy('code')->orderBy('id')->get();
+        $search = $filters['q'] ?? null;
+        $departmentId = $filters['department_id'] ?? null;
+
+        return CostCode::with('department')
+            ->when($search, fn($query) => $query->where(
+                fn($query) => $query->where('code', 'ilike', "%{$search}%")
+                    ->orWhere('name', 'ilike', "%{$search}%"),
+            ))
+            ->when($departmentId, fn($query) => $query->where('department_id', $departmentId))
+            ->orderBy('code')
+            ->orderBy('id')
+            ->get();
     }
 
     /** @return Collection<int, CostCode> */

@@ -20,6 +20,18 @@
 </div>
 
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('disbursements.index')" :reset-url="route('disbursements.index')" :filters="$filters" search-placeholder="Search request ID or staff…">
+        <div class="flex flex-col gap-1">
+            <label for="branch_id" class="sgh-form-label">{{ __('common.columns.branch') }}</label>
+            <select id="branch_id" name="branch_id" class="sgh-select w-full">
+                <option value="">{{ __('common.all') }}</option>
+                @foreach($branches as $branchId => $branchName)
+                    <option value="{{ $branchId }}" @selected(($filters['branch_id'] ?? null) === $branchId)>{{ $branchName }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
 
         @if($cashPositions->isNotEmpty())

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\CashCountStoreRequest;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Cashbook;
@@ -28,16 +29,17 @@ class CashCountController extends Controller
         private readonly CashbookService $cashbookService,
     ) {}
 
-    public function index(Branch $branch, Request $request): View
+    public function index(Branch $branch, IndexFilterRequest $request): View
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
         abort_unless(in_array($branch->id, $this->branchScope->allowedBranchIds($user), true), 403);
 
         $cashbook = $this->getCashbook($branch);
-        $cashCounts = $this->repository->paginatedForCashbook($cashbook);
+        $filters = $request->filters();
+        $cashCounts = $this->repository->paginatedForCashbook($cashbook, filters: $filters);
 
-        return view('tenant.cash-count.index', compact('branch', 'cashbook', 'cashCounts'));
+        return view('tenant.cash-count.index', compact('branch', 'cashbook', 'cashCounts', 'filters'));
     }
 
     public function create(Branch $branch, Request $request): RedirectResponse|View

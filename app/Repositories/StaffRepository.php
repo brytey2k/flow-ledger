@@ -12,13 +12,28 @@ class StaffRepository
 {
     /**
      * @param array<int, int> $branchIds
+     * @param array{q?: string, branch_id?: int, department_id?: int, position_id?: int} $filters
      *
      * @return Collection<int, Staff>
      */
-    public function allWithRelations(array $branchIds): Collection
+    public function allWithRelations(array $branchIds, array $filters = []): Collection
     {
+        $search = $filters['q'] ?? null;
+        $branchId = $filters['branch_id'] ?? null;
+        $departmentId = $filters['department_id'] ?? null;
+        $positionId = $filters['position_id'] ?? null;
+
         return Staff::with(['department', 'position'])
             ->whereIn('branch_id', $branchIds)
+            ->when($search, fn($query) => $query->where(
+                fn($query) => $query->where('first_name', 'ilike', "%{$search}%")
+                    ->orWhere('last_name', 'ilike', "%{$search}%")
+                    ->orWhere('email', 'ilike', "%{$search}%")
+                    ->orWhere('phone', 'ilike', "%{$search}%"),
+            ))
+            ->when($branchId, fn($query) => $query->where('branch_id', $branchId))
+            ->when($departmentId, fn($query) => $query->where('department_id', $departmentId))
+            ->when($positionId, fn($query) => $query->where('position_id', $positionId))
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->orderBy('id')

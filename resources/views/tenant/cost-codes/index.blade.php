@@ -25,6 +25,18 @@
 </div>
 
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('cost-codes.index')" :reset-url="route('cost-codes.index')" :filters="$filters" search-placeholder="Search cost code or name…">
+        <div class="flex flex-col gap-1">
+            <label for="department_id" class="sgh-form-label">{{ __('common.columns.department') }}</label>
+            <select id="department_id" name="department_id" class="sgh-select w-full">
+                <option value="">{{ __('common.all') }}</option>
+                @foreach($departments as $department)
+                    <option value="{{ $department->id }}" @selected(($filters['department_id'] ?? null) === $department->id)>{{ $department->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

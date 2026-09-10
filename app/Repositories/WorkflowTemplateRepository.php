@@ -11,10 +11,26 @@ use Illuminate\Database\Eloquent\Collection;
 
 class WorkflowTemplateRepository
 {
-    /** @return Collection<int, WorkflowTemplate> */
-    public function allWithStageCount(): Collection
+    /**
+     * @param array{q?: string, type?: string, branch_id?: int} $filters
+     *
+     * @return Collection<int, WorkflowTemplate>
+     */
+    public function allWithStageCount(array $filters = []): Collection
     {
-        return WorkflowTemplate::withCount('stages')->with('branch')->where('is_current', true)->orderBy('name')->orderBy('id')->get();
+        $search = $filters['q'] ?? null;
+        $type = $filters['type'] ?? null;
+        $branchId = $filters['branch_id'] ?? null;
+
+        return WorkflowTemplate::withCount('stages')
+            ->with('branch')
+            ->where('is_current', true)
+            ->when($search, fn($query) => $query->where('name', 'ilike', "%{$search}%"))
+            ->when($type, fn($query) => $query->where('type', $type))
+            ->when($branchId, fn($query) => $query->where('branch_id', $branchId))
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get();
     }
 
     /** @return Collection<int, WorkflowTemplate> */

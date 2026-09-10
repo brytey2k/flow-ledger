@@ -28,6 +28,27 @@ test('all with relations uses ascending id as a stable position tie breaker', fu
 
     expect(array_search($lowerId->id, $ids))->toBeLessThan(array_search($higherId->id, $ids));
 });
+test('all with relations filters by search and level', function () {
+    $matchingBranch = Branch::factory()->create([
+        'name' => 'Searchable Northern Office',
+        'code' => 'NTH-SEARCH',
+        'level_id' => $this->level->id,
+    ]);
+    Branch::factory()->create([
+        'name' => 'Searchable Wrong Level',
+    ]);
+    Branch::factory()->create([
+        'name' => 'Unrelated Office',
+        'level_id' => $this->level->id,
+    ]);
+
+    $result = $this->repository->allWithRelations([
+        'q' => 'searchable',
+        'level_id' => $this->level->id,
+    ]);
+
+    expect($result->pluck('id')->all())->toBe([$matchingBranch->id]);
+});
 test('all with cashbook returns collection', function () {
     $result = $this->repository->allWithCashbook();
 

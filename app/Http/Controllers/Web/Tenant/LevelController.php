@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\LevelStoreRequest;
 use App\Http\Requests\Tenant\LevelUpdateRequest;
 use App\Models\Tenant\Level;
@@ -18,11 +19,12 @@ class LevelController extends Controller
         private readonly LevelRepository $repository,
     ) {}
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $levels = $this->repository->allOrderedByPosition();
+        $filters = $request->filters();
+        $levels = $this->repository->allOrderedByPosition($filters);
 
-        return view('tenant.levels.index', compact('levels'));
+        return view('tenant.levels.index', compact('levels', 'filters'));
     }
 
     public function create(): View

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\CostCodeImportRequest;
 use App\Http\Requests\Tenant\CostCodeStoreRequest;
 use App\Http\Requests\Tenant\CostCodeUpdateRequest;
@@ -24,11 +25,13 @@ class CostCodesController extends Controller
         private readonly CostCodeImportService $importService,
     ) {}
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $costCodes = $this->repository->allWithDepartment();
+        $filters = $request->filters();
+        $costCodes = $this->repository->allWithDepartment($filters);
+        $departments = $this->departmentRepository->allOrderedByName();
 
-        return view('tenant.cost-codes.index', compact('costCodes'));
+        return view('tenant.cost-codes.index', compact('costCodes', 'departments', 'filters'));
     }
 
     public function create(): View

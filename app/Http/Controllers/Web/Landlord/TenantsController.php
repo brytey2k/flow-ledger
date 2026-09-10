@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Landlord;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Landlord\PostImpersonateTenantRequest;
 use App\Http\Requests\Landlord\TenantCreateRequest;
 use App\Http\Requests\Landlord\TenantDeleteRequest;
@@ -25,12 +26,30 @@ use Throwable;
 
 class TenantsController extends Controller
 {
-    public function index(IdpTenantService $idpTenantService): View
+    public function index(IndexFilterRequest $request, IdpTenantService $idpTenantService): View
     {
-        $tenants = Tenant::with('domains')->orderByDesc('created_at')->orderByDesc('id')->get();
+        $filters = $request->filters();
+        $search = $filters['q'] ?? null;
+        $status = $filters['status'] ?? null;
+        $tenants = Tenant::with('domains')
+            ->when($search, fn($query) => $query->where(
+                fn($query) => $query->where('id', 'ilike', "%{$search}%")
+                    ->orWhereHas('domains', fn($query) => $query->where('domain', 'ilike', "%{$search}%")),
+            ))
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+
+        if ($status !== null) {
+            $tenants = $tenants->filter(function ($tenant) use ($status): bool {
+                assert($tenant instanceof Tenant);
+
+                return $tenant->isSuspended() === ($status === 'suspended');
+            })->values();
+        }
         $idpTenantNames = $this->fetchIdpTenantNames($idpTenantService);
 
-        return view('landlord.tenants.index', compact('tenants', 'idpTenantNames'));
+        return view('landlord.tenants.index', compact('tenants', 'idpTenantNames', 'filters'));
     }
 
     public function create(IdpTenantService $idpTenantService): View

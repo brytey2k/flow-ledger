@@ -26,6 +26,17 @@
 
 <!-- Container -->
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('landlord.tenants.index')" :reset-url="route('landlord.tenants.index')" :filters="$filters" search-placeholder="Search tenant ID or domain…">
+        <div class="flex flex-col gap-1">
+            <label for="status" class="sgh-form-label">Status</label>
+            <select id="status" name="status" class="sgh-select w-full">
+                <option value="">All statuses</option>
+                <option value="active" @selected(($filters['status'] ?? null) === 'active')>Active</option>
+                <option value="suspended" @selected(($filters['status'] ?? null) === 'suspended')>Suspended</option>
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

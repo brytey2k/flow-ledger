@@ -19,6 +19,8 @@
 </div>
 
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('levels.index')" :reset-url="route('levels.index')" :filters="$filters" search-placeholder="Search levels…" />
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

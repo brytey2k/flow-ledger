@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\CurrencyDenominationStoreRequest;
 use App\Http\Requests\Tenant\CurrencyDenominationUpdateRequest;
 use App\Models\Tenant\Currency;
@@ -22,11 +23,12 @@ class CurrencyDenominationsController extends Controller
         private readonly CurrencyDenominationService $service,
     ) {}
 
-    public function index(Currency $currency): View
+    public function index(IndexFilterRequest $request, Currency $currency): View
     {
-        $denominations = $this->repository->allForCurrency($currency);
+        $filters = $request->filters();
+        $denominations = $this->repository->allForCurrency($currency, $filters);
 
-        return view('tenant.currencies.denominations.index', compact('currency', 'denominations'));
+        return view('tenant.currencies.denominations.index', compact('currency', 'denominations', 'filters'));
     }
 
     public function create(Currency $currency): View

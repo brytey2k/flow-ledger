@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Landlord;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Landlord\RolePermissionsSyncRequest;
 use App\Http\Requests\Landlord\UserPermissionsSyncRequest;
 use App\Http\Requests\Landlord\UserRolesSyncRequest;
@@ -12,7 +13,6 @@ use App\Models\Landlord\User as LandlordUser;
 use App\Models\Tenant;
 use App\Services\LandlordTenantAccessControlService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -35,13 +35,15 @@ class TenantRolesAndPermissionsController extends Controller
 {
     public function __construct(private readonly LandlordTenantAccessControlService $accessControlService) {}
 
-    public function roles(Tenant $tenant): View
+    public function roles(IndexFilterRequest $request, Tenant $tenant): View
     {
-        $roles = $this->accessControlService->listRoles($tenant);
+        $filters = $request->filters();
+        $roles = $this->accessControlService->listRoles($tenant, $filters);
 
         return view('landlord.tenants.roles.index', [
             'tenant' => $tenant,
             'roles' => $roles,
+            'filters' => $filters,
         ]);
     }
 
@@ -73,14 +75,18 @@ class TenantRolesAndPermissionsController extends Controller
             ->with('success', __('flash.landlord.role_permissions_updated'));
     }
 
-    public function users(Tenant $tenant, Request $request): View
+    public function users(Tenant $tenant, IndexFilterRequest $request): View
     {
+        $filters = $request->filters();
         $page = (int) $request->query('page', 1);
-        $users = $this->accessControlService->listUsersPaginated($tenant, 15, $page);
+        $users = $this->accessControlService->listUsersPaginated($tenant, 15, $page, $filters)->withQueryString();
+        $roles = $this->accessControlService->listRoles($tenant);
 
         return view('landlord.tenants.users.index', [
             'tenant' => $tenant,
             'users' => $users,
+            'roles' => $roles,
+            'filters' => $filters,
         ]);
     }
 

@@ -9,10 +9,20 @@ use Illuminate\Database\Eloquent\Collection;
 
 class LevelRepository
 {
-    /** @return Collection<int, Level> */
-    public function allOrderedByPosition(): Collection
+    /**
+     * @param array{q?: string} $filters
+     *
+     * @return Collection<int, Level>
+     */
+    public function allOrderedByPosition(array $filters = []): Collection
     {
-        return Level::orderBy('position')->orderBy('id')->get();
+        $search = $filters['q'] ?? null;
+
+        return Level::query()
+            ->when($search, fn($query) => $query->where('name', 'ilike', "%{$search}%"))
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
     }
 
     public function nextPosition(): int

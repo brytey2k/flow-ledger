@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\RetirementRequestStoreRequest;
 use App\Http\Requests\Tenant\RetirementRequestUpdateRequest;
 use App\Models\Tenant\PaymentRequest;
@@ -30,13 +31,14 @@ class RetirementRequestsController extends Controller
         private readonly BranchScopeService $branchScope,
     ) {}
 
-    public function index(Request $request): View
+    public function index(IndexFilterRequest $request): View
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
-        $retirements = $this->repository->paginated($this->branchScope->allowedBranchIds($user));
+        $filters = $request->filters();
+        $retirements = $this->repository->paginated($this->branchScope->allowedBranchIds($user), filters: $filters);
 
-        return view('tenant.retirement-requests.index', compact('retirements'));
+        return view('tenant.retirement-requests.index', compact('retirements', 'filters'));
     }
 
     public function create(PaymentRequest $paymentRequest, Request $request): View

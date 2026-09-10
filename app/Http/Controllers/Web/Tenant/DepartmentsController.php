@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\DepartmentImportRequest;
 use App\Http\Requests\Tenant\DepartmentStoreRequest;
 use App\Http\Requests\Tenant\DepartmentUpdateRequest;
@@ -23,11 +24,12 @@ class DepartmentsController extends Controller
         private readonly DepartmentImportService $importService,
     ) {}
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $departments = $this->repository->allOrderedByName();
+        $filters = $request->filters();
+        $departments = $this->repository->allOrderedByName($filters);
 
-        return view('tenant.departments.index', compact('departments'));
+        return view('tenant.departments.index', compact('departments', 'filters'));
     }
 
     public function create(): View

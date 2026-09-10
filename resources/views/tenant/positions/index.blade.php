@@ -25,6 +25,8 @@
 </div>
 
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('positions.index')" :reset-url="route('positions.index')" :filters="$filters" search-placeholder="Search positions…" />
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

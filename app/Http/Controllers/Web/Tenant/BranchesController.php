@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Exceptions\BranchCurrencyLockedException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\BranchStoreRequest;
 use App\Http\Requests\Tenant\BranchUpdateRequest;
 use App\Models\Tenant\Branch;
@@ -24,11 +25,13 @@ class BranchesController extends Controller
         private readonly CurrencyRepository $currencyRepository,
     ) {}
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $branches = $this->repository->allWithRelations();
+        $filters = $request->filters();
+        $branches = $this->repository->allWithRelations($filters);
+        $levels = $this->levelRepository->allOrderedByPosition();
 
-        return view('tenant.branches.index', compact('branches'));
+        return view('tenant.branches.index', compact('branches', 'filters', 'levels'));
     }
 
     public function create(): View

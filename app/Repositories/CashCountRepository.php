@@ -11,11 +11,26 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class CashCountRepository
 {
-    /** @return LengthAwarePaginator<int, CashCount> */
-    public function paginatedForCashbook(Cashbook $cashbook, int $perPage = 20): LengthAwarePaginator
+    /**
+     * @param Cashbook $cashbook
+     * @param int $perPage
+     * @param array{q?: string, date_from?: string, date_to?: string} $filters
+     *
+     * @return LengthAwarePaginator<int, CashCount>
+     */
+    public function paginatedForCashbook(Cashbook $cashbook, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
+        $search = $filters['q'] ?? null;
+        $dateFrom = $filters['date_from'] ?? null;
+        $dateTo = $filters['date_to'] ?? null;
+
         return CashCount::where('cashbook_id', $cashbook->id)
             ->with(['countedBy', 'items'])
+            ->when($search, fn($query) => $query->whereHas('countedBy', fn($query) => $query
+                ->where('first_name', 'ilike', "%{$search}%")
+                ->orWhere('last_name', 'ilike', "%{$search}%")))
+            ->when($dateFrom, fn($query) => $query->whereDate('counted_at', '>=', $dateFrom))
+            ->when($dateTo, fn($query) => $query->whereDate('counted_at', '<=', $dateTo))
             ->orderByDesc('counted_at')
             ->orderByDesc('id')
             ->paginate($perPage)

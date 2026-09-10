@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\PermissionsSyncRequest;
 use App\Http\Requests\Tenant\RoleStoreRequest;
 use App\Http\Requests\Tenant\RoleUpdateRequest;
@@ -41,12 +42,14 @@ class RolesController extends Controller
         return __('flash.roles.permission_grant_denied', ['permissions' => $permissionsText]);
     }
 
-    public function index(): View
+    public function index(IndexFilterRequest $request): View
     {
-        $roles = $this->repository->allWithCounts();
+        $filters = $request->filters();
+        $roles = $this->repository->allWithCounts($filters);
 
         return view('tenant.roles.index', [
             'roles' => $roles,
+            'filters' => $filters,
         ]);
     }
 

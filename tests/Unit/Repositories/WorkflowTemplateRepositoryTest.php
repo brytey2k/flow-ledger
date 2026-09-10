@@ -54,3 +54,25 @@ test('all with stage count returns zero count for template without stages', func
     expect($emptyTemplate)->not->toBeNull();
     expect($emptyTemplate->stages_count)->toBe(0);
 });
+test('all with stage count filters by search type and branch', function () {
+    $matchingTemplate = WorkflowTemplate::factory()->advance()->create([
+        'name' => 'Searchable Advance Workflow',
+        'branch_id' => $this->branch->id,
+    ]);
+    WorkflowTemplate::factory()->expense()->create([
+        'name' => 'Searchable Expense Workflow',
+        'branch_id' => $this->branch->id,
+    ]);
+    WorkflowTemplate::factory()->advance()->create([
+        'name' => 'Unrelated Advance Workflow',
+        'branch_id' => $this->branch->id,
+    ]);
+
+    $result = $this->repository->allWithStageCount([
+        'q' => 'searchable',
+        'type' => 'advance',
+        'branch_id' => $this->branch->id,
+    ]);
+
+    expect($result->pluck('id')->all())->toBe([$matchingTemplate->id]);
+});

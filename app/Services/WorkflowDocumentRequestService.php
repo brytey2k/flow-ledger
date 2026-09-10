@@ -419,6 +419,9 @@ class WorkflowDocumentRequestService
             ->push($request->opened_by_user_id)
             ->unique();
 
-        return User::query()->whereIn('id', $userIds)->get();
+        return User::query()
+            ->active()
+            ->whereIn('id', $userIds)
+            ->get();
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\StaffStoreRequest;
 use App\Http\Requests\Tenant\StaffUpdateRequest;
 use App\Models\Tenant\Staff;
@@ -32,13 +33,18 @@ class StaffController extends Controller
         private readonly BranchScopeService $branchScope,
     ) {}
 
-    public function index(Request $request): View
+    public function index(IndexFilterRequest $request): View
     {
         /** @var User $user */
         $user = $request->user();
-        $staff = $this->repository->allWithRelations($this->branchScope->allowedBranchIds($user));
+        $filters = $request->filters();
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
+        $staff = $this->repository->allWithRelations($allowedBranchIds, $filters);
+        $departments = $this->departmentRepository->allOrderedByName();
+        $positions = $this->positionRepository->allOrderedByName();
+        $branches = $this->branchRepository->allByIdsOrderedByName($allowedBranchIds);
 
-        return view('tenant.staff.index', compact('staff'));
+        return view('tenant.staff.index', compact('staff', 'filters', 'departments', 'positions', 'branches'));
     }
 
     public function create(): View

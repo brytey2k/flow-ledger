@@ -38,28 +38,33 @@
 
 <div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
-        <div class="sgh-card p-5">
-            <form method="GET" class="flex flex-wrap gap-4 items-end">
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-xs font-medium text-secondary-foreground">{{ __('payment_requests.filters.status_label') }}</label>
-                    <select name="status" class="sgh-select sgh-select-sm">
-                        @foreach(__('payment_requests.filters.status_options') as $value => $label)
-                            <option value="{{ $value === 'all' ? '' : $value }}" @selected(($status ?? '') === ($value === 'all' ? '' : $value))>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-xs font-medium text-secondary-foreground">{{ __('payment_requests.filters.scope_label') }}</label>
-                    <select name="scope" class="sgh-select sgh-select-sm">
-                        @foreach(__('payment_requests.filters.scope_options') as $value => $label)
-                            <option value="{{ $value }}" @selected(($scope ?? 'branch') === $value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="sgh-btn sgh-btn-sm sgh-btn-primary">{{ __('payment_requests.filters.apply') }}</button>
-                <a href="{{ route('payment-requests.index') }}" class="sgh-btn sgh-btn-sm sgh-btn-light">Reset</a>
-            </form>
-        </div>
+        <x-index-filters :action="route('payment-requests.index')" :reset-url="route('payment-requests.index')" :filters="$filters" search-placeholder="Search request ID, staff, notes, or reference…">
+            <div class="flex flex-col gap-1">
+                <label for="status" class="sgh-form-label">{{ __('payment_requests.filters.status_label') }}</label>
+                <select id="status" name="status" class="sgh-select w-full">
+                    @foreach(__('payment_requests.filters.status_options') as $value => $label)
+                        <option value="{{ $value === 'all' ? '' : $value }}" @selected(($status ?? '') === ($value === 'all' ? '' : $value))>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label for="scope" class="sgh-form-label">{{ __('payment_requests.filters.scope_label') }}</label>
+                <select id="scope" name="scope" class="sgh-select w-full">
+                    @foreach(__('payment_requests.filters.scope_options') as $value => $label)
+                        <option value="{{ $value }}" @selected(($scope ?? 'branch') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label for="branch_id" class="sgh-form-label">{{ __('common.columns.branch') }}</label>
+                <select id="branch_id" name="branch_id" class="sgh-select w-full">
+                    <option value="">{{ __('common.all') }}</option>
+                    @foreach($branches as $branchId => $branchName)
+                        <option value="{{ $branchId }}" @selected(($filters['branch_id'] ?? null) === $branchId)>{{ $branchName }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </x-index-filters>
 
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

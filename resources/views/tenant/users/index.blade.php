@@ -24,6 +24,27 @@
 
 <!-- Container -->
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('users.index')" :reset-url="route('users.index')" :filters="$filters" search-placeholder="Search user names or email…">
+        <div class="flex flex-col gap-1">
+            <label for="status" class="sgh-form-label">{{ __('common.columns.status') }}</label>
+            <select id="status" name="status" class="sgh-select w-full">
+                <option value="">{{ __('common.all_statuses') }}</option>
+                @foreach(\App\Enums\Tenant\UserStatus::cases() as $status)
+                    <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>{{ $status->label() }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="flex flex-col gap-1">
+            <label for="role_id" class="sgh-form-label">{{ __('users.columns.roles') }}</label>
+            <select id="role_id" name="role_id" class="sgh-select w-full">
+                <option value="">{{ __('common.all') }}</option>
+                @foreach($roles as $role)
+                    <option value="{{ $role->id }}" @selected(($filters['role_id'] ?? null) === $role->id)>{{ Str::headline($role->name) }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

@@ -12,10 +12,25 @@ use Illuminate\Support\Facades\DB;
 
 class BranchRepository
 {
-    /** @return Collection<int, Branch> */
-    public function allWithRelations(): Collection
+    /**
+     * @param array{q?: string, level_id?: int} $filters
+     *
+     * @return Collection<int, Branch>
+     */
+    public function allWithRelations(array $filters = []): Collection
     {
-        return Branch::with(['level', 'parent'])->orderBy('position')->orderBy('id')->get();
+        $search = $filters['q'] ?? null;
+        $levelId = $filters['level_id'] ?? null;
+
+        return Branch::with(['level', 'parent'])
+            ->when($search, fn($query) => $query->where(
+                fn($query) => $query->where('name', 'ilike', "%{$search}%")
+                    ->orWhere('code', 'ilike', "%{$search}%"),
+            ))
+            ->when($levelId, fn($query) => $query->where('level_id', $levelId))
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
     }
 
     /** @return Collection<int, Branch> */

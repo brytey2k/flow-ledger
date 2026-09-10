@@ -48,7 +48,10 @@ class CheckCashBalanceThreshold
         }
 
         // Get users and send notifications
-        $users = User::whereIn('id', $userIds)->get();
+        $users = User::query()
+            ->active()
+            ->whereIn('id', $userIds)
+            ->get();
 
         if ($users->isEmpty()) {
             return;

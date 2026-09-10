@@ -3,8 +3,11 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Enums\Tenant\UserStatus;
+use App\Models\Role;
 use App\Models\Tenant\User;
 use App\Repositories\UserRepository;
+use Illuminate\Support\Str;
 
 beforeEach(function () {
     $this->repository = app(UserRepository::class);
@@ -59,4 +62,36 @@ test('all with roles uses descending id as a stable tie breaker', function () {
     $ids = $this->repository->allWithRoles()->pluck('id')->all();
 
     expect(array_search($higherId->id, $ids))->toBeLessThan(array_search($lowerId->id, $ids));
+});
+test('all with roles filters by search status and role', function () {
+    $matchingRole = Role::create(['name' => 'matching_' . Str::uuid(), 'guard_name' => 'web']);
+    $otherRole = Role::create(['name' => 'other_' . Str::uuid(), 'guard_name' => 'web']);
+    $matchingUser = User::factory()->create([
+        'first_name' => 'Searchable',
+        'last_name' => 'Person',
+        'status' => UserStatus::Active,
+    ]);
+    $matchingUser->assignRole($matchingRole);
+
+    $wrongRoleUser = User::factory()->create([
+        'first_name' => 'Searchable',
+        'last_name' => 'Wrong Role',
+        'status' => UserStatus::Active,
+    ]);
+    $wrongRoleUser->assignRole($otherRole);
+
+    $wrongStatusUser = User::factory()->create([
+        'first_name' => 'Searchable',
+        'last_name' => 'Wrong Status',
+        'status' => UserStatus::Suspended,
+    ]);
+    $wrongStatusUser->assignRole($matchingRole);
+
+    $result = $this->repository->allWithRoles([
+        'q' => 'searchable',
+        'status' => UserStatus::Active->value,
+        'role_id' => $matchingRole->id,
+    ]);
+
+    expect($result->pluck('id')->all())->toBe([$matchingUser->id]);
 });

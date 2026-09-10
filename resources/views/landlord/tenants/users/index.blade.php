@@ -44,6 +44,18 @@
 
 <!-- Container -->
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('landlord.tenants.users-permissions.index', $tenant)" :reset-url="route('landlord.tenants.users-permissions.index', $tenant)" :filters="$filters" search-placeholder="Search tenant user names or email…">
+        <div class="flex flex-col gap-1">
+            <label for="role_id" class="sgh-form-label">Role</label>
+            <select id="role_id" name="role_id" class="sgh-select w-full">
+                <option value="">All roles</option>
+                @foreach($roles as $role)
+                    <option value="{{ $role->id }}" @selected(($filters['role_id'] ?? null) === $role->id)>{{ Str::headline($role->name) }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card">
             <div class="sgh-card-header">

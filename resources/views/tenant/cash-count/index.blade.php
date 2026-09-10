@@ -28,6 +28,17 @@
 
 <!-- Cash Count History Table -->
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('cash-count.index', $branch)" :reset-url="route('cash-count.index', $branch)" :filters="$filters" search-placeholder="Search who counted…">
+        <div class="flex flex-col gap-1">
+            <label for="date_from" class="sgh-form-label">From</label>
+            <input id="date_from" name="date_from" type="date" value="{{ $filters['date_from'] ?? '' }}" class="sgh-input w-full">
+        </div>
+        <div class="flex flex-col gap-1">
+            <label for="date_to" class="sgh-form-label">To</label>
+            <input id="date_to" name="date_to" type="date" value="{{ $filters['date_to'] ?? '' }}" class="sgh-input w-full">
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

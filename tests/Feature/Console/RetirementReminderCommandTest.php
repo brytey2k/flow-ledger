@@ -5,8 +5,10 @@ declare(strict_types=1);
 uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\PaymentRequestStatus;
 use App\Enums\Tenant\SettingKey;
+use App\Enums\Tenant\UserStatus;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
+use App\Models\Tenant\User;
 use App\Notifications\RetirementOverdueNotification;
 use App\Repositories\SettingsRepository;
 use App\Services\RetirementReminderService;
@@ -59,6 +61,22 @@ test('notification sent on first reminder day', function () {
     $this->assertDatabaseHas('retirement_reminder_logs', [
         'payment_request_id' => $paymentRequest->id,
         'user_id' => $this->user->id,
+    ], 'tenant');
+});
+test('invited role recipients do not receive retirement reminders', function () {
+    Notification::fake();
+    $invitedUser = User::factory()->create(['status' => UserStatus::Invited]);
+    $invitedUser->assignRole($this->role);
+    configureReminderSettings(['grace_period_days' => 7, 'frequency_days' => 7]);
+
+    $paymentRequest = makeDisbursedAdvance(7);
+
+    sendReminders();
+
+    Notification::assertNotSentTo($invitedUser, RetirementOverdueNotification::class);
+    $this->assertDatabaseMissing('retirement_reminder_logs', [
+        'payment_request_id' => $paymentRequest->id,
+        'user_id' => $invitedUser->id,
     ], 'tenant');
 });
 test('notification sent on second reminder day', function () {

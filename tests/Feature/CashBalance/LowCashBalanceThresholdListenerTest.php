@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Enums\Tenant\UserStatus;
 use App\Events\CashbookBalanceChanged;
 use App\Listeners\CheckCashBalanceThreshold;
 use App\Models\Tenant\Branch;
@@ -26,10 +27,15 @@ test('listener sends notification when balance drops below threshold', function 
         'branch_id' => $this->branch->id,
         'operational_branch_id' => $this->branch->id,
     ]);
+    $invitedRecipient = User::factory()->create([
+        'branch_id' => $this->branch->id,
+        'operational_branch_id' => $this->branch->id,
+        'status' => UserStatus::Invited,
+    ]);
     $threshold = CashBalanceThreshold::factory()->create([
         'branch_id' => $branch->id,
         'threshold_amount' => 1000.00,
-        'notification_user_ids' => [$recipient->id],
+        'notification_user_ids' => [$recipient->id, $invitedRecipient->id],
         'cooldown_minutes' => 60,
     ]);
     $cashbook = Cashbook::create([
@@ -43,6 +49,7 @@ test('listener sends notification when balance drops below threshold', function 
     );
 
     Notification::assertSentTo($recipient, LowCashBalanceNotification::class);
+    Notification::assertNotSentTo($invitedRecipient, LowCashBalanceNotification::class);
     expect($threshold->notificationLogs()->count())->toBe(1);
 });
 test('listener respects cooldown when recent notification exists', function () {

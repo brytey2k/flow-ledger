@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Models\Tenant;
 
 use App\Enums\Tenant\UserStatus;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -119,6 +122,26 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function isStaff(): bool
     {
         return $this->staffProfile()->exists();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === UserStatus::Active;
+    }
+
+    /** @param Builder<User> $query */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('status', UserStatus::Active);
+    }
+
+    public function routeNotificationForMail(Notification|null $notification = null): string|null
+    {
+        if ($notification instanceof WelcomeNotification) {
+            return $this->email;
+        }
+
+        return $this->isActive() ? $this->email : null;
     }
 
     public function preferredLocale(): string|null

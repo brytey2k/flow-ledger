@@ -19,6 +19,27 @@
 </div>
 
 <div class="sgh-container-fixed">
+    <x-index-filters :action="route('workflow-templates.index')" :reset-url="route('workflow-templates.index')" :filters="$filters" search-placeholder="Search workflow templates…">
+        <div class="flex flex-col gap-1">
+            <label for="type" class="sgh-form-label">{{ __('common.columns.type') }}</label>
+            <select id="type" name="type" class="sgh-select w-full">
+                <option value="">{{ __('common.all_types') }}</option>
+                <option value="advance" @selected(($filters['type'] ?? null) === 'advance')>{{ __('workflows.fields.type_advance') }}</option>
+                <option value="expense" @selected(($filters['type'] ?? null) === 'expense')>{{ __('workflows.fields.type_expense') }}</option>
+                <option value="retirement" @selected(($filters['type'] ?? null) === 'retirement')>{{ __('workflows.fields.type_retirement') }}</option>
+            </select>
+        </div>
+        <div class="flex flex-col gap-1">
+            <label for="branch_id" class="sgh-form-label">{{ __('common.columns.branch') }}</label>
+            <select id="branch_id" name="branch_id" class="sgh-select w-full">
+                <option value="">{{ __('common.all') }}</option>
+                @foreach($branches as $branch)
+                    <option value="{{ $branch->id }}" @selected(($filters['branch_id'] ?? null) === $branch->id)>{{ $branch->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    </x-index-filters>
+
     <div class="grid gap-5 lg:gap-7.5">
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">

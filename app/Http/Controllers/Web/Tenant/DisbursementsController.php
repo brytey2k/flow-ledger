@@ -6,15 +6,16 @@ namespace App\Http\Controllers\Web\Tenant;
 
 use App\Exceptions\InsufficientCashbookBalanceException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\DisbursementStoreRequest;
 use App\Models\Tenant\PaymentRequest;
+use App\Repositories\BranchRepository;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
 use App\Services\ReportService;
 use App\Services\WorkflowApproverResolver;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DisbursementsController extends Controller
@@ -25,24 +26,28 @@ class DisbursementsController extends Controller
         private readonly BranchScopeService $branchScope,
         private readonly WorkflowApproverResolver $approvers,
         private readonly ReportService $reports,
+        private readonly BranchRepository $branchRepository,
     ) {}
 
-    public function index(Request $request): View
+    public function index(IndexFilterRequest $request): View
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
+        $filters = $request->filters();
         $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
         $requests = $this->repository->pendingDisbursement(
             $allowedBranchIds,
             user: $user,
+            filters: $filters,
         );
+        $branches = $this->branchRepository->allByIdsOrderedByName($allowedBranchIds);
         $cashPositions = $this->reports->cashPosition(
             $allowedBranchIds,
             now()->toDateString(),
             now()->toDateString(),
         )['cashbooks'];
 
-        return view('tenant.disbursements.index', compact('requests', 'cashPositions'));
+        return view('tenant.disbursements.index', compact('requests', 'cashPositions', 'branches', 'filters'));
     }
 
     public function store(DisbursementStoreRequest $request, PaymentRequest $paymentRequest): RedirectResponse
