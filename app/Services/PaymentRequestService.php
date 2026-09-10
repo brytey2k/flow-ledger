@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\DTOs\Tenant\CreatePaymentRequestDto;
 use App\DTOs\Tenant\DisbursePaymentRequestDto;
+use App\Enums\Tenant\PaymentMethod;
 use App\Enums\Tenant\PaymentRequestStatus;
 use App\Enums\Tenant\PaymentRequestType;
 use App\Exceptions\BranchCurrencyNotConfiguredException;
@@ -102,11 +103,13 @@ class PaymentRequestService
         }
 
         DB::transaction(function () use ($request, $dto, $user): void {
+            $method = PaymentMethod::Cash;
+
             $request->update([
                 'status' => PaymentRequestStatus::Disbursed->value,
                 'disbursed_at' => now(),
                 'disbursed_by_user_id' => $user?->id,
-                'disbursement_method' => $dto->method,
+                'disbursement_method' => $method,
                 'disbursement_reference' => $dto->reference,
             ]);
 
@@ -116,7 +119,7 @@ class PaymentRequestService
                 ->performedOn($request)
                 ->causedBy($user)
                 ->event('request.disbursed')
-                ->withProperties(['old_status' => PaymentRequestStatus::Approved->value, 'new_status' => PaymentRequestStatus::Disbursed->value, 'method' => $dto->method->value])
+                ->withProperties(['old_status' => PaymentRequestStatus::Approved->value, 'new_status' => PaymentRequestStatus::Disbursed->value, 'method' => $method->value])
                 ->log('Disbursed');
         });
 

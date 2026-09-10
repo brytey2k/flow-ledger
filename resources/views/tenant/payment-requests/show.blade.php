@@ -2,7 +2,6 @@
 
 @php
     use App\Enums\Tenant\PermissionKey;
-    use App\Enums\Tenant\PaymentMethod;
 
     $statusColors = [
         'draft'       => 'sgh-badge-outline',
@@ -552,22 +551,6 @@
                                 @if($canDisburse)
                                     <form method="POST" action="{{ route('disbursements.store', $paymentRequest) }}" class="flex flex-col gap-3">
                                     @csrf
-                                    <div>
-                                        <label class="sgh-form-label block mb-1.5 text-sm" for="disbursement_method">{{ __('payment_requests.show.payment_method') }} <span class="text-destructive">*</span></label>
-                                        <select id="disbursement_method" name="disbursement_method"
-                                                class="sgh-select w-full"
-                                                aria-invalid="@error('disbursement_method') true @else false @enderror">
-                                            <option value="">— Select method —</option>
-                                            @foreach(PaymentMethod::cases() as $method)
-                                                <option value="{{ $method->value }}" @selected(old('disbursement_method') === $method->value)>
-                                                    {{ $method->label() }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('disbursement_method')
-                                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
-                                        @enderror
-                                    </div>
                                     <div>
                                         <label class="sgh-form-label block mb-1.5 text-sm" for="disbursement_reference">Reference <span class="text-secondary-foreground text-xs font-normal">(optional)</span></label>
                                         <input id="disbursement_reference" name="disbursement_reference" type="text"

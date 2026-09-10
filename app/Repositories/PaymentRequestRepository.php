@@ -48,6 +48,27 @@ class PaymentRequestRepository
     }
 
     /**
+     * @param array<int, int> $branchIds
+     *
+     * @return Collection<string, float>
+     */
+    public function approvedTotalsByBranchAndCurrency(array $branchIds): Collection
+    {
+        /** @var Collection<int, object{branch_id: int, currency_id: int, total: float|int|string}> $rows */
+        $rows = DB::table('payment_requests')
+            ->whereIn('branch_id', $branchIds)
+            ->where('status', 'approved')
+            ->whereNull('deleted_at')
+            ->selectRaw('branch_id, currency_id, SUM(total_amount) as total')
+            ->groupBy('branch_id', 'currency_id')
+            ->get();
+
+        return $rows->mapWithKeys(static fn(object $row): array => [
+            $row->branch_id . ':' . $row->currency_id => (float) $row->total,
+        ]);
+    }
+
+    /**
      * @param array<int, int> $allowedBranchIds
      * @param int $graceDays
      */

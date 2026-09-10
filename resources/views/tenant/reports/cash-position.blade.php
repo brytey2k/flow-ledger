@@ -11,8 +11,8 @@
             </div>
             <h1 class="text-xl font-medium leading-none text-mono">Cash Position</h1>
             <p class="text-sm text-secondary-foreground max-w-2xl">
-                Current balance per cashbook with period receipts and payments. Shows net cash movement for any date range
-                and gives a clear picture of available funds across all branches.
+                Current cash per branch, approved payments awaiting release, and the amount still free for new commitments.
+                Period receipts and payments show movement within the selected date range.
             </p>
         </div>
         @include('tenant.reports.partials.export-buttons', ['exportRoute' => 'reports.export.cash-position'])
@@ -62,17 +62,32 @@
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-3 rounded-lg bg-muted/40 p-3">
+                            <div>
+                                <div class="text-xs text-secondary-foreground mb-0.5">Approved Awaiting Release</div>
+                                <div class="text-sm font-semibold text-warning">
+                                    {{ number_format((float) $row['approved_awaiting_release'], 2) }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-secondary-foreground mb-0.5">Available Uncommitted Cash</div>
+                                <div class="text-sm font-semibold {{ $row['available_uncommitted_cash'] < 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ $row['cashbook']->currency?->symbol ?? '' }} {{ number_format((float) $row['available_uncommitted_cash'], 2) }}
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="border-t border-border pt-3 grid grid-cols-2 gap-3">
                             <div>
                                 <div class="text-xs text-secondary-foreground mb-0.5">Period Receipts</div>
                                 <div class="text-sm font-semibold text-success">
-                                    + {{ number_format((float) $row['period_credits'], 2) }}
+                                    + {{ number_format((float) $row['period_receipts'], 2) }}
                                 </div>
                             </div>
                             <div>
                                 <div class="text-xs text-secondary-foreground mb-0.5">Period Payments</div>
                                 <div class="text-sm font-semibold text-danger">
-                                    − {{ number_format((float) $row['period_debits'], 2) }}
+                                    − {{ number_format((float) $row['period_payments'], 2) }}
                                 </div>
                             </div>
                         </div>

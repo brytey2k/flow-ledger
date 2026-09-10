@@ -22,6 +22,35 @@
 <div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
 
+        @if($cashPositions->isNotEmpty())
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach($cashPositions as $position)
+                    <div class="sgh-card p-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="text-sm font-semibold text-mono">{{ $position['cashbook']->branch?->name ?? 'Unknown Branch' }}</div>
+                                <div class="text-xs text-secondary-foreground">Cash available for release</div>
+                            </div>
+                            <x-tabler-calculator-filled class="text-2xl text-muted-foreground" />
+                        </div>
+                        <div class="mt-4 text-2xl font-bold {{ $position['available_uncommitted_cash'] < 0 ? 'text-danger' : 'text-mono' }}">
+                            {{ $position['cashbook']->currency?->symbol ?? '' }} {{ number_format((float) $position['available_uncommitted_cash'], 2) }}
+                        </div>
+                        <div class="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-3 text-xs">
+                            <div>
+                                <div class="text-secondary-foreground">Cashbook balance</div>
+                                <div class="mt-0.5 font-semibold text-mono">{{ number_format((float) $position['current_balance'], 2) }}</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary-foreground">Approved commitments</div>
+                                <div class="mt-0.5 font-semibold text-warning">{{ number_format((float) $position['approved_awaiting_release'], 2) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         <div class="sgh-card sgh-card-grid">
             <div class="sgh-card-header">
                 <h3 class="sgh-card-title">{{ __('disbursements.pending_card') }}</h3>

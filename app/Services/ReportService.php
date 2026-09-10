@@ -119,14 +119,16 @@ class ReportService
      * @param string $dateTo
      *
      * @return array{
-     *     cashbooks: Collection<int, array{cashbook: Cashbook, current_balance: float, period_debits: float, period_credits: float, entry_count: int<0, max>}>,
+     *     cashbooks: Collection<int, array{cashbook: Cashbook, current_balance: float, approved_awaiting_release: float, available_uncommitted_cash: float, period_receipts: float, period_payments: float, entry_count: int<0, max>}>,
      *     dateFrom: string,
      *     dateTo: string,
      * }
      */
     public function cashPosition(array $allowedBranchIds, string $dateFrom, string $dateTo): array
     {
-        $cashbooks = $this->cashbooks->cashbooksForPosition($allowedBranchIds, $dateFrom, $dateTo)->map(function (Cashbook $book): array {
+        $approvedTotals = $this->paymentRequests->approvedTotalsByBranchAndCurrency($allowedBranchIds);
+
+        $cashbooks = $this->cashbooks->cashbooksForPosition($allowedBranchIds, $dateFrom, $dateTo)->map(function (Cashbook $book) use ($approvedTotals): array {
             $entries = $book->entries;
 
             /** @var float|int $balance */
@@ -135,12 +137,15 @@ class ReportService
             $debits = $entries->where('type', 'debit')->sum('amount');
             /** @var float|int $credits */
             $credits = $entries->where('type', 'credit')->sum('amount');
+            $approvedAwaitingRelease = (float) $approvedTotals->get($book->branch_id . ':' . $book->currency_id, 0.0);
 
             return [
                 'cashbook' => $book,
                 'current_balance' => (float) $balance,
-                'period_debits' => (float) $debits,
-                'period_credits' => (float) $credits,
+                'approved_awaiting_release' => $approvedAwaitingRelease,
+                'available_uncommitted_cash' => (float) $balance - $approvedAwaitingRelease,
+                'period_receipts' => (float) $debits,
+                'period_payments' => (float) $credits,
                 'entry_count' => $entries->count(),
             ];
         });

@@ -90,12 +90,14 @@ class ReportsExportController extends Controller
             $this->dateInput($request, 'date_to', now()->toDateString()),
         );
 
-        $headers = ['Cashbook', 'Current Balance', 'Period Debits', 'Period Credits', 'Entries'];
+        $headers = ['Cashbook', 'Current Balance', 'Approved Awaiting Release', 'Available Uncommitted Cash', 'Period Receipts', 'Period Payments', 'Entries'];
         $rows = $data['cashbooks']->map(fn(array $item) => [
             $item['cashbook']->branch->name,
             number_format($item['current_balance'], 2, '.', ''),
-            number_format($item['period_debits'], 2, '.', ''),
-            number_format($item['period_credits'], 2, '.', ''),
+            number_format($item['approved_awaiting_release'], 2, '.', ''),
+            number_format($item['available_uncommitted_cash'], 2, '.', ''),
+            number_format($item['period_receipts'], 2, '.', ''),
+            number_format($item['period_payments'], 2, '.', ''),
             $item['entry_count'],
         ]);
 

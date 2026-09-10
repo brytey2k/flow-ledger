@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
-use App\Enums\Tenant\PaymentMethod;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\Currency;
@@ -36,7 +35,7 @@ test('disbursement creates credit cashbook entry', function () {
     $request = approvedAdvanceForCashbookAutoEntry(500.00);
 
     $this->actingAs($this->user)
-        ->post(route('disbursements.store', $request), ['disbursement_method' => PaymentMethod::Cash->value]);
+        ->post(route('disbursements.store', $request));
 
     $cashbook = Cashbook::where('branch_id', $request->branch_id)->first();
     expect($cashbook)->not->toBeNull();
@@ -52,7 +51,7 @@ test('disbursement decrements cashbook balance', function () {
     $request = approvedAdvanceForCashbookAutoEntry(300.00);
 
     $this->actingAs($this->user)
-        ->post(route('disbursements.store', $request), ['disbursement_method' => PaymentMethod::Cash->value]);
+        ->post(route('disbursements.store', $request));
 
     $cashbook = Cashbook::where('branch_id', $request->branch_id)->first();
     expect((float) $cashbook->balance)->toEqualWithDelta(-300.00, 0.01);
@@ -62,7 +61,7 @@ test('disbursement auto creates cashbook for branch', function () {
     expect(Cashbook::where('branch_id', $request->branch_id)->first())->toBeNull();
 
     $this->actingAs($this->user)
-        ->post(route('disbursements.store', $request), ['disbursement_method' => PaymentMethod::Cash->value]);
+        ->post(route('disbursements.store', $request));
 
     expect(Cashbook::where('branch_id', $request->branch_id)->first())->not->toBeNull();
 });
@@ -82,10 +81,10 @@ test('second disbursement on same branch accumulates balance', function () {
     $second->update(['currency_id' => $currency->id]);
 
     $this->actingAs($this->user)
-        ->post(route('disbursements.store', $first), ['disbursement_method' => PaymentMethod::Cash->value]);
+        ->post(route('disbursements.store', $first));
 
     $this->actingAs($this->user)
-        ->post(route('disbursements.store', $second), ['disbursement_method' => PaymentMethod::Cash->value]);
+        ->post(route('disbursements.store', $second));
 
     $cashbook = Cashbook::where('branch_id', $this->branch->id)->first();
     expect((float) $cashbook->balance)->toEqualWithDelta(0.00, 0.01);

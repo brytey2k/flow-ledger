@@ -11,6 +11,7 @@ use App\Models\Tenant\PaymentRequest;
 use App\Repositories\PaymentRequestRepository;
 use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
+use App\Services\ReportService;
 use App\Services\WorkflowApproverResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,18 +24,25 @@ class DisbursementsController extends Controller
         private readonly PaymentRequestRepository $repository,
         private readonly BranchScopeService $branchScope,
         private readonly WorkflowApproverResolver $approvers,
+        private readonly ReportService $reports,
     ) {}
 
     public function index(Request $request): View
     {
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
+        $allowedBranchIds = $this->branchScope->allowedBranchIds($user);
         $requests = $this->repository->pendingDisbursement(
-            $this->branchScope->allowedBranchIds($user),
+            $allowedBranchIds,
             user: $user,
         );
+        $cashPositions = $this->reports->cashPosition(
+            $allowedBranchIds,
+            now()->toDateString(),
+            now()->toDateString(),
+        )['cashbooks'];
 
-        return view('tenant.disbursements.index', compact('requests'));
+        return view('tenant.disbursements.index', compact('requests', 'cashPositions'));
     }
 
     public function store(DisbursementStoreRequest $request, PaymentRequest $paymentRequest): RedirectResponse
