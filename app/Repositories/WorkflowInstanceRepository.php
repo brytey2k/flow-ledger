@@ -109,6 +109,7 @@ class WorkflowInstanceRepository
                 'instance.workflowable.currency',
             ])
             ->latest('workflow_instance_stages.created_at')
+            ->orderByDesc('workflow_instance_stages.id')
             ->paginate($perPage);
     }
 

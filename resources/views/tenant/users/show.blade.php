@@ -61,7 +61,7 @@
                 <p class="text-sm text-muted-foreground">{{ __('users.columns.roles') }}</p>
                 <div class="flex flex-wrap gap-2 mt-1">
                     @forelse($user->roles as $role)
-                        <span class="badge badge-sm badge-primary">{{ $role->name }}</span>
+                        <span class="sgh-badge sgh-badge-sm sgh-badge-primary">{{ Str::headline($role->name) }}</span>
                     @empty
                         <span class="text-2sm text-muted-foreground">{{ __('users.columns.no_roles') }}</span>
                     @endforelse

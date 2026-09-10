@@ -17,6 +17,7 @@ class CashCountRepository
         return CashCount::where('cashbook_id', $cashbook->id)
             ->with(['countedBy', 'items'])
             ->orderByDesc('counted_at')
+            ->orderByDesc('id')
             ->paginate($perPage)
             ->withQueryString();
     }

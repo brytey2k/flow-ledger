@@ -20,6 +20,14 @@ test('all with relations eager loads level', function () {
     expect($result->count())->toBeGreaterThan(0);
     expect($result->first()->relationLoaded('level'))->toBeTrue();
 });
+test('all with relations uses ascending id as a stable position tie breaker', function () {
+    $lowerId = Branch::factory()->create(['level_id' => $this->level->id, 'position' => 99]);
+    $higherId = Branch::factory()->create(['level_id' => $this->level->id, 'position' => 99]);
+
+    $ids = $this->repository->allWithRelations()->pluck('id')->all();
+
+    expect(array_search($lowerId->id, $ids))->toBeLessThan(array_search($higherId->id, $ids));
+});
 test('all with cashbook returns collection', function () {
     $result = $this->repository->allWithCashbook();
 

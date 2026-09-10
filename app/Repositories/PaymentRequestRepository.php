@@ -234,6 +234,7 @@ class PaymentRequestRepository
                 ->whereDoesntHave('retirementRequests', fn(EloquentBuilder $q2) => $q2->whereIn('status', ['draft', 'in_workflow', 'approved', 'sent_back'])))
             ->when($status !== null && $status !== 'pending_retirement', fn(EloquentBuilder $q) => $q->where('status', $status))
             ->orderBy('created_at', 'desc')
+            ->orderByDesc('id')
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -250,7 +251,8 @@ class PaymentRequestRepository
         $query = PaymentRequest::with(['staff', 'branch', 'currency'])
             ->whereIn('branch_id', $branchIds)
             ->where('status', 'approved')
-            ->orderBy('approved_at', 'asc');
+            ->orderBy('approved_at', 'asc')
+            ->orderBy('id');
 
         if ($user !== null) {
             $this->workflowApprovers->excludePaymentRequestsParticipatedIn($query, $user);

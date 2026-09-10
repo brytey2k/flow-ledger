@@ -348,6 +348,7 @@ class WorkflowDocumentRequestService
             ->whereNull('responded_at')
             ->whereHas('documentRequest', fn($query) => $query->where('status', WorkflowDocumentRequestStatus::AwaitingReReview->value))
             ->latest()
+            ->orderByDesc('id')
             ->get();
     }
 

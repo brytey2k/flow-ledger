@@ -27,7 +27,7 @@ class TenantsController extends Controller
 {
     public function index(IdpTenantService $idpTenantService): View
     {
-        $tenants = Tenant::with('domains')->orderByDesc('created_at')->get();
+        $tenants = Tenant::with('domains')->orderByDesc('created_at')->orderByDesc('id')->get();
         $idpTenantNames = $this->fetchIdpTenantNames($idpTenantService);
 
         return view('landlord.tenants.index', compact('tenants', 'idpTenantNames'));

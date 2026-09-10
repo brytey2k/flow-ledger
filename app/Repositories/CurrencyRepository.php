@@ -18,6 +18,6 @@ class CurrencyRepository
     /** @return Collection<int, Currency> */
     public function allOrderedByShortName(): Collection
     {
-        return Currency::orderBy('short_name')->get();
+        return Currency::orderBy('short_name')->orderBy('id')->get();
     }
 }

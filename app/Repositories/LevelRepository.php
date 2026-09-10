@@ -12,7 +12,7 @@ class LevelRepository
     /** @return Collection<int, Level> */
     public function allOrderedByPosition(): Collection
     {
-        return Level::orderBy('position')->get();
+        return Level::orderBy('position')->orderBy('id')->get();
     }
 
     public function nextPosition(): int

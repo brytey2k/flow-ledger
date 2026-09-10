@@ -12,6 +12,6 @@ class PositionRepository
     /** @return Collection<int, Position> */
     public function allOrderedByName(): Collection
     {
-        return Position::orderBy('name')->get();
+        return Position::orderBy('name')->orderBy('id')->get();
     }
 }

@@ -93,6 +93,30 @@ test('user without delete permission cannot destroy', function () {
 test('authorised user can view index', function () {
     $this->actingAs($this->user)->get(route('users.index'))->assertOk();
 });
+test('index formats role names for display', function () {
+    $user = User::factory()->create();
+    $role = Role::create(['name' => 'finance_operations_manager', 'guard_name' => 'web']);
+    $user->assignRole($role);
+
+    $response = $this->actingAs($this->user)->get(route('users.index'));
+
+    $response->assertOk();
+    $response->assertSee('Finance Operations Manager');
+    $response->assertSee('sgh-badge sgh-badge-sm sgh-badge-primary');
+    $response->assertDontSee('finance_operations_manager');
+});
+test('user detail formats role names for display', function () {
+    $user = User::factory()->create();
+    $role = Role::create(['name' => 'finance_operations_manager', 'guard_name' => 'web']);
+    $user->assignRole($role);
+
+    $response = $this->actingAs($this->user)->get(route('users.show', $user));
+
+    $response->assertOk();
+    $response->assertSee('Finance Operations Manager');
+    $response->assertSee('sgh-badge sgh-badge-sm sgh-badge-primary');
+    $response->assertDontSee('finance_operations_manager');
+});
 test('authorised user can view create form with roles', function () {
     $response = $this->actingAs($this->user)->get(route('users.create'));
 

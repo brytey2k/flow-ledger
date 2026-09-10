@@ -12,12 +12,12 @@ class RoleRepository
     /** @return Collection<int, Role> */
     public function allOrderedByName(): Collection
     {
-        return Role::orderBy('name')->get();
+        return Role::orderBy('name')->orderBy('id')->get();
     }
 
     /** @return Collection<int, Role> */
     public function allWithCounts(): Collection
     {
-        return Role::withCount(['users', 'permissions'])->orderBy('name')->get();
+        return Role::withCount(['users', 'permissions'])->orderBy('name')->orderBy('id')->get();
     }
 }

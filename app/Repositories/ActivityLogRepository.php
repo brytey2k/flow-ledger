@@ -40,7 +40,9 @@ class ActivityLogRepository
         string|null $causerSearch = null,
         int $perPage = 50,
     ): LengthAwarePaginator {
-        $query = Activity::with(['causer', 'subject'])->orderByDesc('created_at');
+        $query = Activity::with(['causer', 'subject'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         if ($subjectType !== null && isset($this->subjectTypes[$subjectType])) {
             // Rows written before the morph map was introduced store the FQCN; newer rows store the alias.

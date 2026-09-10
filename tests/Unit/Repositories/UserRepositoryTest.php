@@ -43,3 +43,20 @@ test('all with roles orders by created at desc', function () {
     $ids = $result->pluck('id')->all();
     expect(array_search($newer->id, $ids))->toBeLessThan(array_search($older->id, $ids));
 });
+test('all with roles uses descending id as a stable tie breaker', function () {
+    $createdAt = now()->subMinute();
+    $lowerId = User::factory()->create([
+        'branch_id' => $this->branch->id,
+        'operational_branch_id' => $this->branch->id,
+        'created_at' => $createdAt,
+    ]);
+    $higherId = User::factory()->create([
+        'branch_id' => $this->branch->id,
+        'operational_branch_id' => $this->branch->id,
+        'created_at' => $createdAt,
+    ]);
+
+    $ids = $this->repository->allWithRoles()->pluck('id')->all();
+
+    expect(array_search($higherId->id, $ids))->toBeLessThan(array_search($lowerId->id, $ids));
+});

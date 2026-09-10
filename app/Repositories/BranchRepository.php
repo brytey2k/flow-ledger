@@ -15,7 +15,7 @@ class BranchRepository
     /** @return Collection<int, Branch> */
     public function allWithRelations(): Collection
     {
-        return Branch::with(['level', 'parent'])->orderBy('position')->get();
+        return Branch::with(['level', 'parent'])->orderBy('position')->orderBy('id')->get();
     }
 
     /** @return Collection<int, Branch> */
@@ -29,7 +29,7 @@ class BranchRepository
     /** @return Collection<int, Branch> */
     public function allOrderedByName(): Collection
     {
-        return Branch::orderBy('name')->get();
+        return Branch::orderBy('name')->orderBy('id')->get();
     }
 
     /**

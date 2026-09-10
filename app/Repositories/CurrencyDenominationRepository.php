@@ -16,6 +16,7 @@ class CurrencyDenominationRepository
         return CurrencyDenomination::where('currency_id', $currency->id)
             ->orderBy('sort_order')
             ->orderBy('value')
+            ->orderBy('id')
             ->get();
     }
 

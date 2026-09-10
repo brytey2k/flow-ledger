@@ -12,7 +12,7 @@ class UserRepository
     /** @return Collection<int, User> */
     public function allWithRoles(): Collection
     {
-        return User::with('roles')->orderBy('created_at', 'desc')->get();
+        return User::with('roles')->orderBy('created_at', 'desc')->orderByDesc('id')->get();
     }
 
     public function findByOidcSub(string $oidcSub): User|null

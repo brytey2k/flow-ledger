@@ -21,6 +21,7 @@ class StaffRepository
             ->whereIn('branch_id', $branchIds)
             ->orderBy('last_name')
             ->orderBy('first_name')
+            ->orderBy('id')
             ->get();
     }
 

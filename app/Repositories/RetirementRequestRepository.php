@@ -37,6 +37,7 @@ class RetirementRequestRepository
         return RetirementRequest::with(['paymentRequest.staff', 'paymentRequest.currency'])
             ->whereHas('paymentRequest', fn($q) => $q->whereIn('branch_id', $branchIds))
             ->orderBy('created_at', 'desc')
+            ->orderByDesc('id')
             ->paginate($perPage);
     }
 

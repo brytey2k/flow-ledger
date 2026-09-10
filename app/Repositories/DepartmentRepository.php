@@ -12,6 +12,6 @@ class DepartmentRepository
     /** @return Collection<int, Department> */
     public function allOrderedByName(): Collection
     {
-        return Department::orderBy('name')->get();
+        return Department::orderBy('name')->orderBy('id')->get();
     }
 }

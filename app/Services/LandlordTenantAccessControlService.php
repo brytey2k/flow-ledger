@@ -43,6 +43,7 @@ class LandlordTenantAccessControlService
         /** @var Collection<int, Role> $roles */
         $roles = $tenant->run(fn(): Collection => Role::withCount(['users', 'permissions'])
             ->orderBy('name')
+            ->orderBy('id')
             ->get());
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -120,6 +121,7 @@ class LandlordTenantAccessControlService
         /** @var LengthAwarePaginator<int, TenantUser> $paginator */
         $paginator = $tenant->run(fn(): LengthAwarePaginator => TenantUser::with(['roles', 'permissions', 'branch'])
             ->orderBy('first_name')
+            ->orderBy('id')
             ->paginate($perPage, ['*'], 'page', $page));
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

@@ -21,12 +21,14 @@ class CashBalanceThresholdController extends Controller
     {
         $branches = Branch::with(['cashbook.currency', 'cashBalanceThreshold'])
             ->orderBy('position')
+            ->orderBy('id')
             ->get();
         $thresholds = CashBalanceThreshold::with(['branch.currency', 'notificationLogs'])
             ->orderBy('branch_id')
+            ->orderBy('id')
             ->get();
 
-        $users = User::query()->orderBy('first_name')->orderBy('last_name')->get();
+        $users = User::query()->orderBy('first_name')->orderBy('last_name')->orderBy('id')->get();
 
         return view('tenant.settings.cash-balance-thresholds', compact('branches', 'thresholds', 'users'));
     }

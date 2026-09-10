@@ -12,7 +12,7 @@ class CostCodeRepository
     /** @return Collection<int, CostCode> */
     public function allWithDepartment(): Collection
     {
-        return CostCode::with('department')->orderBy('code')->get();
+        return CostCode::with('department')->orderBy('code')->orderBy('id')->get();
     }
 
     /** @return Collection<int, CostCode> */
