@@ -387,17 +387,16 @@ Log in as a user with the **`DisburseRequests`** permission.
 
 The disbursements list shows all **approved** requests ready to be paid out.
 
-Click **Disburse** on a request and fill in:
+Click **Disburse** on a request. All payments are released as cash; there is no payment-method selection.
 
 | Field | Notes |
 |-------|-------|
-| Disbursement Method | e.g. Bank Transfer, Cash, Cheque |
-| Reference Number | Transaction/cheque reference |
-| Notes | (Optional) Additional notes |
+| Reference Number | (Optional) Cash voucher or transaction reference |
 
 On submission:
 - Request status → **`disbursed`**
 - `disbursed_at` and `disbursed_by` are recorded
+- The disbursement method is recorded automatically as **Cash**
 - Notification sent to the requester (funds are ready)
 - A **credit entry** is automatically added to the branch's cashbook (money has left the cashbook and gone to the staff member)
 

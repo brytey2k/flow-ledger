@@ -175,7 +175,6 @@ test('store creates draft and redirects to show', function () {
 
     $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
         'type' => 'advance',
-        'planned_disbursement_method' => App\Enums\Tenant\PaymentMethod::BankTransfer->value,
         'currency_id' => $currency->id,
         'notes' => 'Test notes',
         'items' => [
@@ -192,22 +191,10 @@ test('store creates draft and redirects to show', function () {
         'type' => 'advance',
         'status' => 'draft',
         'total_amount' => '450.00',
-        'planned_disbursement_method' => App\Enums\Tenant\PaymentMethod::BankTransfer->value,
     ]);
 
     $this->assertDatabaseHas('payment_request_items', ['description' => 'Transport', 'amount' => '150.00']);
     $this->assertDatabaseHas('payment_request_items', ['description' => 'Accommodation', 'amount' => '300.00']);
-});
-test('store rejects an invalid planned payment method', function () {
-    Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
-
-    $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
-        'type' => 'advance',
-        'planned_disbursement_method' => 'wire_transfer',
-        'items' => [['description' => 'Transport', 'amount' => '150.00']],
-    ]);
-
-    $response->assertSessionHasErrors('planned_disbursement_method');
 });
 test('store is forbidden when user has no staff profile', function () {
     $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [

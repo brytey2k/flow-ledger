@@ -157,7 +157,6 @@ test('submit falls back to master template when no branch template', function ()
 test('disburse sets status to disbursed', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
-        method: App\Enums\Tenant\PaymentMethod::Cash,
         reference: null,
     );
 
@@ -171,7 +170,6 @@ test('disburse sets status to disbursed', function () {
 test('disburse records disbursed at and disbursed by', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
-        method: App\Enums\Tenant\PaymentMethod::Cash,
         reference: 'REF-123',
     );
 
@@ -186,7 +184,6 @@ test('disburse records disbursed at and disbursed by', function () {
 test('disburse creates cashbook entry', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 200.0]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
-        method: App\Enums\Tenant\PaymentMethod::Cash,
         reference: null,
     );
 
@@ -201,7 +198,6 @@ test('disburse creates cashbook entry', function () {
 test('disburse logs activity', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
-        method: App\Enums\Tenant\PaymentMethod::Cash,
         reference: null,
     );
 
@@ -224,7 +220,6 @@ test('disburse rejects the request submitter', function () {
         'status' => 'completed',
     ]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
-        method: App\Enums\Tenant\PaymentMethod::Cash,
         reference: null,
     );
 

@@ -105,7 +105,6 @@ return [
         'resubmitted' => 'Demande renvoyee pour approbation.',
         'updated' => 'Demande mise a jour avec succes.',
         'submit_only_draft' => 'Seules les demandes en brouillon peuvent etre soumises.',
-        'planned_disbursement_method_required' => 'Selectionnez un mode de paiement prevu avant de soumettre cette demande pour approbation.',
         'resubmit_only_sent_back' => 'Seules les demandes renvoyees peuvent etre soumises a nouveau.',
         'resubmit_not_owner' => 'Vous ne pouvez soumettre a nouveau que vos propres demandes.',
         'edit_only_sent_back' => 'Seules les demandes renvoyees peuvent etre modifiees.',

@@ -34,11 +34,6 @@ class PaymentRequestResubmitController extends Controller
                 ->with('error', __('flash.requests.resubmit_not_owner'));
         }
 
-        if ($paymentRequest->planned_disbursement_method === null) {
-            return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('error', __('flash.requests.planned_disbursement_method_required'));
-        }
-
         if ($paymentRequest->type === PaymentRequestType::Expense->value
             && $this->settingsService->isExpenseSourceDocumentRequired()
             && $paymentRequest->attachments()->doesntExist()

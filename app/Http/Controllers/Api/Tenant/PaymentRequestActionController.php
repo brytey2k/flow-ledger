@@ -29,10 +29,6 @@ class PaymentRequestActionController extends BaseApiController
         abort_unless($user->staffProfile?->id === $paymentRequest->staff_id, 403, 'You do not own this request.');
         abort_unless($paymentRequest->isDraft(), 422, 'Only draft requests can be submitted.');
 
-        if ($paymentRequest->planned_disbursement_method === null) {
-            return response()->json(['message' => 'A planned payment method is required before submission.'], 422);
-        }
-
         if ($paymentRequest->isExpense()
             && $this->settingsService->isExpenseSourceDocumentRequired()
             && $paymentRequest->attachments()->doesntExist()
@@ -72,10 +68,6 @@ class PaymentRequestActionController extends BaseApiController
         $user = $this->apiUser();
         abort_unless($paymentRequest->status === 'sent_back', 422, 'Only sent-back requests can be resubmitted.');
         abort_unless($user->staffProfile?->id === $paymentRequest->staff_id, 403, 'You do not own this request.');
-
-        if ($paymentRequest->planned_disbursement_method === null) {
-            return response()->json(['message' => 'A planned payment method is required before resubmission.'], 422);
-        }
 
         if ($paymentRequest->isExpense()
             && $this->settingsService->isExpenseSourceDocumentRequired()

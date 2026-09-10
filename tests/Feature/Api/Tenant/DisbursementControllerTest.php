@@ -82,10 +82,11 @@ test('store disburses approved request', function () {
     ]);
 
     $this->postJson("/api/disbursements/{$pr->id}", [
-        'disbursement_method' => 'cash',
         'disbursement_reference' => 'REF-001',
     ])->assertOk()
         ->assertJsonPath('data.status', 'disbursed');
+
+    expect($pr->fresh()->disbursement_method?->value)->toBe('cash');
 });
 test('store rejects an approver attempting to disburse the same request', function () {
     $paymentRequest = PaymentRequest::factory()->create([
@@ -114,9 +115,7 @@ test('store rejects an approver attempting to disburse the same request', functi
         'user_id' => $this->user->id,
     ]);
 
-    $this->postJson("/api/disbursements/{$paymentRequest->id}", [
-        'disbursement_method' => 'cash',
-    ])->assertForbidden();
+    $this->postJson("/api/disbursements/{$paymentRequest->id}")->assertForbidden();
 
     expect($paymentRequest->fresh()->status)->toBe('approved');
 });
@@ -128,9 +127,7 @@ test('store rejects non approved request', function () {
         'status' => 'draft',
     ]);
 
-    $this->postJson("/api/disbursements/{$pr->id}", [
-        'disbursement_method' => 'cash',
-    ])->assertStatus(422);
+    $this->postJson("/api/disbursements/{$pr->id}")->assertStatus(422);
 });
 test('store rejects out of scope branch', function () {
     $otherBranch = App\Models\Tenant\Branch::factory()->create(['level_id' => $this->level->id]);
@@ -141,9 +138,7 @@ test('store rejects out of scope branch', function () {
         'status' => 'approved',
     ]);
 
-    $this->postJson("/api/disbursements/{$pr->id}", [
-        'disbursement_method' => 'cash',
-    ])->assertForbidden();
+    $this->postJson("/api/disbursements/{$pr->id}")->assertForbidden();
 });
 test('store rejects disbursement when insufficient cashbook balance', function () {
     $pr = PaymentRequest::factory()->create([
@@ -160,14 +155,12 @@ test('store rejects disbursement when insufficient cashbook balance', function (
         'balance' => 50.00,
     ]);
 
-    $this->postJson("/api/disbursements/{$pr->id}", [
-        'disbursement_method' => 'cash',
-    ])->assertStatus(422)
+    $this->postJson("/api/disbursements/{$pr->id}")->assertStatus(422)
         ->assertJsonPath('message', 'Insufficient cashbook balance for disbursement.');
 
     $this->assertDatabaseHas('payment_requests', ['id' => $pr->id, 'status' => 'approved']);
 });
-test('store requires valid disbursement method', function () {
+test('store rejects a caller supplied disbursement method', function () {
     $pr = PaymentRequest::factory()->create([
         'staff_id' => $this->staff->id,
         'branch_id' => $this->branch->id,
@@ -176,6 +169,8 @@ test('store requires valid disbursement method', function () {
     ]);
 
     $this->postJson("/api/disbursements/{$pr->id}", [
-        'disbursement_method' => 'wire_transfer',
+        'disbursement_method' => 'bank_transfer',
     ])->assertUnprocessable();
+
+    expect($pr->fresh()->status)->toBe('approved');
 });

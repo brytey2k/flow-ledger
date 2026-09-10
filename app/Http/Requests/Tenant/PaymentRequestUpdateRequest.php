@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Tenant;
 
-use App\Enums\Tenant\PaymentMethod;
 use App\Models\Tenant\PaymentRequest;
 use App\Rules\Tenant\UniqueReceiptNumber;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class PaymentRequestUpdateRequest extends FormRequest
 {
@@ -25,7 +23,6 @@ class PaymentRequestUpdateRequest extends FormRequest
         $isExpense = $paymentRequest instanceof PaymentRequest && $paymentRequest->type === \App\Enums\Tenant\PaymentRequestType::Expense->value;
 
         return [
-            'planned_disbursement_method' => ['nullable', Rule::enum(PaymentMethod::class)],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
@@ -37,8 +34,6 @@ class PaymentRequestUpdateRequest extends FormRequest
 
     public function toDto(int $staffId, int $branchId, string $type): \App\DTOs\Tenant\CreatePaymentRequestDto
     {
-        /** @var PaymentRequest|null $paymentRequest */
-        $paymentRequest = $this->route('paymentRequest');
         /** @var list<array{description: string, amount: string|float, cost_code_id?: string|int|null, receipt_number?: string|null}> $rawItems */
         $rawItems = $this->input('items', []) ?? [];
         $items = array_map(
@@ -55,11 +50,6 @@ class PaymentRequestUpdateRequest extends FormRequest
             staffId: $staffId,
             branchId: $branchId,
             type: $type,
-            plannedDisbursementMethod: $this->has('planned_disbursement_method')
-                ? ($this->filled('planned_disbursement_method')
-                    ? PaymentMethod::from($this->string('planned_disbursement_method')->toString())
-                    : null)
-                : $paymentRequest?->planned_disbursement_method,
             notes: $this->filled('notes') ? $this->string('notes')->toString() : null,
             items: $items,
         );

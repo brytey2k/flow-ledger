@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
-use App\Enums\Tenant\PaymentMethod;
 use App\Models\Role;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
@@ -158,7 +157,7 @@ test('submitter is notified when advance is disbursed', function () {
 
     Notification::fake();
 
-    app(PaymentRequestService::class)->disburse($paymentRequest, new App\DTOs\Tenant\DisbursePaymentRequestDto(method: PaymentMethod::BankTransfer, reference: 'REF-001'), $this->user);
+    app(PaymentRequestService::class)->disburse($paymentRequest, new App\DTOs\Tenant\DisbursePaymentRequestDto(reference: 'REF-001'), $this->user);
 
     Notification::assertSentTo($this->user, RequestDisbursedNotification::class);
 });
@@ -173,7 +172,7 @@ test('submitter also receives retirement reminder when advance is disbursed', fu
 
     Notification::fake();
 
-    app(PaymentRequestService::class)->disburse($paymentRequest, new App\DTOs\Tenant\DisbursePaymentRequestDto(method: PaymentMethod::Cash, reference: null), $this->user);
+    app(PaymentRequestService::class)->disburse($paymentRequest, new App\DTOs\Tenant\DisbursePaymentRequestDto(reference: null), $this->user);
 
     Notification::assertSentTo($this->user, RetirementRequiredNotification::class);
 });
@@ -188,7 +187,7 @@ test('expense disbursement does not send retirement reminder', function () {
 
     Notification::fake();
 
-    app(PaymentRequestService::class)->disburse($paymentRequest, new App\DTOs\Tenant\DisbursePaymentRequestDto(method: PaymentMethod::BankTransfer, reference: null), $this->user);
+    app(PaymentRequestService::class)->disburse($paymentRequest, new App\DTOs\Tenant\DisbursePaymentRequestDto(reference: null), $this->user);
 
     Notification::assertSentTo($this->user, RequestDisbursedNotification::class);
     Notification::assertNotSentTo($this->user, RetirementRequiredNotification::class);

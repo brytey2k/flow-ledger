@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Tenant;
 
-use App\Enums\Tenant\PaymentMethod;
 use App\Models\Tenant\Staff;
 use App\Rules\Tenant\UniqueReceiptNumber;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,7 +27,6 @@ class PaymentRequestStoreRequest extends FormRequest
 
         return [
             'type' => ['required', Rule::in([\App\Enums\Tenant\PaymentRequestType::Advance->value, \App\Enums\Tenant\PaymentRequestType::Expense->value])],
-            'planned_disbursement_method' => ['nullable', Rule::enum(PaymentMethod::class)],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
@@ -56,9 +54,6 @@ class PaymentRequestStoreRequest extends FormRequest
             staffId: $staffId,
             branchId: $branchId,
             type: $this->string('type')->toString(),
-            plannedDisbursementMethod: $this->filled('planned_disbursement_method')
-                ? PaymentMethod::from($this->string('planned_disbursement_method')->toString())
-                : null,
             notes: $this->filled('notes') ? $this->string('notes')->toString() : null,
             items: $items,
         );

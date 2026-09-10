@@ -15,8 +15,6 @@ return [
 
     'columns' => [
         'approved' => 'Approved',
-        'payment_method' => 'Payment Method',
-        'legacy_method' => 'Select at release',
     ],
 
     'buttons' => [

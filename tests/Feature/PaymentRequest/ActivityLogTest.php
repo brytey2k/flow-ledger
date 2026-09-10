@@ -17,7 +17,6 @@ test('creating draft logs request created event', function () {
         staffId: $staff->id,
         branchId: $this->branch->id,
         type: 'advance',
-        plannedDisbursementMethod: App\Enums\Tenant\PaymentMethod::Cash,
         notes: null,
         items: [new App\DTOs\Tenant\PaymentRequestItemDto(description: 'Test', amount: 100.0, costCodeId: null, receiptNumber: null)],
     );

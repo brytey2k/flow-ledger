@@ -565,6 +565,14 @@ test('cash position renders with cashbook and entry data', function () {
         'entry_date' => now()->toDateString(),
     ]);
 
+    PaymentRequest::factory()->create([
+        'branch_id' => $this->branch->id,
+        'currency_id' => $currency->id,
+        'status' => 'approved',
+        'total_amount' => '300.00',
+        'approved_at' => now(),
+    ]);
+
     App\Models\Tenant\CashbookEntry::create([
         'cashbook_id' => $cashbook->id,
         'type' => 'credit',
@@ -580,6 +588,9 @@ test('cash position renders with cashbook and entry data', function () {
     $cashbooks = $response->viewData('cashbooks');
     expect($cashbooks)->not->toBeEmpty();
     $first = $cashbooks->first();
+    expect($first['current_balance'])->toEqual(1000.0);
+    expect($first['approved_awaiting_release'])->toEqual(300.0);
+    expect($first['available_uncommitted_cash'])->toEqual(700.0);
     expect($first['period_receipts'])->toEqual(500.0);
     expect($first['period_payments'])->toEqual(200.0);
     expect($first['entry_count'])->toEqual(2);
