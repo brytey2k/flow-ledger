@@ -36,6 +36,7 @@ Items in `[ brackets ]` are details to fill in before sharing.
 **In place**
 
 - **Single sign-on:** customers can delegate sign-in to an external identity provider (OpenID Connect). Tokens are validated by signature (RS256) and issuer. Sign-out from the provider ends the session here too (back-channel logout).
+- **Single sign-on hand-off.** The last step of a single sign-in is tied to the browser that began it: the customer's sign-in page keeps a secret in a cookie, and only its hash travels through the identity provider. A sign-in link forwarded to someone else is not honoured silently; that person is shown the account and must confirm, or cancel.
 - **Multi-factor authentication** and password rules for single sign-on users are enforced by the identity provider: `[ confirm provider and its MFA policy ]`.
 - **Local sign-in** (where enabled for a customer):
   - Passwords must be at least 12 characters with upper and lower case letters, a number and a symbol. In production, passwords found in public breach lists are also rejected.
@@ -53,7 +54,8 @@ Items in `[ brackets ]` are details to fill in before sharing.
 ## 4. Access control
 
 - Access is granted through **roles and permissions** per customer. Features and reports check the specific permission, not just "logged in".
-- Customers manage their own roles. The platform team manages the platform administrator accounts separately.
+- Customers manage their own roles. The platform team manages the platform administrator accounts separately: a single sign-on identity without a customer is treated as a platform administrator only if it already exists as a platform administrator account here. Accounts are created deliberately by the platform team and are never created on first sign-in.
+- A user can only create accounts, assign roles, or edit the email or roles of another user within the permissions they hold themselves.
 - Approval workflows enforce who may approve each stage of a request, with stage-level controls.
 - Platform administrators running data tools on a customer (for example exports and clean-ups) are recorded in a platform audit log with who ran them, with what parameters and with what outcome.
 
@@ -62,7 +64,10 @@ Items in `[ brackets ]` are details to fill in before sharing.
 - Key actions are recorded with the user, the time, the record, and the old and new values: users, roles, branches, settings, approval workflows, retirements, cash counts and documents.
 - Customers with the right permission can view the **Activity Log** and run and export an **Audit Trail report**.
 - Account lockouts are written to the activity log.
-- **Retention:** `[ define, e.g. 7 years ]`. A written retention rule and a rule that audit entries cannot be edited or deleted through the application are `[ to confirm ]`.
+- **Retention: 7 years** for the customer activity log (`activitylog.retention_years`). The platform audit log of administrator actions is kept indefinitely.
+- **Entries cannot be edited or deleted through the application.** The application can only add to the activity log. A finished platform audit entry is locked, and none can be deleted.
+- **The one clean-up path** is the platform administrator's "Clear activity log" tool. It removes only entries older than 7 years, whatever dates the administrator enters, and the run itself is recorded in the platform audit log. Clearing a customer's requests with the data tools also leaves the activity for those requests in place until it is 7 years old.
+- **Limit:** these protections are in the application. Someone with direct database access could still change rows. A database-level block and tamper-evident chaining are on the roadmap (section 12).
 
 ## 6. Protecting data
 
@@ -108,7 +113,7 @@ Additional points:
 - **Registration.** Data controllers must register with the **Data Protection Commission**. Registration status: `[ yours and, if applicable, the customer's ]`.
 - **Breach notification.** A security compromise must be reported to the Commission and the people affected. Our process is in section 9.
 - **Cross-border transfer.** Hosting and backups are outside Ghana: `[ Linode region ]`, `[ bucket provider and region ]`. Record the legal basis and safeguards for this, and tell customers. `[ to confirm with counsel ]`
-- **Retention and deletion.** `[ define per data type ]`; an offboarding process that deletes a customer's data and its backups after the agreed period is `[ to write ]`.
+- **Retention and deletion.** Activity log: 7 years, then removable (section 5). Backups: 30 days daily and 12 months monthly (section 7), so deleted data can remain in backups for up to 12 months. Other data types: `[ define per data type ]`. Deleting a person's data does not remove their activity log entries within the 7 years, as these are kept as the audit record of financial approvals; state this lawful basis in the privacy notice. An offboarding process that deletes a customer's data and its backups after the agreed period is `[ to write ]`.
 
 ### Cybersecurity Act, 2020 (Act 1038)
 
@@ -135,6 +140,7 @@ A written, rehearsed version of this plan is `[ planned ]`.
 
 - Application errors are sent to Sentry.
 - A health route exists for uptime checks. External uptime monitoring: `[ tool, planned ]`.
+- A platform **Overview** page lists every customer with stuck work, failed jobs and backup and restore-test status, and flags the ones that need attention. Readings are taken every 10 minutes and stored centrally, so the page is fast however many customers there are. Backup problems are shown at the top.
 - A per-customer health view shows stuck approvals, failed background jobs, storage use, and backup and restore-test dates.
 - Background job failures can be inspected and retried by platform administrators.
 - Automated tests (about 2,000) and a code-style check run on every change in continuous integration; static analysis (PHPStan) is run during development.
@@ -142,14 +148,14 @@ A written, rehearsed version of this plan is `[ planned ]`.
 ## 11. Vulnerability and change management
 
 - Code is in version control with a continuous-integration workflow.
-- Dependencies are scanned with `composer audit`. **At the time of writing the scan lists known advisories in 7 packages** (document generation, markdown, YAML, spreadsheet and framework components). Fixing them and re-running the scan is scheduled: `[ date ]`. Do not share this document until it says "resolved" or you are ready to explain it.
+- Dependencies are scanned with `composer audit` and `npm audit`. Both reported no known advisories on 2026-10-17, after updating the affected packages. Re-run them before each release and before sharing this document.
+- A code-level security review of the application code (`app`, `routes`, `config`) was run on 2026-10-17 by a team of automated reviewers, each finding challenged by an independent panel. It found 31 issues, mostly authorization gaps. All are fixed and covered by tests. This is not a penetration test.
 - Independent **penetration test:** planned, `[ vendor, date ]`.
 
 ## 12. Known gaps and roadmap
 
 | Gap | Plan | Target date |
 |---|---|---|
-| Dependency advisories (section 11) | Update and re-scan | `[ ]` |
 | Penetration test | Commission an external test | `[ ]` |
 | Field-level encryption of sensitive fields | Encrypt phone, bank and mobile-money numbers | `[ ]` |
 | Point-in-time recovery | WAL archiving to the backup bucket | `[ ]` |
@@ -158,6 +164,7 @@ A written, rehearsed version of this plan is `[ planned ]`.
 | Mobile Money and bank integrations, GRA tax features | Scope with customer | `[ ]` |
 | API documentation | Generate an OpenAPI specification | `[ ]` |
 | Written policies: retention, incident response, DPA, privacy notice | Draft and adopt | `[ ]` |
+| Database-level block on editing or deleting audit entries; tamper-evident hash chain | Trigger on the audit tables, then chaining with a verify command | `[ ]` |
 | Content-Security-Policy for scripts | Remove inline scripts, then restrict script sources | `[ ]` |
 
 ## 13. Questions you may be asked, and honest answers
@@ -167,6 +174,8 @@ A written, rehearsed version of this plan is `[ planned ]`.
 - **"What if the server burns down?"** We rebuild from the latest backup, with up to 6 hours of data lost, in about `[ measured time ]`. The procedure is written and tested.
 - **"Do you support MFA?"** Through your identity provider, yes. Local sign-in does not have it yet.
 - **"Who can see what?"** Only roles and permissions you assign; every sensitive action is logged.
+- **"Can the audit log be changed or wiped?"** Not through the application: entries can only be added, and the only clean-up tool removes entries older than 7 years and is itself logged. Direct database access is the remaining gap, listed in section 12.
+- **"How long do you keep the audit trail?"** 7 years.
 - **"Have you been pen-tested?"** Not yet; it is scheduled for `[ date ]`.
 - **"Does it comply with Act 843?"** The technical safeguards are in place. Registration, agreements and policies listed in sections 8 and 12 are what remain.
 

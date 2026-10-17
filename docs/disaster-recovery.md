@@ -73,6 +73,25 @@ sudo apt install postgresql-client-16
 
 If the PHP app runs in a container on the Linode, that container needs the same client. Either rebuild the image with `postgresql-client-<server major>` or point `BACKUP_PG_DUMP_BINARY` and `BACKUP_PG_RESTORE_BINARY` at a matching binary mounted into it. For local development you can also set `BACKUP_ALLOW_CLIENT_VERSION_MISMATCH=true`, but never in production.
 
+### Production database (as of 2026-10-17)
+
+- Server: `softwaregh-server` (Ubuntu 24.04), shared with other apps.
+- Flow Ledger's databases (`flow_ledger_landlord`, `tenant_perseus_2026_06_15`, owner `flow_ledger_user`) run on **PostgreSQL 18.6, port 5433**, a second cluster installed beside the shared PostgreSQL 16 cluster (port 5432), which still serves the other apps. Config: `/etc/postgresql/18/main/`, data: `/var/lib/postgresql/18/main/`.
+- `DB_PORT` and `DB_TENANT_PORT` in `/var/www/flow-ledger/.env` are `5433`. The previous file is kept as `.env.pre-pg18-20261017-112907`.
+- The plain `pg_dump` on the server's PATH is still **version 16** (Debian's wrapper picks the cluster on port 5432). When backups are deployed there, set `BACKUP_PG_DUMP_BINARY=/usr/lib/postgresql/18/bin/pg_dump` and `BACKUP_PG_RESTORE_BINARY=/usr/lib/postgresql/18/bin/pg_restore` in `.env`; otherwise `backup:run` will refuse to run, because 16 does not match the 18 server.
+- Old copies of the two databases remain on the 16 cluster as a rollback. Drop them once you are sure (`sudo -u postgres dropdb -p 5432 <name>`).
+- Pre-upgrade dumps are in `/var/backups/flow-ledger-pre-pg18-*` and `/var/backups/flow-ledger-cutover-*` on the server. They contain production data, so delete them when no longer needed.
+- The PostGIS extension was deliberately not carried over to 18 for Flow Ledger: it does not use it.
+- **church-mgt-system** (production: `church_system_landlord` plus tenants `ascension`, `loveeconomy`, `test`, owner `church_system_user`) was moved to the 18 cluster on 2026-10-17. Its `.env` `DB_PORT` is `5433` (previous file: `.env.pre-pg18-20261017-115351`). The tenant connection is derived from the central one, so only `DB_PORT` changes. The `church-mgt-system-testing` app and its databases (`church_system_test_landlord`, `tenant_tenant-test_*`) are still on 16.
+- **PostGIS:** the church app uses it (`places.location`). To support it on 18, `postgresql-18-postgis-3` 3.6.4 was installed from the PostgreSQL repo, which also upgraded the 16 cluster's PostGIS packages from 3.4.2 to 3.6.4. `ALTER EXTENSION postgis UPDATE` was then run in every PostGIS database on 16 (`iam`, `eazi_sms_mcp`, the church tenants, the Flow Ledger central copy). Any new PostGIS database made on 16 or 18 now gets 3.6.4.
+- When restoring a dump that contains PostGIS into a new database, leave out the `TABLE DATA public spatial_ref_sys` entry (`pg_restore -l ... | grep -v spatial_ref_sys`, then `-L`), because creating the extension already fills that table.
+- **All six apps now run on PostgreSQL 18 (port 5433)** as of 2026-10-17: Flow Ledger, church-mgt-system, church-mgt-system-testing, business-software, eazi-sms-mcp and iam. Each app's previous `.env` is kept next to it as `.env.pre-pg18-<timestamp>` (this is the rollback). Every app's `.env` is mode `640`.
+- The 16 cluster (port 5432) is still running and still holds the old copies of every database as a rollback. Nothing connects to it. Retire it later: drop the old databases, then remove `postgresql-16` and `postgresql-16-postgis-3`. Until then, keep both clusters up.
+- On 18, the `church_admin` role exists as a **no-login, non-superuser** placeholder, only so three testing-database objects keep their owner. On 16 it is a superuser with login.
+- The Laravel schedulers run from the `church-sys-user` crontab (and `/etc/cron.d/business-software`), not from root's.
+- Never run `php artisan` as root on the server. Use the project directory's owner, e.g. `sudo -u church-sys-user php8.5 /var/www/church-mgt-system/artisan ...`.
+- **Rollback to 16:** put the app in maintenance mode, stop the three `flow-ledger-worker` processes, restore `.env.pre-pg18-20261017-112907` over `.env`, start the workers and bring the app up. Anything written after the cutover would have to be copied back by hand.
+
 Also note the database connection used for backups is the app's default connection. Its user must be able to read every tenant database. If tenant databases use a different role, `backup:run` will report a failure for those databases, so check the first run.
 
 ## 5. Monitoring
