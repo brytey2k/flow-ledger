@@ -29,14 +29,16 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        if ($this->loginAttemptLimiter->isLocked('landlord', $credentials['email'])) {
+        $attempts = $this->loginAttemptLimiter->reserve('landlord', $credentials['email']);
+
+        if ($this->loginAttemptLimiter->isOverLimit($attempts)) {
             return back()->withErrors([
                 'email' => __('auth.account_locked', ['minutes' => $this->loginAttemptLimiter->minutesUntilUnlocked('landlord', $credentials['email'])]),
             ])->onlyInput('email');
         }
 
         if (! Auth::guard('landlord')->attempt($credentials, $request->boolean('remember'))) {
-            if ($this->loginAttemptLimiter->recordFailure('landlord', $credentials['email'])) {
+            if ($this->loginAttemptLimiter->isFinalAttempt($attempts)) {
                 Log::warning('Landlord account locked after repeated failed sign-in attempts', [
                     'email' => $credentials['email'],
                     'ip' => $request->ip(),

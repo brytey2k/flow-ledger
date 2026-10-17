@@ -11,7 +11,7 @@
             <strong id="session-timeout-countdown">{{ $warnSeconds }}</strong>s
         </p>
         <div style="display:flex;gap:.5rem;justify-content:flex-end;">
-            <a href="{{ $loginUrl }}" class="sgh-btn sgh-btn-outline">{{ __('auth.sign_out_now') }}</a>
+            <button type="button" id="session-timeout-signout" class="sgh-btn sgh-btn-outline">{{ __('auth.sign_out_now') }}</button>
             <button type="button" id="session-timeout-stay" class="sgh-btn sgh-btn-primary">{{ __('auth.stay_signed_in') }}</button>
         </div>
     </div>
@@ -22,10 +22,25 @@
         const warnMs = {{ $warnSeconds }} * 1000;
         const keepAliveUrl = @json($keepAliveUrl);
         const loginUrl = @json($loginUrl);
+        const logoutUrl = @json($logoutUrl);
+        const csrfToken = @json(csrf_token());
         const dialog = document.getElementById('session-timeout-warning');
         const countdown = document.getElementById('session-timeout-countdown');
         let warnTimer = null;
         let tickTimer = null;
+
+        // Ends the server session with a CSRF-protected POST; the redirect happens either way,
+        // because an already expired session answers 419 and is logged out regardless.
+        function signOut() {
+            clearInterval(tickTimer);
+            fetch(logoutUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest'},
+            }).finally(function () {
+                window.location.href = loginUrl;
+            });
+        }
 
         function schedule() {
             clearTimeout(warnTimer);
@@ -42,10 +57,12 @@
                 remaining -= 1;
                 countdown.textContent = Math.max(remaining, 0);
                 if (remaining <= 0) {
-                    window.location.href = loginUrl;
+                    signOut();
                 }
             }, 1000);
         }
+
+        document.getElementById('session-timeout-signout').addEventListener('click', signOut);
 
         document.getElementById('session-timeout-stay').addEventListener('click', function () {
             fetch(keepAliveUrl, {credentials: 'same-origin', headers: {'X-Requested-With': 'XMLHttpRequest'}})

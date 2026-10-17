@@ -92,3 +92,35 @@ test('authenticated pages include the session timeout warning', function () {
     $this->actingAs($this->user)->get(route('dashboard'))
         ->assertSee('session-timeout-warning', false);
 });
+test('a successful password reset lifts the lockout', function () {
+    $user = User::factory()->create(['password' => Hash::make('Correct-Password-1!')]);
+
+    failLoginTimes($this, $user->email, LoginAttemptLimiter::MAX_ATTEMPTS + 1);
+    $this->post(route('do-login'), ['email' => $user->email, 'password' => 'Correct-Password-1!'])
+        ->assertSessionHasErrors('email');
+
+    $this->post(route('password.update'), [
+        'token' => Illuminate\Support\Facades\Password::createToken($user),
+        'email' => $user->email,
+        'password' => 'Brand-New-Pass-2026!',
+        'password_confirmation' => 'Brand-New-Pass-2026!',
+    ]);
+    $this->post(route('logout'));
+
+    $this->post(route('do-login'), ['email' => $user->email, 'password' => 'Brand-New-Pass-2026!'])
+        ->assertRedirect(route('dashboard'));
+});
+test('the correct password on the final allowed attempt still signs in', function () {
+    $user = User::factory()->create(['password' => Hash::make('Correct-Password-1!')]);
+
+    failLoginTimes($this, $user->email, LoginAttemptLimiter::MAX_ATTEMPTS - 1);
+
+    $this->post(route('do-login'), ['email' => $user->email, 'password' => 'Correct-Password-1!'])
+        ->assertRedirect(route('dashboard'));
+});
+test('the session timeout warning signs out with a csrf protected post', function () {
+    $this->actingAs($this->user)->get(route('dashboard'))
+        ->assertSee(route('logout'), false)
+        ->assertSee('X-CSRF-TOKEN', false)
+        ->assertDontSee('href="' . route('login') . '" class="sgh-btn sgh-btn-outline"', false);
+});

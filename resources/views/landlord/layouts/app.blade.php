@@ -53,7 +53,7 @@
     <!-- End of Main -->
     <!-- End of Page -->
 
-    @include('partials.session-timeout', ['keepAliveUrl' => route('landlord.session.keep-alive'), 'loginUrl' => route('landlord.login')])
+    @include('partials.session-timeout', ['keepAliveUrl' => route('landlord.session.keep-alive'), 'loginUrl' => route('landlord.login'), 'logoutUrl' => route('landlord.logout')])
     @stack('scripts')
 </body>
 </html>

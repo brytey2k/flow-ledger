@@ -51,16 +51,17 @@ class LoginController extends Controller
             ])->onlyInput('email');
         }
 
-        $scope = $this->lockoutScope();
+        $scope = $this->loginAttemptLimiter->tenantScope();
+        $attempts = $this->loginAttemptLimiter->reserve($scope, $credentials['email']);
 
-        if ($this->loginAttemptLimiter->isLocked($scope, $credentials['email'])) {
+        if ($this->loginAttemptLimiter->isOverLimit($attempts)) {
             return back()->withErrors([
                 'email' => __('auth.account_locked', ['minutes' => $this->loginAttemptLimiter->minutesUntilUnlocked($scope, $credentials['email'])]),
             ])->onlyInput('email');
         }
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            if ($this->loginAttemptLimiter->recordFailure($scope, $credentials['email'])) {
+            if ($this->loginAttemptLimiter->isFinalAttempt($attempts)) {
                 $this->handleLockout($credentials['email'], $request);
             }
 
@@ -87,13 +88,6 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));
-    }
-
-    private function lockoutScope(): string
-    {
-        $tenantId = tenant('id');
-
-        return 'tenant:' . (is_string($tenantId) ? $tenantId : '');
     }
 
     private function handleLockout(string $email, Request $request): void

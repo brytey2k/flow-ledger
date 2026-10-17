@@ -9,6 +9,7 @@ use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\User;
+use App\Services\LoginAttemptLimiter;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Auth\CanResetPassword;
@@ -24,6 +25,8 @@ use Laravel\Pennant\Feature;
 
 class ResetPasswordController extends Controller
 {
+    public function __construct(private readonly LoginAttemptLimiter $loginAttemptLimiter) {}
+
     public function showForm(Request $request, string $token): RedirectResponse|View
     {
         if (Feature::for(tenant())->active(DelegateIdentityToIdp::class)) {
@@ -77,6 +80,8 @@ class ResetPasswordController extends Controller
         );
 
         if ($status === Password::PasswordReset) {
+            $this->loginAttemptLimiter->clear($this->loginAttemptLimiter->tenantScope(), $request->string('email')->toString());
+
             /** @var CanResetPassword|null $resetUser */
             $resetUser = Password::broker()->getUser($request->only('email'));
             if ($resetUser instanceof User) {
