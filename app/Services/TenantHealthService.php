@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Landlord\BackupRun;
 use App\Models\Tenant;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -27,14 +28,16 @@ class TenantHealthService
      *     last_activity_at: string|null,
      *     attachments: int,
      *     storage_bytes: int,
-     *     users: array<string, int>
+     *     users: array<string, int>,
+     *     last_backup_at: string|null,
+     *     last_backup_verified_at: string|null
      * }
      */
     public function snapshot(Tenant $tenant): array
     {
         $failedJobs = $this->failedJobs->countFor($tenant);
 
-        /** @var array{payment_requests: array<string, int>, retirements: array<string, int>, blocked_stages: int, stale_stages: int, overdue_retirements: int, failed_jobs: int, last_activity_at: string|null, attachments: int, storage_bytes: int, users: array<string, int>} $snapshot */
+        /** @var array{payment_requests: array<string, int>, retirements: array<string, int>, blocked_stages: int, stale_stages: int, overdue_retirements: int, failed_jobs: int, last_activity_at: string|null, attachments: int, storage_bytes: int, users: array<string, int>, last_backup_at?: string|null, last_backup_verified_at?: string|null} $snapshot */
         $snapshot = $tenant->run(function () use ($failedJobs): array {
             $graceDays = $this->settings->getRetirementReminderSettings()['grace_period_days'];
 
@@ -65,6 +68,12 @@ class TenantHealthService
                 'users' => $this->countByStatus('users'),
             ];
         });
+
+        $latestBackup = BackupRun::query()->usable()->where('tenant_id', $tenant->tenantId())->latest('finished_at')->first();
+        $latestVerified = BackupRun::query()->usable()->where('tenant_id', $tenant->tenantId())->where('verify_status', 'ok')->latest('verified_at')->first();
+
+        $snapshot['last_backup_at'] = $latestBackup?->finished_at?->toDateTimeString();
+        $snapshot['last_backup_verified_at'] = $latestVerified?->verified_at?->toDateTimeString();
 
         return $snapshot;
     }

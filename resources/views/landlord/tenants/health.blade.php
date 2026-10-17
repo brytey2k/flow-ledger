@@ -19,6 +19,8 @@
         $stat('Overdue retirements', $snapshot['overdue_retirements'], 'Disbursed advances past the grace period'),
         $stat('Failed jobs', $snapshot['failed_jobs']),
         $stat('Attachments', number_format($snapshot['attachments']), $size),
+        $stat('Last backup', ($snapshot['last_backup_at'] ?? null) ? \Illuminate\Support\Carbon::parse($snapshot['last_backup_at'])->diffForHumans() : 'Never', 'Encrypted offsite database backup'),
+        $stat('Last restore test', ($snapshot['last_backup_verified_at'] ?? null) ? \Illuminate\Support\Carbon::parse($snapshot['last_backup_verified_at'])->diffForHumans() : 'Never', 'A backup restored and checked'),
         $stat('Last activity', $snapshot['last_activity_at'] ? \Illuminate\Support\Carbon::parse($snapshot['last_activity_at'])->diffForHumans() : 'Never'),
     ];
     $groups = ['Payment requests' => $snapshot['payment_requests'], 'Retirements' => $snapshot['retirements'], 'Users' => $snapshot['users']];

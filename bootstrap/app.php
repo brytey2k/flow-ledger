@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Console\Commands\CheckBackups;
+use App\Console\Commands\RunBackups;
 use App\Console\Commands\SendRetirementReminders;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -48,6 +50,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command(SendRetirementReminders::class)->dailyAt('08:00');
+        $schedule->command(RunBackups::class)->everySixHours()->withoutOverlapping(120);
+        $schedule->command(CheckBackups::class)->hourly();
     })
     ->withExceptions(static function (Exceptions $exceptions): void {
         Integration::handles($exceptions);

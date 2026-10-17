@@ -84,10 +84,11 @@ test('health page renders the snapshot', function () {
         'payment_requests' => ['draft' => 3], 'retirements' => [], 'blocked_stages' => 2, 'stale_stages' => 1,
         'overdue_retirements' => 4, 'failed_jobs' => 5, 'last_activity_at' => null, 'attachments' => 6,
         'storage_bytes' => 2048, 'users' => ['active' => 7],
+        'last_backup_at' => '2026-10-17 06:00:00', 'last_backup_verified_at' => null,
     ]);
 
     opsAsLandlord()->get(route('landlord.tenants.health.index', $this->tenant))
-        ->assertOk()->assertSee('Blocked workflow stages')->assertSee('Overdue retirements')->assertSee('Draft');
+        ->assertOk()->assertSee('Blocked workflow stages')->assertSee('Overdue retirements')->assertSee('Draft')->assertSee('Last backup')->assertSee('Last restore test');
 });
 
 test('failed jobs page lists jobs and retry is audited', function () {
