@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Landlord\Auth\LoginController;
 use App\Http\Controllers\Web\Landlord\DocumentationController;
 use App\Http\Controllers\Web\Landlord\HomeController;
 use App\Http\Controllers\Web\Landlord\LocaleController;
+use App\Http\Controllers\Web\Landlord\PlatformOverviewController;
 use App\Http\Controllers\Web\Landlord\TenantAnnouncementsController;
 use App\Http\Controllers\Web\Landlord\TenantDataToolsController;
 use App\Http\Controllers\Web\Landlord\TenantFailedJobsController;
@@ -44,6 +45,9 @@ foreach (config('tenancy.central_domains') as $domain) {
         Route::middleware(['auth:landlord'])->group(static function () {
             Route::post('landlord/sys-admin/logout', [LoginController::class, 'logout'])->name('logout');
             Route::get('landlord/sys-admin/session/keep-alive', static fn() => response()->noContent())->name('session.keep-alive');
+
+            Route::get('landlord/sys-admin/overview', [PlatformOverviewController::class, 'index'])->name('overview.index');
+            Route::post('landlord/sys-admin/overview/refresh', [PlatformOverviewController::class, 'refresh'])->name('overview.refresh')->middleware('throttle:6,1');
 
             Route::get('landlord/sys-admin/tenants', [TenantsController::class, 'index'])->name('tenants.index');
             Route::get('landlord/sys-admin/tenants/create', [TenantsController::class, 'create'])->name('tenants.create');
