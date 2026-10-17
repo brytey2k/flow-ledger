@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Role;
+use App\Models\Tenant\Activity;
 use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
@@ -12,7 +13,6 @@ use App\Models\Tenant\Staff;
 use App\Models\Tenant\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogRepository
 {

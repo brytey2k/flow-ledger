@@ -6,6 +6,7 @@ namespace App\Models\Landlord;
 
 use App\Enums\AuditLogStatus;
 use App\Enums\TenantDataTool;
+use App\Exceptions\ImmutableRecordException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
@@ -44,6 +45,19 @@ class AuditLog extends Model
         'started_at',
         'finished_at',
     ];
+
+    protected static function booted(): void
+    {
+        static::updating(static function (self $log): void {
+            if ($log->getOriginal('status') === AuditLogStatus::Completed || $log->getOriginal('status') === AuditLogStatus::Failed) {
+                throw new ImmutableRecordException('Finished audit log entries cannot be edited.');
+            }
+        });
+
+        static::deleting(static function (): never {
+            throw new ImmutableRecordException('Audit log entries cannot be deleted.');
+        });
+    }
 
     protected function casts(): array
     {

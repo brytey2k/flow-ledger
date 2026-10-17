@@ -9,6 +9,7 @@ use App\Enums\TenantDataTool;
 use App\Models\Tenant;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -201,7 +202,10 @@ class TenantDataToolService
             DB::table('cashbook_entries')->where('sourceable_type', $morphClass)->whereIn('sourceable_id', $ids()),
         );
 
-        $this->delete('activity_log', DB::table('activity_log')->where('subject_type', $morphClass)->whereIn('subject_id', $ids()));
+        $this->delete('activity_log', DB::table('activity_log')
+            ->where('created_at', '<', $this->activityRetentionCutoff())
+            ->where('subject_type', $morphClass)
+            ->whereIn('subject_id', $ids()));
     }
 
     /** @param Closure(): Builder $instanceIds */
@@ -268,8 +272,17 @@ class TenantDataToolService
     private function clearActivityLog(TenantDataToolFilters $filters): void
     {
         $this->delete('activity_log', DB::table('activity_log')
+            ->where('created_at', '<', $this->activityRetentionCutoff())
             ->when($filters->from !== null, fn(Builder $query) => $query->where('created_at', '>=', $filters->from))
             ->when($filters->to !== null, fn(Builder $query) => $query->where('created_at', '<=', $filters->to)));
+    }
+
+    /** Activity entries newer than this are inside the retention period and are never removed. */
+    private function activityRetentionCutoff(): CarbonImmutable
+    {
+        $years = config('activitylog.retention_years');
+
+        return CarbonImmutable::now()->subYears(is_numeric($years) ? (int) $years : 7);
     }
 
     private function recalculateBalances(): void

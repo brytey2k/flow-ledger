@@ -179,15 +179,41 @@ test('recalculating balances corrects drifted cashbooks only', function () {
 
 test('clearing activity log respects date range', function () {
     DB::table('activity_log')->insert([
-        ['description' => 'old', 'created_at' => '2026-01-01', 'updated_at' => '2026-01-01'],
-        ['description' => 'new', 'created_at' => '2026-06-01', 'updated_at' => '2026-06-01'],
+        ['description' => 'oldest', 'created_at' => now()->subYears(10), 'updated_at' => now()->subYears(10)],
+        ['description' => 'old', 'created_at' => now()->subYears(8), 'updated_at' => now()->subYears(8)],
     ]);
     $before = DB::table('activity_log')->count();
 
-    dataToolService()->execute($this->tenant, TenantDataTool::ClearActivityLog, TenantDataToolFilters::fromArray(['to' => '2026-02-01']));
+    dataToolService()->execute($this->tenant, TenantDataTool::ClearActivityLog, TenantDataToolFilters::fromArray(['to' => now()->subYears(9)->toDateString()]));
 
     expect(DB::table('activity_log')->count())->toBe($before - 1);
-    expect(DB::table('activity_log')->where('description', 'new')->exists())->toBeTrue();
+    expect(DB::table('activity_log')->where('description', 'old')->exists())->toBeTrue();
+});
+
+test('clearing activity log never removes rows inside the retention period', function () {
+    DB::table('activity_log')->insert([
+        ['description' => 'expired', 'created_at' => now()->subYears(8), 'updated_at' => now()->subYears(8)],
+        ['description' => 'recent', 'created_at' => now()->subYears(2), 'updated_at' => now()->subYears(2)],
+        ['description' => 'today', 'created_at' => now(), 'updated_at' => now()],
+    ]);
+
+    dataToolService()->execute($this->tenant, TenantDataTool::ClearActivityLog, new TenantDataToolFilters());
+
+    expect(DB::table('activity_log')->where('description', 'expired')->exists())->toBeFalse();
+    expect(DB::table('activity_log')->where('description', 'recent')->exists())->toBeTrue();
+    expect(DB::table('activity_log')->where('description', 'today')->exists())->toBeTrue();
+});
+
+test('clearing payment requests keeps their activity inside the retention period', function () {
+    $paymentRequest = PaymentRequest::factory()->create();
+    DB::table('activity_log')->insert([
+        'description' => 'kept', 'subject_type' => PaymentRequest::class, 'subject_id' => $paymentRequest->id,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    dataToolService()->execute($this->tenant, TenantDataTool::ClearPaymentRequests, new TenantDataToolFilters());
+
+    expect(DB::table('activity_log')->where('description', 'kept')->exists())->toBeTrue();
 });
 
 test('job records result and releases the tenant lock', function () {

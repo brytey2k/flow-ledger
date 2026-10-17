@@ -30,11 +30,11 @@ enum TenantDataTool: string
     public function description(): string
     {
         return match ($this) {
-            self::ClearPaymentRequests => 'Permanently deletes payment requests with their items, retirements, workflow history, comments, attachments (rows and files), activity and linked cashbook entries (balances are reversed).',
+            self::ClearPaymentRequests => 'Permanently deletes payment requests with their items, retirements, workflow history, comments, attachments (rows and files), activity older than the 7-year retention period and linked cashbook entries (balances are reversed).',
             self::ClearRetirements => 'Permanently deletes retirements with their items, workflow history, comments, attachments, reminder logs and settlement cashbook entries. Retired payment requests go back to Disbursed.',
             self::ClearCashbook => 'Permanently deletes cashbook entries and cash counts, then lowers or raises balances by the amount removed.',
             self::ResetInFlightWorkflows => 'Deletes workflow instances that are still in progress and returns their requests to Draft so they can be resubmitted. Completed workflows are untouched.',
-            self::ClearActivityLog => 'Permanently deletes activity log rows.',
+            self::ClearActivityLog => 'Permanently deletes activity log rows older than the 7-year retention period. Newer rows are never removed.',
             self::RecalculateCashbookBalances => 'Sets each cashbook balance to the sum of its entries. Nothing is deleted.',
             self::ExportData => 'Builds a ZIP of CSV files covering requests, retirements, workflow history, cashbook, cash counts, attachment metadata (not the files themselves) and the activity log. Run this before any clear.',
         };
