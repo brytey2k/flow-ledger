@@ -56,10 +56,7 @@ Retention: daily copies for 30 days; the first backup of each month for 12 month
 
 The `pg_dump` on the machine that runs `backup:run` must have the **same major version as the PostgreSQL server**. A dump made by a newer client can fail to restore on an older server. `backup:run` checks this and refuses to run on a mismatch.
 
-What we found in the repo:
-
-- The Docker image is `brytey2k/sail-php:8.5-node24`. Its Dockerfile is not in this repository, so it cannot be changed here.
-- That image ships **`pg_dump` 18**, while the Compose database is **PostgreSQL 16**. A dump made there will not restore into 16 (`unrecognized configuration parameter "transaction_timeout"`). This was reproduced and then fixed by using the 16 client.
+In development, the Docker image `brytey2k/sail-php:8.5-node24` (built from the `dev-images` repository with `POSTGRES_VERSION=18`) ships the PostgreSQL **18** client, and the Compose database service is **`postgres:18-alpine`**, so they match. If you ever change one, change the other. A dump made by a newer client than the server fails to restore with errors like `unrecognized configuration parameter "transaction_timeout"`.
 
 Production runs PostgreSQL installed directly on the Linode, so:
 
