@@ -35,6 +35,13 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $this->hasMany(Domain::class);
     }
 
+    public function tenantId(): string
+    {
+        $key = $this->getTenantKey();
+
+        return is_scalar($key) ? (string) $key : '';
+    }
+
     public function isSuspended(): bool
     {
         return (bool) $this->getAttribute('is_suspended');

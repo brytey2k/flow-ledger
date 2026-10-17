@@ -42,6 +42,7 @@
                     </div>
                 </div>
             @endif
+            @include('tenant.partials.announcement')
             @include('tenant.layouts.flash')
             @yield('content')
         </main>

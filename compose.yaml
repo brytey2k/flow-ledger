@@ -23,7 +23,7 @@ services:
         depends_on:
             - laravel.test
     laravel.test:
-        image: 'ghcr.io/brytey2k/sail-php:8.5-node24'
+        image: 'brytey2k/sail-php:8.5-node24'
         logging:
             driver: json-file
             options:
@@ -103,7 +103,7 @@ services:
             retries: 3
             timeout: 5s
     queue:
-        image: 'ghcr.io/brytey2k/sail-php:8.5-node24'
+        image: 'brytey2k/sail-php:8.5-node24'
         logging:
             driver: json-file
             options:
@@ -128,7 +128,7 @@ services:
         restart: unless-stopped
         command: php artisan queue:listen --tries=3 --sleep=1 --queue=default
     scheduler:
-        image: 'ghcr.io/brytey2k/sail-php:8.5-node24'
+        image: 'brytey2k/sail-php:8.5-node24'
         logging:
             driver: json-file
             options:

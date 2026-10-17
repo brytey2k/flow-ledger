@@ -58,6 +58,7 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
     'tenant.active',
+    'tenant.maintenance',
 ])->group(function (): void {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('do-login')->middleware('throttle:5,1');

@@ -336,7 +336,7 @@ class ReportService
      *     dateFrom: string,
      *     dateTo: string,
      *     action: string|null,
-     *     actionTypes: array<int, string>,
+     *     actionTypes: array<string, string>,
      * }
      */
     public function auditTrail(string $dateFrom, string $dateTo, string|null $action, int $perPage = 50): array
@@ -346,7 +346,11 @@ class ReportService
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'action' => $action,
-            'actionTypes' => ['approved', 'sent_back', 'cancelled'],
+            'actionTypes' => [
+                'approve' => 'Approved',
+                'reject' => 'Rejected',
+                'send_back' => 'Sent Back',
+            ],
         ];
     }
 

@@ -30,6 +30,7 @@ Route::prefix('api')
         InitializeTenancyByDomain::class,
         PreventAccessFromCentralDomains::class,
         'tenant.active',
+        'tenant.maintenance',
         'auth:iam_jwt',
     ])
     ->group(function (): void {

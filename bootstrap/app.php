@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'tenant.active' => App\Http\Middleware\EnsureTenantIsActive::class,
+            'tenant.maintenance' => App\Http\Middleware\EnsureTenantIsNotInMaintenance::class,
             'check.force.logout' => App\Http\Middleware\CheckForceLogout::class,
         ]);
     })

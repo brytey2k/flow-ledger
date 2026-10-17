@@ -207,7 +207,7 @@ class ReportsExportController extends Controller
 
         $headers = ['Date', 'User', 'Action', 'Request #', 'Stage'];
         $rows = collect($data['actions']->items())->map(fn(WorkflowAction $action) => [
-            date('Y-m-d H:i', (int) strtotime($action->created_at)),
+            $action->created_at?->format('Y-m-d H:i') ?? '',
             $action->user->name ?? '',
             $action->action ?? '',
             $action->instanceStage?->instance?->workflowable?->getKey() ?? '',

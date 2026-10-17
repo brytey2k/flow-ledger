@@ -183,6 +183,14 @@
                                                         <x-tabler-user-check />
                                                         <span>Impersonate User</span>
                                                     </a>
+                                                    <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.data-tools.index', $tenant) }}">
+                                                        <x-tabler-database-cog />
+                                                        <span>Data Tools</span>
+                                                    </a>
+                                                    <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.health.index', $tenant) }}">
+                                                        <x-tabler-heartbeat />
+                                                        <span>Health &amp; Ops</span>
+                                                    </a>
                                                     <a class="sgh-dropdown-item" href="{{ route('landlord.tenants.edit', $tenant) }}">
                                                         <x-tabler-settings-filled />
                                                         <span>Edit Tenant</span>
