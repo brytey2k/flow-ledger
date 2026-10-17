@@ -16,8 +16,10 @@ class DecryptBackup extends Command
 {
     public function handle(BackupEncryptor $encryptor): int
     {
-        $input = $this->argument('input');
-        $output = $this->argument('output');
+        $inputArgument = $this->argument('input');
+        $outputArgument = $this->argument('output');
+        $input = is_string($inputArgument) ? $inputArgument : '';
+        $output = is_string($outputArgument) ? $outputArgument : '';
         $keyFile = $this->option('private-key-file');
 
         if (! is_file($input)) {
@@ -25,7 +27,7 @@ class DecryptBackup extends Command
 
             return self::FAILURE;
         }
-        if ($output === '' || file_exists($output)) {
+        if ($output === '' || file_exists($output) || is_link($output)) {
             $this->error('Choose an output path that does not already exist.');
 
             return self::FAILURE;

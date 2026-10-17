@@ -18,9 +18,21 @@ use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\RetirementService;
 
+function ownStaffIdForRetirementRequestsController(): int
+{
+    $staff = test()->user->staffProfile;
+
+    if ($staff === null) {
+        $staff = Staff::factory()->withUser(test()->user)->withBranch(test()->branch)->create();
+        test()->user->load('staffProfile');
+    }
+
+    return $staff->id;
+}
 function disbursedAdvanceForRetirementRequestsController(): PaymentRequest
 {
     return PaymentRequest::factory()->advance()->create([
+        'staff_id' => ownStaffIdForRetirementRequestsController(),
         'status' => 'disbursed',
         'disbursed_at' => now(),
         'branch_id' => test()->branch->id,
@@ -102,6 +114,7 @@ test('create renders for disbursed advance', function () {
 });
 test('create rejects expense type', function () {
     $paymentRequest = PaymentRequest::factory()->expense()->create([
+        'staff_id' => ownStaffIdForRetirementRequestsController(),
         'status' => 'disbursed',
         'branch_id' => $this->branch->id,
     ]);
@@ -111,7 +124,7 @@ test('create rejects expense type', function () {
         ->assertStatus(422);
 });
 test('create rejects non disbursed advance', function () {
-    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['staff_id' => ownStaffIdForRetirementRequestsController(), 'status' => 'approved', 'branch_id' => $this->branch->id]);
 
     $this->actingAs($this->user)
         ->get(route('retirement-requests.create', $paymentRequest))
@@ -127,6 +140,7 @@ test('create rejects advance with pending retirement', function () {
 });
 test('create rejects already retired advance', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'staff_id' => ownStaffIdForRetirementRequestsController(),
         'status' => 'retired',
         'disbursed_at' => now(),
         'branch_id' => $this->branch->id,
@@ -156,6 +170,7 @@ test('store creates draft retirement', function () {
 });
 test('store rejects expense type', function () {
     $paymentRequest = PaymentRequest::factory()->expense()->create([
+        'staff_id' => ownStaffIdForRetirementRequestsController(),
         'status' => 'disbursed',
         'branch_id' => $this->branch->id,
     ]);
@@ -173,6 +188,7 @@ test('store rejects expense type', function () {
 });
 test('store calculates difference correctly', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'staff_id' => ownStaffIdForRetirementRequestsController(),
         'status' => 'disbursed',
         'disbursed_at' => now(),
         'total_amount' => 1000.00,
@@ -196,6 +212,7 @@ test('store calculates difference correctly', function () {
 });
 test('store sets pay to staff when overspent', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'staff_id' => ownStaffIdForRetirementRequestsController(),
         'status' => 'disbursed',
         'disbursed_at' => now(),
         'total_amount' => 500.00,
@@ -721,4 +738,22 @@ test('update allows same receipt numbers for existing request', function () {
         'did_not_spend_money' => '0',
         'items' => [['description' => 'Hotel', 'amount' => '500.00', 'cost_code_id' => $costCode->id, 'receipt_number' => 'RCP-KEEP']],
     ])->assertSessionHasNoErrors()->assertRedirect();
+});
+test('create and store refuse an advance that belongs to another staff member', function () {
+    $someoneElse = Staff::factory()->withBranch($this->branch)->create();
+    $paymentRequest = PaymentRequest::factory()->advance()->create([
+        'staff_id' => $someoneElse->id,
+        'status' => 'disbursed',
+        'disbursed_at' => now(),
+        'branch_id' => $this->branch->id,
+    ]);
+    ownStaffIdForRetirementRequestsController();
+
+    $this->actingAs($this->user)->get(route('retirement-requests.create', $paymentRequest))->assertForbidden();
+    $this->actingAs($this->user)->post(route('retirement-requests.store', $paymentRequest), [
+        'did_not_spend_money' => '0',
+        'items' => validItems(),
+    ])->assertForbidden();
+
+    expect(RetirementRequest::query()->where('payment_request_id', $paymentRequest->id)->exists())->toBeFalse();
 });

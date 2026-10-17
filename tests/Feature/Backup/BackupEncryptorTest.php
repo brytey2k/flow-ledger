@@ -77,3 +77,16 @@ test('a malformed key is reported clearly', function () {
     expect(fn() => $this->encryptor->encryptFile("{$this->dir}/in", "{$this->dir}/enc", 'not-a-key'))
         ->toThrow(RuntimeException::class, 'public backup key');
 });
+test('decrypted plaintext is readable by its owner only', function () {
+    file_put_contents("{$this->dir}/in", 'customer data');
+    $this->encryptor->encryptFile("{$this->dir}/in", "{$this->dir}/enc", $this->keys['public']);
+    $previousUmask = umask(0022);
+
+    try {
+        $this->encryptor->decryptFile("{$this->dir}/enc", "{$this->dir}/out", $this->keys['private']);
+    } finally {
+        umask($previousUmask);
+    }
+
+    expect(fileperms("{$this->dir}/out") & 0777)->toBe(0600);
+});

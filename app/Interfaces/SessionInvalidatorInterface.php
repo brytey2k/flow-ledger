@@ -23,4 +23,13 @@ interface SessionInvalidatorInterface
      * @param int $userId
      */
     public function invalidate(int $userId): void;
+
+    /**
+     * Delete the user's stored sessions and rotate their remember-me token, without forcing the
+     * browser that is making the call to sign in again. Used after a password change or reset.
+     *
+     * @param int $userId
+     * @param string|null $exceptSessionId session to keep, when the caller is signed in
+     */
+    public function revokeOtherSessions(int $userId, string|null $exceptSessionId = null): void;
 }

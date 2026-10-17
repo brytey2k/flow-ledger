@@ -7,8 +7,11 @@ namespace App\Http\Controllers\Web\Tenant\Auth;
 use App\Enums\Tenant\UserStatus;
 use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
+use App\Features\VerifyLoginWithIdp;
 use App\Http\Controllers\Controller;
+use App\Interfaces\SessionInvalidatorInterface;
 use App\Models\Tenant\User;
+use App\Services\IdpAccessVerificationService;
 use App\Services\LoginAttemptLimiter;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
@@ -25,7 +28,11 @@ use Laravel\Pennant\Feature;
 
 class ResetPasswordController extends Controller
 {
-    public function __construct(private readonly LoginAttemptLimiter $loginAttemptLimiter) {}
+    public function __construct(
+        private readonly LoginAttemptLimiter $loginAttemptLimiter,
+        private readonly SessionInvalidatorInterface $sessionInvalidator,
+        private readonly IdpAccessVerificationService $idpAccessVerification,
+    ) {}
 
     public function showForm(Request $request, string $token): RedirectResponse|View
     {
@@ -85,6 +92,16 @@ class ResetPasswordController extends Controller
             /** @var CanResetPassword|null $resetUser */
             $resetUser = Password::broker()->getUser($request->only('email'));
             if ($resetUser instanceof User) {
+                // Sessions opened before the reset (possibly by someone else) must not outlive it.
+                $this->sessionInvalidator->revokeOtherSessions($resetUser->id);
+
+                // Signing in straight after a reset must not skip the identity provider access check
+                // that the normal sign-in path enforces.
+                if (Feature::for(tenant())->active(VerifyLoginWithIdp::class)
+                    && ! $this->idpAccessVerification->userHasAccess($resetUser->oidc_sub, $resetUser->email)) {
+                    return redirect()->route('login')->withErrors(['email' => 'Access denied. Please contact your administrator.']);
+                }
+
                 Auth::login($resetUser);
                 $request->session()->regenerate();
             }

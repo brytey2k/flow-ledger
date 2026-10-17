@@ -9,6 +9,7 @@ use App\DTOs\Tenant\UpdateUserDto;
 use App\Enums\Tenant\UserStatus;
 use App\Models\Tenant\User;
 use App\Notifications\WelcomeNotification;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
@@ -16,8 +17,15 @@ use Illuminate\Support\Str;
 
 class UserService
 {
+    public function __construct(private readonly PermissionEscalationGuard $escalationGuard = new PermissionEscalationGuard()) {}
+
+    /** @throws AuthorizationException when the actor would grant roles carrying permissions they do not hold */
     public function create(CreateUserDto $dto, Model|null $actor = null): User
     {
+        if ($actor instanceof User && $this->escalationGuard->deniedPermissionNamesForRoles($actor, $dto->roles, []) !== []) {
+            throw new AuthorizationException(__('You cannot assign roles that carry permissions you do not hold.'));
+        }
+
         $user = DB::transaction(function () use ($dto, $actor): User {
             $user = User::create([
                 'first_name' => $dto->firstName,
@@ -53,8 +61,13 @@ class UserService
         return $user;
     }
 
+    /** @throws AuthorizationException when the target holds permissions the actor lacks */
     public function update(User $user, UpdateUserDto $dto, Model|null $actor = null): void
     {
+        if ($actor instanceof User && ! $this->escalationGuard->actorMayManage($actor, $user) && $this->changesIdentityOrRoles($user, $dto)) {
+            throw new AuthorizationException(__('You cannot change the email or roles of a user who holds permissions you do not hold.'));
+        }
+
         DB::transaction(function () use ($user, $dto, $actor): void {
             $attributes = [
                 'first_name' => $dto->firstName,
@@ -103,5 +116,15 @@ class UserService
 
             $user->delete();
         });
+    }
+
+    /** Names alone may be edited freely; the email decides where password resets go, and roles decide access. */
+    private function changesIdentityOrRoles(User $user, UpdateUserDto $dto): bool
+    {
+        /** @var list<int> $currentRoleIds */
+        $currentRoleIds = $user->roles()->pluck('roles.id')->map(fn($id): int => is_numeric($id) ? (int) $id : 0)->sort()->values()->all();
+        $requestedRoleIds = collect($dto->roles)->map(fn($id): int => (int) $id)->sort()->values()->all();
+
+        return $user->email !== $dto->email || $currentRoleIds !== $requestedRoleIds;
     }
 }

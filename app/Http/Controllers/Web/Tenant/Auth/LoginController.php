@@ -44,13 +44,6 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        $invitedUser = User::query()->where('email', $credentials['email'])->where('status', UserStatus::Invited)->first();
-        if ($invitedUser !== null) {
-            return back()->withErrors([
-                'email' => __('auth.invite_not_accepted'),
-            ])->onlyInput('email');
-        }
-
         $scope = $this->loginAttemptLimiter->tenantScope();
         $attempts = $this->loginAttemptLimiter->reserve($scope, $credentials['email']);
 
@@ -64,6 +57,17 @@ class LoginController extends Controller
             if ($this->loginAttemptLimiter->isFinalAttempt($attempts)) {
                 $this->handleLockout($credentials['email'], $request);
             }
+
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ])->onlyInput('email');
+        }
+
+        // An invited account that has not been activated must not sign in, but it gets the same generic
+        // answer as a wrong password so the form cannot be used to find out who has a pending invite.
+        $attemptedUser = Auth::user();
+        if ($attemptedUser instanceof User && $attemptedUser->status === UserStatus::Invited) {
+            Auth::logout();
 
             return back()->withErrors([
                 'email' => 'The provided credentials do not match our records.',

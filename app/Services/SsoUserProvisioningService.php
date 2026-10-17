@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Data\Auth\SsoUserClaimsDto;
 use App\Enums\Tenant\UserStatus;
+use App\Exceptions\LandlordAccessDeniedException;
 use App\Exceptions\UnverifiedEmailException;
 use App\Models\Landlord\User as LandlordUser;
 use App\Models\Tenant\Staff;
@@ -88,15 +89,19 @@ class SsoUserProvisioningService
     }
 
     /**
-     * Find or JIT-provision a landlord user from SSO claims.
-     * Operates on the central database — no tenant context required.
+     * Find the landlord user for an SSO identity that carries no tenant. The identity provider does not
+     * mark platform administrators, so a missing tenant is only a hint: access is granted only to
+     * identities that already exist as landlord users here. Nobody is created on first sight.
+     * Operates on the central database, with no tenant context required.
      *
      * @param SsoUserClaimsDto $claims
+     *
+     * @throws LandlordAccessDeniedException when the identity is not a known landlord user
+     * @throws UnverifiedEmailException when the identity provider has not verified the email
      */
-    public function findOrCreateLandlordUser(SsoUserClaimsDto $claims): LandlordUser
+    public function findLandlordUser(SsoUserClaimsDto $claims): LandlordUser
     {
-        // 1. Returning landlord user — revalidate email_verified on every
-        // login for the same reason as the tenant path above.
+        // 1. Returning landlord user - revalidate email_verified on every login.
         $user = LandlordUser::query()->where('oidc_sub', $claims->sub)->first();
         if ($user !== null) {
             if (! $claims->email_verified) {
@@ -106,7 +111,7 @@ class SsoUserProvisioningService
             return $user;
         }
 
-        // 2. Existing password-based landlord user — link account.
+        // 2. Existing password-based landlord user created by an operator - link the account.
         $user = LandlordUser::query()->where('email', $claims->email)->first();
         if ($user !== null) {
             if (! $claims->email_verified) {
@@ -118,14 +123,7 @@ class SsoUserProvisioningService
             return $user->refresh();
         }
 
-        // 3. New landlord user (first SSO login)
-        return LandlordUser::create([
-            'name' => $claims->name,
-            'email' => $claims->email,
-            'password' => bcrypt(Str::random(32)),
-            'oidc_sub' => $claims->sub,
-            'is_oidc_user' => true,
-        ]);
+        throw new LandlordAccessDeniedException(__('auth.landlord_not_authorised'));
     }
 
     private function maybeLinkStaffProfile(TenantUser $user, SsoUserClaimsDto $claims): void

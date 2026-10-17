@@ -14,7 +14,9 @@ use App\Support\PhoneNumberFormatter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -38,6 +40,11 @@ class StaffImportController extends Controller
         $departments = $this->departmentRepository->allOrderedByName();
         $positions = $this->positionRepository->allOrderedByName();
         $branches = $this->branchRepository->allOrderedByName();
+
+        // Names are typed by tenant users. Bind every value as text so one that starts with "=" can never
+        // become a formula when an administrator opens the template.
+        $previousBinder = Cell::getValueBinder();
+        Cell::setValueBinder(new StringValueBinder());
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -65,6 +72,7 @@ class StaffImportController extends Controller
         $listSheet->fromArray($positions->map(static fn($position): array => [$position->name])->all(), null, 'C1');
         $listSheet->fromArray($branches->map(static fn($branch): array => [$branch->name])->all(), null, 'D1');
         $listSheet->setSheetState(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet::SHEETSTATE_HIDDEN);
+        Cell::setValueBinder($previousBinder);
 
         $this->applyDropdownFromRange($sheet, 'D2:D1048576', '=lists!$A$1:$A$' . max(1, count(PhoneNumberFormatter::dialCodeMap())));
         $this->applyDropdownFromRange($sheet, 'F2:F1048576', '=lists!$B$1:$B$' . max(1, $departments->count()));

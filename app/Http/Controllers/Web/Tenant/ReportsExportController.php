@@ -523,7 +523,7 @@ class ReportsExportController extends Controller
         return response()->streamDownload(function () use ($headers, $rows): void {
             $handle = fopen('php://output', 'w');
             assert($handle !== false);
-            fputcsv($handle, $headers);
+            fputcsv($handle, CsvSanitizer::sanitizeRow($headers));
             foreach ($rows as $row) {
                 // @phpstan-ignore-next-line
                 fputcsv($handle, CsvSanitizer::sanitizeRow($row));

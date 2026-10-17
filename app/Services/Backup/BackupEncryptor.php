@@ -72,7 +72,15 @@ class BackupEncryptor
         $pair = $this->decodeKey($privateKey, SODIUM_CRYPTO_BOX_KEYPAIRBYTES, 'private');
 
         $input = $this->open($encryptedPath, 'rb');
-        $output = $this->open($plainPath, 'wb');
+
+        // The output is plaintext customer data: create it readable by the owner only, from the first byte.
+        $previousUmask = umask(0077);
+        try {
+            $output = $this->open($plainPath, 'wb');
+        } finally {
+            umask($previousUmask);
+        }
+        chmod($plainPath, 0600);
 
         if (fread($input, strlen(self::MAGIC)) !== self::MAGIC) {
             throw new RuntimeException('Not a Flow Ledger backup file.');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Notifications\Concerns\CapturesTenantDomain;
+use App\Support\MailText;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -52,7 +53,7 @@ class RequestDisbursedNotification extends Notification implements ShouldQueue
             ->line(__('notifications.request_disbursed.disbursed'))
             ->line(__('notifications.request_disbursed.amount', ['amount' => $amount]))
             ->line(__('notifications.request_disbursed.method', ['method' => $method]))
-            ->when($referenceStr !== null, fn($mail) => $mail->line(__('notifications.request_disbursed.reference', ['reference' => $referenceStr])))
+            ->when($referenceStr !== null, fn($mail) => $mail->line(__('notifications.request_disbursed.reference', ['reference' => MailText::plain($referenceStr)])))
             ->action(__('notifications.request_disbursed.action'), $url);
     }
 }

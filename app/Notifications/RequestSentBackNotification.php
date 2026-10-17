@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Notifications\Concerns\CapturesTenantDomain;
+use App\Support\MailText;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +42,7 @@ class RequestSentBackNotification extends Notification implements ShouldQueue
             ->subject(__('notifications.request_sent_back.subject', ['id' => $id]))
             ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
             ->line(__('notifications.request_sent_back.sent_back'))
-            ->line(__('notifications.request_sent_back.feedback', ['feedback' => $this->comment]))
+            ->line(__('notifications.request_sent_back.feedback', ['feedback' => MailText::plain($this->comment)]))
             ->action(__('notifications.request_sent_back.action'), $url)
             ->line(__('notifications.request_sent_back.resubmit'));
     }

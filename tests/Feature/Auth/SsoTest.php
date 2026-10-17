@@ -32,7 +32,7 @@ function storeSsoTokenForSso(string $token, SsoUserClaimsDto $claims): void
     $tenant = test()->tenant;
 
     Cache::store(config()->string('cache.default'))
-        ->put("sso_login:{$tenant->id}:{$token}", $claims->toArray(), now()->addSeconds(30));
+        ->put("sso_login:{$tenant->id}:{$token}", [...$claims->toArray(), 'bind' => hash('sha256', 'secret-for-sso-test')], now()->addSeconds(30));
 }
 test('finalize returns 403 when token is missing', function () {
     $this->get(route('sso.finalize'))
@@ -57,7 +57,7 @@ test('finalize logs in existing user matched by oidc sub', function () {
     $token = 'test-login-token-' . uniqid();
     storeSsoTokenForSso($token, $claims);
 
-    $this->get(route('sso.finalize', ['token' => $token]))
+    $this->withCookie('sso_bind', 'secret-for-sso-test')->get(route('sso.finalize', ['token' => $token]))
         ->assertRedirect(route('dashboard'));
 
     $this->assertAuthenticatedAs($this->user);
@@ -77,7 +77,7 @@ test('finalize links existing password user by email', function () {
     $token = 'test-login-token-' . uniqid();
     storeSsoTokenForSso($token, $claims);
 
-    $this->get(route('sso.finalize', ['token' => $token]))
+    $this->withCookie('sso_bind', 'secret-for-sso-test')->get(route('sso.finalize', ['token' => $token]))
         ->assertRedirect(route('dashboard'));
 
     $this->assertAuthenticatedAs($this->user);
@@ -102,7 +102,7 @@ test('finalize jit provisions new tenant user', function () {
     $token = 'test-login-token-' . uniqid();
     storeSsoTokenForSso($token, $claims);
 
-    $this->get(route('sso.finalize', ['token' => $token]))
+    $this->withCookie('sso_bind', 'secret-for-sso-test')->get(route('sso.finalize', ['token' => $token]))
         ->assertRedirect(route('dashboard'));
 
     $this->assertDatabaseHas('users', [
@@ -124,10 +124,10 @@ test('finalize token is consumed after use', function () {
     $token = 'one-time-token-' . uniqid();
     storeSsoTokenForSso($token, $claims);
 
-    $this->get(route('sso.finalize', ['token' => $token]))->assertRedirect();
+    $this->withCookie('sso_bind', 'secret-for-sso-test')->get(route('sso.finalize', ['token' => $token]))->assertRedirect();
 
     // Second use of the same token must fail
-    $this->get(route('sso.finalize', ['token' => $token]))->assertForbidden();
+    $this->withCookie('sso_bind', 'secret-for-sso-test')->get(route('sso.finalize', ['token' => $token]))->assertForbidden();
 });
 test('provisioner does not link unverified email', function () {
     $this->user->update(['oidc_sub' => null]);

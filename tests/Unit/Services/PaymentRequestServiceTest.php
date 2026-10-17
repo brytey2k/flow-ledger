@@ -285,3 +285,23 @@ test('decline without workflow instance sets status to denied', function () {
 
     $this->assertDatabaseHas('payment_requests', ['id' => $request->id, 'status' => 'denied']);
 });
+test('disburse refuses a request that another call already disbursed', function () {
+    $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    $staleCopy = PaymentRequest::findOrFail($request->id);
+    $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(reference: null);
+
+    makeServiceForPaymentRequestService()->disburse($request, $dto, $this->user);
+
+    expect(fn() => makeServiceForPaymentRequestService()->disburse($staleCopy, $dto, $this->user))
+        ->toThrow(Symfony\Component\HttpKernel\Exception\ConflictHttpException::class);
+    expect(App\Models\Tenant\CashbookEntry::query()->where('sourceable_type', PaymentRequest::class)->where('sourceable_id', $request->id)->count())->toBe(1);
+});
+test('cancel refuses a request that has already been disbursed', function () {
+    $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    $staleCopy = PaymentRequest::findOrFail($request->id);
+    makeServiceForPaymentRequestService()->disburse($request, new App\DTOs\Tenant\DisbursePaymentRequestDto(reference: null), $this->user);
+
+    expect(fn() => makeServiceForPaymentRequestService()->cancel($staleCopy, $this->user))
+        ->toThrow(Symfony\Component\HttpKernel\Exception\ConflictHttpException::class);
+    expect($request->fresh()->status)->toBe('disbursed');
+});

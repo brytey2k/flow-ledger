@@ -46,6 +46,7 @@ class RetirementRequestsController extends Controller
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+        abort_unless($user->staffProfile?->id === $paymentRequest->staff_id, 403, 'You do not own this advance request.');
         abort_unless($paymentRequest->isAdvance(), 422, 'Only advance requests can be retired.');
         abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
         // Disallow creating a new retirement if there is an active (non-cancelled) retirement
@@ -63,6 +64,7 @@ class RetirementRequestsController extends Controller
         /** @var \App\Models\Tenant\User $user */
         $user = $request->user();
         abort_unless(in_array($paymentRequest->branch_id, $this->branchScope->allowedBranchIds($user), true), 403);
+        abort_unless($user->staffProfile?->id === $paymentRequest->staff_id, 403, 'You do not own this advance request.');
         abort_unless($paymentRequest->isAdvance(), 422, 'Only advance requests can be retired.');
         abort_unless($paymentRequest->status === 'disbursed', 422, 'Can only retire disbursed advances.');
         // Disallow creating a new retirement if there is an active (non-cancelled) retirement

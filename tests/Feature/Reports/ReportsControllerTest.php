@@ -1169,3 +1169,12 @@ test('send back rate includes actions late on the end date', function () {
 
     expect($rows->firstWhere('user.id', $this->user->id)['sent_back_count'])->toEqual(1);
 });
+test('csv export neutralises a formula smuggled in through group_by', function () {
+    $response = $this->actingAs($this->user)
+        ->get(route('reports.export.expenditure-summary', ['group_by' => '=HYPERLINK("https://evil.example/")', 'format' => 'csv']))
+        ->assertOk();
+
+    $firstCell = str_getcsv((string) strtok($response->streamedContent(), "\n"))[0];
+
+    expect($firstCell)->not->toStartWith('=');
+});

@@ -98,6 +98,15 @@ class RetirementService
     public function settle(RetirementRequest $retirement, string|null $notes, User|null $user = null): void
     {
         DB::transaction(function () use ($retirement, $notes, $user): void {
+            // Lock the row and check again: the controller's status check ran before this transaction, so two
+            // simultaneous calls could otherwise both settle and post to the cashbook twice.
+            RetirementRequest::lockForUpdate()->findOrFail($retirement->id);
+            $retirement->refresh();
+
+            if ($retirement->status !== 'approved') {
+                throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException('This retirement is no longer awaiting settlement.');
+            }
+
             $retirement->update([
                 'status' => 'settled',
                 'settled_at' => now(),

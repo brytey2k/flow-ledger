@@ -40,6 +40,8 @@ class WorkflowParallelGroupsController extends Controller
 
     public function destroy(WorkflowTemplate $workflowTemplate, WorkflowParallelGroup $workflowParallelGroup): RedirectResponse
     {
+        abort_unless($workflowParallelGroup->workflow_template_id === $workflowTemplate->id, 404);
+
         if ($this->versioning->shouldFork($workflowTemplate, isStructuralChange: true)) {
             if (($draft = $this->versioning->draftFor($workflowTemplate)) !== null) {
                 return redirect()->route('workflow-templates.show', $draft)

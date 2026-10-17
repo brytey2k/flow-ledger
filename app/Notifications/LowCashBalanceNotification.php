@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Tenant\CashBalanceThreshold;
+use App\Support\MailText;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\DatabaseMessage;
@@ -43,7 +44,7 @@ class LowCashBalanceNotification extends Notification implements ShouldQueue
         return (new MailMessage())
             ->subject(__('notifications.low_cash_balance.subject', ['branch' => $branchName]))
             ->greeting(__('notifications.low_cash_balance.greeting'))
-            ->line(__('notifications.low_cash_balance.balance_fallen', ['branch' => $branchName]))
+            ->line(__('notifications.low_cash_balance.balance_fallen', ['branch' => MailText::plain($branchName)]))
             ->line(__('notifications.low_cash_balance.current_balance', ['amount' => $formattedBalance]))
             ->line(__('notifications.low_cash_balance.threshold', ['amount' => $formattedThreshold]))
             ->line(__('notifications.low_cash_balance.take_action'))

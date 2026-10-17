@@ -103,6 +103,15 @@ class PaymentRequestService
         }
 
         DB::transaction(function () use ($request, $dto, $user): void {
+            // The controller checked the status on a model read before this transaction. Take the row lock and
+            // check again, so two simultaneous calls cannot both disburse and debit the cashbook twice.
+            PaymentRequest::lockForUpdate()->findOrFail($request->id);
+            $request->refresh();
+
+            if ($request->status !== PaymentRequestStatus::Approved->value) {
+                throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException('This request is no longer awaiting disbursement.');
+            }
+
             $method = PaymentMethod::Cash;
 
             $request->update([
@@ -200,6 +209,11 @@ class PaymentRequestService
     {
         DB::transaction(function () use ($request, $user): void {
             $request = PaymentRequest::lockForUpdate()->findOrFail($request->id);
+
+            if (! $request->isCancelable()) {
+                throw new \Symfony\Component\HttpKernel\Exception\ConflictHttpException('This request can no longer be cancelled.');
+            }
+
             $oldStatus = $request->status;
             $activeInstance = $request->activeWorkflowInstance;
 

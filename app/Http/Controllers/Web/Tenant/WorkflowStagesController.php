@@ -38,6 +38,7 @@ class WorkflowStagesController extends Controller
     public function store(WorkflowStageStoreRequest $request, WorkflowTemplate $workflowTemplate): RedirectResponse
     {
         $dto = $request->toDto();
+        $this->assertParallelGroupBelongsToTemplate($dto, $workflowTemplate);
 
         if ($this->versioning->shouldFork($workflowTemplate, isStructuralChange: true)) {
             if (($draft = $this->versioning->draftFor($workflowTemplate)) !== null) {
@@ -58,6 +59,8 @@ class WorkflowStagesController extends Controller
 
     public function edit(WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): View
     {
+        $this->assertStageBelongsToTemplate($workflowStage, $workflowTemplate);
+
         $roles = $this->roleRepository->allOrderedByName();
         $parallelGroups = $workflowTemplate->parallelGroups()->with('stages')->orderBy('name')->get();
         $parallelGroupStages = $this->parallelGroupStagesForJs($parallelGroups);
@@ -68,7 +71,10 @@ class WorkflowStagesController extends Controller
 
     public function update(WorkflowStageUpdateRequest $request, WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): RedirectResponse
     {
+        $this->assertStageBelongsToTemplate($workflowStage, $workflowTemplate);
+
         $dto = $request->toDto();
+        $this->assertParallelGroupBelongsToTemplate($dto, $workflowTemplate);
 
         if ($this->versioning->shouldFork($workflowTemplate, isStructuralChange: true)) {
             if (($draft = $this->versioning->draftFor($workflowTemplate)) !== null) {
@@ -90,6 +96,8 @@ class WorkflowStagesController extends Controller
 
     public function destroy(WorkflowTemplate $workflowTemplate, WorkflowStage $workflowStage): RedirectResponse
     {
+        $this->assertStageBelongsToTemplate($workflowStage, $workflowTemplate);
+
         if ($this->versioning->shouldFork($workflowTemplate, isStructuralChange: true)) {
             if (($draft = $this->versioning->draftFor($workflowTemplate)) !== null) {
                 return redirect()->route('workflow-templates.show', $draft)
@@ -105,6 +113,24 @@ class WorkflowStagesController extends Controller
 
         return redirect()->route('workflow-templates.show', $workflowTemplate)
             ->with('success', __('flash.workflows.stage_deleted'));
+    }
+
+    /** The fork-on-edit protection looks at the template in the URL, so the stage must really belong to it. */
+    private function assertStageBelongsToTemplate(WorkflowStage $workflowStage, WorkflowTemplate $workflowTemplate): void
+    {
+        abort_unless($workflowStage->workflow_template_id === $workflowTemplate->id, 404);
+    }
+
+    private function assertParallelGroupBelongsToTemplate(WorkflowStageDto $dto, WorkflowTemplate $workflowTemplate): void
+    {
+        if ($dto->parallelGroupId === null) {
+            return;
+        }
+
+        abort_unless(
+            WorkflowParallelGroup::query()->whereKey($dto->parallelGroupId)->where('workflow_template_id', $workflowTemplate->id)->exists(),
+            404,
+        );
     }
 
     /** @param array<int, int> $groupIdMap */

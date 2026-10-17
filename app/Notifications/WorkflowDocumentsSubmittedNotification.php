@@ -8,6 +8,7 @@ use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowDocumentRequest;
 use App\Notifications\Concerns\CapturesTenantDomain;
+use App\Support\MailText;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -40,7 +41,7 @@ class WorkflowDocumentsSubmittedNotification extends Notification implements Sho
             throw new \LogicException('The document request notification context is incomplete.');
         }
         $route = $request instanceof RetirementRequest ? 'retirement-requests.show' : 'payment-requests.show';
-        $files = $this->documentRequest->attachments->pluck('original_name')->implode(', ');
+        $files = $this->documentRequest->attachments->pluck('original_name')->map(fn($name): string => MailText::plain(is_string($name) ? $name : ''))->implode(', ');
         $requestId = $request->getKey();
         $displayId = is_scalar($requestId) ? (string) $requestId : '';
 
@@ -48,10 +49,10 @@ class WorkflowDocumentsSubmittedNotification extends Notification implements Sho
             ->subject('Additional source documents submitted')
             ->line('Additional source documents have been submitted for request #' . $displayId . '.')
             ->line('Files: ' . $files)
-            ->line('Uploaded by: ' . $requester->name)
-            ->line('Requested by: ' . $openedBy->name)
-            ->line('Stage: ' . $stage->name)
-            ->line('Reason: ' . $this->documentRequest->reason)
+            ->line('Uploaded by: ' . MailText::plain($requester->name))
+            ->line('Requested by: ' . MailText::plain($openedBy->name))
+            ->line('Stage: ' . MailText::plain($stage->name))
+            ->line('Reason: ' . MailText::plain($this->documentRequest->reason))
             ->line('Submitted: ' . $this->documentRequest->submitted_at?->toDayDateTimeString())
             ->action('View request', tenant_route_url($this->domain, $route, $request));
     }

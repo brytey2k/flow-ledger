@@ -102,8 +102,15 @@ test('login fails for a user who has not accepted their invite', function () {
         'password' => 'Password1!',
     ]);
 
-    $response->assertSessionHasErrors(['email' => __('auth.invite_not_accepted')]);
+    $response->assertSessionHasErrors(['email' => 'The provided credentials do not match our records.']);
     $this->assertGuest();
+});
+test('an invited account gets the same error as an unknown one', function () {
+    $invited = User::factory()->create(['status' => UserStatus::Invited, 'invited_at' => now()]);
+    $expected = ['email' => 'The provided credentials do not match our records.'];
+
+    $this->post(route('login'), ['email' => $invited->email, 'password' => 'wrong'])->assertSessionHasErrors($expected);
+    $this->post(route('login'), ['email' => 'nobody@example.com', 'password' => 'wrong'])->assertSessionHasErrors($expected);
 });
 test('login form shows form when local auth is enabled', function () {
     Feature::for($this->tenant)->activate(LocalAuth::class);
