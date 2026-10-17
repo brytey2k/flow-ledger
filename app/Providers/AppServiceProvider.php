@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Password::defaults(static fn(): Password => app()->isProduction()
+            ? Password::min(12)->letters()->mixedCase()->numbers()->symbols()->uncompromised()
+            : Password::min(12)->letters()->mixedCase()->numbers()->symbols());
+
         Event::listen(CashbookBalanceChanged::class, CheckCashBalanceThreshold::class);
 
         $invalidateDashboardCache = function (mixed $model = null): void {

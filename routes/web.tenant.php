@@ -74,6 +74,7 @@ Route::middleware([
 
     Route::middleware(['auth', 'check.force.logout'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::get('/session/keep-alive', static fn() => response()->noContent())->name('session.keep-alive');
         Route::post('/exit-impersonation', [ImpersonationController::class, 'exit'])->name('exit-impersonation');
         Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
         Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');

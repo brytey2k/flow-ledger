@@ -55,6 +55,7 @@
 <!-- End of Main -->
 <!-- End of Page -->
 
+@include('partials.session-timeout', ['keepAliveUrl' => route('session.keep-alive'), 'loginUrl' => route('login')])
 @include('tenant.layouts.partials.scripts')
 </body>
 </html>
