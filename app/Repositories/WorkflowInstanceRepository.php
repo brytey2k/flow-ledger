@@ -9,6 +9,7 @@ use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -125,7 +126,8 @@ class WorkflowInstanceRepository
             ->whereIn('status', ['approved', 'sent_back', 'cancelled'])
             ->whereNotNull('completed_at')
             ->whereNotNull('started_at')
-            ->whereBetween('completed_at', [$dateFrom, $dateTo])
+            ->where('completed_at', '>=', Carbon::parse($dateFrom)->startOfDay())
+            ->where('completed_at', '<', Carbon::parse($dateTo)->startOfDay()->addDay())
             ->get();
     }
 
@@ -142,7 +144,8 @@ class WorkflowInstanceRepository
             ->whereIn('status', ['approved', 'sent_back', 'cancelled'])
             ->whereNotNull('completed_at')
             ->whereNotNull('started_at')
-            ->whereBetween('completed_at', [$dateFrom, $dateTo])
+            ->where('completed_at', '>=', Carbon::parse($dateFrom)->startOfDay())
+            ->where('completed_at', '<', Carbon::parse($dateTo)->startOfDay()->addDay())
             ->get();
     }
 

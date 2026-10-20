@@ -13,9 +13,12 @@ class ImpersonationController extends Controller
 {
     public function impersonate(Request $request, string $token): RedirectResponse
     {
+        // Validate the token first: this route is reachable without signing in, and the flag exempts the
+        // session from the tenant maintenance lock, so an invalid token must never set it.
+        $response = UserImpersonation::makeResponse($token);
         $request->session()->put('impersonated', true);
 
-        return UserImpersonation::makeResponse($token);
+        return $response;
     }
 
     public function exit(Request $request): RedirectResponse

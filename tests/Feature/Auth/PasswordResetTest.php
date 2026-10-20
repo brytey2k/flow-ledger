@@ -89,13 +89,13 @@ test('password reset succeeds and logs in', function () {
     $response = $this->post(route('password.update'), [
         'token' => $token,
         'email' => $this->user->email,
-        'password' => 'newpassword123',
-        'password_confirmation' => 'newpassword123',
+        'password' => 'Sturdy-Pass-2026!',
+        'password_confirmation' => 'Sturdy-Pass-2026!',
     ]);
 
     $response->assertRedirect(route('dashboard'));
     $response->assertSessionHas('success');
-    expect(Hash::check('newpassword123', $this->user->fresh()->password))->toBeTrue();
+    expect(Hash::check('Sturdy-Pass-2026!', $this->user->fresh()->password))->toBeTrue();
 });
 test('password reset for unverified invited user activates account and verifies email', function () {
     $invitedUser = User::factory()->unverified()->create([
@@ -108,8 +108,8 @@ test('password reset for unverified invited user activates account and verifies 
     $response = $this->post(route('password.update'), [
         'token' => $token,
         'email' => $invitedUser->email,
-        'password' => 'newpassword123',
-        'password_confirmation' => 'newpassword123',
+        'password' => 'Sturdy-Pass-2026!',
+        'password_confirmation' => 'Sturdy-Pass-2026!',
     ]);
 
     $response->assertRedirect(route('dashboard'));
@@ -124,8 +124,8 @@ test('password reset for an already-active user does not change status', functio
     $this->post(route('password.update'), [
         'token' => $token,
         'email' => $this->user->email,
-        'password' => 'newpassword123',
-        'password_confirmation' => 'newpassword123',
+        'password' => 'Sturdy-Pass-2026!',
+        'password_confirmation' => 'Sturdy-Pass-2026!',
     ]);
 
     expect($this->user->fresh()->status)->toBe(UserStatus::Active);
@@ -134,8 +134,8 @@ test('password reset fails with invalid token', function () {
     $response = $this->post(route('password.update'), [
         'token' => 'invalid-token',
         'email' => $this->user->email,
-        'password' => 'newpassword123',
-        'password_confirmation' => 'newpassword123',
+        'password' => 'Sturdy-Pass-2026!',
+        'password_confirmation' => 'Sturdy-Pass-2026!',
     ]);
 
     $response->assertSessionHasErrors(['email']);
@@ -146,7 +146,7 @@ test('password reset fails with mismatched confirmation', function () {
     $response = $this->post(route('password.update'), [
         'token' => $token,
         'email' => $this->user->email,
-        'password' => 'newpassword123',
+        'password' => 'Sturdy-Pass-2026!',
         'password_confirmation' => 'different456',
     ]);
 
@@ -171,8 +171,8 @@ test('password reset returns 403 when local auth disabled', function () {
     $response = $this->post(route('password.update'), [
         'token' => $token,
         'email' => $this->user->email,
-        'password' => 'newpassword123',
-        'password_confirmation' => 'newpassword123',
+        'password' => 'Sturdy-Pass-2026!',
+        'password_confirmation' => 'Sturdy-Pass-2026!',
     ]);
 
     $response->assertForbidden();
@@ -185,11 +185,31 @@ test('password not reset when identity delegated to idp', function () {
     $response = $this->post(route('password.update'), [
         'token' => $token,
         'email' => $this->user->email,
-        'password' => 'newpassword123',
-        'password_confirmation' => 'newpassword123',
+        'password' => 'Sturdy-Pass-2026!',
+        'password_confirmation' => 'Sturdy-Pass-2026!',
     ]);
 
     $response->assertRedirect();
     $response->assertSessionHas('status');
     expect($this->user->fresh()->password)->toBe($originalPassword);
+});
+test('password reset rejects a password that is long enough but too simple', function () {
+    $token = Password::createToken($this->user);
+
+    $this->post(route('password.update'), [
+        'token' => $token,
+        'email' => $this->user->email,
+        'password' => 'alllowercaseletters',
+        'password_confirmation' => 'alllowercaseletters',
+    ])->assertSessionHasErrors('password');
+});
+test('password reset rejects a password shorter than twelve characters', function () {
+    $token = Password::createToken($this->user);
+
+    $this->post(route('password.update'), [
+        'token' => $token,
+        'email' => $this->user->email,
+        'password' => 'Ab1!short',
+        'password_confirmation' => 'Ab1!short',
+    ])->assertSessionHasErrors('password');
 });

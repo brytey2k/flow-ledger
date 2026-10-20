@@ -48,7 +48,7 @@
                     <ul class="flex flex-col gap-3">
                         <li class="flex items-start gap-2.5 text-sm text-secondary-foreground">
                             <x-tabler-circle-check-filled class="text-success mt-0.5 shrink-0" />
-                            At least 8 characters long
+                            At least 12 characters, with upper and lower case, a number and a symbol
                         </li>
                         <li class="flex items-start gap-2.5 text-sm text-secondary-foreground">
                             <x-tabler-circle-check-filled class="text-success mt-0.5 shrink-0" />
@@ -116,7 +116,7 @@
                                 autocomplete="new-password"
                                 aria-invalid="@error('password') true @else false @enderror"
                             />
-                            <p class="mt-1 text-xs text-muted-foreground">Must be at least 8 characters.</p>
+                            <x-password-requirements input="password" confirm="password_confirmation" />
                             @error('password')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror

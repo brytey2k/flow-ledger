@@ -5,6 +5,7 @@ declare(strict_types=1);
 uses(Tests\TenantAppTestCase::class);
 use App\Data\Auth\SsoUserClaimsDto;
 use App\Enums\Tenant\UserStatus;
+use App\Exceptions\LandlordAccessDeniedException;
 use App\Exceptions\UnverifiedEmailException;
 use App\Models\Landlord\User as LandlordUser;
 use App\Models\Tenant\User as TenantUser;
@@ -70,7 +71,7 @@ test('find or create tenant user activates an invited user matched by email', fu
     expect($user->oidc_sub)->toBe('sub-fresh-link');
     expect($user->activated_at)->not->toBeNull();
 });
-test('find or create landlord user returns existing user matched by oidc sub', function () {
+test('find landlord user returns existing user matched by oidc sub', function () {
     $existing = LandlordUser::query()->create([
         'name' => 'Existing Landlord',
         'email' => 'existing-landlord@example.com',
@@ -81,11 +82,11 @@ test('find or create landlord user returns existing user matched by oidc sub', f
 
     $claims = makeClaimsForSsoUserProvisioningService(sub: 'sub-landlord-existing', email: $existing->email);
 
-    $user = $this->service->findOrCreateLandlordUser($claims);
+    $user = $this->service->findLandlordUser($claims);
 
     expect($user->id)->toBe($existing->id);
 });
-test('find or create landlord user throws when returning oidc user email becomes unverified', function () {
+test('find landlord user throws when returning oidc user email becomes unverified', function () {
     LandlordUser::query()->create([
         'name' => 'Revoked Landlord',
         'email' => 'revoked-landlord@example.com',
@@ -98,7 +99,29 @@ test('find or create landlord user throws when returning oidc user email becomes
 
     $this->expectException(UnverifiedEmailException::class);
 
-    $this->service->findOrCreateLandlordUser($claims);
+    $this->service->findLandlordUser($claims);
+});
+test('find landlord user refuses an unknown identity instead of creating an account', function () {
+    $claims = makeClaimsForSsoUserProvisioningService(sub: 'sub-stranger', email: 'stranger@example.com');
+
+    expect(fn() => $this->service->findLandlordUser($claims))->toThrow(LandlordAccessDeniedException::class);
+    expect(LandlordUser::query()->where('email', 'stranger@example.com')->exists())->toBeFalse();
+});
+test('find landlord user links an operator-created account by verified email', function () {
+    $existing = LandlordUser::query()->create([
+        'name' => 'Operator', 'email' => 'operator@example.com', 'password' => Hash::make('password'),
+    ]);
+
+    $user = $this->service->findLandlordUser(makeClaimsForSsoUserProvisioningService(sub: 'sub-operator', email: 'operator@example.com'));
+
+    expect($user->id)->toBe($existing->id)->and($user->oidc_sub)->toBe('sub-operator');
+});
+test('find landlord user refuses to link by an unverified email', function () {
+    LandlordUser::query()->create(['name' => 'Operator', 'email' => 'operator2@example.com', 'password' => Hash::make('password')]);
+
+    $claims = makeClaimsForSsoUserProvisioningService(sub: 'sub-op2', email: 'operator2@example.com', emailVerified: false);
+
+    expect(fn() => $this->service->findLandlordUser($claims))->toThrow(UnverifiedEmailException::class);
 });
 // -------------------------------------------------------------------------
 // Helpers

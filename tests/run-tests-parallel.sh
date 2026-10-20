@@ -6,14 +6,14 @@ set -e
 export AUTOMATED_TEST_TENANT_MARKER="$$-$(date +%s%N 2>/dev/null || date +%s)-$RANDOM"
 
 # Laravel's built-in ParallelTesting support auto-clones the *default*
-# connection's database per worker (e.g. testing -> testing_test_1) for any
+# connection's database per worker (e.g. testing_flow_ledger -> testing_flow_ledger_test_1) for any
 # test using DatabaseTransactions/RefreshDatabase/etc, completely independent
 # of this app's own tenant/central database setup. This app's central tenant
 # data always lives in the hardcoded "testing_pgsql" connection, which Laravel
 # never touches (it's not the default connection) — so under --parallel, the
 # app's default "pgsql" connection (used by e.g. App\Models\Tenant at
 # request-handling time) silently diverges onto its own empty
-# "testing_test_N" database while central tenant rows only exist in
+# "testing_flow_ledger_test_N" database while central tenant rows only exist in
 # "testing_pgsql"'s database.
 #
 # Disable Laravel's auto-cloning so "pgsql" stays pointed at the same
@@ -31,7 +31,7 @@ cleanup() {
 trap cleanup EXIT
 
 php artisan config:clear --ansi
-php artisan migrate --database=testing_pgsql --force
+PENNANT_DB_CONNECTION=testing_pgsql php artisan migrate --database=testing_pgsql --force
 
 # Each ParaTest worker process gets its own tenant database, keyed by
 # ParaTest's per-worker TEST_TOKEN env var (see

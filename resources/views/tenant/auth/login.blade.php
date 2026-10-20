@@ -122,13 +122,7 @@
             </div>
         @endif
 
-        @php
-            $ssoScheme = request()->getScheme();
-            $ssoPort = request()->getPort();
-            $ssoPortSuffix = in_array($ssoPort, [80, 443], true) ? '' : ":{$ssoPort}";
-            $ssoUrl = "{$ssoScheme}://" . config('app.central_url') . $ssoPortSuffix . '/auth/sso/redirect?return_to=' . urlencode(route('login'));
-        @endphp
-        <a class="sgh-btn sgh-btn-outline flex justify-center gap-2" href="{{ $ssoUrl }}">
+        <a class="sgh-btn sgh-btn-outline flex justify-center gap-2" href="{{ route('sso.start') }}">
             <x-tabler-shield-check-filled />
             {{ __('auth.sign_in_with_sso') }}
         </a>

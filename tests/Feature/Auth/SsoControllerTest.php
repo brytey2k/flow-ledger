@@ -173,7 +173,7 @@ test('callback logs in landlord user and redirects to tenants', function () {
     $client->shouldReceive('fetchUserInfo')->andReturn($claims);
 
     $this->mock(SsoUserProvisioningService::class)
-        ->shouldReceive('findOrCreateLandlordUser')
+        ->shouldReceive('findLandlordUser')
         ->once()
         ->with($claims)
         ->andReturn($this->landlordUser);
@@ -185,6 +185,40 @@ test('callback logs in landlord user and redirects to tenants', function () {
     $response->assertRedirect(route('landlord.tenants.index'));
     $this->assertAuthenticatedAs($this->landlordUser, 'landlord');
 });
+test('callback refuses a tenantless identity that is not a known landlord user', function () {
+    $state = 'test-state-' . uniqid();
+    $claims = new SsoUserClaimsDto('sub-stranger', 'stranger@idp.test', 'Stranger', true, null, []);
+
+    $client = $this->mock(SsoClientService::class);
+    $client->shouldReceive('validateAndConsumeState')->andReturn(true);
+    $client->shouldReceive('exchangeCodeForTokens')->andReturn(['access_token' => 'tok']);
+    $client->shouldReceive('fetchUserInfo')->andReturn($claims);
+
+    Cache::put("sso_pkce:{$state}", 'verifier', now()->addMinutes(5));
+    $this->withCookie('sso_state', $state)
+        ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']))
+        ->assertForbidden();
+
+    $this->assertGuest('landlord');
+    expect(App\Models\Landlord\User::query()->where('email', 'stranger@idp.test')->exists())->toBeFalse();
+});
+test('redirect only stores same-origin paths and absolute urls on known hosts as return_to', function (string $returnTo, bool $stored) {
+    $response = $this->get(route('sso.redirect', ['return_to' => $returnTo]));
+    $response->assertRedirect();
+    parse_str((string) parse_url($response->headers->get('Location', ''), PHP_URL_QUERY), $params);
+    $state = $params['state'] ?? '';
+
+    expect($state)->not->toBeEmpty();
+    expect(Cache::has("sso_return:{$state}"))->toBe($stored);
+})->with([
+    'scheme without host' => ['http:evil.com', false],
+    'scheme and single slash' => ['http:/evil.com', false],
+    'protocol relative' => ['//evil.com', false],
+    'backslash' => ['/\\evil.com', false],
+    'tab smuggled in' => ["/\t/evil.com", false],
+    'javascript scheme' => ['javascript:alert(1)', false],
+    'plain path' => ['/dashboard', true],
+]);
 test('callback routes tenant user to tenant domain', function () {
     $state = 'test-state-' . uniqid();
     $tid = 'tid-' . uniqid();
@@ -234,4 +268,40 @@ test('logout clears authenticated session', function () {
         ->post(route('sso.logout'));
 
     $this->assertGuest('landlord');
+});
+test('redirect remembers a valid binding hash and ignores a malformed one', function (string $bind, bool $stored) {
+    $response = $this->get(route('sso.redirect', ['bind' => $bind]));
+    parse_str((string) parse_url($response->headers->get('Location', ''), PHP_URL_QUERY), $params);
+    $state = $params['state'] ?? '';
+
+    expect($state)->not->toBeEmpty();
+    expect(Cache::has("sso_bind:{$state}"))->toBe($stored);
+})->with([
+    'sha256 hex' => [str_repeat('a1', 32), true],
+    'too short' => ['abc', false],
+    'not hex' => [str_repeat('zz', 32), false],
+]);
+test('callback hands the binding hash to the tenant with the one-time token', function () {
+    $state = 'test-state-' . uniqid();
+    $tid = 'tid-' . uniqid();
+    $hash = str_repeat('b2', 32);
+    $this->tenant->update(['idp_tenant_id' => $tid]);
+    $this->tenant->domains()->create(['domain' => 'bound-company.localhost']);
+    $claims = new SsoUserClaimsDto('sub-1', 'user@test.com', 'Test User', true, $tid, ['flow-ledger']);
+
+    $client = $this->mock(SsoClientService::class);
+    $client->shouldReceive('validateAndConsumeState')->andReturn(true);
+    $client->shouldReceive('exchangeCodeForTokens')->andReturn(['access_token' => 'tok']);
+    $client->shouldReceive('fetchUserInfo')->andReturn($claims);
+    Cache::put("sso_pkce:{$state}", 'verifier', now()->addMinutes(5));
+    Cache::put("sso_bind:{$state}", $hash, now()->addMinutes(5));
+
+    $location = (string) $this->withCookie('sso_state', $state)
+        ->get(route('sso.callback', ['state' => $state, 'code' => 'abc']))
+        ->headers->get('Location');
+    parse_str((string) parse_url($location, PHP_URL_QUERY), $params);
+    $payload = Cache::store(config()->string('cache.default'))->get("sso_login:{$this->tenant->id}:{$params['token']}");
+
+    expect($payload['bind'])->toBe($hash)->and($payload['email'])->toBe('user@test.com');
+    expect(Cache::has("sso_bind:{$state}"))->toBeFalse();
 });

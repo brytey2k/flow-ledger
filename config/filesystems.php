@@ -49,6 +49,35 @@ return [
             'report' => false,
         ],
 
+        // Offsite, encrypted database backups. Keep this on a different provider (and with different
+        // credentials) from the primary server and from the uploads bucket.
+        'backups' => [
+            'driver' => 's3',
+            'key' => env('BACKUP_DISK_KEY'),
+            'secret' => env('BACKUP_DISK_SECRET'),
+            'region' => env('BACKUP_DISK_REGION', 'us-east-1'),
+            'bucket' => env('BACKUP_DISK_BUCKET'),
+            'endpoint' => env('BACKUP_DISK_ENDPOINT'),
+            'use_path_style_endpoint' => env('BACKUP_DISK_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
+        // DigitalOcean Spaces (S3 compatible) for user uploads. Not yet wired to attachments.
+        'spaces' => [
+            'driver' => 's3',
+            'key' => env('SPACES_KEY'),
+            'secret' => env('SPACES_SECRET'),
+            'region' => env('SPACES_REGION', 'us-east-1'),
+            'bucket' => env('SPACES_BUCKET'),
+            'endpoint' => env('SPACES_ENDPOINT'),
+            'use_path_style_endpoint' => env('SPACES_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

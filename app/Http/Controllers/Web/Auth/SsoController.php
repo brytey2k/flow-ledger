@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Data\Auth\SsoUserClaimsDto;
+use App\Exceptions\LandlordAccessDeniedException;
 use App\Exceptions\UnverifiedEmailException;
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
 use App\Models\Tenant;
 use App\Services\SsoClientService;
 use App\Services\SsoUserProvisioningService;
+use App\Support\SsoBinding;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +44,13 @@ class SsoController extends Controller
         $returnTo = (string) $request->query('return_to', '');
         if ($returnTo !== '' && $this->isAllowedReturnUrl($returnTo)) {
             Cache::put("sso_return:{$state}", $returnTo, now()->addMinutes(5));
+        }
+
+        // The hash of a secret the tenant domain keeps in a cookie. It is handed on with the one-time token so the
+        // last step can tell that the browser finishing the sign-in is the one that began it.
+        $bind = (string) $request->query('bind', '');
+        if (SsoBinding::isValidHash($bind)) {
+            Cache::put("sso_bind:{$state}", $bind, now()->addMinutes(5));
         }
 
         return redirect()->away(
@@ -81,6 +90,9 @@ class SsoController extends Controller
         $pulledReturn = Cache::pull("sso_return:{$state}");
         $returnTo = is_string($pulledReturn) ? $pulledReturn : '';
 
+        $pulledBind = Cache::pull("sso_bind:{$state}");
+        $bind = is_string($pulledBind) ? $pulledBind : null;
+
         $pulled = Cache::pull("sso_pkce:{$state}");
         $verifier = is_string($pulled) ? $pulled : '';
         if ($verifier === '') {
@@ -116,7 +128,7 @@ class SsoController extends Controller
         if ($claims->isLandlordUser()) {
             try {
                 return $this->loginAsLandlord($request, $claims);
-            } catch (UnverifiedEmailException $e) {
+            } catch (LandlordAccessDeniedException|UnverifiedEmailException $e) {
                 return $this->failRedirect($e->getMessage(), $returnTo);
             }
         }
@@ -125,7 +137,7 @@ class SsoController extends Controller
             return $this->failRedirect('Your account does not have access to this application.', $returnTo);
         }
 
-        return $this->routeToTenant($claims);
+        return $this->routeToTenant($claims, $bind);
     }
 
     /**
@@ -150,7 +162,7 @@ class SsoController extends Controller
 
     private function loginAsLandlord(Request $request, SsoUserClaimsDto $claims): RedirectResponse
     {
-        $user = $this->provisioner->findOrCreateLandlordUser($claims);
+        $user = $this->provisioner->findLandlordUser($claims);
 
         Auth::guard('landlord')->login($user);
         $request->session()->regenerate();
@@ -158,7 +170,7 @@ class SsoController extends Controller
         return redirect()->route('landlord.tenants.index');
     }
 
-    private function routeToTenant(SsoUserClaimsDto $claims): RedirectResponse
+    private function routeToTenant(SsoUserClaimsDto $claims, string|null $bind): RedirectResponse
     {
         $tenant = Tenant::where('idp_tenant_id', $claims->tenant_id)->first();
 
@@ -179,7 +191,7 @@ class SsoController extends Controller
         // The tenant id is baked into the key itself so the token can only ever
         // resolve against the tenant it was minted for.
         Cache::store(config()->string('cache.default'))
-            ->put("sso_login:{$tenant->id}:{$loginToken}", $claims->toArray(), now()->addSeconds(30));
+            ->put("sso_login:{$tenant->id}:{$loginToken}", [...$claims->toArray(), 'bind' => $bind], now()->addSeconds(30));
 
         $port = request()->getPort();
         $portSuffix = in_array($port, [80, 443], true) ? '' : ":{$port}";
@@ -197,6 +209,12 @@ class SsoController extends Controller
             return false;
         }
 
+        // Control characters and whitespace are stripped by browsers before they navigate, so
+        // "/\t/evil.com" would otherwise become "//evil.com".
+        if (preg_match('/[\x00-\x20\x7f]/', $url) === 1) {
+            return false;
+        }
+
         $parsed = parse_url($url);
 
         if ($parsed === false) {
@@ -204,7 +222,15 @@ class SsoController extends Controller
         }
 
         if (empty($parsed['host'])) {
-            return isset($parsed['path']);
+            // A host-less value is only safe as a same-origin path. A scheme with no host, such as
+            // "http:evil.com", is resolved by browsers as a link to another site.
+            return ! isset($parsed['scheme'])
+                && str_starts_with($url, '/')
+                && ! str_starts_with($url, '//');
+        }
+
+        if (! in_array($parsed['scheme'] ?? '', ['http', 'https'], true)) {
+            return false;
         }
 
         $host = $parsed['host'];

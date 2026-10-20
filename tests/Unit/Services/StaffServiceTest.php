@@ -178,7 +178,7 @@ test('update syncs user branch when branch changes', function () {
     $newBranch = Branch::factory()->create(['level_id' => $this->level->id]);
     $dto = makeStaffDtoFromStaff($staff, branchId: $newBranch->id, userId: $linkedUser->id);
 
-    $this->service->update($staff, $dto, $this->user);
+    $this->service->update($staff, $dto);
 
     $linkedUser->refresh();
     expect($linkedUser->branch_id)->toBe($newBranch->id);

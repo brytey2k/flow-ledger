@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\Tenant\Auth\LoginController;
 use App\Http\Controllers\Web\Tenant\Auth\PasswordChangeController;
 use App\Http\Controllers\Web\Tenant\Auth\ResetPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\SsoFinalizeController;
+use App\Http\Controllers\Web\Tenant\Auth\SsoStartController;
 use App\Http\Controllers\Web\Tenant\BranchesController;
 use App\Http\Controllers\Web\Tenant\CashBalanceThresholdController;
 use App\Http\Controllers\Web\Tenant\CashbookController;
@@ -58,10 +59,13 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
     'tenant.active',
+    'tenant.maintenance',
 ])->group(function (): void {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('do-login')->middleware('throttle:5,1');
+    Route::get('/auth/sso/start', SsoStartController::class)->name('sso.start');
     Route::get('/auth/sso/finalize', SsoFinalizeController::class)->name('sso.finalize');
+    Route::post('/auth/sso/finalize', [SsoFinalizeController::class, 'confirm'])->name('sso.finalize.confirm')->middleware('throttle:10,1');
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendLink'])->name('password.email')->middleware('throttle:5,1');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
@@ -73,6 +77,7 @@ Route::middleware([
 
     Route::middleware(['auth', 'check.force.logout'])->group(function (): void {
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::get('/session/keep-alive', static fn() => response()->noContent())->name('session.keep-alive');
         Route::post('/exit-impersonation', [ImpersonationController::class, 'exit'])->name('exit-impersonation');
         Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
         Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');
@@ -419,10 +424,10 @@ Route::middleware([
             ->can(PermissionKey::DeleteRole->value)
             ->name('roles.destroy');
         Route::get('/roles/{role}/permissions', [RolesController::class, 'editPermissions'])
-            ->can(PermissionKey::AccessRoles->value)
+            ->can(PermissionKey::ManageRolePermissions->value)
             ->name('roles.permissions.edit');
         Route::put('/roles/{role}/permissions', [RolesController::class, 'updatePermissions'])
-            ->can(PermissionKey::AccessRoles->value)
+            ->can(PermissionKey::ManageRolePermissions->value)
             ->name('roles.permissions.update');
 
         // Workflow Templates

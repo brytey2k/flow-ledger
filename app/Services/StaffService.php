@@ -5,16 +5,26 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DTOs\Tenant\StaffDto;
+use App\Enums\Tenant\PermissionKey;
 use App\Models\Tenant\Staff;
+use App\Models\Tenant\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class StaffService
 {
-    public function __construct(private readonly UserService $userService) {}
+    public function __construct(
+        private readonly UserService $userService,
+        private readonly BranchScopeService $branchScope,
+    ) {}
 
+    /** @throws AuthorizationException */
     public function create(StaffDto $dto, Model|null $actor = null): Staff
     {
+        $this->authorizeBranch($dto, $actor);
+        $this->authorizeLoginCreation($dto, $actor);
+
         return DB::transaction(function () use ($dto, $actor): Staff {
             $userId = $dto->userId;
 
@@ -45,8 +55,21 @@ class StaffService
         });
     }
 
+    /** @throws AuthorizationException */
     public function update(Staff $staff, StaffDto $dto, Model|null $actor = null): void
     {
+        if ($staff->branch_id !== $dto->branchId) {
+            $this->authorizeBranch($dto, $actor);
+
+            if ($actor instanceof User && $staff->user_id === $actor->id) {
+                throw new AuthorizationException(__('You cannot move your own staff record to another branch.'));
+            }
+        }
+
+        if ($staff->user_id === null) {
+            $this->authorizeLoginCreation($dto, $actor);
+        }
+
         DB::transaction(function () use ($staff, $dto, $actor): void {
             $userId = $staff->user_id;
             $oldBranchId = $staff->branch_id;
@@ -96,5 +119,21 @@ class StaffService
 
             $staff->delete();
         });
+    }
+
+    /** The destination branch must be one the acting user may work in. */
+    private function authorizeBranch(StaffDto $dto, Model|null $actor): void
+    {
+        if ($actor instanceof User && $dto->branchId !== null && ! in_array($dto->branchId, $this->branchScope->allowedBranchIds($actor), true)) {
+            throw new AuthorizationException(__('You cannot place staff in a branch outside your access.'));
+        }
+    }
+
+    /** Creating a login from the staff form needs the same permission as creating a user. */
+    private function authorizeLoginCreation(StaffDto $dto, Model|null $actor): void
+    {
+        if ($dto->newUser !== null && $actor instanceof User && ! $actor->can(PermissionKey::CreateUser->value)) {
+            throw new AuthorizationException(__('You do not have permission to create user accounts.'));
+        }
     }
 }

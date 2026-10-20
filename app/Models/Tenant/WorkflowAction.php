@@ -7,6 +7,9 @@ namespace App\Models\Tenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property \Carbon\Carbon|null $created_at
+ */
 class WorkflowAction extends Model
 {
     public $timestamps = false;

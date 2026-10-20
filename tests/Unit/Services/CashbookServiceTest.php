@@ -259,3 +259,19 @@ test('delete manual receipt dispatches balance changed event', function () {
 
     Event::assertDispatched(CashbookBalanceChanged::class);
 });
+test('the database refuses a second entry of the same type for one source', function () {
+    $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 50.0]);
+    $cashbook = Cashbook::create([
+        'branch_id' => $this->branch->id,
+        'currency_id' => Currency::factory()->create()->id,
+        'balance' => 0,
+    ]);
+    $entry = fn(string $type): array => [
+        'cashbook_id' => $cashbook->id, 'type' => $type, 'amount' => 50, 'description' => 'x', 'entry_date' => today(),
+        'sourceable_type' => PaymentRequest::class, 'sourceable_id' => $request->id,
+    ];
+
+    $first = CashbookEntry::create($entry('credit'));
+
+    expect(fn() => CashbookEntry::create($entry('credit')))->toThrow(Illuminate\Database\QueryException::class);
+});

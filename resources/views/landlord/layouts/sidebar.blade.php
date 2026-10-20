@@ -39,6 +39,14 @@
                     System Management
                 </div>
 
+                {{-- Overview --}}
+                <a href="{{ route('landlord.overview.index') }}" class="sgh-nav-item gap-2.5 {{ request()->routeIs('landlord.overview.*') ? 'active' : '' }}">
+                    <span class="sgh-nav-icon">
+                        <x-tabler-heart-rate-monitor class="size-4" />
+                    </span>
+                    <span class="sgh-nav-title">Overview</span>
+                </a>
+
                 {{-- Tenants --}}
                 <a href="{{ route('landlord.tenants.index') }}" class="sgh-nav-item gap-2.5 {{ request()->routeIs('landlord.tenants.*') ? 'active' : '' }}">
                     <span class="sgh-nav-icon">

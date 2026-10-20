@@ -104,4 +104,10 @@ return [
         'login' => 'Veuillez vous connecter pour approuver, renvoyer ou rejeter cette demande.',
         'action' => 'Examiner la demande',
     ],
+
+    'account_locked' => [
+        'subject' => 'Votre compte :app_name a ete temporairement verrouille',
+        'line_1' => 'Trop de tentatives de connexion echouees ont ete detectees sur votre compte, il est donc verrouille pendant :minutes minutes.',
+        'line_2' => "Si c'etait vous, patientez puis reessayez. Sinon, reinitialisez votre mot de passe et prevenez votre administrateur.",
+    ],
 ];

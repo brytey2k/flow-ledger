@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Auth;
 
+use App\Enums\Tenant\UserStatus;
 use App\Repositories\UserRepository;
+use App\Services\SessionInvalidatorService;
 use App\Services\SsoClientService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
@@ -24,6 +27,8 @@ class IamJwtGuard implements Guard
     private Authenticatable|null $user = null;
 
     private bool $userResolved = false;
+
+    protected int|null $issuedAt = null;
 
     public function __construct(// @phpstan-ignore constructor.unusedParameter
         UserProvider|null $provider,
@@ -62,7 +67,15 @@ class IamJwtGuard implements Guard
             return null;
         }
 
-        $this->user = $this->userRepository->findByOidcSub($sub);
+        $user = $this->userRepository->findByOidcSub($sub);
+
+        // Suspended users and tokens issued before an administrator's force sign-out or the provider's
+        // back-channel logout are refused, the same as a web session would be.
+        if ($user !== null && ($user->status === UserStatus::Suspended || $this->issuedBeforeRevocation($user->id))) {
+            $user = null;
+        }
+
+        $this->user = $user;
 
         return $this->user;
     }
@@ -111,6 +124,17 @@ class IamJwtGuard implements Guard
         $token = substr($header, 7);
 
         return $token !== '' ? $token : null;
+    }
+
+    private function issuedBeforeRevocation(int $userId): bool
+    {
+        $revokedBefore = Cache::get(SessionInvalidatorService::apiRevokedBeforeKey($userId));
+
+        if (! is_numeric($revokedBefore)) {
+            return false;
+        }
+
+        return $this->issuedAt === null || $this->issuedAt <= (int) $revokedBefore;
     }
 
     /** @param non-empty-string $rawToken */
@@ -184,6 +208,9 @@ class IamJwtGuard implements Guard
         if (! is_scalar($tokenTenantId) || ! is_scalar($currentTenantId) || (string) $tokenTenantId !== (string) $currentTenantId) {
             throw new RuntimeException('Token is not valid for this organisation.');
         }
+
+        $issuedAt = $token->claims()->get('iat');
+        $this->issuedAt = $issuedAt instanceof \DateTimeInterface ? $issuedAt->getTimestamp() : null;
 
         $sub = $token->claims()->get('sub', '');
 

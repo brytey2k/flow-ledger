@@ -8,9 +8,18 @@ use App\Http\Controllers\Web\Landlord\Auth\LoginController;
 use App\Http\Controllers\Web\Landlord\DocumentationController;
 use App\Http\Controllers\Web\Landlord\HomeController;
 use App\Http\Controllers\Web\Landlord\LocaleController;
+use App\Http\Controllers\Web\Landlord\PlatformHeartbeatController;
+use App\Http\Controllers\Web\Landlord\PlatformOverviewController;
+use App\Http\Controllers\Web\Landlord\TenantAnnouncementsController;
+use App\Http\Controllers\Web\Landlord\TenantDataToolsController;
+use App\Http\Controllers\Web\Landlord\TenantFailedJobsController;
 use App\Http\Controllers\Web\Landlord\TenantFeatureFlagsController;
+use App\Http\Controllers\Web\Landlord\TenantFixUpsController;
+use App\Http\Controllers\Web\Landlord\TenantHealthController;
 use App\Http\Controllers\Web\Landlord\TenantRolesAndPermissionsController;
 use App\Http\Controllers\Web\Landlord\TenantsController;
+use App\Http\Controllers\Web\Landlord\TenantStorageController;
+use App\Http\Controllers\Web\Landlord\TenantUserAdminController;
 use Illuminate\Support\Facades\Route;
 
 foreach (config('tenancy.central_domains') as $domain) {
@@ -26,6 +35,8 @@ foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('landlord.')->group(static function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
 
+        Route::get('health/heartbeat', PlatformHeartbeatController::class)->name('heartbeat')->middleware('throttle:60,1');
+
         // Self-service sign-up is paused while new organizations are onboarded by hand.
         Route::view('register', 'landlord.auth.register-halted')->name('register');
 
@@ -36,6 +47,10 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         Route::middleware(['auth:landlord'])->group(static function () {
             Route::post('landlord/sys-admin/logout', [LoginController::class, 'logout'])->name('logout');
+            Route::get('landlord/sys-admin/session/keep-alive', static fn() => response()->noContent())->name('session.keep-alive');
+
+            Route::get('landlord/sys-admin/overview', [PlatformOverviewController::class, 'index'])->name('overview.index');
+            Route::post('landlord/sys-admin/overview/refresh', [PlatformOverviewController::class, 'refresh'])->name('overview.refresh')->middleware('throttle:6,1');
 
             Route::get('landlord/sys-admin/tenants', [TenantsController::class, 'index'])->name('tenants.index');
             Route::get('landlord/sys-admin/tenants/create', [TenantsController::class, 'create'])->name('tenants.create');
@@ -46,6 +61,32 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::post('landlord/sys-admin/tenants/{tenant}/unsuspend', [TenantsController::class, 'unsuspend'])->name('tenants.unsuspend');
             Route::post('landlord/sys-admin/tenants/{tenant}/reset', [TenantsController::class, 'reset'])->name('tenants.reset');
             Route::delete('landlord/sys-admin/tenants/{tenant}', [TenantsController::class, 'destroy'])->name('tenants.destroy');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/data-tools', [TenantDataToolsController::class, 'index'])->name('tenants.data-tools.index');
+            Route::post('landlord/sys-admin/tenants/{tenant}/data-tools/{tool}/preview', [TenantDataToolsController::class, 'preview'])->name('tenants.data-tools.preview');
+            Route::post('landlord/sys-admin/tenants/{tenant}/data-tools/{tool}', [TenantDataToolsController::class, 'run'])->name('tenants.data-tools.run')->middleware('throttle:6,1');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/data-tools/runs/{auditLog}/download', [TenantDataToolsController::class, 'download'])->name('tenants.data-tools.download');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/fix-ups', [TenantFixUpsController::class, 'index'])->name('tenants.fix-ups.index');
+            Route::post('landlord/sys-admin/tenants/{tenant}/fix-ups/{fixUp}', [TenantFixUpsController::class, 'run'])->name('tenants.fix-ups.run')->middleware('throttle:10,1');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/health', [TenantHealthController::class, 'index'])->name('tenants.health.index');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/failed-jobs', [TenantFailedJobsController::class, 'index'])->name('tenants.failed-jobs.index');
+            Route::post('landlord/sys-admin/tenants/{tenant}/failed-jobs/{scope}/{uuid}/retry', [TenantFailedJobsController::class, 'retry'])->name('tenants.failed-jobs.retry');
+            Route::delete('landlord/sys-admin/tenants/{tenant}/failed-jobs/{scope}/{uuid}', [TenantFailedJobsController::class, 'discard'])->name('tenants.failed-jobs.discard');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/storage', [TenantStorageController::class, 'index'])->name('tenants.storage.index');
+            Route::post('landlord/sys-admin/tenants/{tenant}/storage/cleanup', [TenantStorageController::class, 'cleanup'])->name('tenants.storage.cleanup')->middleware('throttle:6,1');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/user-admin', [TenantUserAdminController::class, 'index'])->name('tenants.user-admin.index');
+            Route::post('landlord/sys-admin/tenants/{tenant}/user-admin/{userId}/force-logout', [TenantUserAdminController::class, 'forceLogout'])->name('tenants.user-admin.force-logout');
+            Route::post('landlord/sys-admin/tenants/{tenant}/user-admin/{userId}/resend-invite', [TenantUserAdminController::class, 'resendInvite'])->name('tenants.user-admin.resend-invite');
+            Route::post('landlord/sys-admin/tenants/{tenant}/user-admin/{userId}/unlock', [TenantUserAdminController::class, 'unlock'])->name('tenants.user-admin.unlock');
+
+            Route::get('landlord/sys-admin/tenants/{tenant}/announcements', [TenantAnnouncementsController::class, 'edit'])->name('tenants.announcements.edit');
+            Route::put('landlord/sys-admin/tenants/{tenant}/announcements', [TenantAnnouncementsController::class, 'update'])->name('tenants.announcements.update');
 
             Route::get('landlord/sys-admin/documentation', [DocumentationController::class, 'index'])->name('documentation');
 

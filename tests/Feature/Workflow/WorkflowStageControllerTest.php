@@ -652,3 +652,32 @@ test('structural edit against stale original redirects to existing draft instead
     $this->assertDatabaseCount('workflow_templates', 2);
     $this->assertDatabaseMissing('workflow_stages', ['name' => 'Should Not Be Created']);
 });
+test('a stage cannot be edited through a different template url', function () {
+    $liveTemplate = WorkflowTemplate::factory()->create();
+    $liveStage = WorkflowStage::factory()->create(['workflow_template_id' => $liveTemplate->id, 'name' => 'Original']);
+    $otherTemplate = WorkflowTemplate::factory()->create();
+    $role = Role::create(['name' => 'mismatch_role_' . uniqid(), 'guard_name' => 'web']);
+
+    $this->actingAs($this->user)->put(route('workflow-templates.stages.update', [$otherTemplate, $liveStage]), [
+        'name' => 'Hijacked',
+        'display_order' => $liveStage->display_order,
+        'role_ids' => [$role->id],
+    ])->assertNotFound();
+    $this->actingAs($this->user)->delete(route('workflow-templates.stages.destroy', [$otherTemplate, $liveStage]))->assertNotFound();
+
+    expect($liveStage->fresh()->name)->toBe('Original');
+});
+test('a stage cannot be assigned to a parallel group of another template', function () {
+    $template = WorkflowTemplate::factory()->create();
+    $foreignGroup = WorkflowParallelGroup::factory()->create(['workflow_template_id' => WorkflowTemplate::factory()->create()->id]);
+    $role = Role::create(['name' => 'group_role_' . uniqid(), 'guard_name' => 'web']);
+
+    $this->actingAs($this->user)->post(route('workflow-templates.stages.store', $template), [
+        'name' => 'Sneaky',
+        'display_order' => 1,
+        'role_ids' => [$role->id],
+        'parallel_group_id' => $foreignGroup->id,
+    ])->assertNotFound();
+
+    expect(WorkflowStage::query()->where('name', 'Sneaky')->exists())->toBeFalse();
+});

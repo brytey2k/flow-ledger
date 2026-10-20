@@ -86,6 +86,7 @@
         @error('password')
             <span class="text-xs text-destructive">{{ $message }}</span>
         @enderror
+        <x-password-requirements input="password" confirm="password_confirmation" />
     </div>
 
     <div class="flex flex-col gap-1" x-data="{ show: false }">

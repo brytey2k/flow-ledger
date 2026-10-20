@@ -17,6 +17,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class WorkflowEngineService
 {
@@ -449,9 +450,16 @@ class WorkflowEngineService
 
     private function resolveRequestAmount(Model $subject): float
     {
-        $amount = $subject->getAttribute('total_amount');
+        $amountField = $subject instanceof RetirementRequest ? 'total_amount_expended' : 'total_amount';
+        $amount = $subject->getAttributes()[$amountField] ?? null;
 
-        return is_numeric($amount) ? (float) $amount : 0.0;
+        if (! is_numeric($amount) || ! is_finite((float) $amount) || (float) $amount < 0) {
+            throw ValidationException::withMessages([
+                $amountField => 'The approval amount must be a valid, non-negative number.',
+            ]);
+        }
+
+        return (float) $amount;
     }
 
     /** @throws AuthorizationException */

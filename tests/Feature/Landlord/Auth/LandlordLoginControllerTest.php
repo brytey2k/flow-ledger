@@ -77,3 +77,21 @@ test('logout redirects to landlord login', function () {
         ->post(route('landlord.logout'))
         ->assertRedirect(route('landlord.login'));
 });
+test('landlord account locks after repeated failures even with the correct password', function () {
+    $this->withoutMiddleware(Illuminate\Routing\Middleware\ThrottleRequests::class);
+    $user = User::factory()->create(['password' => Hash::make('Correct-Password-1!')]);
+
+    for ($i = 0; $i < App\Services\LoginAttemptLimiter::MAX_ATTEMPTS; $i++) {
+        $this->post(route('landlord.do-login'), ['email' => $user->email, 'password' => 'Wrong-Password-1!']);
+    }
+
+    $this->post(route('landlord.do-login'), ['email' => $user->email, 'password' => 'Correct-Password-1!'])
+        ->assertSessionHasErrors('email');
+    $this->assertGuest('landlord');
+});
+test('landlord keep-alive endpoint returns no content for a signed in landlord user', function () {
+    $user = User::factory()->create();
+
+    $this->get(route('landlord.session.keep-alive'))->assertRedirect(route('landlord.login'));
+    $this->actingAs($user, 'landlord')->get(route('landlord.session.keep-alive'))->assertNoContent();
+});

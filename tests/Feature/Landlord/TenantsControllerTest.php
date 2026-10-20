@@ -92,14 +92,14 @@ test('store creates tenant when valid data provided', function () {
     $this->mock(NewTenantSetupService::class)
         ->shouldReceive('createTenant')
         ->once()
-        ->with('new-test-tenant', 'New Test Tenant', 'admin@newtest.com', 'secret123', null);
+        ->with('new-test-tenant', 'New Test Tenant', 'admin@newtest.com', 'Sturdy-Pass-2026!', null);
 
     $this->actingAs($this->landlordUser, 'landlord')
         ->post(route('landlord.tenants.store'), [
             'id' => 'new-test-tenant',
             'name' => 'New Test Tenant',
             'admin_email' => 'admin@newtest.com',
-            'admin_password' => 'secret123',
+            'admin_password' => 'Sturdy-Pass-2026!',
         ])
         ->assertRedirect(route('landlord.tenants.index'))
         ->assertSessionHas('success');
@@ -108,14 +108,14 @@ test('store passes idp tenant id through to service', function () {
     $this->mock(NewTenantSetupService::class)
         ->shouldReceive('createTenant')
         ->once()
-        ->with('new-test-tenant', 'New Test Tenant', 'admin@newtest.com', 'secret123', '42');
+        ->with('new-test-tenant', 'New Test Tenant', 'admin@newtest.com', 'Sturdy-Pass-2026!', '42');
 
     $this->actingAs($this->landlordUser, 'landlord')
         ->post(route('landlord.tenants.store'), [
             'id' => 'new-test-tenant',
             'name' => 'New Test Tenant',
             'admin_email' => 'admin@newtest.com',
-            'admin_password' => 'secret123',
+            'admin_password' => 'Sturdy-Pass-2026!',
             'idp_tenant_id' => '42',
         ])
         ->assertRedirect(route('landlord.tenants.index'))
@@ -129,7 +129,7 @@ test('store rejects duplicate idp tenant id', function () {
             'id' => 'new-test-tenant',
             'name' => 'New Test Tenant',
             'admin_email' => 'admin@newtest.com',
-            'admin_password' => 'secret123',
+            'admin_password' => 'Sturdy-Pass-2026!',
             'idp_tenant_id' => '99',
         ])
         ->assertSessionHasErrors('idp_tenant_id');
@@ -328,4 +328,10 @@ test('impersonate redirects to tenant domain url with token', function () {
 
     $response->assertRedirect();
     $this->assertStringContainsString($domain->domain . '/impersonate/' . $fakeToken->token, $response->headers->get('Location'));
+});
+test('create tenant page shows the admin password requirements checklist', function () {
+    $this->actingAs($this->landlordUser, 'landlord')
+        ->get(route('landlord.tenants.create'))
+        ->assertOk()
+        ->assertSee('pw-req-admin_password', false);
 });

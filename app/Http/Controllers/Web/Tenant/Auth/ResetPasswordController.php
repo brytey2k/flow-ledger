@@ -7,8 +7,12 @@ namespace App\Http\Controllers\Web\Tenant\Auth;
 use App\Enums\Tenant\UserStatus;
 use App\Features\DelegateIdentityToIdp;
 use App\Features\LocalAuth;
+use App\Features\VerifyLoginWithIdp;
 use App\Http\Controllers\Controller;
+use App\Interfaces\SessionInvalidatorInterface;
 use App\Models\Tenant\User;
+use App\Services\IdpAccessVerificationService;
+use App\Services\LoginAttemptLimiter;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Auth\CanResetPassword;
@@ -18,11 +22,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 use Laravel\Pennant\Feature;
 
 class ResetPasswordController extends Controller
 {
+    public function __construct(
+        private readonly LoginAttemptLimiter $loginAttemptLimiter,
+        private readonly SessionInvalidatorInterface $sessionInvalidator,
+        private readonly IdpAccessVerificationService $idpAccessVerification,
+    ) {}
+
     public function showForm(Request $request, string $token): RedirectResponse|View
     {
         if (Feature::for(tenant())->active(DelegateIdentityToIdp::class)) {
@@ -46,7 +57,7 @@ class ResetPasswordController extends Controller
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
         $status = Password::reset(
@@ -76,9 +87,21 @@ class ResetPasswordController extends Controller
         );
 
         if ($status === Password::PasswordReset) {
+            $this->loginAttemptLimiter->clear($this->loginAttemptLimiter->tenantScope(), $request->string('email')->toString());
+
             /** @var CanResetPassword|null $resetUser */
             $resetUser = Password::broker()->getUser($request->only('email'));
             if ($resetUser instanceof User) {
+                // Sessions opened before the reset (possibly by someone else) must not outlive it.
+                $this->sessionInvalidator->revokeOtherSessions($resetUser->id);
+
+                // Signing in straight after a reset must not skip the identity provider access check
+                // that the normal sign-in path enforces.
+                if (Feature::for(tenant())->active(VerifyLoginWithIdp::class)
+                    && ! $this->idpAccessVerification->userHasAccess($resetUser->oidc_sub, $resetUser->email)) {
+                    return redirect()->route('login')->withErrors(['email' => 'Access denied. Please contact your administrator.']);
+                }
+
                 Auth::login($resetUser);
                 $request->session()->regenerate();
             }

@@ -80,6 +80,25 @@ class PermissionEscalationGuard
     }
 
     /**
+     * Whether the acting user may change another account's identity or roles: only when every
+     * permission the target holds is also held by the actor. Users may always edit themselves.
+     *
+     * @param User $actor
+     * @param User $target
+     */
+    public function actorMayManage(User $actor, User $target): bool
+    {
+        if ($actor->is($target)) {
+            return true;
+        }
+
+        /** @var array<int, string> $targetPermissionNames */
+        $targetPermissionNames = $target->getAllPermissions()->pluck('name')->all();
+
+        return $this->namesNotHeldBy($actor, $targetPermissionNames) === [];
+    }
+
+    /**
      * @param User $actor
      * @param array<int, string> $permissionNames
      *

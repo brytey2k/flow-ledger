@@ -250,3 +250,18 @@ test('submit falls back to master template when no branch template', function ()
 
     expect($instance->workflow_template_id)->toEqual($masterTemplate->id);
 });
+test('settle refuses a retirement that another call already settled', function () {
+    $paymentRequest = disbursedAdvanceForRetirementService();
+    $retirement = RetirementRequest::factory()->create([
+        'payment_request_id' => $paymentRequest->id,
+        'status' => 'approved',
+        'difference_type' => 'nil',
+        'difference_amount' => 0,
+    ]);
+    $staleCopy = RetirementRequest::findOrFail($retirement->id);
+
+    makeServiceForRetirementService()->settle($retirement, null, $this->user);
+
+    expect(fn() => makeServiceForRetirementService()->settle($staleCopy, null, $this->user))
+        ->toThrow(Symfony\Component\HttpKernel\Exception\ConflictHttpException::class);
+});

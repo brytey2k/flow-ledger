@@ -34,8 +34,15 @@ test('user without access permission cannot view edit', function () {
 
     $this->actingAs($this->user)->get(route('roles.edit', $role))->assertForbidden();
 });
+test('user without manage role permissions cannot view or update permissions even with access roles', function () {
+    $this->role->revokePermissionTo(PermissionKey::ManageRolePermissions->value);
+    $role = Role::create(['name' => 'perm-test-' . Str::uuid(), 'guard_name' => 'web']);
+
+    $this->actingAs($this->user)->get(route('roles.permissions.edit', $role))->assertForbidden();
+    $this->actingAs($this->user)->put(route('roles.permissions.update', $role), ['permissions' => []])->assertForbidden();
+});
 test('user without access permission cannot view permissions edit', function () {
-    $this->role->revokePermissionTo(PermissionKey::AccessRoles->value);
+    $this->role->revokePermissionTo(PermissionKey::ManageRolePermissions->value);
     $role = Role::create(['name' => 'perm-test-' . Str::uuid(), 'guard_name' => 'web']);
 
     $this->actingAs($this->user)->get(route('roles.permissions.edit', $role))->assertForbidden();

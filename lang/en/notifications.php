@@ -104,4 +104,10 @@ return [
         'login' => 'Please log in to approve, send back, or reject this request.',
         'action' => 'Review Request',
     ],
+
+    'account_locked' => [
+        'subject' => 'Your :app_name account has been temporarily locked',
+        'line_1' => 'There were too many failed sign-in attempts on your account, so it has been locked for :minutes minutes.',
+        'line_2' => 'If this was you, wait and try again. If it was not, reset your password and tell your administrator.',
+    ],
 ];

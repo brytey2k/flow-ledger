@@ -11,7 +11,7 @@
             </div>
             <h1 class="text-xl font-medium leading-none text-mono">Audit Trail</h1>
             <p class="text-sm text-secondary-foreground max-w-2xl">
-                Full workflow action history — who approved, sent back, or cancelled, with timestamps and comments.
+                Workflow decisions — who approved, rejected, or sent back a claim, with timestamps and comments.
                 Required for internal and external audits to demonstrate a clear chain of accountability.
             </p>
         </div>
@@ -37,8 +37,8 @@
                     <label class="text-xs font-medium text-secondary-foreground">Action</label>
                     <select name="action" class="sgh-select sgh-select-sm">
                         <option value="">All Actions</option>
-                        @foreach($actionTypes as $type)
-                            <option value="{{ $type }}" @selected($action === $type)>{{ ucwords(str_replace('_', ' ', $type)) }}</option>
+                        @foreach($actionTypes as $type => $label)
+                            <option value="{{ $type }}" @selected($action === $type)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -76,9 +76,9 @@
                                 @foreach($actions as $wfAction)
                                     @php
                                         $actionColors = [
-                                            'approved'   => 'sgh-badge-success',
-                                            'sent_back'  => 'sgh-badge-warning',
-                                            'cancelled'  => 'sgh-badge-danger',
+                                            'approve'   => 'sgh-badge-success',
+                                            'send_back' => 'sgh-badge-warning',
+                                            'reject'    => 'sgh-badge-danger',
                                         ];
                                         $workflowable = $wfAction->instanceStage?->instance?->workflowable;
                                     @endphp
@@ -92,7 +92,7 @@
                                         <td><span class="text-sm font-medium text-mono">{{ $wfAction->user?->name ?? '—' }}</span></td>
                                         <td>
                                             <span class="sgh-badge sgh-badge-sm {{ $actionColors[$wfAction->action] ?? 'sgh-badge-outline' }}">
-                                                {{ ucwords(str_replace('_', ' ', $wfAction->action)) }}
+                                                {{ $actionTypes[$wfAction->action] ?? ucwords(str_replace('_', ' ', $wfAction->action)) }}
                                             </span>
                                         </td>
                                         <td>

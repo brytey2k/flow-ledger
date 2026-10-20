@@ -220,7 +220,7 @@ test('top spenders with type filter', function () {
 });
 test('audit trail with action filter', function () {
     $this->actingAs($this->user)
-        ->get(route('reports.audit-trail', ['action' => 'approved']))
+        ->get(route('reports.audit-trail', ['action' => 'approve']))
         ->assertOk();
 });
 test('outstanding advances bucket logic within 30 days', function () {
@@ -525,12 +525,11 @@ test('audit trail with workflow actions and date filter', function () {
         'completed_at' => now(),
     ]);
 
-    App\Models\Tenant\WorkflowAction::create([
+    $action = App\Models\Tenant\WorkflowAction::create([
         'workflow_instance_stage_id' => $instanceStage->id,
         'user_id' => $this->user->id,
-        'action' => 'approved',
+        'action' => 'approve',
         'comment' => 'Looks good',
-        'created_at' => now(),
     ]);
 
     $this->actingAs($this->user)
@@ -539,7 +538,7 @@ test('audit trail with workflow actions and date filter', function () {
             'date_to' => now()->toDateString(),
         ]))
         ->assertOk()
-        ->assertViewHas('actions');
+        ->assertViewHas('actions', fn(Illuminate\Contracts\Pagination\LengthAwarePaginator $actions): bool => $actions->getCollection()->modelKeys() === [$action->id]);
 });
 test('spend trend uses current year fallback when no disbursed requests', function () {
     $response = $this->actingAs($this->user)
@@ -1080,4 +1079,102 @@ test('cash count report branch filter excludes other branches', function () {
         ->assertOk();
 
     expect($response->viewData('totalCounts'))->toEqual(0);
+});
+
+test('approval turnaround includes stages completed late on the end date', function () {
+    $template = App\Models\Tenant\WorkflowTemplate::factory()->create(['type' => 'advance']);
+    $stage = App\Models\Tenant\WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'branch_id' => $this->branch->id]);
+    $instance = App\Models\Tenant\WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $paymentRequest->id,
+        'status' => 'in_progress',
+    ]);
+
+    App\Models\Tenant\WorkflowInstanceStage::create([
+        'workflow_instance_id' => $instance->id,
+        'workflow_stage_id' => $stage->id,
+        'status' => 'approved',
+        'started_at' => '2026-10-07 10:00:00',
+        'completed_at' => '2026-10-07 23:59:59',
+    ]);
+
+    $stages = $this->actingAs($this->user)
+        ->get(route('reports.approval-turnaround', ['date_from' => '2026-10-07', 'date_to' => '2026-10-07']))
+        ->assertOk()
+        ->viewData('stages');
+
+    expect($stages)->toHaveCount(1);
+});
+
+test('retirement turnaround includes stages completed late on the end date', function () {
+    $template = App\Models\Tenant\WorkflowTemplate::factory()->create(['type' => 'retirement']);
+    $stage = App\Models\Tenant\WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+    $advance = PaymentRequest::factory()->advance()->create(['status' => 'disbursed', 'disbursed_at' => '2026-10-01 10:00:00', 'branch_id' => $this->branch->id]);
+    $retirement = RetirementRequest::factory()->inWorkflow()->create(['payment_request_id' => $advance->id]);
+    $instance = App\Models\Tenant\WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => RetirementRequest::class,
+        'workflowable_id' => $retirement->id,
+        'status' => 'in_progress',
+    ]);
+
+    App\Models\Tenant\WorkflowInstanceStage::create([
+        'workflow_instance_id' => $instance->id,
+        'workflow_stage_id' => $stage->id,
+        'status' => 'approved',
+        'started_at' => '2026-10-07 10:00:00',
+        'completed_at' => '2026-10-07 23:59:59',
+    ]);
+
+    $stages = $this->actingAs($this->user)
+        ->get(route('reports.retirement-turnaround', ['date_from' => '2026-10-07', 'date_to' => '2026-10-07']))
+        ->assertOk()
+        ->viewData('stages');
+
+    expect($stages)->toHaveCount(1);
+});
+
+test('send back rate includes actions late on the end date', function () {
+    $template = App\Models\Tenant\WorkflowTemplate::factory()->create(['type' => 'advance']);
+    $stage = App\Models\Tenant\WorkflowStage::factory()->create(['workflow_template_id' => $template->id]);
+    $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'in_workflow', 'branch_id' => $this->branch->id]);
+    $instance = App\Models\Tenant\WorkflowInstance::create([
+        'workflow_template_id' => $template->id,
+        'workflowable_type' => PaymentRequest::class,
+        'workflowable_id' => $paymentRequest->id,
+        'status' => 'in_progress',
+    ]);
+    $instanceStage = App\Models\Tenant\WorkflowInstanceStage::create([
+        'workflow_instance_id' => $instance->id,
+        'workflow_stage_id' => $stage->id,
+        'status' => 'sent_back',
+        'started_at' => '2026-10-07 10:00:00',
+        'completed_at' => '2026-10-07 23:59:59',
+    ]);
+
+    $action = App\Models\Tenant\WorkflowAction::create([
+        'workflow_instance_stage_id' => $instanceStage->id,
+        'user_id' => $this->user->id,
+        'action' => 'sent_back',
+        'comment' => 'Missing receipts',
+    ]);
+    $action->forceFill(['created_at' => '2026-10-07 23:59:59'])->save();
+
+    $rows = $this->actingAs($this->user)
+        ->get(route('reports.send-back-rate', ['date_from' => '2026-10-07', 'date_to' => '2026-10-07']))
+        ->assertOk()
+        ->viewData('rows');
+
+    expect($rows->firstWhere('user.id', $this->user->id)['sent_back_count'])->toEqual(1);
+});
+test('csv export neutralises a formula smuggled in through group_by', function () {
+    $response = $this->actingAs($this->user)
+        ->get(route('reports.export.expenditure-summary', ['group_by' => '=HYPERLINK("https://evil.example/")', 'format' => 'csv']))
+        ->assertOk();
+
+    $firstCell = str_getcsv((string) strtok($response->streamedContent(), "\n"))[0];
+
+    expect($firstCell)->not->toStartWith('=');
 });

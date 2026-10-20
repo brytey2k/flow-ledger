@@ -49,3 +49,6 @@ test('impersonate default redirect url resolves to an existing route', function 
 
     $this->assertAuthenticatedAs($this->user);
 });
+test('an invalid impersonation token never sets the session flag that lifts the maintenance lock', function () {
+    $this->get(route('impersonate', 'not-a-real-token'))->assertSessionMissing('impersonated');
+});

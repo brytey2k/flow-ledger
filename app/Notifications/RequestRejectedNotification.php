@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Notifications\Concerns\CapturesTenantDomain;
+use App\Support\MailText;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -48,7 +49,7 @@ class RequestRejectedNotification extends Notification implements ShouldQueue
             ->subject(__('notifications.request_rejected.subject', ['id' => $id]))
             ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
             ->line(__('notifications.request_rejected.rejected'))
-            ->line(__('notifications.request_rejected.reason', ['reason' => $this->comment]))
+            ->line(__('notifications.request_rejected.reason', ['reason' => MailText::plain($this->comment)]))
             ->line(__('notifications.request_rejected.amount', ['amount' => $amount]))
             ->action(__('notifications.request_rejected.action'), $url)
             ->line(__('notifications.request_rejected.contact'));

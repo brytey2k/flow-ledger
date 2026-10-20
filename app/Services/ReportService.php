@@ -336,7 +336,7 @@ class ReportService
      *     dateFrom: string,
      *     dateTo: string,
      *     action: string|null,
-     *     actionTypes: array<int, string>,
+     *     actionTypes: array<string, string>,
      * }
      */
     public function auditTrail(string $dateFrom, string $dateTo, string|null $action, int $perPage = 50): array
@@ -346,7 +346,11 @@ class ReportService
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'action' => $action,
-            'actionTypes' => ['approved', 'sent_back', 'cancelled'],
+            'actionTypes' => [
+                'approve' => 'Approved',
+                'reject' => 'Rejected',
+                'send_back' => 'Sent Back',
+            ],
         ];
     }
 
@@ -369,11 +373,16 @@ class ReportService
         $paymentStatuses = $this->paymentRequests->paymentStatuses($allowedBranchIds, $dateFrom, $dateTo);
         $retirementStatuses = $this->retirementRequests->retirementStatuses($allowedBranchIds, $dateFrom, $dateTo);
 
+        /** @var float|int $paymentTotal */
+        $paymentTotal = $paymentStatuses->sum('count');
+        /** @var float|int $retirementTotal */
+        $retirementTotal = $retirementStatuses->sum('count');
+
         return [
             'paymentStatuses' => $paymentStatuses,
             'retirementStatuses' => $retirementStatuses,
-            'paymentTotal' => $paymentStatuses->sum('count'),
-            'retirementTotal' => $retirementStatuses->sum('count'),
+            'paymentTotal' => $paymentTotal,
+            'retirementTotal' => $retirementTotal,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
         ];
@@ -453,16 +462,16 @@ class ReportService
 
         /** @var Collection<int|string, mixed> $byBranch */
         $byBranch = $rows->groupBy('branch_name');
-        /** @var int $deniedCount */
-        $deniedCount = (int) $rows->where('status', 'denied')->sum('count');
-        /** @var int $cancelledCount */
-        $cancelledCount = (int) $rows->where('status', 'cancelled')->sum('count');
+        /** @var float|int $deniedCount */
+        $deniedCount = $rows->where('status', 'denied')->sum('count');
+        /** @var float|int $cancelledCount */
+        $cancelledCount = $rows->where('status', 'cancelled')->sum('count');
 
         return [
             'rows' => $rows,
             'byBranch' => $byBranch,
-            'deniedCount' => $deniedCount,
-            'cancelledCount' => $cancelledCount,
+            'deniedCount' => (int) $deniedCount,
+            'cancelledCount' => (int) $cancelledCount,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'branches' => $this->branches->allByIdsOrderedByName($allowedBranchIds),

@@ -48,3 +48,29 @@ test('store for retirement request creates comment', function () {
     ])->assertCreated()
         ->assertJsonPath('data.body', 'Retirement note.');
 });
+test('a user who is neither owner nor in the approval chain cannot comment on a payment request', function () {
+    $otherStaff = Staff::factory()->create(['branch_id' => $this->branch->id]);
+    $strangersRequest = PaymentRequest::factory()->create([
+        'staff_id' => $otherStaff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+    ]);
+
+    $this->postJson("/api/payment-requests/{$strangersRequest->id}/comments", ['body' => 'Injected comment'])
+        ->assertForbidden();
+
+    expect($strangersRequest->comments()->count())->toBe(0);
+});
+test('a user who is neither owner nor in the approval chain cannot comment on a retirement request', function () {
+    $otherStaff = Staff::factory()->create(['branch_id' => $this->branch->id]);
+    $strangersAdvance = PaymentRequest::factory()->advance()->create([
+        'staff_id' => $otherStaff->id,
+        'branch_id' => $this->branch->id,
+        'currency_id' => $this->currency->id,
+        'status' => 'disbursed',
+    ]);
+    $retirement = RetirementRequest::factory()->create(['payment_request_id' => $strangersAdvance->id]);
+
+    $this->postJson("/api/retirement-requests/{$retirement->id}/comments", ['body' => 'Injected comment'])
+        ->assertForbidden();
+});

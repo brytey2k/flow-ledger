@@ -398,3 +398,15 @@ test('export neutralises formula injection in free text fields', function () {
     $this->assertStringContainsString('"\'+cmd|""/c calc"""', $content);
     $this->assertStringContainsString('\'@SUM(1+1)', $content);
 });
+test('destroy refuses an entry that belongs to another branch cashbook', function () {
+    $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+    $otherCashbook = cashbookForBranch($otherBranch, 500.00);
+    $foreignEntry = manualEntry($otherCashbook, 120.00);
+
+    $this->actingAs($this->user)
+        ->delete(route('cashbook.destroy', [$this->branch, $foreignEntry]))
+        ->assertNotFound();
+
+    expect($foreignEntry->fresh()->trashed())->toBeFalse();
+    expect((float) $otherCashbook->fresh()->balance)->toEqualWithDelta(500.00, 0.01);
+});

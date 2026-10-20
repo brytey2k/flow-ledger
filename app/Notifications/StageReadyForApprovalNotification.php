@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Notifications\Concerns\CapturesTenantDomain;
+use App\Support\MailText;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -53,7 +54,7 @@ class StageReadyForApprovalNotification extends Notification implements ShouldQu
         return (new MailMessage())
             ->subject(__('notifications.stage_ready.subject', ['stage' => $stageName, 'id' => $subjectId]))
             ->greeting(__('notifications.greeting', ['name' => $recipient->first_name]))
-            ->line(__('notifications.stage_ready.waiting', ['stage' => $stageName]))
+            ->line(__('notifications.stage_ready.waiting', ['stage' => MailText::plain($stageName)]))
             ->line(__('notifications.stage_ready.request', ['id' => $subjectId, 'type' => $type]))
             ->line(__('notifications.stage_ready.amount', ['amount' => $amount]))
             ->action(__('notifications.stage_ready.action'), $url)

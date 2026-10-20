@@ -185,3 +185,24 @@ function makeSpreadsheetFileForStaffImportController(array $rows): UploadedFile
         true,
     );
 }
+test('template stores tenant-typed names as text and never as formulas', function () {
+    Department::factory()->create(['name' => '=HYPERLINK("https://evil.example/","Finance")']);
+    Position::factory()->create(['name' => '+cmd|calc']);
+
+    $response = $this->actingAs($this->user)->get(route('staff.import.template'))->assertOk();
+    $path = tempnam(sys_get_temp_dir(), 'tpl') . '.xlsx';
+    file_put_contents($path, $response->streamedContent());
+
+    $workbook = PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+    unlink($path);
+    $formulaCells = [];
+    foreach ($workbook->getAllSheets() as $sheet) {
+        foreach ($sheet->getCellCollection()->getCoordinates() as $coordinate) {
+            if ($sheet->getCell($coordinate)->getDataType() === PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA) {
+                $formulaCells[] = $sheet->getTitle() . '!' . $coordinate;
+            }
+        }
+    }
+
+    expect($formulaCells)->toBe([]);
+});

@@ -90,11 +90,9 @@
                                 Admin Password <span class="text-destructive">*</span>
                             </label>
                             <input id="admin_password" name="admin_password" type="password"
-                                   class="sgh-input w-full" placeholder="Minimum 8 characters"
+                                   class="sgh-input w-full" placeholder="Minimum 12 characters"
                                    required aria-invalid="@error('admin_password') true @else false @enderror" />
-                            <div class="mt-1 text-xs text-muted-foreground">
-                                Use a mix of letters, numbers, and symbols.
-                            </div>
+                            <x-password-requirements input="admin_password" />
                             @error('admin_password')
                                 <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                             @enderror
