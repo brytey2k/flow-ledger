@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Console\Commands\CheckBackups;
+use App\Console\Commands\CheckHeartbeat;
+use App\Console\Commands\RecordHeartbeat;
 use App\Console\Commands\RefreshTenantHealth;
 use App\Console\Commands\RunBackups;
 use App\Console\Commands\SendRetirementReminders;
@@ -54,6 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command(RunBackups::class)->everySixHours()->withoutOverlapping(120);
         $schedule->command(CheckBackups::class)->hourly();
         $schedule->command(RefreshTenantHealth::class)->everyTenMinutes()->withoutOverlapping(30);
+        $schedule->command(RecordHeartbeat::class)->everyMinute();
+        $schedule->command(CheckHeartbeat::class)->everyFiveMinutes();
     })
     ->withExceptions(static function (Exceptions $exceptions): void {
         Integration::handles($exceptions);

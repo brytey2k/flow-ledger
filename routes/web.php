@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Landlord\Auth\LoginController;
 use App\Http\Controllers\Web\Landlord\DocumentationController;
 use App\Http\Controllers\Web\Landlord\HomeController;
 use App\Http\Controllers\Web\Landlord\LocaleController;
+use App\Http\Controllers\Web\Landlord\PlatformHeartbeatController;
 use App\Http\Controllers\Web\Landlord\PlatformOverviewController;
 use App\Http\Controllers\Web\Landlord\TenantAnnouncementsController;
 use App\Http\Controllers\Web\Landlord\TenantDataToolsController;
@@ -33,6 +34,8 @@ foreach (config('tenancy.central_domains') as $domain) {
 
     Route::domain($domain)->name('landlord.')->group(static function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
+
+        Route::get('health/heartbeat', PlatformHeartbeatController::class)->name('heartbeat')->middleware('throttle:60,1');
 
         // Self-service sign-up is paused while new organizations are onboarded by hand.
         Route::view('register', 'landlord.auth.register-halted')->name('register');

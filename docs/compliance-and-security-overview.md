@@ -140,6 +140,7 @@ A written, rehearsed version of this plan is `[ planned ]`.
 
 - Application errors are sent to Sentry.
 - A health route exists for uptime checks. External uptime monitoring: `[ tool, planned ]`.
+- The scheduler and the queue workers each leave a timestamp in the shared cache every minute. The platform Overview shows a warning when either goes quiet, a stopped queue is reported to the error tracker, and an unauthenticated `health/heartbeat` address on the platform domain answers 200 or 503 for an external uptime monitor `[ tool, to set up ]`. A stopped scheduler cannot report itself, so that alert has to come from the external monitor.
 - A platform **Overview** page lists every customer with stuck work, failed jobs and backup and restore-test status, and flags the ones that need attention. Readings are taken every 10 minutes and stored centrally, so the page is fast however many customers there are. Backup problems are shown at the top.
 - A per-customer health view shows stuck approvals, failed background jobs, storage use, and backup and restore-test dates.
 - Background job failures can be inspected and retried by platform administrators.
@@ -150,6 +151,7 @@ A written, rehearsed version of this plan is `[ planned ]`.
 - Code is in version control with a continuous-integration workflow.
 - Dependencies are scanned with `composer audit` and `npm audit`. Both reported no known advisories on 2026-10-17, after updating the affected packages. Re-run them before each release and before sharing this document.
 - A code-level security review of the application code (`app`, `routes`, `config`) was run on 2026-10-17 by a team of automated reviewers, each finding challenged by an independent panel. It found 31 issues, mostly authorization gaps. All are fixed and covered by tests. This is not a penetration test.
+- An OWASP ZAP baseline scan and a time-limited active scan were run on 2026-10-17 against the sign-in pages of a development copy. The active scan found no injection, cross-site scripting or other high-risk issue (133 checks passed, none failed). The remaining warnings were the missing script restrictions in the Content-Security-Policy (section 12), the Google Fonts stylesheet loaded without an integrity hash, the readable anti-forgery cookie that the front end needs, and optional cross-origin headers. The web server now hides its version and the PHP version and marks static files as non-sniffable; `[ confirm the same in the production web server configuration ]`. This scan covered unauthenticated pages only and is not a penetration test.
 - Independent **penetration test:** planned, `[ vendor, date ]`.
 
 ## 12. Known gaps and roadmap

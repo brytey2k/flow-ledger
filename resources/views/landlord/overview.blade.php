@@ -23,6 +23,19 @@
 @endphp
 <div class="sgh-container-fixed">
     <div class="grid gap-5 lg:gap-7.5">
+        @if(! $heartbeat['ok'])
+            <div class="sgh-card">
+                <div class="sgh-card-header"><h3 class="sgh-card-title text-destructive">Background processing</h3></div>
+                <div class="sgh-card-content grid gap-1 text-sm">
+                    @foreach(['scheduler' => 'Scheduler', 'queue' => 'Queue workers'] as $key => $label)
+                        @unless($heartbeat[$key]['ok'])
+                            <span>{{ $label }}: {{ $heartbeat[$key]['last_seen_at'] ? 'last seen ' . \Illuminate\Support\Carbon::createFromTimestamp($heartbeat[$key]['last_seen_at'])->diffForHumans() : 'not seen yet' }}.</span>
+                        @endunless
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @if($backup_problems !== [])
             <div class="sgh-card">
                 <div class="sgh-card-header"><h3 class="sgh-card-title text-destructive">Backup problems</h3></div>

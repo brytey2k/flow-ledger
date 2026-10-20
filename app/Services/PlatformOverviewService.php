@@ -22,6 +22,7 @@ class PlatformOverviewService
     public function __construct(
         private readonly TenantHealthService $health,
         private readonly BackupService $backups,
+        private readonly PlatformHeartbeatService $heartbeat,
     ) {}
 
     /**
@@ -31,7 +32,8 @@ class PlatformOverviewService
      *     tenants: list<array{tenant: Tenant, reading: TenantHealthSnapshot|null}>,
      *     backup_problems: list<string>,
      *     totals: array{tenants: int, needing_attention: int, failed_jobs: int, blocked_stages: int},
-     *     oldest_reading_at: \Carbon\Carbon|null
+     *     oldest_reading_at: \Carbon\Carbon|null,
+     *     heartbeat: array{scheduler: array{ok: bool, last_seen_at: int|null}, queue: array{ok: bool, last_seen_at: int|null}, ok: bool}
      * }
      */
     public function overview(): array
@@ -66,7 +68,7 @@ class PlatformOverviewService
             fn(): array => $this->backups->problems(),
         );
 
-        return ['tenants' => $rows, 'backup_problems' => $problems, 'totals' => $totals, 'oldest_reading_at' => $oldest];
+        return ['tenants' => $rows, 'backup_problems' => $problems, 'totals' => $totals, 'oldest_reading_at' => $oldest, 'heartbeat' => $this->heartbeat->status()];
     }
 
     /** Takes a fresh reading for one customer. A database that cannot be read is stored as an error, not thrown. */

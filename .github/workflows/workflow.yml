@@ -25,7 +25,7 @@ jobs:
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: testing
+          POSTGRES_DB: testing_flow_ledger
         options: >-
           --health-cmd="pg_isready -U app"
           --health-interval=10s

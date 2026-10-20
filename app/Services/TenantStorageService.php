@@ -102,7 +102,7 @@ class TenantStorageService
 
         foreach (self::ATTACHMENT_FOLDERS as $folder) {
             foreach ($disk->allFiles($folder) as $path) {
-                if (is_string($path) && ! isset($referenced[$path])) {
+                if (! isset($referenced[$path])) {
                     $orphans[] = $path;
                 }
             }

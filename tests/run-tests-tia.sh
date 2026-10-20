@@ -14,7 +14,7 @@ cleanup() {
 trap cleanup EXIT
 
 php artisan config:clear --ansi
-php artisan migrate --database=testing_pgsql --force
+PENNANT_DB_CONNECTION=testing_pgsql php artisan migrate --database=testing_pgsql --force
 php artisan app:create-automated-tests-tenant
 
 vendor/bin/pest --tia "$@"
