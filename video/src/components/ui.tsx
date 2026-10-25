@@ -33,17 +33,17 @@ export const Pop = ({ start, children, className }: { start: number; children: R
     </div>
 );
 
-const SwapLayer = ({ progress, children }: { progress: number; children: ReactNode }) => (
+const SwapLayer = ({ progress, collapse, children }: { progress: number; collapse: boolean; children: ReactNode }) => (
     <div
         style={{
             gridArea: '1 / 1',
             display: 'grid',
-            gridTemplateRows: `${progress}fr`,
+            gridTemplateRows: collapse ? `${progress}fr` : undefined,
             opacity: progress,
             visibility: progress === 0 ? 'hidden' : undefined,
         }}
     >
-        <div style={{ minHeight: 0, overflow: 'clip', overflowClipMargin: 4 }}>{children}</div>
+        <div style={collapse ? { minHeight: 0, overflow: 'clip', overflowClipMargin: 4 } : undefined}>{children}</div>
     </div>
 );
 
@@ -51,16 +51,33 @@ const SwapLayer = ({ progress, children }: { progress: number; children: ReactNo
  * Crossfades from `before` to `after` at frame `at`, easing the height
  * between the two. Both stay mounted (stacked in one grid cell), so anchors
  * inside either are measurable on every frame — Remotion renders frames out
- * of order across tabs.
+ * of order across tabs. Whole-page navigations pass `page`, which keeps
+ * both pages at full height so a scrolled view never collapses to blank.
  */
-export const Swap = ({ at, before, after, duration = 10 }: { at: number; before: ReactNode; after: ReactNode; duration?: number }) => {
+export const Swap = ({
+    at,
+    before,
+    after,
+    duration = 10,
+    page = false,
+}: {
+    at: number;
+    before: ReactNode;
+    after: ReactNode;
+    duration?: number;
+    page?: boolean;
+}) => {
     const frame = useCurrentFrame();
     const progress = tween(frame, at, duration, 0, 1);
 
     return (
         <div className="grid">
-            <SwapLayer progress={1 - progress}>{before}</SwapLayer>
-            <SwapLayer progress={progress}>{after}</SwapLayer>
+            <SwapLayer progress={1 - progress} collapse={!page}>
+                {before}
+            </SwapLayer>
+            <SwapLayer progress={progress} collapse={!page}>
+                {after}
+            </SwapLayer>
         </div>
     );
 };
@@ -178,6 +195,41 @@ export const Card = ({
     </div>
 );
 
+/**
+ * A native checkbox, as the app renders them, with a pulse when ticked.
+ */
+export const Checkbox = ({
+    label,
+    checked,
+    checkedAt,
+    className = '',
+    checkboxRef,
+}: {
+    label: string;
+    checked: boolean;
+    checkedAt?: number;
+    className?: string;
+    checkboxRef?: Ref<HTMLSpanElement>;
+}) => {
+    const frame = useCurrentFrame();
+    const pulse = checkedAt === undefined ? 0 : tween(frame, checkedAt, 12, 1, 0) * (frame >= checkedAt ? 1 : 0);
+
+    return (
+        <label className="flex items-center gap-2">
+            <span ref={checkboxRef} className="relative inline-flex">
+                <input type="checkbox" checked={checked} readOnly className={className} />
+                {pulse > 0 && (
+                    <span
+                        className="absolute -inset-1.5 rounded-full bg-primary/30"
+                        style={{ opacity: pulse, transform: `scale(${1.6 - pulse * 0.6})` }}
+                    />
+                )}
+            </span>
+            <span className="text-sm text-foreground">{label}</span>
+        </label>
+    );
+};
+
 export const FormLabel = ({ children, required = false, small = false }: { children: ReactNode; required?: boolean; small?: boolean }) => (
     <label className={`sgh-form-label block ${small ? 'mb-1 text-xs text-secondary-foreground' : 'mb-2'}`}>
         {children} {required && <span className={small ? '' : 'text-destructive'}>*</span>}
@@ -286,7 +338,7 @@ export const RequestDetailsCard = ({ submitted = false, approved = false }: { su
     </Card>
 );
 
-const TableLabel = ({ children, end = false }: { children: ReactNode; end?: boolean }) => (
+export const TableLabel = ({ children, end = false }: { children: ReactNode; end?: boolean }) => (
     <th className={end ? 'w-[160px] text-end' : undefined}>
         <span className={`sgh-table-col ${end ? 'justify-end' : ''}`}>
             <span className="sgh-table-col-label">{children}</span>

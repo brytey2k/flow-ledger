@@ -3,17 +3,29 @@ import { Img, staticFile } from 'remotion';
 import {
     IconBuildingBank,
     IconCalculatorFilled,
+    IconArrowsExchange,
     IconChartLine,
     IconChevronDown,
     IconFileArrowLeft,
     IconLanguage,
     IconLayoutGridFilled,
     IconShieldCheckFilled,
+    IconUsers,
     IconWallet,
 } from '@tabler/icons-react';
 import { tenant, type Person } from '../data';
 
-export type NavKey = 'dashboard' | 'payment-requests' | 'retirements' | 'disbursements' | 'cashbook' | 'approvals' | 'reports';
+export type NavKey =
+    | 'dashboard'
+    | 'payment-requests'
+    | 'retirements'
+    | 'disbursements'
+    | 'cashbook'
+    | 'approvals'
+    | 'reports'
+    | 'users'
+    | 'roles'
+    | 'workflows';
 
 const navSections: { heading?: string; items: { key: NavKey; label: string; icon: ReactNode }[] }[] = [
     { items: [{ key: 'dashboard', label: 'Dashboard', icon: <IconLayoutGridFilled size={16} /> }] },
@@ -33,6 +45,14 @@ const navSections: { heading?: string; items: { key: NavKey; label: string; icon
         ],
     },
     { heading: 'Reports', items: [{ key: 'reports', label: 'Reports', icon: <IconChartLine size={16} /> }] },
+    {
+        heading: 'Settings',
+        items: [
+            { key: 'users', label: 'Users', icon: <IconUsers size={16} /> },
+            { key: 'roles', label: 'Roles', icon: <IconShieldCheckFilled size={16} /> },
+            { key: 'workflows', label: 'Workflows', icon: <IconArrowsExchange size={16} /> },
+        ],
+    },
 ];
 
 const Sidebar = ({ active, approvalsCount }: { active: NavKey; approvalsCount?: number }) => (

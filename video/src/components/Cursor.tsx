@@ -9,6 +9,15 @@ export type CursorMove = { frame: number; to?: Point; duration?: number };
 
 const CLICK_FRAMES = 10;
 
+/**
+ * Cursor moves and click frames for a sequence of clicks: the cursor
+ * travels to each target and clicks it on `at`.
+ */
+export const clickPath = (steps: { at: number; to?: Point }[], travel = 14): { moves: CursorMove[]; clicks: number[] } => ({
+    moves: steps.map((step) => ({ frame: step.at - travel - 2, to: step.to, duration: travel })),
+    clicks: steps.map((step) => step.at),
+});
+
 const positionAt = (frame: number, start: Point, moves: CursorMove[]): Point => {
     let position = start;
 

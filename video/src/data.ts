@@ -10,7 +10,7 @@ export const people = {
     disburser: { name: 'Efua Owusu', initials: 'EO', role: 'Disbursement Officer' },
 } as const;
 
-export type Person = (typeof people)[keyof typeof people];
+export type Person = { name: string; initials: string; role: string };
 
 export const advance = {
     id: 1042,
@@ -68,3 +68,67 @@ export const statusBadgeClasses: Record<RequestStatus, string> = {
     disbursed: 'sgh-badge-info',
     retired: 'sgh-badge-neutral',
 };
+
+/**
+ * Setup prequel: an admin creates the Disbursement Officer role, grants it
+ * the same permissions NewTenantSetupService seeds, invites Efua into it
+ * and builds the Advance Approval workflow used in the advance video.
+ */
+export const admin = { name: 'Nana Adjei', initials: 'NA', role: 'Administrator' };
+
+export const setupRole = 'Disbursement Officer';
+
+export const existingRoles = [
+    { name: 'admin', users: 1, permissions: 60, created: 'Oct 01, 2026', time: '8:02 AM' },
+    { name: 'Finance Director', users: 1, permissions: 5, created: 'Oct 01, 2026', time: '8:02 AM' },
+    { name: 'Finance Manager', users: 1, permissions: 5, created: 'Oct 01, 2026', time: '8:02 AM' },
+    { name: 'Finance Officer', users: 2, permissions: 5, created: 'Oct 01, 2026', time: '8:02 AM' },
+];
+
+/**
+ * Permission categories shown on the role permissions page (a subset of
+ * PermissionCategory), with the permissions this role is granted.
+ */
+export const permissionGroups = [
+    {
+        category: 'Payment Requests',
+        permissions: ['Access Payment Requests', 'Create Payment Request', 'Edit Payment Request', 'Delete Payment Request'],
+        granted: ['Access Payment Requests', 'Create Payment Request'],
+    },
+    {
+        category: 'Retirement Requests',
+        permissions: ['Access Retirement Requests', 'Create Retirement Request', 'Edit Retirement Request'],
+        granted: ['Access Retirement Requests'],
+    },
+    {
+        category: 'Workflow & Approvals',
+        permissions: [
+            'Access Workflow Templates',
+            'Create Workflow Template',
+            'Edit Workflow Template',
+            'Delete Workflow Template',
+            'Approve Requests',
+            'Disburse Requests',
+            'Settle Retirements',
+        ],
+        granted: ['Approve Requests', 'Disburse Requests', 'Settle Retirements'],
+    },
+    {
+        category: 'Cashbook',
+        permissions: ['Access Cashbook', 'Create Cashbook Entry', 'Delete Cashbook Entry'],
+        granted: [],
+    },
+];
+
+export const allRoleNames = ['admin', 'Disbursement Officer', 'Finance Director', 'Finance Manager', 'Finance Officer'];
+
+export const invitee = { firstName: 'Efua', lastName: 'Owusu', email: 'efua.owusu@acmelogistics.com', branch: 'Kumasi Branch' };
+
+export const setupTemplate = { name: 'Advance Approval' };
+
+export const setupStages = [
+    { name: 'Finance Officer', role: 'Finance Officer', skipBelow: undefined },
+    { name: 'Finance Manager', role: 'Finance Manager', skipBelow: undefined },
+    { name: 'Finance Director', role: 'Finance Director', skipBelow: 1000 },
+    { name: 'Disbursement Officer', role: 'Disbursement Officer', skipBelow: undefined },
+];

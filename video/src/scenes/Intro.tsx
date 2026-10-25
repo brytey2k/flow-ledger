@@ -5,8 +5,6 @@ import { enter } from '../lib/motion';
 
 export const INTRO_DURATION = 120;
 
-const steps = ['Raise', 'Submit', 'Approve', 'Disburse', 'Retire'];
-
 const Rise = ({ start, children, className = '' }: { start: number; children: ReactNode; className?: string }) => {
     const frame = useCurrentFrame();
     const progress = enter(frame, start, 20);
@@ -18,17 +16,18 @@ const Rise = ({ start, children, className = '' }: { start: number; children: Re
     );
 };
 
-export const Intro = () => (
+/**
+ * Opening title card: logo, title, subtitle and the numbered steps ahead.
+ */
+export const TitleCard = ({ title, subtitle, steps }: { title: string; subtitle: string; steps: string[] }) => (
     <Backdrop>
         <div className="flex size-full flex-col items-center justify-center gap-10 text-center">
             <Rise start={4}>
                 <Img src={staticFile('flowledger_logo_dark.png')} style={{ height: 64 }} />
             </Rise>
             <Rise start={12} className="flex flex-col gap-5">
-                <h1 className="text-[84px] font-semibold leading-none tracking-tight text-[var(--auth-panel-foreground)]">
-                    The advance request flow
-                </h1>
-                <p className="text-3xl text-[var(--auth-panel-muted)]">From first request to final retirement, in five steps.</p>
+                <h1 className="text-[84px] font-semibold leading-none tracking-tight text-[var(--auth-panel-foreground)]">{title}</h1>
+                <p className="text-3xl text-[var(--auth-panel-muted)]">{subtitle}</p>
             </Rise>
             <div className="mt-4 flex items-center gap-4">
                 {steps.map((step, index) => (
@@ -42,4 +41,12 @@ export const Intro = () => (
             </div>
         </div>
     </Backdrop>
+);
+
+export const Intro = () => (
+    <TitleCard
+        title="The advance request flow"
+        subtitle="From first request to final retirement, in five steps."
+        steps={['Raise', 'Submit', 'Approve', 'Disburse', 'Retire']}
+    />
 );

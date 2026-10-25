@@ -137,6 +137,7 @@ export const ApproveRequest = () => {
             >
                 <Swap
                     at={REVIEW_PAGE}
+                    page
                     before={<Inbox reviewRef={anchor('review')} />}
                     after={
                         <>

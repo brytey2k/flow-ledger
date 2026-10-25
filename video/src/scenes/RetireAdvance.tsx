@@ -235,6 +235,7 @@ export const RetireAdvance = () => {
             >
                 <Swap
                     at={RETIRE_PAGE}
+                    page
                     before={
                         <RequestPage
                             status="disbursed"
