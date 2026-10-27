@@ -1,0 +1,6 @@
+@import 'tailwindcss' source('.');
+@import '../../resources/css/design-system.css';
+
+body {
+    font-family: var(--font-sans);
+}

@@ -1,0 +1,470 @@
+/*
+ * Design tokens and sgh-* component classes, shared by the app (app.css)
+ * and the Remotion product videos (video/src/style.css).
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * flow-ledger's design tokens — matches church-mgt-system's Steward design
+ * system 1:1 (same teal anchor, same radius, same type scale) so the two
+ * products share one visual identity.
+ */
+:root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.141 0.005 285.823);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.141 0.005 285.823);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.141 0.005 285.823);
+
+    --primary: oklch(0.5 0.115 168);
+    --primary-foreground: oklch(0.99 0.005 168);
+    --secondary: oklch(0.967 0.001 286.375);
+    --secondary-foreground: oklch(0.21 0.006 285.885);
+    --muted: oklch(0.967 0.001 286.375);
+    --muted-foreground: oklch(0.552 0.016 285.938);
+    --accent: oklch(0.955 0.032 168);
+    --accent-foreground: oklch(0.4 0.11 168);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.99 0.005 168);
+    --success: oklch(0.5 0.12 150);
+    --success-foreground: oklch(0.99 0.005 150);
+    --info: oklch(0.55 0.13 250);
+    --info-foreground: oklch(0.99 0.005 250);
+    --warning: oklch(0.75 0.15 80);
+    --warning-foreground: oklch(0.2 0.05 80);
+
+    --border: oklch(0.92 0.004 286.32);
+    --input: oklch(0.92 0.004 286.32);
+    --ring: oklch(0.6 0.1 168);
+    --radius: 0.625rem;
+
+    --app-link-color: #0d7a63;
+    --app-link-hover-color: #0a5e4c;
+
+    --auth-panel-background: oklch(0.19 0.012 255);
+    --auth-panel-foreground: oklch(0.985 0.002 255);
+    --auth-panel-muted: oklch(0.74 0.008 255);
+    --auth-panel-border: oklch(0.3 0.012 255);
+    --auth-panel-caption: oklch(0.6 0.01 255);
+
+    --sgh-sidebar-width: 280px;
+    --sgh-sidebar-width-collapse: 80px;
+    --sgh-header-height: 70px;
+}
+
+.dark {
+    --background: oklch(0.141 0.005 285.823);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.21 0.006 285.885);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.21 0.006 285.885);
+    --popover-foreground: oklch(0.985 0 0);
+
+    --primary: oklch(0.64 0.13 168);
+    --primary-foreground: oklch(0.16 0.02 168);
+    --secondary: oklch(0.274 0.006 286.033);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.274 0.006 286.033);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --accent: oklch(0.32 0.05 168);
+    --accent-foreground: oklch(0.86 0.06 168);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+    --success: oklch(0.64 0.13 150);
+    --success-foreground: oklch(0.16 0.02 150);
+    --info: oklch(0.64 0.13 250);
+    --info-foreground: oklch(0.16 0.02 250);
+    --warning: oklch(0.75 0.15 80);
+    --warning-foreground: oklch(0.2 0.05 80);
+
+    --border: oklch(0.274 0.006 286.033);
+    --input: oklch(0.274 0.006 286.033);
+    --ring: oklch(0.58 0.12 168);
+
+    --app-link-color: #5eead4;
+    --app-link-hover-color: #99f6e4;
+}
+
+@theme inline {
+    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-auth-panel-background: var(--auth-panel-background);
+    --color-auth-panel-foreground: var(--auth-panel-foreground);
+    --color-auth-panel-muted: var(--auth-panel-muted);
+    --color-auth-panel-border: var(--auth-panel-border);
+    --color-auth-panel-caption: var(--auth-panel-caption);
+}
+
+@layer base {
+    html,
+    body {
+        @apply overflow-x-clip;
+    }
+}
+
+/*
+ * sgh-* Tailwind component classes replacing the legacy kt-* markup.
+ * Mirrors the sibling church-mgt-system project sgh-* design system for
+ * visual consistency between the two products.
+ */
+@layer components {
+    .sgh-btn {
+        @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius)] px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50;
+    }
+    .sgh-btn-primary {
+        @apply bg-primary text-primary-foreground hover:opacity-90;
+    }
+    .sgh-btn-secondary {
+        @apply bg-secondary text-secondary-foreground hover:opacity-90;
+    }
+    .sgh-btn-outline {
+        @apply border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
+    }
+    .sgh-btn-light {
+        @apply border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
+    }
+    .sgh-btn-ghost {
+        @apply text-foreground hover:bg-accent hover:text-accent-foreground;
+    }
+    .sgh-btn-danger,
+    .sgh-btn-destructive {
+        @apply bg-destructive text-destructive-foreground hover:opacity-90;
+    }
+    .sgh-btn-success {
+        @apply bg-[oklch(0.5_0.12_150)] text-white hover:opacity-90;
+    }
+    .sgh-btn-warning {
+        @apply bg-[oklch(0.75_0.15_80)] text-[oklch(0.2_0.05_80)] hover:opacity-90;
+    }
+    .sgh-btn-sm {
+        @apply px-2.5 py-1.5 text-xs;
+    }
+    .sgh-btn-xs {
+        @apply px-2 py-1 text-xs;
+    }
+    .sgh-btn-icon {
+        @apply p-2;
+    }
+
+    .sgh-input,
+    .sgh-select,
+    .sgh-textarea {
+        @apply block w-full rounded-[var(--radius)] border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+    .sgh-input-sm,
+    .sgh-select-sm {
+        @apply px-2.5 py-1.5 text-xs;
+    }
+
+    .sgh-checkbox,
+    .sgh-radio {
+        @apply size-4 border border-input text-primary focus:ring-2 focus:ring-ring/30;
+    }
+    .sgh-checkbox {
+        @apply rounded;
+    }
+    .sgh-checkbox-sm {
+        @apply size-3.5;
+    }
+    .sgh-checkbox-label {
+        @apply text-sm text-foreground;
+    }
+    .sgh-radio {
+        @apply rounded-full;
+    }
+
+    .sgh-label,
+    .sgh-form-label {
+        @apply text-sm font-medium text-foreground;
+    }
+    .sgh-link {
+        @apply font-medium text-primary hover:underline;
+    }
+
+    .sgh-card {
+        @apply min-w-0 rounded-2xl border border-border bg-card text-card-foreground;
+    }
+    .sgh-card-hover {
+        @apply transition-shadow hover:shadow-md;
+    }
+    .sgh-card-header {
+        @apply flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-border p-5;
+    }
+    .sgh-card-title {
+        @apply min-w-0 text-sm font-semibold text-foreground;
+        overflow-wrap: anywhere;
+    }
+    .sgh-card-subtitle {
+        @apply mt-1 text-xs text-muted-foreground;
+    }
+    .sgh-card-content,
+    .sgh-card-body {
+        @apply min-w-0 p-5;
+    }
+    .sgh-card-footer {
+        @apply flex items-center justify-between gap-3 border-t border-border p-5;
+    }
+    .sgh-card-grid {
+        @apply min-w-0 grid;
+    }
+    .sgh-card-table {
+        @apply min-w-0 max-w-full p-0;
+    }
+
+    .sgh-badge {
+        @apply inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium leading-relaxed;
+    }
+    .sgh-badge-sm {
+        @apply px-1.5 py-0.5 text-[11px];
+    }
+    .sgh-badge-outline {
+        @apply border border-border bg-transparent;
+    }
+    .sgh-badge-neutral {
+        @apply bg-muted text-muted-foreground;
+    }
+    .sgh-badge-primary {
+        @apply bg-accent text-accent-foreground;
+    }
+    .sgh-badge-accent {
+        @apply bg-accent text-accent-foreground;
+    }
+    .sgh-badge-success {
+        @apply bg-[oklch(0.94_0.06_150)] text-[oklch(0.38_0.11_150)];
+    }
+    .sgh-badge-warning {
+        @apply bg-[oklch(0.95_0.07_80)] text-[oklch(0.42_0.12_60)];
+    }
+    .sgh-badge-danger {
+        @apply bg-[oklch(0.94_0.06_25)] text-[oklch(0.42_0.16_25)];
+    }
+    .sgh-badge-info {
+        @apply bg-[oklch(0.93_0.05_250)] text-[oklch(0.4_0.13_250)];
+    }
+
+    .sgh-alert {
+        @apply flex items-start gap-3 rounded-[var(--radius)] border p-4 text-sm;
+    }
+    .sgh-alert-icon {
+        @apply shrink-0;
+    }
+    .sgh-alert-content {
+        @apply flex-1;
+    }
+    .sgh-alert-title {
+        @apply font-semibold;
+    }
+    .sgh-alert-description {
+        @apply mt-1;
+    }
+    .sgh-alert-light {
+        @apply border-border bg-accent text-accent-foreground;
+    }
+    .sgh-alert-success {
+        @apply border-[oklch(0.85_0.08_150)] bg-[oklch(0.97_0.03_150)] text-[oklch(0.32_0.1_150)];
+    }
+    .sgh-alert-danger,
+    .sgh-alert-destructive {
+        @apply border-[oklch(0.85_0.08_25)] bg-[oklch(0.97_0.03_25)] text-[oklch(0.4_0.15_25)];
+    }
+    .sgh-alert-warning {
+        @apply border-[oklch(0.87_0.09_80)] bg-[oklch(0.97_0.04_80)] text-[oklch(0.4_0.11_60)];
+    }
+    .sgh-alert-info {
+        @apply border-border bg-accent text-accent-foreground;
+    }
+
+    .sgh-table {
+        @apply w-full border-collapse text-sm;
+    }
+    .sgh-table-border thead th,
+    .sgh-table-border tbody td,
+    .sgh-table-border tfoot td {
+        @apply border-b border-border px-4 py-3 align-middle text-left;
+    }
+    .sgh-table-col {
+        @apply text-foreground;
+    }
+    .sgh-table-col-label {
+        @apply text-left text-xs font-medium uppercase tracking-wide text-muted-foreground;
+    }
+    .sgh-table-col-sort {
+        @apply ms-1 inline-block size-3 opacity-40;
+    }
+    .sgh-table-col-end {
+        @apply text-end;
+    }
+
+    .sgh-container-fixed {
+        @apply mx-auto min-w-0 w-full max-w-full px-4 lg:px-7.5;
+    }
+    .sgh-wrapper {
+        @apply flex min-w-0 w-full grow flex-col;
+    }
+    .sgh-scrollable-x-auto {
+        @apply min-w-0 max-w-full overflow-x-auto overscroll-x-contain;
+    }
+
+    .sgh-switch {
+        @apply relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-border transition-colors;
+    }
+    .sgh-switch-sm {
+        @apply h-4 w-7;
+    }
+    .sgh-switch-thumb {
+        @apply inline-block size-4 transform rounded-full bg-background shadow-sm ring-1 ring-black/10 transition-transform;
+    }
+    .sgh-switch-sm .sgh-switch-thumb {
+        @apply size-3;
+    }
+
+    .sgh-dropdown-panel {
+        @apply absolute end-0 z-50 mt-2 min-w-[12rem] rounded-[var(--radius)] border border-border bg-popover p-1.5 text-popover-foreground shadow-lg;
+    }
+    .sgh-dropdown-item {
+        @apply flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground;
+    }
+    .sgh-dropdown-separator {
+        @apply my-1.5 border-t border-border;
+    }
+
+    .sgh-nav-heading {
+        @apply px-2.5 pb-1 pt-4 font-mono text-[11px] font-medium uppercase tracking-wider text-muted-foreground;
+    }
+    .sgh-nav-item {
+        @apply flex items-center gap-2.5 rounded-e-[var(--radius)] border-s-2 border-transparent px-2.5 py-[7px] text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground;
+    }
+    .sgh-nav-item.active {
+        @apply border-s-primary bg-accent font-semibold text-accent-foreground;
+    }
+    .sgh-nav-icon {
+        @apply w-5 shrink-0 text-muted-foreground;
+    }
+
+    .sgh-sidebar-tenant-card {
+        @apply flex items-center gap-2.5 rounded-[var(--radius)] border border-border bg-muted/40 px-2.5 py-2 text-start;
+    }
+    .sgh-sidebar-tenant-avatar {
+        @apply flex size-[22px] shrink-0 items-center justify-center rounded-md bg-accent font-mono text-[10px] font-semibold text-accent-foreground;
+    }
+    .sgh-sidebar-tenant-name {
+        @apply block truncate text-[12.5px] font-medium text-foreground;
+    }
+    .sgh-sidebar-help-card {
+        @apply mt-auto rounded-[--radius] border border-border bg-muted/40 p-3;
+    }
+    .sgh-sidebar-help-title {
+        @apply mb-1 text-[12.5px] font-medium text-foreground;
+    }
+    .sgh-sidebar-help-body {
+        @apply text-[11.5px] leading-relaxed text-muted-foreground;
+    }
+    .sgh-sidebar-tenant-kind {
+        @apply block font-mono text-[10px] text-muted-foreground;
+    }
+
+    .sgh-modal-backdrop {
+        @apply fixed inset-0 z-40 bg-foreground/40;
+    }
+    .sgh-modal-content {
+        @apply relative z-50 mx-auto grid max-h-[90vh] w-full max-w-[500px] grid-rows-[auto_1fr] overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xl;
+    }
+    .sgh-modal-header {
+        @apply flex items-center justify-between gap-3 border-b border-border p-5;
+    }
+    .sgh-modal-title {
+        @apply text-base font-semibold text-foreground;
+    }
+    .sgh-modal-close {
+        @apply text-muted-foreground hover:text-foreground;
+    }
+    .sgh-modal-body {
+        @apply overflow-y-auto p-5;
+    }
+    .sgh-modal-footer {
+        @apply flex items-center justify-end border-t border-border p-5;
+    }
+
+    .sgh-tooltip-panel {
+        @apply absolute bottom-full start-1/2 z-50 mb-2 -translate-x-1/2 rounded-md border border-border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-lg;
+    }
+
+    .sgh-shell {
+        @apply flex min-w-0 w-full grow;
+    }
+    .sgh-sidebar {
+        width: var(--sgh-sidebar-width);
+        transition: width 0.3s ease;
+    }
+    .sgh-header {
+        height: var(--sgh-header-height);
+        inset-inline-start: 0;
+        transition: inset-inline-start 0.3s ease;
+    }
+    .sgh-wrapper {
+        padding-top: var(--sgh-header-height);
+        transition: padding-inline-start 0.3s ease;
+    }
+    @media (min-width: 64rem) {
+        .sgh-wrapper {
+            padding-inline-start: var(--sgh-sidebar-width);
+        }
+        .sgh-header {
+            inset-inline-start: var(--sgh-sidebar-width);
+        }
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar {
+        width: var(--sgh-sidebar-width-collapse);
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar.is-hover-expanded {
+        width: var(--sgh-sidebar-width);
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-nav-title,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-nav-heading,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .default-logo,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-sidebar-tenant-card,
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .sgh-sidebar-help-card {
+        display: none;
+    }
+    .sgh-shell.is-collapsed .sgh-sidebar:not(.is-hover-expanded) .small-logo {
+        display: flex;
+    }
+    @media (min-width: 64rem) {
+        .sgh-shell.is-collapsed .sgh-wrapper {
+            padding-inline-start: var(--sgh-sidebar-width-collapse);
+        }
+        .sgh-shell.is-collapsed .sgh-header {
+            inset-inline-start: var(--sgh-sidebar-width-collapse);
+        }
+    }
+}

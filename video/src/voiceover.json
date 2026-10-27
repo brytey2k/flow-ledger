@@ -1,0 +1,98 @@
+{
+    "WalkthroughIntro": {
+        "text": "Welcome to FlowLedger. In the next few minutes, we will set up approvals, run an advance, and read the numbers.",
+        "seconds": 10.893061
+    },
+    "Setup0-Organisation": {
+        "text": "First, your organisation. Add your branches, departments, cost codes and currencies. Every request in FlowLedger is filed against this structure.",
+        "seconds": 13.740408
+    },
+    "Setup1-CreateRole": {
+        "text": "Next, roles. A role describes what someone does, like Disbursement Officer. Approval stages are assigned to roles, not to individual people.",
+        "seconds": 14.628571
+    },
+    "Setup2-GrantPermissions": {
+        "text": "Now give the role its permissions. Tick exactly what it may do: approve requests, disburse funds, settle retirements. Everyone holding the role inherits them.",
+        "seconds": 14.759184
+    },
+    "Setup3-InviteUser": {
+        "text": "Then invite your people. Here, Efua Owusu joins the Kumasi branch as a Disbursement Officer. Her approvals inbox follows from the roles she holds.",
+        "seconds": 14.759184
+    },
+    "Setup4-CreateTemplate": {
+        "text": "With your people in place, create the workflow. One template per request type. Leave the branch blank, and it covers every branch.",
+        "seconds": 11.284898
+    },
+    "Setup5-AddStages": {
+        "text": "Add the stages in order. First, approval by the requester's head of department, limited to their own department. Then finance approval. Then disbursement, where the funds are released.",
+        "seconds": 16.326531
+    },
+    "Step1-CreateAdvance": {
+        "text": "Now the workflow is live. Ama Mensah needs funds for a field visit to Tamale. She raises an advance, adds each line item, and FlowLedger totals it in Ghana cedis.",
+        "seconds": 15.046531
+    },
+    "Step2-SubmitRequest": {
+        "text": "One click submits it for approval. The request moves straight into the workflow. No emails, no chasing signatures.",
+        "seconds": 10.44898
+    },
+    "Step3-ApproveRequest": {
+        "text": "Kwame, her head of department, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. It then moves on to finance and disbursement on its own.",
+        "seconds": 15.229388
+    },
+    "Step4-DisburseAdvance": {
+        "text": "Once it is fully approved, Efua pays out the funds and records the payment voucher number. FlowLedger makes sure no one pays out a request they approved themselves.",
+        "seconds": 12.982857
+    },
+    "Step5-RetireAdvance": {
+        "text": "After the trip, Ama retires the advance. She records what she actually spent, with receipts, and FlowLedger works out the difference. Here, one hundred and seventy cedis to refund.",
+        "seconds": 16.979592
+    },
+    "Reports1-Cfo": {
+        "text": "For the CFO, the numbers are always current: spending month by month, advances that are still unaccounted for, and the cash available in every branch.",
+        "seconds": 13.688163
+    },
+    "Reports2-It": {
+        "text": "And for IT and audit: approval times measured against your target, and a timestamped trail of every decision.",
+        "seconds": 10.266122
+    },
+    "Outro": {
+        "text": "FlowLedger. Every advance approved, paid, and accounted for.",
+        "seconds": 6.112653
+    },
+    "SetupOutro": {
+        "text": "Advances and expenses follow the same path: requester, head of department, finance, then disbursement. A retirement ends with a top-up, a refund, or a nil balance.",
+        "seconds": 15.699592
+    },
+    "Promo1-Hook": {
+        "text": "Still chasing signatures for staff advances?",
+        "seconds": 3.709388
+    },
+    "Promo2-Reveal": {
+        "text": "Meet FlowLedger.",
+        "seconds": 1.854694
+    },
+    "Promo3-Request": {
+        "text": "Staff request funds in seconds.",
+        "seconds": 2.873469
+    },
+    "Promo4-Approve": {
+        "text": "Approvals follow your own workflow, and can be done in under a day.",
+        "seconds": 5.668571
+    },
+    "Promo5-Disburse": {
+        "text": "Every payout lands in your cashbook.",
+        "seconds": 3.108571
+    },
+    "Promo6-Retire": {
+        "text": "Retirements work out the refund for you.",
+        "seconds": 3.004082
+    },
+    "Promo7-Reports": {
+        "text": "Plus live reports and a full audit trail.",
+        "seconds": 3.369796
+    },
+    "Promo8-Cta": {
+        "text": "Call or WhatsApp us to get started.",
+        "seconds": 2.76898
+    }
+}
