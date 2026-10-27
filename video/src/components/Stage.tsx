@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
 import { IconLock } from '@tabler/icons-react';
-import { PORTRAIT_BANDS } from '../lib/format';
+import { PORTRAIT_BANDS, PORTRAIT_SCREEN_WIDTH } from '../lib/format';
 import { easeInOut, type Point } from '../lib/motion';
 
 export const SCREEN_WIDTH = 1440;
@@ -10,7 +10,13 @@ export const SCREEN_HEIGHT = 864;
 const CHROME_HEIGHT = 40;
 const WINDOW_HEIGHT = SCREEN_HEIGHT + CHROME_HEIGHT;
 const BASE_SCALE = 1.1;
-const PORTRAIT_BASE_SCALE = 1;
+
+/**
+ * Share of each camera push-in kept in portrait, where the screen is
+ * already framed tightly: enough to draw the eye without cropping the
+ * sides of the screen away.
+ */
+const PORTRAIT_ZOOM_STRENGTH = 0.4;
 
 /**
  * A camera move starting at `frame`: zoom is relative to the resting
@@ -18,18 +24,35 @@ const PORTRAIT_BASE_SCALE = 1;
  */
 export type CameraKey = { frame: number; zoom: number; focus?: Point; duration?: number };
 
-const SCREEN_CENTER: Point = { x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT / 2 };
+type Screen = { width: number; height: number };
+
+const LANDSCAPE_SCREEN: Screen = { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
+
+/**
+ * The portrait screen fills the frame's width at rest and the window
+ * fills the band between the header and the captions.
+ */
+const portraitScreen = (frameWidth: number): Screen & { baseScale: number } => {
+    const baseScale = frameWidth / PORTRAIT_SCREEN_WIDTH;
+
+    return {
+        width: PORTRAIT_SCREEN_WIDTH,
+        height: Math.round((PORTRAIT_BANDS.stageBottom - PORTRAIT_BANDS.stageTop) / baseScale - CHROME_HEIGHT),
+        baseScale,
+    };
+};
 
 const lerp = (from: number, to: number, progress: number): number => from + (to - from) * progress;
 
-const cameraAt = (frame: number, keys: CameraKey[]): { zoom: number; focus: Point } => {
+const cameraAt = (frame: number, keys: CameraKey[], screen: Screen): { zoom: number; focus: Point } => {
+    const center: Point = { x: screen.width / 2, y: screen.height / 2 };
     let zoom = 1;
-    let focus = SCREEN_CENTER;
+    let focus = center;
 
     for (const key of keys) {
         const duration = key.duration ?? 24;
         const progress = easeInOut(Math.min(1, Math.max(0, (frame - key.frame) / duration)));
-        const target = key.focus ?? SCREEN_CENTER;
+        const target = key.focus ?? center;
 
         zoom = lerp(zoom, key.zoom, progress);
         focus = { x: lerp(focus.x, target.x, progress), y: lerp(focus.y, target.y, progress) };
@@ -55,21 +78,16 @@ const landscapeTranslate = (scale: number, focus: Point, width: number, height: 
 };
 
 /**
- * Window position for a portrait frame: the window is wider than the
- * frame, so the camera pans across it to the focus, and sits in the
- * middle band between the chapter header and the captions.
+ * Window position for a portrait frame, relative to the band between the
+ * chapter header and the captions: at rest the window fills the band
+ * exactly, and pushing in pans to the focus without leaving it.
  */
-const portraitTranslate = (scale: number, focus: Point, width: number): Point => {
-    const { stageTop, stageBottom } = PORTRAIT_BANDS;
-    const bandCenter = (stageTop + stageBottom) / 2;
-    const scaledHeight = scale * WINDOW_HEIGHT;
+const portraitTranslate = (scale: number, focus: Point, width: number, screen: Screen): Point => {
+    const bandHeight = PORTRAIT_BANDS.stageBottom - PORTRAIT_BANDS.stageTop;
 
     return {
-        x: clamp(width / 2 - scale * focus.x, width - scale * SCREEN_WIDTH, 0),
-        y:
-            scaledHeight <= stageBottom - stageTop
-                ? bandCenter - scaledHeight / 2
-                : clamp(bandCenter - scale * (focus.y + CHROME_HEIGHT), stageBottom - scaledHeight, stageTop),
+        x: clamp(width / 2 - scale * focus.x, width - scale * screen.width, 0),
+        y: clamp(bandHeight / 2 - scale * (focus.y + CHROME_HEIGHT), bandHeight - scale * (screen.height + CHROME_HEIGHT), 0),
     };
 };
 
@@ -100,21 +118,21 @@ export const Stage = ({ url, camera = [], children }: { url: string; camera?: Ca
     const frame = useCurrentFrame();
     const { width, height } = useVideoConfig();
     const portrait = height > width;
-    const { zoom, focus } = cameraAt(frame, camera);
-    const scale = (portrait ? PORTRAIT_BASE_SCALE : BASE_SCALE) * zoom;
+    const screen = portrait ? portraitScreen(width) : LANDSCAPE_SCREEN;
+    const { zoom, focus } = cameraAt(frame, camera, screen);
+    const scale = portrait ? portraitScreen(width).baseScale * (1 + (zoom - 1) * PORTRAIT_ZOOM_STRENGTH) : BASE_SCALE * zoom;
     const { x: translateX, y: translateY } = portrait
-        ? portraitTranslate(scale, focus, width)
+        ? portraitTranslate(scale, focus, width, screen)
         : landscapeTranslate(scale, focus, width, height);
 
-    const bandTop = portrait ? PORTRAIT_BANDS.stageTop : 0;
     const browser = (
         <div
             className="absolute left-0 top-0 overflow-hidden rounded-[14px] bg-background"
             style={{
-                width: SCREEN_WIDTH,
-                height: WINDOW_HEIGHT,
+                width: screen.width,
+                height: screen.height + CHROME_HEIGHT,
                 transformOrigin: '0 0',
-                transform: `translate(${translateX}px, ${translateY - bandTop}px) scale(${scale})`,
+                transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
                 boxShadow: '0 40px 120px -20px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.08)',
             }}
         >
@@ -124,13 +142,13 @@ export const Stage = ({ url, camera = [], children }: { url: string; camera?: Ca
                     <span className="size-3 rounded-full bg-[#febc2e]" />
                     <span className="size-3 rounded-full bg-[#28c840]" />
                 </div>
-                <div className="mx-auto flex h-6 w-[520px] items-center justify-center gap-1.5 rounded-md bg-background text-xs text-muted-foreground">
+                <div className="mx-auto flex h-6 w-[520px] max-w-[60%] items-center justify-center gap-1.5 rounded-md bg-background text-xs text-muted-foreground">
                     <IconLock size={12} />
                     {url}
                 </div>
                 <div className="w-[52px]" />
             </div>
-            <div className="relative" style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}>
+            <div className="relative" style={{ width: screen.width, height: screen.height }}>
                 {children}
             </div>
         </div>

@@ -12,7 +12,13 @@ export const PORTRAIT = { width: 1080, height: 1920 };
  * Portrait bands, top to bottom: the chapter header, the app window, then
  * the captions. The bottom of the frame stays clear of the TikTok UI.
  */
-export const PORTRAIT_BANDS = { headerTop: 150, stageTop: 330, stageBottom: 1330, captionTop: 1370 };
+export const PORTRAIT_BANDS = { headerTop: 150, stageTop: 300, stageBottom: 1350, captionTop: 1380 };
+
+/**
+ * In portrait the app is laid out at tablet width, with the sidebar
+ * collapsed, so the whole screen fits the frame's width at rest.
+ */
+export const PORTRAIT_SCREEN_WIDTH = 900;
 
 export const useIsPortrait = (): boolean => {
     const { width, height } = useVideoConfig();

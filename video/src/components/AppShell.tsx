@@ -11,12 +11,14 @@ import {
     IconFileArrowLeft,
     IconLanguage,
     IconLayoutGridFilled,
+    IconMenu2,
     IconShieldCheckFilled,
     IconUsers,
     IconUsersGroup,
     IconWallet,
 } from '@tabler/icons-react';
 import { tenant, type Person } from '../data';
+import { useIsPortrait } from '../lib/format';
 import { logos } from '../logos';
 
 export type NavKey =
@@ -111,9 +113,14 @@ const Sidebar = ({ active, approvalsCount, navAnchor }: { active: NavKey; approv
     </aside>
 );
 
-const Header = ({ user }: { user: Person }) => (
+const Header = ({ user, menuButton }: { user: Person; menuButton: boolean }) => (
     <header className="flex h-[70px] shrink-0 items-stretch justify-between border-b border-border bg-background px-7.5">
         <div className="flex items-center gap-2.5">
+            {menuButton && (
+                <span className="sgh-btn sgh-btn-ghost sgh-btn-icon -ms-1">
+                    <IconMenu2 size={20} />
+                </span>
+            )}
             <span className="text-lg font-semibold leading-none tracking-tight text-foreground">FlowLedger</span>
             <span className="sgh-badge sgh-badge-accent font-mono uppercase tracking-wider">Tenant</span>
         </div>
@@ -138,7 +145,9 @@ const Header = ({ user }: { user: Person }) => (
 /**
  * Static re-creation of tenant/layouts/base.blade.php: sidebar, header and
  * a scrollable content area. `scroll` is applied as a transform and exposed
- * through data-scroll so anchors can compensate for it.
+ * through data-scroll so anchors can compensate for it. In portrait the
+ * sidebar collapses behind a menu button, as on a narrow screen, unless
+ * the scene clicks through it (`navAnchor`).
  */
 export const AppShell = ({
     rootRef,
@@ -158,17 +167,21 @@ export const AppShell = ({
     scroll?: number;
     children: ReactNode;
     overlay?: ReactNode;
-}) => (
-    <div ref={rootRef} className="relative flex size-full bg-background text-base text-foreground antialiased">
-        <Sidebar active={active} approvalsCount={approvalsCount} navAnchor={navAnchor} />
-        <div className="flex min-w-0 grow flex-col">
-            <Header user={user} />
-            <main className="relative grow overflow-hidden">
-                <div data-scroll={scroll} className="pt-5" style={{ transform: `translateY(${-scroll}px)` }}>
-                    {children}
-                </div>
-            </main>
+}) => {
+    const sidebar = !useIsPortrait() || navAnchor !== undefined;
+
+    return (
+        <div ref={rootRef} className="relative flex size-full bg-background text-base text-foreground antialiased">
+            {sidebar && <Sidebar active={active} approvalsCount={approvalsCount} navAnchor={navAnchor} />}
+            <div className="flex min-w-0 grow flex-col">
+                <Header user={user} menuButton={!sidebar} />
+                <main className="relative grow overflow-hidden">
+                    <div data-scroll={scroll} className="pt-5" style={{ transform: `translateY(${-scroll}px)` }}>
+                        {children}
+                    </div>
+                </main>
+            </div>
+            {overlay}
         </div>
-        {overlay}
-    </div>
-);
+    );
+};
