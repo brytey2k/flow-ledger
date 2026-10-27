@@ -12,10 +12,10 @@ import { stagesAt } from '../lib/workflow';
 
 export const DISBURSE_ADVANCE_DURATION = 240;
 
-const REFERENCE_CLICK = 48;
+export const REFERENCE_CLICK = 48;
 const REFERENCE_START = REFERENCE_CLICK + 6;
 const DISBURSE_CLICK = typingEnds(advance.disbursementReference, REFERENCE_START, 0.7) + 30;
-const DISBURSED = DISBURSE_CLICK + 6;
+export const DISBURSED = DISBURSE_CLICK + 6;
 
 export const DisburseAdvance = () => {
     const frame = useCurrentFrame();

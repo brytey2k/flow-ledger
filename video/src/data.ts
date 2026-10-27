@@ -281,3 +281,13 @@ export const auditActions = [
         at: 'Oct 19, 2026 10:47 AM',
     },
 ];
+
+/**
+ * Copy for the 30-second promo.
+ */
+export const promo = {
+    pains: ['Paper forms', 'WhatsApp approvals', 'Lost receipts'],
+    phone: '+233 59 220 9201',
+    audience: 'Built for Ghanaian businesses, NGOs and multi-branch teams.',
+    music: { file: 'music/wallpaper.mp3', credit: '"Wallpaper" Kevin MacLeod (incompetech.com), licensed under CC BY 4.0' },
+};

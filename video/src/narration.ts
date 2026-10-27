@@ -1,7 +1,8 @@
 /**
  * Voice-over script, keyed by scene id. Each line covers its chapter card
  * and scene, written for roughly 140 words per minute. Amounts are spelled
- * the way they should be spoken.
+ * the way they should be spoken. The Promo lines voice the 30-second promo,
+ * one per beat.
  */
 export const narration: Record<string, string> = {
     WalkthroughIntro: 'Welcome to FlowLedger. In the next two minutes, we will set up approvals, run an advance, and read the numbers.',
@@ -33,4 +34,12 @@ export const narration: Record<string, string> = {
         'For the CFO, the numbers are always current: spending month by month, advances that are still unaccounted for, and the cash available in every branch.',
     'Reports2-It': 'And for IT and audit: approval times measured against your target, and a timestamped trail of every decision.',
     Outro: 'FlowLedger. Every advance approved, paid, and accounted for.',
+    'Promo1-Hook': 'Still chasing signatures for staff advances?',
+    'Promo2-Reveal': 'Meet FlowLedger.',
+    'Promo3-Request': 'Your staff request funds in seconds, right in cedis.',
+    'Promo4-Approve': 'Their head of department approves, then finance. It can all be done in under a day.',
+    'Promo5-Disburse': 'Pay out by mobile money, with the reference on record.',
+    'Promo6-Retire': 'Retirements work out the refund for you. Every cedi accounted for.',
+    'Promo7-Reports': 'And live reports with a full audit trail.',
+    'Promo8-Cta': 'FlowLedger. Call or WhatsApp us today to get started.',
 };

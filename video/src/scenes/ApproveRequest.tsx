@@ -25,10 +25,10 @@ export const APPROVE_REQUEST_DURATION = 360;
 const REVIEW_CLICK = 52;
 const REVIEW_PAGE = REVIEW_CLICK + 8;
 const COMMENT_START = 100;
-const APPROVE_CLICK = typingEnds(advance.approvalComment, COMMENT_START, 1.4) + 28;
+export const APPROVE_CLICK = typingEnds(advance.approvalComment, COMMENT_START, 1.4) + 28;
 const APPROVED = APPROVE_CLICK + 6;
 const STAGE_APPROVALS = [APPROVED, APPROVED + 44, APPROVED + 84];
-const FULLY_APPROVED = STAGE_APPROVALS[2] + 10;
+export const FULLY_APPROVED = STAGE_APPROVALS[2] + 10;
 
 const TableLabel = ({ children }: { children: string }) => (
     <th>

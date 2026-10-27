@@ -12,6 +12,12 @@ const CAPTION_CHARACTERS = 46;
 const voiceClips: Record<string, { seconds: number }> = voiceover;
 
 /**
+ * Speaking rate used to time captions for a line that has no voice clip
+ * yet, so drafts can be reviewed before the voice-over is generated.
+ */
+const ESTIMATED_WORDS_PER_SECOND = 2.5;
+
+/**
  * Splits `text` into `parts` runs of whole words of roughly equal length.
  */
 const evenSplit = (text: string, parts: number): string[] => {
@@ -58,19 +64,21 @@ const captionChunks = (text: string): string[] =>
 
 /**
  * Caption cards for one voice clip, each timed by its share of the
- * clip's characters.
+ * clip's characters. Lines without a clip are timed by an estimate.
  */
 const captionTimeline = (segment: Segment, voiceLeadFrames: number): { text: string; from: number; to: number }[] => {
     const text = segment.voice ? narration[segment.voice] : undefined;
-    const clip = segment.voice ? voiceClips[segment.voice] : undefined;
+    const seconds = segment.voice
+        ? (voiceClips[segment.voice]?.seconds ?? (text ? text.split(' ').length / ESTIMATED_WORDS_PER_SECOND : undefined))
+        : undefined;
 
-    if (!text || !clip) {
+    if (!text || !seconds) {
         return [];
     }
 
     const chunks = captionChunks(text);
     const totalCharacters = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-    const clipFrames = clip.seconds * FPS;
+    const clipFrames = seconds * FPS;
     let from = segment.start + voiceLeadFrames;
 
     return chunks.map((chunk) => {

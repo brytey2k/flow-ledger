@@ -22,8 +22,8 @@ import { countUp, easeOut, money, tween } from '../../lib/motion';
 
 const SPEND_CLICK = 46;
 const SPEND_PAGE = SPEND_CLICK + 8;
-const OUTSTANDING_PAGE = SPEND_PAGE + 100;
-const CASH_PAGE = OUTSTANDING_PAGE + 92;
+export const OUTSTANDING_PAGE = SPEND_PAGE + 100;
+export const CASH_PAGE = OUTSTANDING_PAGE + 92;
 
 export const CFO_REPORTS_DURATION = CASH_PAGE + 86;
 

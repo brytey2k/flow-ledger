@@ -5,6 +5,7 @@ import { loadFonts } from './fonts';
 import { FULL_WALKTHROUGH_DURATION, FullWalkthrough, reportScenes } from './FullWalkthrough';
 import { LANDSCAPE, PORTRAIT } from './lib/format';
 import { FPS } from './lib/motion';
+import { Promo, PROMO_DURATION } from './Promo';
 import type { Scene } from './Series';
 import { setupScenes, WORKFLOW_SETUP_DURATION, WorkflowSetup } from './WorkflowSetup';
 
@@ -27,6 +28,7 @@ export const RemotionRoot = () => (
         <Composition id="WorkflowSetup" component={WorkflowSetup} durationInFrames={WORKFLOW_SETUP_DURATION} {...size} />
         <Composition id="AdvanceRequestFlow" component={AdvanceRequestFlow} durationInFrames={ADVANCE_REQUEST_FLOW_DURATION} {...size} />
         <Folder name="Portrait">
+            <Composition id="Promo" component={Promo} durationInFrames={PROMO_DURATION} {...portraitSize} />
             <Composition
                 id="FullWalkthrough-Portrait"
                 component={FullWalkthrough}

@@ -8,7 +8,7 @@ import { centerOf, useAnchors } from '../../lib/anchors';
 import { countUp, easeOut, tween } from '../../lib/motion';
 
 const SLA_PAGE = 0;
-const AUDIT_PAGE = 110;
+export const AUDIT_PAGE = 110;
 
 export const IT_REPORTS_DURATION = AUDIT_PAGE + 110;
 

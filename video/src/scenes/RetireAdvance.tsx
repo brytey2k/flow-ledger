@@ -39,7 +39,7 @@ const rowTimings: RowTiming[] = retirement.items.reduce<RowTiming[]>((timings, i
 }, []);
 
 const ITEMS_DONE = rowTimings[rowTimings.length - 1].done;
-const DIFFERENCE_AT = rowTimings[rowTimings.length - 1].amountDone + 16;
+export const DIFFERENCE_AT = rowTimings[rowTimings.length - 1].amountDone + 16;
 const SAVE_CLICK = DIFFERENCE_AT + 70;
 const SAVED = SAVE_CLICK + 6;
 
