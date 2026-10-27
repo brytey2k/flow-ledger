@@ -2,7 +2,7 @@
 
 Audience: whoever operates Flow Ledger in production. Keep a printed or offline copy; you will need it when the app is down.
 
-Last reviewed: 2026-10-27. Review this runbook after every infrastructure change and at least every 6 months, at the rebuild drill (section 8).
+Last reviewed: 2026-10-27. Review this runbook after every infrastructure change and at least every 6 months, at the rebuild drill (section 8). Before relying on it, complete the go-live checklist in Appendix B.
 
 ## 1. Targets
 
@@ -219,3 +219,24 @@ Use this for the 7d rebuild, the rebuild drill, and every new server added for s
 8. Configure Supervisor to run three `flow-ledger-worker` queue worker processes.
 9. Add the scheduler cron entry (section 3, step 4) on one server only.
 10. Run `php artisan config:cache`, `php artisan route:cache` and `php artisan view:cache`, then complete the checks in 7d steps 7–8.
+
+## Appendix B. Go-live checklist
+
+The choices in this runbook are only true once they are set up. Work through this list, write who did each item and when, and keep it with the runbook.
+
+| # | Task | Section | Who | Done on |
+|---|---|---|---|---|
+| 1 | Confirm in the Linode dashboard that production is in the Los Angeles region. If not, update sections 2, 3, 9 and Appendix A. | 9 | | |
+| 2 | Create the uploads bucket (DigitalOcean Spaces `sfo3`) with its own access keys and versioning on, and point production uploads at it. The attachment services use the `local` disk, so its definition in `config/filesystems.php` must point at the bucket. | 2 | | |
+| 3 | Create the backups bucket (DigitalOcean Spaces `nyc3`) with versioning on and keys limited to write and list on that bucket. Set `BACKUP_DISK_KEY`, `BACKUP_DISK_SECRET`, `BACKUP_DISK_REGION`, `BACKUP_DISK_BUCKET` and `BACKUP_DISK_ENDPOINT` in the server `.env`. | 3 | | |
+| 4 | Set `BACKUP_PG_DUMP_BINARY` and `BACKUP_PG_RESTORE_BINARY` to the PostgreSQL 18 binaries. | 4 | | |
+| 5 | Create the password manager vault **Flow Ledger — Production** and save the production `.env` in it as `Production .env`. | 2 | | |
+| 6 | Choose the second key holder. Run `php artisan backup:generate-key` on a trusted machine, put the public key in `.env`, and store the private key in all three places. | 2, 3 | | |
+| 7 | Run `php artisan backup:run` by hand, read any errors, then confirm `php artisan backup:check` passes. | 3 | | |
+| 8 | Lower the DNS TTL to 300 seconds for `flowledger.softwaregh.com` and every tenant domain. | 3 | | |
+| 9 | Create the Sentry "Backups" alert rule, trigger it once to test it, and record it in the section 5 table. | 5 | | |
+| 10 | Set up the external uptime monitor on `/health/heartbeat`, test it by stopping the workers briefly, and record it in the section 5 table. | 5 | | |
+| 11 | Run the first restore test with `backup:verify` and record it. | 6 | | |
+| 12 | Run the rebuild drill before the demo and record the measured time as the RTO. | 8 | | |
+| 13 | Set up the nightly copy of the uploads bucket to `nyc3`. | 9 | | |
+| 14 | Before a second application server goes live: make sure scheduled tasks run on one server only (cron on one server, or `onOneServer()` on each task in `bootstrap/app.php`), and that Redis and the uploads bucket are shared by all servers. | 3, 9 | | |
