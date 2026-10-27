@@ -78,14 +78,14 @@ const beats: Beat[] = [
         id: 'Promo4-Approve',
         component: clip(ApproveRequest, APPROVE_CLICK - 24),
         durationInFrames: FULLY_APPROVED - APPROVE_CLICK + 54,
-        headline: headline('Approve', 'HOD, then finance. Done.'),
+        headline: headline('Approve · your own stages', 'Your workflow, your rules'),
         captions: true,
     },
     {
         id: 'Promo5-Disburse',
         component: clip(DisburseAdvance, REFERENCE_CLICK - 8),
         durationInFrames: DISBURSED - REFERENCE_CLICK + 44,
-        headline: headline('Pay out', 'Disbursed by mobile money'),
+        headline: headline('Pay out', 'Every payout in the cashbook'),
         captions: true,
     },
     {

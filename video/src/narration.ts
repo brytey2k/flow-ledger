@@ -27,7 +27,7 @@ export const narration: Record<string, string> = {
     'Step3-ApproveRequest':
         'Kwame, her head of department, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. It then moves on to finance and disbursement on its own.',
     'Step4-DisburseAdvance':
-        'Once it is fully approved, Efua pays out the funds and records the mobile money reference. FlowLedger makes sure no one pays out a request they approved themselves.',
+        'Once it is fully approved, Efua pays out the funds and records the payment voucher number. FlowLedger makes sure no one pays out a request they approved themselves.',
     'Step5-RetireAdvance':
         'After the trip, Ama retires the advance. She records what she actually spent, with receipts, and FlowLedger works out the difference. Here, one hundred and seventy cedis to refund.',
     'Reports1-Cfo':
@@ -37,8 +37,8 @@ export const narration: Record<string, string> = {
     'Promo1-Hook': 'Still chasing signatures for staff advances?',
     'Promo2-Reveal': 'Meet FlowLedger.',
     'Promo3-Request': 'Your staff request funds in seconds, right in cedis.',
-    'Promo4-Approve': 'Their head of department approves, then finance. It can all be done in under a day.',
-    'Promo5-Disburse': 'Pay out by mobile money, with the reference on record.',
+    'Promo4-Approve': 'Approvals follow the stages your organisation sets, and can be done in under a day.',
+    'Promo5-Disburse': 'Pay out, and every payment lands in your cashbook.',
     'Promo6-Retire': 'Retirements work out the refund for you. Every cedi accounted for.',
     'Promo7-Reports': 'And live reports with a full audit trail.',
     'Promo8-Cta': 'FlowLedger. Call or WhatsApp us today to get started.',

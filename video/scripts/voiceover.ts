@@ -6,10 +6,11 @@
  *                                          to voice-previews/.
  *   npm run voiceover -- create <number>   Save preview <number> as a
  *                                          permanent voice in voice.json.
- *   npm run voiceover -- generate [--force]
+ *   npm run voiceover -- generate [--force] [id ...]
  *                                          One MP3 per narration line in
  *                                          public/voiceover/, with lengths in
- *                                          src/voiceover.json.
+ *                                          src/voiceover.json. Pass line ids
+ *                                          to voice only those lines.
  *
  * Reads the API key from ELEVENLABS_API_KEY; when the key is a network
  * secret instead, the proxy adds it to each request. generate skips lines
@@ -106,7 +107,7 @@ const create = async (choice: string | undefined): Promise<void> => {
     console.log(`saved voice ${voiceId} to ${VOICE_FILE}`);
 };
 
-const generate = async (force: boolean): Promise<void> => {
+const generate = async (force: boolean, only: string[]): Promise<void> => {
     if (!existsSync(VOICE_FILE)) {
         console.error(`No ${VOICE_FILE} yet: run design, then create <number>.`);
         process.exit(1);
@@ -118,6 +119,10 @@ const generate = async (force: boolean): Promise<void> => {
     mkdirSync(AUDIO_DIR, { recursive: true });
 
     for (const [index, [id, text]] of entries.entries()) {
+        if (only.length > 0 && !only.includes(id)) {
+            continue;
+        }
+
         const file = `${AUDIO_DIR}/${id}.mp3`;
 
         if (!force && manifest[id]?.text === text && existsSync(file)) {
@@ -147,8 +152,11 @@ if (command === 'design') {
 } else if (command === 'create') {
     await create(argument);
 } else if (command === 'generate') {
-    await generate(process.argv.includes('--force'));
+    await generate(
+        process.argv.includes('--force'),
+        process.argv.slice(3).filter((arg) => !arg.startsWith('--')),
+    );
 } else {
-    console.error('Usage: npm run voiceover -- design | create <number> | generate [--force]');
+    console.error('Usage: npm run voiceover -- design | create <number> | generate [--force] [id ...]');
     process.exit(1);
 }

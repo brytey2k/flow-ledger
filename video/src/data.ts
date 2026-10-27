@@ -31,7 +31,7 @@ export const advance = {
     submittedOn: 'Oct 27, 2026',
     approvedAt: 'Oct 27, 2026 2:05 PM',
     disbursedAt: 'Oct 28, 2026 10:42 AM',
-    disbursementReference: 'MOMO-48213',
+    disbursementReference: 'PV-00457',
     approvalComment: 'Budget confirmed against the Q4 operations plan.',
 };
 
