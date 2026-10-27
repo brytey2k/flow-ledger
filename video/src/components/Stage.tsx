@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { AbsoluteFill, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
 import { IconLock } from '@tabler/icons-react';
+import { PORTRAIT_BANDS } from '../lib/format';
 import { easeInOut, type Point } from '../lib/motion';
 
 export const SCREEN_WIDTH = 1440;
@@ -9,10 +10,7 @@ export const SCREEN_HEIGHT = 864;
 const CHROME_HEIGHT = 40;
 const WINDOW_HEIGHT = SCREEN_HEIGHT + CHROME_HEIGHT;
 const BASE_SCALE = 1.1;
-const FRAME_WIDTH = 1920;
-const FRAME_HEIGHT = 1080;
-const MARGIN_X = (FRAME_WIDTH - SCREEN_WIDTH * BASE_SCALE) / 2;
-const MARGIN_Y = (FRAME_HEIGHT - WINDOW_HEIGHT * BASE_SCALE) / 2;
+const PORTRAIT_BASE_SCALE = 1;
 
 /**
  * A camera move starting at `frame`: zoom is relative to the resting
@@ -42,6 +40,39 @@ const cameraAt = (frame: number, keys: CameraKey[]): { zoom: number; focus: Poin
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
+/**
+ * Window position for a landscape frame: the resting framing leaves an
+ * even margin, and pushing in never reveals more than that margin.
+ */
+const landscapeTranslate = (scale: number, focus: Point, width: number, height: number): Point => {
+    const marginX = (width - SCREEN_WIDTH * BASE_SCALE) / 2;
+    const marginY = (height - WINDOW_HEIGHT * BASE_SCALE) / 2;
+
+    return {
+        x: clamp(width / 2 - scale * focus.x, width - scale * SCREEN_WIDTH - marginX, marginX),
+        y: clamp(height / 2 - scale * (focus.y + CHROME_HEIGHT), height - scale * WINDOW_HEIGHT - marginY, marginY),
+    };
+};
+
+/**
+ * Window position for a portrait frame: the window is wider than the
+ * frame, so the camera pans across it to the focus, and sits in the
+ * middle band between the chapter header and the captions.
+ */
+const portraitTranslate = (scale: number, focus: Point, width: number): Point => {
+    const { stageTop, stageBottom } = PORTRAIT_BANDS;
+    const bandCenter = (stageTop + stageBottom) / 2;
+    const scaledHeight = scale * WINDOW_HEIGHT;
+
+    return {
+        x: clamp(width / 2 - scale * focus.x, width - scale * SCREEN_WIDTH, 0),
+        y:
+            scaledHeight <= stageBottom - stageTop
+                ? bandCenter - scaledHeight / 2
+                : clamp(bandCenter - scale * (focus.y + CHROME_HEIGHT), stageBottom - scaledHeight, stageTop),
+    };
+};
+
 export const Backdrop = ({ children }: { children?: ReactNode }) => {
     const frame = useCurrentFrame();
     const drift = Math.sin(frame / 90) * 60;
@@ -62,48 +93,61 @@ export const Backdrop = ({ children }: { children?: ReactNode }) => {
 /**
  * Browser window holding the app screen, framed by a camera that can
  * push in on any point of the screen without exposing empty space beyond
- * the resting margins.
+ * the resting margins. In portrait the window is clipped to its band so
+ * it never covers the chapter header or the captions.
  */
 export const Stage = ({ url, camera = [], children }: { url: string; camera?: CameraKey[]; children: ReactNode }) => {
     const frame = useCurrentFrame();
+    const { width, height } = useVideoConfig();
+    const portrait = height > width;
     const { zoom, focus } = cameraAt(frame, camera);
-    const scale = BASE_SCALE * zoom;
+    const scale = (portrait ? PORTRAIT_BASE_SCALE : BASE_SCALE) * zoom;
+    const { x: translateX, y: translateY } = portrait
+        ? portraitTranslate(scale, focus, width)
+        : landscapeTranslate(scale, focus, width, height);
 
-    const translateX = clamp(FRAME_WIDTH / 2 - scale * focus.x, FRAME_WIDTH - scale * SCREEN_WIDTH - MARGIN_X, MARGIN_X);
-    const translateY = clamp(
-        FRAME_HEIGHT / 2 - scale * (focus.y + CHROME_HEIGHT),
-        FRAME_HEIGHT - scale * WINDOW_HEIGHT - MARGIN_Y,
-        MARGIN_Y,
+    const bandTop = portrait ? PORTRAIT_BANDS.stageTop : 0;
+    const browser = (
+        <div
+            className="absolute left-0 top-0 overflow-hidden rounded-[14px] bg-background"
+            style={{
+                width: SCREEN_WIDTH,
+                height: WINDOW_HEIGHT,
+                transformOrigin: '0 0',
+                transform: `translate(${translateX}px, ${translateY - bandTop}px) scale(${scale})`,
+                boxShadow: '0 40px 120px -20px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.08)',
+            }}
+        >
+            <div className="flex items-center gap-4 border-b border-border bg-muted px-4" style={{ height: CHROME_HEIGHT }}>
+                <div className="flex gap-2">
+                    <span className="size-3 rounded-full bg-[#ff5f57]" />
+                    <span className="size-3 rounded-full bg-[#febc2e]" />
+                    <span className="size-3 rounded-full bg-[#28c840]" />
+                </div>
+                <div className="mx-auto flex h-6 w-[520px] items-center justify-center gap-1.5 rounded-md bg-background text-xs text-muted-foreground">
+                    <IconLock size={12} />
+                    {url}
+                </div>
+                <div className="w-[52px]" />
+            </div>
+            <div className="relative" style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}>
+                {children}
+            </div>
+        </div>
     );
 
     return (
         <Backdrop>
-            <div
-                className="absolute left-0 top-0 overflow-hidden rounded-[14px] bg-background"
-                style={{
-                    width: SCREEN_WIDTH,
-                    height: WINDOW_HEIGHT,
-                    transformOrigin: '0 0',
-                    transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-                    boxShadow: '0 40px 120px -20px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.08)',
-                }}
-            >
-                <div className="flex items-center gap-4 border-b border-border bg-muted px-4" style={{ height: CHROME_HEIGHT }}>
-                    <div className="flex gap-2">
-                        <span className="size-3 rounded-full bg-[#ff5f57]" />
-                        <span className="size-3 rounded-full bg-[#febc2e]" />
-                        <span className="size-3 rounded-full bg-[#28c840]" />
-                    </div>
-                    <div className="mx-auto flex h-6 w-[520px] items-center justify-center gap-1.5 rounded-md bg-background text-xs text-muted-foreground">
-                        <IconLock size={12} />
-                        {url}
-                    </div>
-                    <div className="w-[52px]" />
+            {portrait ? (
+                <div
+                    className="absolute inset-x-0 overflow-hidden"
+                    style={{ top: PORTRAIT_BANDS.stageTop, height: PORTRAIT_BANDS.stageBottom - PORTRAIT_BANDS.stageTop }}
+                >
+                    {browser}
                 </div>
-                <div className="relative" style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}>
-                    {children}
-                </div>
-            </div>
+            ) : (
+                browser
+            )}
         </Backdrop>
     );
 };

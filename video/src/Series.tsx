@@ -4,6 +4,8 @@ import { AbsoluteFill, Html5Audio, Sequence, staticFile } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { type Chapter, ChapterCard } from './components/ChapterCard';
+import { PortraitOverlay } from './components/PortraitOverlay';
+import { useIsPortrait } from './lib/format';
 import { FPS } from './lib/motion';
 import voiceover from './voiceover.json';
 
@@ -18,9 +20,17 @@ const voiceClips: Record<string, { seconds: number }> = voiceover;
 
 /**
  * A segment of the series: a chapter card or a scene, with the frame it
- * starts on and the voice clip (if any) that starts with it.
+ * starts on, the voice clip (if any) that starts with it, and, for a
+ * scene, the chapter it belongs to.
  */
-type Segment = { key: string; start: number; durationInFrames: number; render: () => ReactNode; voice?: string };
+export type Segment = {
+    key: string;
+    start: number;
+    durationInFrames: number;
+    render: () => ReactNode;
+    voice?: string;
+    chapter?: Chapter;
+};
 
 /**
  * Lays out chapter cards and scenes back to back, overlapping each by the
@@ -61,6 +71,7 @@ const layout = (scenes: Scene[]): Segment[] => {
             durationInFrames: Math.max(scene.durationInFrames, neededForVoice),
             render: () => <SceneComponent />,
             voice: voiceFrames && !chapter ? scene.id : undefined,
+            chapter,
         });
     }
 
@@ -77,10 +88,12 @@ export const seriesDuration = (scenes: Scene[]): number => {
  * Plays scenes back to back with a short crossfade between each. A scene
  * with a chapter is preceded by a full-frame chapter card; chapters are
  * numbered in order across the whole series. Narration from
- * public/voiceover plays over the top when it has been generated.
+ * public/voiceover plays over the top when it has been generated; in
+ * portrait, the chapter and captions of that narration are added too.
  */
 export const SceneSeries = ({ scenes }: { scenes: Scene[] }) => {
     const segments = layout(scenes);
+    const portrait = useIsPortrait();
 
     return (
         <AbsoluteFill>
@@ -107,6 +120,7 @@ export const SceneSeries = ({ scenes }: { scenes: Scene[] }) => {
                         </Sequence>
                     ),
             )}
+            {portrait && <PortraitOverlay segments={segments} voiceLeadFrames={VOICE_LEAD_FRAMES} />}
         </AbsoluteFill>
     );
 };

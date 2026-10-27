@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "remotion studio",
         "render": "remotion render FullWalkthrough out/full-walkthrough.mp4",
+        "render:portrait": "remotion render FullWalkthrough-Portrait out/full-walkthrough-portrait.mp4",
         "still": "remotion still",
         "typecheck": "tsc --noEmit",
         "voiceover": "node --experimental-strip-types --no-warnings scripts/voiceover.ts"
