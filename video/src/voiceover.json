@@ -1,1 +1,62 @@
-{}
+{
+    "WalkthroughIntro": {
+        "text": "Welcome to FlowLedger. In the next two minutes, we will set up approvals, run an advance, and read the numbers.",
+        "seconds": 7.549388
+    },
+    "Setup0-Organisation": {
+        "text": "First, your organisation. Add your branches, departments, cost codes and currencies. Every request in FlowLedger is filed against this structure.",
+        "seconds": 9.848163
+    },
+    "Setup1-CreateRole": {
+        "text": "Next, roles. A role describes what someone does, like Disbursement Officer. Approval stages are assigned to roles, not to individual people.",
+        "seconds": 12.068571
+    },
+    "Setup2-GrantPermissions": {
+        "text": "Now give the role its permissions. Tick exactly what it may do: approve requests, disburse funds, settle retirements. Everyone holding the role inherits them.",
+        "seconds": 12.251429
+    },
+    "Setup3-InviteUser": {
+        "text": "Then invite your people. Here, Efua Owusu joins the Kumasi branch as a Disbursement Officer. Her approvals inbox follows from the roles she holds.",
+        "seconds": 11.546122
+    },
+    "Setup4-CreateTemplate": {
+        "text": "With your people in place, create the workflow. One template per request type. Leave the branch blank, and it covers every branch.",
+        "seconds": 9.038367
+    },
+    "Setup5-AddStages": {
+        "text": "Add the approval stages in order: Finance Officer, Finance Manager, Finance Director, then Disbursement Officer. A stage can be skipped for small amounts, or limited to approvers in the same branch.",
+        "seconds": 14.759184
+    },
+    "Step1-CreateAdvance": {
+        "text": "Now the workflow is live. Ama Mensah needs funds for a field visit to Tamale. She raises an advance, adds each line item, and FlowLedger totals it in Ghana cedis.",
+        "seconds": 12.382041
+    },
+    "Step2-SubmitRequest": {
+        "text": "One click submits it for approval. The request moves straight into the workflow. No emails, no chasing signatures.",
+        "seconds": 8.019592
+    },
+    "Step3-ApproveRequest": {
+        "text": "Kwame, the Finance Officer, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. The request then moves through each stage on its own.",
+        "seconds": 12.146939
+    },
+    "Step4-DisburseAdvance": {
+        "text": "Once it is fully approved, Efua pays out the funds and records the mobile money reference. FlowLedger makes sure no one pays out a request they approved themselves.",
+        "seconds": 11.102041
+    },
+    "Step5-RetireAdvance": {
+        "text": "After the trip, Ama retires the advance. She records what she actually spent, with receipts, and FlowLedger works out the difference. Here, one hundred and seventy cedis to refund.",
+        "seconds": 11.964082
+    },
+    "Reports1-Cfo": {
+        "text": "For the CFO, the numbers are always current: spending month by month, advances that are still unaccounted for, and the cash available in every branch.",
+        "seconds": 10.814694
+    },
+    "Reports2-It": {
+        "text": "And for IT and audit: approval times measured against your target, and a timestamped trail of every decision.",
+        "seconds": 8.202449
+    },
+    "Outro": {
+        "text": "FlowLedger. Every advance approved, paid, and accounted for.",
+        "seconds": 4.858776
+    }
+}
