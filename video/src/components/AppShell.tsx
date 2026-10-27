@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-import { Img, staticFile } from 'remotion';
+import { Img } from 'remotion';
 import {
     IconBookFilled,
     IconBriefcaseFilled,
@@ -17,6 +17,7 @@ import {
     IconWallet,
 } from '@tabler/icons-react';
 import { tenant, type Person } from '../data';
+import { logos } from '../logos';
 
 export type NavKey =
     | 'dashboard'
@@ -76,7 +77,7 @@ type NavAnchor = (key: NavKey) => (element: HTMLDivElement | null) => void;
 const Sidebar = ({ active, approvalsCount, navAnchor }: { active: NavKey; approvalsCount?: number; navAnchor?: NavAnchor }) => (
     <aside className="flex w-[280px] shrink-0 flex-col overflow-hidden border-e border-border bg-background pt-3">
         <div className="flex min-h-[44px] items-center px-6">
-            <Img className="default-logo" src={staticFile('flowledger_logo_light.png')} />
+            <Img className="default-logo" src={logos.light} />
         </div>
         <div className="px-6 pt-4">
             <div className="sgh-sidebar-tenant-card">

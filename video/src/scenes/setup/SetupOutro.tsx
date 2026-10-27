@@ -1,8 +1,9 @@
-import { Img, staticFile, useCurrentFrame } from 'remotion';
+import { Img, useCurrentFrame } from 'remotion';
 import { IconArrowRight, IconChevronRight } from '@tabler/icons-react';
 import { Backdrop } from '../../components/Stage';
 import { setupStages, setupTemplate } from '../../data';
 import { enter, money } from '../../lib/motion';
+import { logos } from '../../logos';
 
 export const SETUP_OUTRO_DURATION = 170;
 
@@ -53,7 +54,7 @@ export const SetupOutro = () => {
                         Next: the advance request flow
                         <IconArrowRight size={24} className="text-[oklch(0.72_0.13_168)]" />
                     </span>
-                    <Img src={staticFile('flowledger_logo_dark.png')} style={{ height: 48 }} />
+                    <Img src={logos.dark} style={{ height: 48 }} />
                 </div>
             </div>
         </Backdrop>

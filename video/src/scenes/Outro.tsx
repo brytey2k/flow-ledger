@@ -1,8 +1,9 @@
-import { Img, staticFile, useCurrentFrame } from 'remotion';
+import { Img, useCurrentFrame } from 'remotion';
 import { IconChevronRight } from '@tabler/icons-react';
 import { Backdrop } from '../components/Stage';
 import { statusBadgeClasses, statusLabels, type RequestStatus } from '../data';
 import { enter } from '../lib/motion';
+import { logos } from '../logos';
 
 export const OUTRO_DURATION = 160;
 
@@ -38,7 +39,7 @@ export const Outro = () => {
                     <p className="text-5xl font-semibold tracking-tight text-[var(--auth-panel-foreground)]">
                         Every advance approved, paid and accounted for.
                     </p>
-                    <Img src={staticFile('flowledger_logo_dark.png')} style={{ height: 56 }} />
+                    <Img src={logos.dark} style={{ height: 56 }} />
                 </div>
             </div>
         </Backdrop>

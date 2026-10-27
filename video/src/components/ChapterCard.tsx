@@ -1,6 +1,7 @@
-import { Img, staticFile, useCurrentFrame } from 'remotion';
+import { Img, useCurrentFrame } from 'remotion';
 import { enter, tween } from '../lib/motion';
 import { Backdrop } from './Stage';
+import { logos } from '../logos';
 
 export type Chapter = { part: string; title: string; body: string };
 
@@ -67,7 +68,7 @@ export const ChapterCard = ({ chapters, index }: { chapters: Chapter[]; index: n
     return (
         <Backdrop>
             <div className="flex size-full flex-col justify-between px-40 pb-24 pt-20">
-                <Img src={staticFile('flowledger_logo_dark.png')} style={{ height: 40, alignSelf: 'flex-start' }} />
+                <Img src={logos.dark} style={{ height: 40, alignSelf: 'flex-start' }} />
                 <div className="flex items-end gap-16">
                     <span
                         className="font-mono text-[220px] font-semibold leading-[0.8]"

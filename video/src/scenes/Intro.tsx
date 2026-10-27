@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { Img, staticFile, useCurrentFrame } from 'remotion';
+import { Img, useCurrentFrame } from 'remotion';
 import { Backdrop } from '../components/Stage';
 import { enter } from '../lib/motion';
+import { logos } from '../logos';
 
 export const INTRO_DURATION = 120;
 
@@ -23,7 +24,7 @@ export const TitleCard = ({ title, subtitle, steps }: { title: string; subtitle:
     <Backdrop>
         <div className="flex size-full flex-col items-center justify-center gap-10 text-center">
             <Rise start={4}>
-                <Img src={staticFile('flowledger_logo_dark.png')} style={{ height: 64 }} />
+                <Img src={logos.dark} style={{ height: 64 }} />
             </Rise>
             <Rise start={12} className="flex flex-col gap-5">
                 <h1 className="text-[84px] font-semibold leading-none tracking-tight text-[var(--auth-panel-foreground)]">{title}</h1>

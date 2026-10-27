@@ -19,7 +19,8 @@ export const narration: Record<string, string> = {
         'Add the approval stages in order: Finance Officer, Finance Manager, Finance Director, then Disbursement Officer. A stage can be skipped for small amounts, or limited to approvers in the same branch.',
     'Step1-CreateAdvance':
         'Now the workflow is live. Ama Mensah needs funds for a field visit to Tamale. She raises an advance, adds each line item, and FlowLedger totals it in Ghana cedis.',
-    'Step2-SubmitRequest': 'One click submits it for approval. The request moves straight into the workflow. No emails, no chasing signatures.',
+    'Step2-SubmitRequest':
+        'One click submits it for approval. The request moves straight into the workflow. No emails, no chasing signatures.',
     'Step3-ApproveRequest':
         'Kwame, the Finance Officer, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. The request then moves through each stage on its own.',
     'Step4-DisburseAdvance':

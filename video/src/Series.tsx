@@ -1,54 +1,112 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { Fragment } from 'react';
+import { AbsoluteFill, Html5Audio, Sequence, staticFile } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { type Chapter, ChapterCard } from './components/ChapterCard';
+import { FPS } from './lib/motion';
+import voiceover from './voiceover.json';
 
 export type Scene = { id: string; component: ComponentType; durationInFrames: number; chapter?: Chapter };
 
 const TRANSITION_FRAMES = 15;
 const CHAPTER_CARD_FRAMES = 66;
+const VOICE_LEAD_FRAMES = 10;
+const VOICE_TAIL_FRAMES = 14;
 
-const chapterCount = (scenes: Scene[]): number => scenes.filter((scene) => scene.chapter).length;
+const voiceClips: Record<string, { seconds: number }> = voiceover;
 
 /**
- * Length of a series, including the chapter card played before each
- * chapter scene and the crossfades between everything.
+ * A segment of the series: a chapter card or a scene, with the frame it
+ * starts on and the voice clip (if any) that starts with it.
  */
-export const seriesDuration = (scenes: Scene[]): number => {
-    const segments = scenes.length + chapterCount(scenes);
-    const frames = scenes.reduce((total, scene) => total + scene.durationInFrames, 0) + chapterCount(scenes) * CHAPTER_CARD_FRAMES;
+type Segment = { key: string; start: number; durationInFrames: number; render: () => ReactNode; voice?: string };
 
-    return frames - TRANSITION_FRAMES * (segments - 1);
+/**
+ * Lays out chapter cards and scenes back to back, overlapping each by the
+ * crossfade. A narrated scene is held on its last frame when its voice
+ * clip (which starts on its chapter card) would otherwise be cut off.
+ */
+const layout = (scenes: Scene[]): Segment[] => {
+    const chapters = scenes.flatMap((scene) => (scene.chapter ? [scene.chapter] : []));
+    const segments: Segment[] = [];
+    let start = 0;
+
+    const push = (segment: Omit<Segment, 'start'>) => {
+        segments.push({ ...segment, start });
+        start += segment.durationInFrames - TRANSITION_FRAMES;
+    };
+
+    for (const scene of scenes) {
+        const voiceFrames = voiceClips[scene.id] ? Math.ceil(voiceClips[scene.id].seconds * FPS) : 0;
+        const SceneComponent = scene.component;
+        const chapter = scene.chapter;
+
+        if (chapter) {
+            push({
+                key: `${scene.id}-chapter`,
+                durationInFrames: CHAPTER_CARD_FRAMES,
+                render: () => <ChapterCard chapters={chapters} index={chapters.indexOf(chapter)} />,
+                voice: voiceFrames ? scene.id : undefined,
+            });
+        }
+
+        const voiceAlreadyPlayed = chapter ? CHAPTER_CARD_FRAMES - TRANSITION_FRAMES : 0;
+        const neededForVoice = voiceFrames
+            ? VOICE_LEAD_FRAMES + voiceFrames + VOICE_TAIL_FRAMES + TRANSITION_FRAMES - voiceAlreadyPlayed
+            : 0;
+
+        push({
+            key: scene.id,
+            durationInFrames: Math.max(scene.durationInFrames, neededForVoice),
+            render: () => <SceneComponent />,
+            voice: voiceFrames && !chapter ? scene.id : undefined,
+        });
+    }
+
+    return segments;
+};
+
+export const seriesDuration = (scenes: Scene[]): number => {
+    const last = layout(scenes).at(-1);
+
+    return last ? last.start + last.durationInFrames : 0;
 };
 
 /**
  * Plays scenes back to back with a short crossfade between each. A scene
  * with a chapter is preceded by a full-frame chapter card; chapters are
- * numbered in order across the whole series.
+ * numbered in order across the whole series. Narration from
+ * public/voiceover plays over the top when it has been generated.
  */
 export const SceneSeries = ({ scenes }: { scenes: Scene[] }) => {
-    const chapters = scenes.flatMap((scene) => (scene.chapter ? [scene.chapter] : []));
-    const transition = <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TRANSITION_FRAMES })} />;
+    const segments = layout(scenes);
 
     return (
-        <TransitionSeries>
-            {scenes.map(({ id, component: SceneComponent, durationInFrames, chapter }, index) => (
-                <Fragment key={id}>
-                    {index > 0 && transition}
-                    {chapter && (
-                        <>
-                            <TransitionSeries.Sequence durationInFrames={CHAPTER_CARD_FRAMES}>
-                                <ChapterCard chapters={chapters} index={chapters.indexOf(chapter)} />
-                            </TransitionSeries.Sequence>
-                            {transition}
-                        </>
-                    )}
-                    <TransitionSeries.Sequence durationInFrames={durationInFrames}>
-                        <SceneComponent />
-                    </TransitionSeries.Sequence>
-                </Fragment>
-            ))}
-        </TransitionSeries>
+        <AbsoluteFill>
+            <TransitionSeries>
+                {segments.map((segment, index) => (
+                    <Fragment key={segment.key}>
+                        {index > 0 && (
+                            <TransitionSeries.Transition
+                                presentation={fade()}
+                                timing={linearTiming({ durationInFrames: TRANSITION_FRAMES })}
+                            />
+                        )}
+                        <TransitionSeries.Sequence durationInFrames={segment.durationInFrames}>
+                            {segment.render()}
+                        </TransitionSeries.Sequence>
+                    </Fragment>
+                ))}
+            </TransitionSeries>
+            {segments.map(
+                (segment) =>
+                    segment.voice && (
+                        <Sequence key={`${segment.key}-voice`} from={segment.start + VOICE_LEAD_FRAMES} layout="none">
+                            <Html5Audio src={staticFile(`voiceover/${segment.voice}.mp3`)} />
+                        </Sequence>
+                    ),
+            )}
+        </AbsoluteFill>
     );
 };

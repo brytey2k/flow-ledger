@@ -9,7 +9,16 @@
         "noUnusedParameters": true,
         "skipLibCheck": true,
         "noEmit": true,
-        "lib": ["DOM", "ES2022"]
+        "lib": [
+            "DOM",
+            "ES2022"
+        ],
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true
     },
-    "include": ["src", "remotion.config.ts"]
+    "include": [
+        "src",
+        "scripts",
+        "remotion.config.ts"
+    ]
 }
