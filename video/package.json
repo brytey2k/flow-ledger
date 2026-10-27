@@ -7,7 +7,7 @@
         "render": "remotion render FullWalkthrough out/full-walkthrough.mp4",
         "still": "remotion still",
         "typecheck": "tsc --noEmit",
-        "voiceover": "node --experimental-strip-types --no-warnings scripts/generate-voiceover.ts"
+        "voiceover": "node --experimental-strip-types --no-warnings scripts/voiceover.ts"
     },
     "dependencies": {
         "@fontsource-variable/geist": "5.3.0",
