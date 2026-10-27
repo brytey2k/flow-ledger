@@ -5,7 +5,7 @@
  * one per beat.
  */
 export const narration: Record<string, string> = {
-    WalkthroughIntro: 'Welcome to FlowLedger. In the next two minutes, we will set up approvals, run an advance, and read the numbers.',
+    WalkthroughIntro: 'Welcome to FlowLedger. In the next few minutes, we will set up approvals, run an advance, and read the numbers.',
     'Setup0-Organisation':
         'First, your organisation. Add your branches, departments, cost codes and currencies. Every request in FlowLedger is filed against this structure.',
     'Setup1-CreateRole':
@@ -36,10 +36,10 @@ export const narration: Record<string, string> = {
     Outro: 'FlowLedger. Every advance approved, paid, and accounted for.',
     'Promo1-Hook': 'Still chasing signatures for staff advances?',
     'Promo2-Reveal': 'Meet FlowLedger.',
-    'Promo3-Request': 'Your staff request funds in seconds, right in cedis.',
-    'Promo4-Approve': 'Approvals follow the stages your organisation sets, and can be done in under a day.',
-    'Promo5-Disburse': 'Pay out, and every payment lands in your cashbook.',
-    'Promo6-Retire': 'Retirements work out the refund for you. Every cedi accounted for.',
-    'Promo7-Reports': 'And live reports with a full audit trail.',
-    'Promo8-Cta': 'FlowLedger. Call or WhatsApp us today to get started.',
+    'Promo3-Request': 'Staff request funds in seconds.',
+    'Promo4-Approve': 'Approvals follow your own workflow, and can be done in under a day.',
+    'Promo5-Disburse': 'Every payout lands in your cashbook.',
+    'Promo6-Retire': 'Retirements work out the refund for you.',
+    'Promo7-Reports': 'Plus live reports and a full audit trail.',
+    'Promo8-Cta': 'Call or WhatsApp us to get started.',
 };

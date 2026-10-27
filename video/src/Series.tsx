@@ -4,6 +4,7 @@ import { AbsoluteFill, Html5Audio, Sequence, staticFile } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { type Chapter, ChapterCard } from './components/ChapterCard';
+import { MusicBed } from './components/MusicBed';
 import { PortraitOverlay } from './components/PortraitOverlay';
 import { useIsPortrait } from './lib/format';
 import { FPS } from './lib/motion';
@@ -15,6 +16,8 @@ const TRANSITION_FRAMES = 15;
 const CHAPTER_CARD_FRAMES = 66;
 const VOICE_LEAD_FRAMES = 10;
 const VOICE_TAIL_FRAMES = 14;
+const MUSIC_VOLUME = 0.2;
+const MUSIC_DUCKED_VOLUME = 0.07;
 
 const voiceClips: Record<string, { seconds: number }> = voiceover;
 
@@ -88,8 +91,9 @@ export const seriesDuration = (scenes: Scene[]): number => {
  * Plays scenes back to back with a short crossfade between each. A scene
  * with a chapter is preceded by a full-frame chapter card; chapters are
  * numbered in order across the whole series. Narration from
- * public/voiceover plays over the top when it has been generated; in
- * portrait, the chapter and captions of that narration are added too.
+ * public/voiceover plays over the top when it has been generated, with
+ * the music bed dipping under it; in portrait, the chapter and captions
+ * of that narration are added too.
  */
 export const SceneSeries = ({ scenes }: { scenes: Scene[] }) => {
     const segments = layout(scenes);
@@ -120,6 +124,20 @@ export const SceneSeries = ({ scenes }: { scenes: Scene[] }) => {
                         </Sequence>
                     ),
             )}
+            <MusicBed
+                volume={MUSIC_VOLUME}
+                duckedVolume={MUSIC_DUCKED_VOLUME}
+                voiceWindows={segments.flatMap((segment) =>
+                    segment.voice
+                        ? [
+                              {
+                                  from: segment.start + VOICE_LEAD_FRAMES,
+                                  to: segment.start + VOICE_LEAD_FRAMES + voiceClips[segment.voice].seconds * FPS,
+                              },
+                          ]
+                        : [],
+                )}
+            />
             {portrait && <PortraitOverlay segments={segments} voiceLeadFrames={VOICE_LEAD_FRAMES} />}
         </AbsoluteFill>
     );

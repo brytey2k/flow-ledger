@@ -6,11 +6,13 @@
  *                                          to voice-previews/.
  *   npm run voiceover -- create <number>   Save preview <number> as a
  *                                          permanent voice in voice.json.
- *   npm run voiceover -- generate [--force] [id ...]
+ *   npm run voiceover -- generate [--force] [--speed=<0.7–1.2>] [id ...]
  *                                          One MP3 per narration line in
  *                                          public/voiceover/, with lengths in
  *                                          src/voiceover.json. Pass line ids
- *                                          to voice only those lines.
+ *                                          to voice only those lines, and a
+ *                                          speed to voice them faster or
+ *                                          slower than normal.
  *
  * Reads the API key from ELEVENLABS_API_KEY; when the key is a network
  * secret instead, the proxy adds it to each request. generate skips lines
@@ -107,7 +109,7 @@ const create = async (choice: string | undefined): Promise<void> => {
     console.log(`saved voice ${voiceId} to ${VOICE_FILE}`);
 };
 
-const generate = async (force: boolean, only: string[]): Promise<void> => {
+const generate = async (force: boolean, speed: number, only: string[]): Promise<void> => {
     if (!existsSync(VOICE_FILE)) {
         console.error(`No ${VOICE_FILE} yet: run design, then create <number>.`);
         process.exit(1);
@@ -135,7 +137,7 @@ const generate = async (force: boolean, only: string[]): Promise<void> => {
             model_id: TTS_MODEL_ID,
             previous_text: entries[index - 1]?.[1],
             next_text: entries[index + 1]?.[1],
-            voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true },
+            voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed },
         });
 
         writeFileSync(file, Buffer.from(await response.arrayBuffer()));
@@ -152,11 +154,13 @@ if (command === 'design') {
 } else if (command === 'create') {
     await create(argument);
 } else if (command === 'generate') {
+    const speedArgument = process.argv.find((arg) => arg.startsWith('--speed='));
     await generate(
         process.argv.includes('--force'),
+        speedArgument ? Number(speedArgument.slice('--speed='.length)) : 1,
         process.argv.slice(3).filter((arg) => !arg.startsWith('--')),
     );
 } else {
-    console.error('Usage: npm run voiceover -- design | create <number> | generate [--force] [id ...]');
+    console.error('Usage: npm run voiceover -- design | create <number> | generate [--force] [--speed=<0.7–1.2>] [id ...]');
     process.exit(1);
 }

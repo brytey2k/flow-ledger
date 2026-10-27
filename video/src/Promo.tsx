@@ -1,11 +1,11 @@
 import type { ComponentType } from 'react';
 import { Fragment } from 'react';
-import { AbsoluteFill, Html5Audio, interpolate, Sequence, Series, staticFile, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Html5Audio, Sequence, Series, staticFile } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import type { Chapter } from './components/ChapterCard';
+import { MusicBed } from './components/MusicBed';
 import { PortraitOverlay } from './components/PortraitOverlay';
-import { promo } from './data';
 import { FPS } from './lib/motion';
 import type { Segment } from './Series';
 import { APPROVE_CLICK, ApproveRequest, FULLY_APPROVED } from './scenes/ApproveRequest';
@@ -20,8 +20,8 @@ import voiceover from './voiceover.json';
 const TRANSITION_FRAMES = 8;
 const VOICE_LEAD_FRAMES = 6;
 const VOICE_TAIL_FRAMES = 8;
-const MUSIC_VOLUME = 0.22;
-const MUSIC_FADE_FRAMES = 36;
+const MUSIC_VOLUME = 0.32;
+const MUSIC_DUCKED_VOLUME = 0.12;
 
 const voiceClips: Record<string, { seconds: number }> = voiceover;
 
@@ -44,7 +44,7 @@ const clip =
         </Sequence>
     );
 
-const REPORT_CLIP_FRAMES = 84;
+const REPORT_CLIP_FRAMES = 72;
 
 const ReportsClip = () => {
     const Outstanding = clip(CfoReports, OUTSTANDING_PAGE - 6);
@@ -70,7 +70,7 @@ const beats: Beat[] = [
     {
         id: 'Promo3-Request',
         component: clip(CreateAdvance, ITEMS_START - 12),
-        durationInFrames: 120,
+        durationInFrames: 100,
         headline: headline('Request', 'Funds requested in seconds'),
         captions: true,
     },
@@ -90,8 +90,8 @@ const beats: Beat[] = [
     },
     {
         id: 'Promo6-Retire',
-        component: clip(RetireAdvance, DIFFERENCE_AT - 60),
-        durationInFrames: 110,
+        component: clip(RetireAdvance, DIFFERENCE_AT - 50),
+        durationInFrames: 96,
         headline: headline('Retire', 'Every cedi accounted for'),
         captions: true,
     },
@@ -102,7 +102,7 @@ const beats: Beat[] = [
         headline: headline('Report', 'Live reports, full audit trail'),
         captions: true,
     },
-    { id: 'Promo8-Cta', component: PromoCta, durationInFrames: 156, captions: false },
+    { id: 'Promo8-Cta', component: PromoCta, durationInFrames: 140, captions: false },
 ];
 
 /**
@@ -140,23 +140,6 @@ export const PROMO_DURATION = (() => {
     return last ? last.start + last.durationInFrames : 0;
 })();
 
-const Music = () => {
-    const { durationInFrames } = useVideoConfig();
-
-    return (
-        <Html5Audio
-            src={staticFile(promo.music.file)}
-            volume={(frame) =>
-                MUSIC_VOLUME *
-                interpolate(frame, [0, 10, durationInFrames - MUSIC_FADE_FRAMES, durationInFrames], [0, 1, 1, 0], {
-                    extrapolateLeft: 'clamp',
-                    extrapolateRight: 'clamp',
-                })
-            }
-        />
-    );
-};
-
 /**
  * Thirty-second portrait promo for TikTok and Reels: a hook, the product,
  * five quick cuts from the walkthrough, and a call to action, over a
@@ -191,7 +174,20 @@ export const Promo = () => {
                         </Sequence>
                     ),
             )}
-            <Music />
+            <MusicBed
+                volume={MUSIC_VOLUME}
+                duckedVolume={MUSIC_DUCKED_VOLUME}
+                voiceWindows={segments.flatMap((segment) =>
+                    voiceClips[segment.key]
+                        ? [
+                              {
+                                  from: segment.start + VOICE_LEAD_FRAMES,
+                                  to: segment.start + VOICE_LEAD_FRAMES + voiceClips[segment.key].seconds * FPS,
+                              },
+                          ]
+                        : [],
+                )}
+            />
             <PortraitOverlay
                 segments={segments.map((segment) => (segment.captions ? segment : { ...segment, voice: undefined }))}
                 voiceLeadFrames={VOICE_LEAD_FRAMES}
