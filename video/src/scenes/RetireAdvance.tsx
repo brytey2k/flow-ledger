@@ -7,6 +7,7 @@ import { Stage } from '../components/Stage';
 import { Button, Card, Flash, Input, PageHeading, Pop, Select, Swap, Textarea, usePop } from '../components/ui';
 import { advance, people, retirement, tenant } from '../data';
 import { centerOf, useAnchors } from '../lib/anchors';
+import { useIsPortrait } from '../lib/format';
 import { countUp, money, tween, typed, typingEnds } from '../lib/motion';
 import { stagesAt } from '../lib/workflow';
 
@@ -49,6 +50,7 @@ const ExpenditureRow = ({ index, frame }: { index: number; frame: number }) => {
     const timing = rowTimings[index];
     const style = usePop(timing.rowAt);
     const height = tween(frame, timing.rowAt, 10, 0, ROW_HEIGHT + 16);
+    const portrait = useIsPortrait();
 
     return (
         <div style={index === 0 ? undefined : { height, overflow: 'hidden' }}>
@@ -56,7 +58,7 @@ const ExpenditureRow = ({ index, frame }: { index: number; frame: number }) => {
                 className={`flex items-start gap-3 rounded-lg border border-border p-4 ${index === 0 ? '' : 'mt-4'}`}
                 style={index === 0 ? undefined : style}
             >
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                     <label className="sgh-form-label mb-1.5 block text-sm">
                         Description <span className="text-destructive">*</span>
                     </label>
@@ -66,7 +68,7 @@ const ExpenditureRow = ({ index, frame }: { index: number; frame: number }) => {
                         focused={frame >= timing.descriptionAt && frame < timing.costCodeAt}
                     />
                 </div>
-                <div className="w-64">
+                <div className={portrait ? 'w-52' : 'w-64'}>
                     <label className="sgh-form-label mb-1.5 block text-sm">
                         Cost Code <span className="text-destructive">*</span>
                     </label>
@@ -76,7 +78,7 @@ const ExpenditureRow = ({ index, frame }: { index: number; frame: number }) => {
                         focused={frame >= timing.costCodeAt && frame < timing.amountAt}
                     />
                 </div>
-                <div className="w-36">
+                <div className={portrait ? 'w-24' : 'w-36'}>
                     <label className="sgh-form-label mb-1.5 block text-sm">
                         Amount <span className="text-destructive">*</span>
                     </label>
@@ -86,7 +88,7 @@ const ExpenditureRow = ({ index, frame }: { index: number; frame: number }) => {
                         focused={frame >= timing.amountAt && frame < timing.receiptAt}
                     />
                 </div>
-                <div className="w-36">
+                <div className={portrait ? 'w-28' : 'w-36'}>
                     <label className="sgh-form-label mb-1.5 block text-sm">Receipt No.</label>
                     <Input
                         value={typed(item.receipt, frame, timing.receiptAt, 1.2)}

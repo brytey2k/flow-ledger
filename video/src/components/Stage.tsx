@@ -12,11 +12,11 @@ const WINDOW_HEIGHT = SCREEN_HEIGHT + CHROME_HEIGHT;
 const BASE_SCALE = 1.1;
 
 /**
- * Share of each camera push-in kept in portrait, where the screen is
- * already framed tightly: enough to draw the eye without cropping the
- * sides of the screen away.
+ * Share of each camera push-in kept in portrait. The portrait screen
+ * already fills the frame's width, so any push-in crops its sides; at 0
+ * the whole screen stays in view and the cursor carries the eye.
  */
-const PORTRAIT_ZOOM_STRENGTH = 0.4;
+const PORTRAIT_ZOOM_STRENGTH = 0;
 
 /**
  * A camera move starting at `frame`: zoom is relative to the resting
