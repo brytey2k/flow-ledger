@@ -4,7 +4,7 @@ import { type Scene, SceneSeries, seriesDuration } from './Series';
 import { TitleCard } from './scenes/Intro';
 import { CFO_REPORTS_DURATION, CfoReports } from './scenes/reports/CfoReports';
 import { IT_REPORTS_DURATION, ItReports } from './scenes/reports/ItReports';
-import { setupChapterScenes } from './WorkflowSetup';
+import { setupChapterScenes, setupOutroScene } from './WorkflowSetup';
 
 const WalkthroughIntro = () => (
     <TitleCard
@@ -22,6 +22,7 @@ export const reportScenes: Scene[] = [
 const walkthroughScenes: Scene[] = [
     { id: 'WalkthroughIntro', component: WalkthroughIntro, durationInFrames: 120 },
     ...setupChapterScenes,
+    setupOutroScene,
     ...advanceChapterScenes,
     ...reportScenes,
     outroScene,

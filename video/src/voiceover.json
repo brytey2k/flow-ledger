@@ -24,8 +24,8 @@
         "seconds": 9.038367
     },
     "Setup5-AddStages": {
-        "text": "Add the approval stages in order: Finance Officer, Finance Manager, Finance Director, then Disbursement Officer. A stage can be skipped for small amounts, or limited to approvers in the same branch.",
-        "seconds": 14.759184
+        "text": "Add the stages in order. First, approval by the requester's head of department, limited to their own department. Then finance approval. Then disbursement, where the funds are released.",
+        "seconds": 12.669388
     },
     "Step1-CreateAdvance": {
         "text": "Now the workflow is live. Ama Mensah needs funds for a field visit to Tamale. She raises an advance, adds each line item, and FlowLedger totals it in Ghana cedis.",
@@ -36,8 +36,8 @@
         "seconds": 8.019592
     },
     "Step3-ApproveRequest": {
-        "text": "Kwame, the Finance Officer, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. The request then moves through each stage on its own.",
-        "seconds": 12.146939
+        "text": "Kwame, her head of department, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. It then moves on to finance and disbursement on its own.",
+        "seconds": 12.852245
     },
     "Step4-DisburseAdvance": {
         "text": "Once it is fully approved, Efua pays out the funds and records the mobile money reference. FlowLedger makes sure no one pays out a request they approved themselves.",
@@ -58,5 +58,9 @@
     "Outro": {
         "text": "FlowLedger. Every advance approved, paid, and accounted for.",
         "seconds": 4.858776
+    },
+    "SetupOutro": {
+        "text": "Advances and expenses follow the same path: requester, head of department, finance, then disbursement. A retirement ends with a top-up, a refund, or a nil balance.",
+        "seconds": 12.8
     }
 }

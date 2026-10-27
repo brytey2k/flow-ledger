@@ -16,13 +16,15 @@ export const narration: Record<string, string> = {
     'Setup4-CreateTemplate':
         'With your people in place, create the workflow. One template per request type. Leave the branch blank, and it covers every branch.',
     'Setup5-AddStages':
-        'Add the approval stages in order: Finance Officer, Finance Manager, Finance Director, then Disbursement Officer. A stage can be skipped for small amounts, or limited to approvers in the same branch.',
+        "Add the stages in order. First, approval by the requester's head of department, limited to their own department. Then finance approval. Then disbursement, where the funds are released.",
+    SetupOutro:
+        'Advances and expenses follow the same path: requester, head of department, finance, then disbursement. A retirement ends with a top-up, a refund, or a nil balance.',
     'Step1-CreateAdvance':
         'Now the workflow is live. Ama Mensah needs funds for a field visit to Tamale. She raises an advance, adds each line item, and FlowLedger totals it in Ghana cedis.',
     'Step2-SubmitRequest':
         'One click submits it for approval. The request moves straight into the workflow. No emails, no chasing signatures.',
     'Step3-ApproveRequest':
-        'Kwame, the Finance Officer, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. The request then moves through each stage on its own.',
+        'Kwame, her head of department, finds it waiting in his approvals inbox. He reviews the details, adds a comment, and approves. It then moves on to finance and disbursement on its own.',
     'Step4-DisburseAdvance':
         'Once it is fully approved, Efua pays out the funds and records the mobile money reference. FlowLedger makes sure no one pays out a request they approved themselves.',
     'Step5-RetireAdvance':

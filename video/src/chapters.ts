@@ -38,7 +38,7 @@ export const chapters: Record<string, Chapter> = {
     'Setup5-AddStages': {
         part: WORKFLOW,
         title: 'Add approval stages',
-        body: 'Each stage names the roles that approve it. Skip small requests, or scope approvers to the branch.',
+        body: 'HOD approval, finance approval, then disbursement. Each stage names the roles that approve it.',
     },
     'Step1-CreateAdvance': {
         part: ADVANCE,

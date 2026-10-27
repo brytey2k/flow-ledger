@@ -1,12 +1,14 @@
 /**
- * Demo data shown in the advance request videos. Labels mirror lang/en/*.php
- * and the stage names mirror NewTenantSetupService's default workflow.
+ * Demo data shown in the advance request videos. Labels mirror lang/en/*.php.
+ * Every request type follows the same path: the requester submits, then
+ * HOD approval, finance approval and disbursement (or, for a retirement,
+ * settlement).
  */
 export const tenant = { name: 'Acme Logistics', initials: 'AL', host: 'acme.flowledger.app' };
 
 export const people = {
     staff: { name: 'Ama Mensah', initials: 'AM', role: 'Operations Officer' },
-    approver: { name: 'Kwame Boateng', initials: 'KB', role: 'Finance Officer' },
+    approver: { name: 'Kwame Boateng', initials: 'KB', role: 'Head of Department' },
     disburser: { name: 'Efua Owusu', initials: 'EO', role: 'Disbursement Officer' },
 } as const;
 
@@ -33,9 +35,9 @@ export const advance = {
     approvalComment: 'Budget confirmed against the Q4 operations plan.',
 };
 
-export const workflowStages = ['Finance Officer', 'Finance Manager', 'Finance Director', 'Disbursement Officer'];
+export const workflowStages = ['HOD Approval', 'Finance Approval', 'Disbursement'];
 
-export const stageApprovers = ['Kwame Boateng', 'Abena Osei', 'Kofi Asare', 'Kweku Addo'];
+export const stageApprovers = ['Kwame Boateng', 'Abena Osei', 'Kweku Addo'];
 
 export const retirement = {
     items: [
@@ -83,8 +85,8 @@ export const setupRole = 'Disbursement Officer';
 export const existingRoles = [
     { name: 'admin', users: 1, permissions: 60, created: 'Oct 01, 2026', time: '8:02 AM' },
     { name: 'Finance Director', users: 1, permissions: 5, created: 'Oct 01, 2026', time: '8:02 AM' },
-    { name: 'Finance Manager', users: 1, permissions: 5, created: 'Oct 01, 2026', time: '8:02 AM' },
     { name: 'Finance Officer', users: 2, permissions: 5, created: 'Oct 01, 2026', time: '8:02 AM' },
+    { name: 'Head of Department', users: 5, permissions: 5, created: 'Oct 01, 2026', time: '8:02 AM' },
 ];
 
 /**
@@ -122,17 +124,26 @@ export const permissionGroups = [
     },
 ];
 
-export const allRoleNames = ['admin', 'Disbursement Officer', 'Finance Director', 'Finance Manager', 'Finance Officer'];
+export const allRoleNames = ['admin', 'Disbursement Officer', 'Finance Director', 'Finance Officer', 'Head of Department'];
 
 export const invitee = { firstName: 'Efua', lastName: 'Owusu', email: 'efua.owusu@acmelogistics.com', branch: 'Kumasi Branch' };
 
 export const setupTemplate = { name: 'Advance Approval' };
 
 export const setupStages = [
-    { name: 'Finance Officer', role: 'Finance Officer', skipBelow: undefined },
-    { name: 'Finance Manager', role: 'Finance Manager', skipBelow: undefined },
-    { name: 'Finance Director', role: 'Finance Director', skipBelow: 1000 },
-    { name: 'Disbursement Officer', role: 'Disbursement Officer', skipBelow: undefined },
+    { name: 'HOD Approval', role: 'Head of Department', scope: 'Department' },
+    { name: 'Finance Approval', role: 'Finance Officer', scope: 'Branch' },
+    { name: 'Disbursement', role: 'Disbursement Officer', scope: 'Branch' },
+];
+
+/**
+ * The three request workflows summarised at the end of the setup: each
+ * starts with the requester and ends with the money moving.
+ */
+export const requestWorkflows = [
+    { name: 'Advance Approval', type: 'Advance', badge: 'sgh-badge-primary', last: 'Disbursement' },
+    { name: 'Expense Approval', type: 'Expense', badge: 'sgh-badge-success', last: 'Disbursement' },
+    { name: 'Retirement Approval', type: 'Retirement', badge: 'sgh-badge-warning', last: 'Disbursement, refund or nil balance' },
 ];
 
 /**
@@ -243,12 +254,11 @@ export const slaRows = [
 ];
 
 export const auditActions = [
-    { request: 1042, stage: 'Disbursement Officer', by: 'Kweku Addo', action: 'approve', comment: '—', at: 'Oct 27, 2026 2:05 PM' },
-    { request: 1042, stage: 'Finance Director', by: 'Kofi Asare', action: 'approve', comment: '—', at: 'Oct 27, 2026 1:30 PM' },
-    { request: 1042, stage: 'Finance Manager', by: 'Abena Osei', action: 'approve', comment: '—', at: 'Oct 27, 2026 12:40 PM' },
+    { request: 1042, stage: 'Disbursement', by: 'Kweku Addo', action: 'approve', comment: '—', at: 'Oct 27, 2026 2:05 PM' },
+    { request: 1042, stage: 'Finance Approval', by: 'Abena Osei', action: 'approve', comment: '—', at: 'Oct 27, 2026 12:40 PM' },
     {
         request: 1042,
-        stage: 'Finance Officer',
+        stage: 'HOD Approval',
         by: 'Kwame Boateng',
         action: 'approve',
         comment: 'Budget confirmed against the Q4 operations plan.',
@@ -256,7 +266,7 @@ export const auditActions = [
     },
     {
         request: 1038,
-        stage: 'Finance Officer',
+        stage: 'HOD Approval',
         by: 'Kwame Boateng',
         action: 'send_back',
         comment: 'Attach the venue quote before resubmitting.',
@@ -264,7 +274,7 @@ export const auditActions = [
     },
     {
         request: 1031,
-        stage: 'Finance Manager',
+        stage: 'Finance Approval',
         by: 'Abena Osei',
         action: 'reject',
         comment: 'Duplicate of #1027.',

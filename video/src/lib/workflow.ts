@@ -1,5 +1,5 @@
 import type { StageState } from '../components/ui';
-import { stageApprovers, workflowStages } from '../data';
+import { setupStages, stageApprovers, workflowStages } from '../data';
 
 /**
  * Stage states at `frame`, given the frame on which each stage is approved.
@@ -8,20 +8,20 @@ import { stageApprovers, workflowStages } from '../data';
  */
 export const stagesAt = (frame: number, approvedAt: number[] | 'all'): StageState[] => {
     if (approvedAt === 'all') {
-        return workflowStages.map((name, index) => ({ name, status: 'approved', by: stageApprovers[index] }));
+        return workflowStages.map((name, index) => ({ name, role: setupStages[index].role, status: 'approved', by: stageApprovers[index] }));
     }
 
     const approvedCount = approvedAt.filter((at) => frame >= at).length;
 
     return workflowStages.map((name, index) => {
         if (index < approvedCount) {
-            return { name, status: 'approved', by: stageApprovers[index], changedAt: approvedAt[index] };
+            return { name, role: setupStages[index].role, status: 'approved', by: stageApprovers[index], changedAt: approvedAt[index] };
         }
 
         if (index === approvedCount) {
-            return { name, status: 'active', changedAt: index === 0 ? undefined : approvedAt[index - 1] + 6 };
+            return { name, role: setupStages[index].role, status: 'active', changedAt: index === 0 ? undefined : approvedAt[index - 1] + 6 };
         }
 
-        return { name, status: 'pending' };
+        return { name, role: setupStages[index].role, status: 'pending' };
     });
 };

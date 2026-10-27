@@ -15,7 +15,7 @@ import {
     Textarea,
     TypeBadge,
 } from '../components/ui';
-import { advance, people, tenant } from '../data';
+import { advance, people, tenant, workflowStages } from '../data';
 import { centerOf, useAnchors } from '../lib/anchors';
 import { money, typed, typingEnds } from '../lib/motion';
 import { stagesAt } from '../lib/workflow';
@@ -27,8 +27,8 @@ const REVIEW_PAGE = REVIEW_CLICK + 8;
 const COMMENT_START = 100;
 const APPROVE_CLICK = typingEnds(advance.approvalComment, COMMENT_START, 1.4) + 28;
 const APPROVED = APPROVE_CLICK + 6;
-const STAGE_APPROVALS = [APPROVED, APPROVED + 40, APPROVED + 74, APPROVED + 108];
-const FULLY_APPROVED = STAGE_APPROVALS[3] + 10;
+const STAGE_APPROVALS = [APPROVED, APPROVED + 44, APPROVED + 84];
+const FULLY_APPROVED = STAGE_APPROVALS[2] + 10;
 
 const TableLabel = ({ children }: { children: string }) => (
     <th>
@@ -76,7 +76,7 @@ const Inbox = ({ reviewRef }: { reviewRef: (element: HTMLDivElement | null) => v
                             <td className="text-sm font-medium">
                                 {advance.currency.symbol} {money(advance.total)}
                             </td>
-                            <td className="text-sm">Finance Officer</td>
+                            <td className="text-sm">{workflowStages[0]}</td>
                             <td className="text-sm">{advance.submittedOn}</td>
                             <td>
                                 <Button buttonRef={reviewRef} variant="sgh-btn-sm sgh-btn-primary" clickAt={REVIEW_CLICK}>
@@ -142,7 +142,7 @@ export const ApproveRequest = () => {
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-secondary-foreground">
                                             <span>
-                                                Stage: <span className="font-medium text-foreground">Finance Officer</span>
+                                                Stage: <span className="font-medium text-foreground">{workflowStages[0]}</span>
                                             </span>
                                             <span className="sgh-badge sgh-badge-sm sgh-badge-outline">Version 1</span>
                                         </div>
@@ -215,7 +215,7 @@ export const ApproveRequest = () => {
                                                                 className="flex items-center gap-2 rounded-lg bg-success/10 p-3 text-sm text-success"
                                                             >
                                                                 <IconCircleCheckFilled size={16} />
-                                                                Stage approved — routed to Finance Manager
+                                                                Stage approved — routed to {workflowStages[1]}
                                                             </Pop>
                                                         }
                                                         after={

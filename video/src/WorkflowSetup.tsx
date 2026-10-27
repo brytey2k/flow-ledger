@@ -20,16 +20,18 @@ export const setupChapterScenes: Scene[] = [
     chapterScene({ id: 'Setup5-AddStages', component: AddStages, durationInFrames: ADD_STAGES_DURATION }),
 ];
 
+export const setupOutroScene: Scene = { id: 'SetupOutro', component: SetupOutro, durationInFrames: SETUP_OUTRO_DURATION };
+
 export const setupScenes: Scene[] = [
     { id: 'SetupIntro', component: SetupIntro, durationInFrames: SETUP_INTRO_DURATION },
     ...setupChapterScenes,
-    { id: 'SetupOutro', component: SetupOutro, durationInFrames: SETUP_OUTRO_DURATION },
+    setupOutroScene,
 ];
 
 export const WORKFLOW_SETUP_DURATION = seriesDuration(setupScenes);
 
 /**
  * The prequel: organisation structure, roles, permissions and people, then
- * the advance approval workflow built from those roles.
+ * the approval workflows built from those roles.
  */
 export const WorkflowSetup = () => <SceneSeries scenes={setupScenes} />;

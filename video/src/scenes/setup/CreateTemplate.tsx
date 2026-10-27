@@ -21,8 +21,8 @@ const CREATED = CREATE_CLICK + 6;
 export const CREATE_TEMPLATE_DURATION = CREATED + 100;
 
 const templates = [
-    { name: 'Expense Approval', type: 'Expense', badge: 'sgh-badge-success', stages: 2 },
-    { name: 'Retirement Approval', type: 'Retirement', badge: 'sgh-badge-warning', stages: 2 },
+    { name: 'Expense Approval', type: 'Expense', badge: 'sgh-badge-success', stages: 3 },
+    { name: 'Retirement Approval', type: 'Retirement', badge: 'sgh-badge-warning', stages: 3 },
 ];
 
 const TemplatesIndex = ({ newRef }: { newRef: (element: HTMLDivElement | null) => void }) => (

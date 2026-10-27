@@ -409,7 +409,7 @@ export const LineItemsCard = () => (
     </Card>
 );
 
-export type StageState = { name: string; status: 'pending' | 'active' | 'approved'; by?: string; changedAt?: number };
+export type StageState = { name: string; role: string; status: 'pending' | 'active' | 'approved'; by?: string; changedAt?: number };
 
 const StageIcon = ({ status }: { status: StageState['status'] }) => {
     if (status === 'approved') {
@@ -447,7 +447,7 @@ const StageRow = ({ stage }: { stage: StageState }) => {
             <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium">{stage.name}</span>
                 <span className="text-xs capitalize text-secondary-foreground">{stage.status}</span>
-                {stage.status === 'active' && <span className="mt-1 text-xs text-secondary-foreground">Primary: {stage.name}</span>}
+                {stage.status === 'active' && <span className="mt-1 text-xs text-secondary-foreground">Primary: {stage.role}</span>}
                 {stage.by && <span className="text-xs text-success">Approved by {stage.by}</span>}
             </div>
         </div>

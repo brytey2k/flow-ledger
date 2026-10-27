@@ -5,7 +5,8 @@ import { Cursor } from '../components/Cursor';
 import { RequestPage } from '../components/RequestPage';
 import { Stage } from '../components/Stage';
 import { Button, Pop, Swap } from '../components/ui';
-import { advance, people, tenant, workflowStages } from '../data';
+import { advance, people, tenant } from '../data';
+import { stagesAt } from '../lib/workflow';
 import { centerOf, useAnchors } from '../lib/anchors';
 
 export const SUBMIT_REQUEST_DURATION = 230;
@@ -51,9 +52,7 @@ export const SubmitRequest = () => {
                     actionsRef={anchor('actions')}
                     progressRef={anchor('progress')}
                     stagesStart={SUBMITTED + 8}
-                    stages={
-                        submitted ? workflowStages.map((name, index) => ({ name, status: index === 0 ? 'active' : 'pending' })) : undefined
-                    }
+                    stages={submitted ? stagesAt(frame, []) : undefined}
                     actions={
                         <Swap
                             at={SUBMITTED}

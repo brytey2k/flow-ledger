@@ -26,8 +26,8 @@ export const INVITE_USER_DURATION = INVITED + 90;
 const users = [
     { name: 'Nana Adjei', email: 'nana.adjei@acmelogistics.com', roles: ['Admin'], status: 'Active' },
     { name: 'Kofi Asare', email: 'kofi.asare@acmelogistics.com', roles: ['Finance Director'], status: 'Active' },
-    { name: 'Abena Osei', email: 'abena.osei@acmelogistics.com', roles: ['Finance Manager'], status: 'Active' },
-    { name: 'Kwame Boateng', email: 'kwame.boateng@acmelogistics.com', roles: ['Finance Officer'], status: 'Active' },
+    { name: 'Abena Osei', email: 'abena.osei@acmelogistics.com', roles: ['Finance Officer'], status: 'Active' },
+    { name: 'Kwame Boateng', email: 'kwame.boateng@acmelogistics.com', roles: ['Head of Department'], status: 'Active' },
 ];
 
 const UsersIndex = ({ rowRef }: { rowRef: (element: HTMLTableRowElement | null) => void }) => {

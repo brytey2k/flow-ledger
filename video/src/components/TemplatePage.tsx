@@ -2,7 +2,6 @@ import type { Ref } from 'react';
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconArrowsExchange, IconClockFilled, IconPencilFilled, IconPlusFilled } from '@tabler/icons-react';
 import { setupStages, setupTemplate } from '../data';
-import { money } from '../lib/motion';
 import { Button, Card, Flash, Input, Pop, Select, TableLabel } from './ui';
 
 /**
@@ -129,14 +128,10 @@ export const TemplatePage = ({
                                                     <span className="text-xs text-muted-foreground">Sequential</span>
                                                 </td>
                                                 <td>
-                                                    {stage.skipBelow === undefined ? (
-                                                        <span className="text-xs text-muted-foreground">—</span>
-                                                    ) : (
-                                                        <span className="text-sm">&lt; {money(stage.skipBelow)}</span>
-                                                    )}
+                                                    <span className="text-xs text-muted-foreground">—</span>
                                                 </td>
                                                 <td>
-                                                    <span className="sgh-badge sgh-badge-sm sgh-badge-info">Branch</span>
+                                                    <span className="sgh-badge sgh-badge-sm sgh-badge-info">{stage.scope}</span>
                                                 </td>
                                                 <td>
                                                     <span className="sgh-btn sgh-btn-sm sgh-btn-outline">

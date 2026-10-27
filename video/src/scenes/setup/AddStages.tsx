@@ -16,9 +16,9 @@ const NAME_START = NAME_CLICK + 4;
 const ROLE_CLICK = typingEnds(firstStage.name, NAME_START, 1.1) + 40;
 const ADD_CLICK = ROLE_CLICK + 36;
 const ADDED = ADD_CLICK + 6;
-const STAGES_ADDED_AT = [ADDED, ADDED + 44, ADDED + 76, ADDED + 108];
+const STAGES_ADDED_AT = [ADDED, ADDED + 44, ADDED + 76];
 
-export const ADD_STAGES_DURATION = STAGES_ADDED_AT[3] + 90;
+export const ADD_STAGES_DURATION = STAGES_ADDED_AT[2] + 90;
 
 export const AddStages = () => {
     const frame = useCurrentFrame();
@@ -94,9 +94,9 @@ export const AddStages = () => {
                                         <Checkbox
                                             className="sgh-checkbox"
                                             label="Restrict approvers to submitter's department"
-                                            checked={false}
+                                            checked
                                         />
-                                        <Checkbox className="sgh-checkbox" label="Restrict approvers to request's branch" checked />
+                                        <Checkbox className="sgh-checkbox" label="Restrict approvers to request's branch" checked={false} />
                                         <Checkbox className="sgh-checkbox" label="Allow send-back at this stage" checked />
                                         <Checkbox className="sgh-checkbox" label="Allow attachment-only document requests" checked />
                                     </div>
