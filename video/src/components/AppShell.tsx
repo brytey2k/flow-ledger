@@ -1,6 +1,8 @@
 import type { ReactNode, Ref } from 'react';
 import { Img, staticFile } from 'remotion';
 import {
+    IconBookFilled,
+    IconBriefcaseFilled,
     IconBuildingBank,
     IconCalculatorFilled,
     IconArrowsExchange,
@@ -11,6 +13,7 @@ import {
     IconLayoutGridFilled,
     IconShieldCheckFilled,
     IconUsers,
+    IconUsersGroup,
     IconWallet,
 } from '@tabler/icons-react';
 import { tenant, type Person } from '../data';
@@ -23,8 +26,12 @@ export type NavKey =
     | 'cashbook'
     | 'approvals'
     | 'reports'
+    | 'branches'
+    | 'departments'
+    | 'cost-codes'
     | 'users'
     | 'roles'
+    | 'currencies'
     | 'workflows';
 
 const navSections: { heading?: string; items: { key: NavKey; label: string; icon: ReactNode }[] }[] = [
@@ -46,17 +53,28 @@ const navSections: { heading?: string; items: { key: NavKey; label: string; icon
     },
     { heading: 'Reports', items: [{ key: 'reports', label: 'Reports', icon: <IconChartLine size={16} /> }] },
     {
+        heading: 'Organisation',
+        items: [
+            { key: 'branches', label: 'Branches', icon: <IconBriefcaseFilled size={16} /> },
+            { key: 'departments', label: 'Departments', icon: <IconUsersGroup size={16} /> },
+            { key: 'cost-codes', label: 'Cost Codes', icon: <IconBookFilled size={16} /> },
+        ],
+    },
+    {
         heading: 'Settings',
         items: [
             { key: 'users', label: 'Users', icon: <IconUsers size={16} /> },
             { key: 'roles', label: 'Roles', icon: <IconShieldCheckFilled size={16} /> },
+            { key: 'currencies', label: 'Currencies', icon: <IconBuildingBank size={16} /> },
             { key: 'workflows', label: 'Workflows', icon: <IconArrowsExchange size={16} /> },
         ],
     },
 ];
 
-const Sidebar = ({ active, approvalsCount }: { active: NavKey; approvalsCount?: number }) => (
-    <aside className="flex w-[280px] shrink-0 flex-col border-e border-border bg-background pt-3">
+type NavAnchor = (key: NavKey) => (element: HTMLDivElement | null) => void;
+
+const Sidebar = ({ active, approvalsCount, navAnchor }: { active: NavKey; approvalsCount?: number; navAnchor?: NavAnchor }) => (
+    <aside className="flex w-[280px] shrink-0 flex-col overflow-hidden border-e border-border bg-background pt-3">
         <div className="flex min-h-[44px] items-center px-6">
             <Img className="default-logo" src={staticFile('flowledger_logo_light.png')} />
         </div>
@@ -74,7 +92,7 @@ const Sidebar = ({ active, approvalsCount }: { active: NavKey; approvalsCount?: 
                 <div key={index} className="flex flex-col gap-1">
                     {section.heading && <div className="sgh-nav-heading">{section.heading}</div>}
                     {section.items.map((item) => (
-                        <div key={item.key} className={`sgh-nav-item ${item.key === active ? 'active' : ''}`}>
+                        <div key={item.key} ref={navAnchor?.(item.key)} className={`sgh-nav-item ${item.key === active ? 'active' : ''}`}>
                             <span className="sgh-nav-icon">{item.icon}</span>
                             <span className="grow text-nowrap">{item.label}</span>
                             {item.key === 'approvals' && approvalsCount ? (
@@ -126,6 +144,7 @@ export const AppShell = ({
     user,
     active,
     approvalsCount,
+    navAnchor,
     scroll = 0,
     children,
     overlay,
@@ -134,12 +153,13 @@ export const AppShell = ({
     user: Person;
     active: NavKey;
     approvalsCount?: number;
+    navAnchor?: NavAnchor;
     scroll?: number;
     children: ReactNode;
     overlay?: ReactNode;
 }) => (
     <div ref={rootRef} className="relative flex size-full bg-background text-base text-foreground antialiased">
-        <Sidebar active={active} approvalsCount={approvalsCount} />
+        <Sidebar active={active} approvalsCount={approvalsCount} navAnchor={navAnchor} />
         <div className="flex min-w-0 grow flex-col">
             <Header user={user} />
             <main className="relative grow overflow-hidden">

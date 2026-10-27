@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconCheckFilled, IconCurrencyDollar, IconFileArrowLeft, IconTrashFilled } from '@tabler/icons-react';
 import { AppShell } from '../components/AppShell';
-import { Caption } from '../components/Caption';
 import { Cursor } from '../components/Cursor';
 import { RequestPage } from '../components/RequestPage';
 import { Stage } from '../components/Stage';
@@ -207,13 +206,6 @@ export const RetireAdvance = () => {
                 { frame: ITEMS_START - 10, zoom: 1.3, focus: centerOf(rects.items, { x: 0, y: 30 }), duration: 30 },
                 { frame: ITEMS_DONE - 30, zoom: 1.5, focus: centerOf(rects.summary, { x: -140, y: 0 }), duration: 34 },
             ]}
-            overlay={
-                <Caption
-                    step={5}
-                    title="Retire the advance"
-                    body="Staff account for every cedi spent. FlowLedger works out the refund or top-up."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

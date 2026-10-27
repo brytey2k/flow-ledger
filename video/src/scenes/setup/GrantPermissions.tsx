@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconCheckFilled, IconInfoSquareFilled, IconShieldCheckFilled, IconTrashFilled } from '@tabler/icons-react';
 import { AppShell } from '../../components/AppShell';
-import { Caption } from '../../components/Caption';
 import { clickPath, Cursor } from '../../components/Cursor';
 import { Stage } from '../../components/Stage';
 import { Button, Card, Checkbox, Flash, FormLabel, Input, PageHeading, Swap } from '../../components/ui';
@@ -91,13 +90,6 @@ export const GrantPermissions = () => {
                 { frame: UPDATE_CLICK - 30, zoom: 1.3, focus: centerOf(rects.update, { x: 380, y: -120 }), duration: 26 },
                 { frame: UPDATED + 10, zoom: 1.2, duration: 30 },
             ]}
-            overlay={
-                <Caption
-                    step={2}
-                    title="Grant permissions"
-                    body="Pick what the role can do. Everyone holding the role inherits these permissions."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

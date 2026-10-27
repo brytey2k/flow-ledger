@@ -64,17 +64,7 @@ export const Backdrop = ({ children }: { children?: ReactNode }) => {
  * push in on any point of the screen without exposing empty space beyond
  * the resting margins.
  */
-export const Stage = ({
-    url,
-    camera = [],
-    children,
-    overlay,
-}: {
-    url: string;
-    camera?: CameraKey[];
-    children: ReactNode;
-    overlay?: ReactNode;
-}) => {
+export const Stage = ({ url, camera = [], children }: { url: string; camera?: CameraKey[]; children: ReactNode }) => {
     const frame = useCurrentFrame();
     const { zoom, focus } = cameraAt(frame, camera);
     const scale = BASE_SCALE * zoom;
@@ -114,7 +104,6 @@ export const Stage = ({
                     {children}
                 </div>
             </div>
-            {overlay}
         </Backdrop>
     );
 };

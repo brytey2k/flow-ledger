@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconCircleCheckFilled, IconCurrencyDollar } from '@tabler/icons-react';
 import { AppShell } from '../components/AppShell';
-import { Caption } from '../components/Caption';
 import { Cursor } from '../components/Cursor';
 import { RequestPage } from '../components/RequestPage';
 import { Stage } from '../components/Stage';
@@ -30,13 +29,6 @@ export const DisburseAdvance = () => {
                 { frame: 16, zoom: 1.55, focus: centerOf(rects.actions, { x: -60, y: 20 }), duration: 30 },
                 { frame: DISBURSED + 40, zoom: 1.08, duration: 34 },
             ]}
-            overlay={
-                <Caption
-                    step={4}
-                    title="Disburse the funds"
-                    body="Finance pays out and records the reference — separation of duties is enforced."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

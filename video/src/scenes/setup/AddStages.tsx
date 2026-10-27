@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconPlusFilled } from '@tabler/icons-react';
 import { AppShell } from '../../components/AppShell';
-import { Caption } from '../../components/Caption';
 import { clickPath, Cursor } from '../../components/Cursor';
 import { Stage } from '../../components/Stage';
 import { TemplatePage } from '../../components/TemplatePage';
@@ -39,13 +38,6 @@ export const AddStages = () => {
                 { frame: ADD_CLICK - 24, zoom: 1.3, focus: centerOf(rects.add, { x: 420, y: -140 }), duration: 22 },
                 { frame: ADDED + 8, zoom: 1.3, focus: centerOf(rects.table, { x: 0, y: 0 }), duration: 30 },
             ]}
-            overlay={
-                <Caption
-                    step={5}
-                    title="Add approval stages"
-                    body="Each stage names the roles that approve it. Skip small requests, or scope approvers to the branch."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

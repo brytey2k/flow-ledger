@@ -82,6 +82,30 @@ export const Swap = ({
     );
 };
 
+/**
+ * Several pages shown in turn, each crossfading in at its `at` frame. Like
+ * Swap's page mode, every page stays mounted at full height.
+ */
+export const PageSequence = ({ pages, duration = 10 }: { pages: { at: number; content: ReactNode }[]; duration?: number }) => {
+    const frame = useCurrentFrame();
+
+    return (
+        <div className="grid">
+            {pages.map((page, index) => {
+                const next = pages[index + 1];
+                const opacity =
+                    (index === 0 ? 1 : tween(frame, page.at, duration, 0, 1)) * (next ? tween(frame, next.at, duration, 1, 0) : 1);
+
+                return (
+                    <div key={page.at} style={{ gridArea: '1 / 1', opacity, visibility: opacity === 0 ? 'hidden' : undefined }}>
+                        {page.content}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 const focusClasses = (focused: boolean): string => (focused ? 'border-ring ring-2 ring-ring/30' : '');
 
 export const Input = ({

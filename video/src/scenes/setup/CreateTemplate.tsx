@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconEyeFilled, IconPlusFilled } from '@tabler/icons-react';
 import { AppShell } from '../../components/AppShell';
-import { Caption } from '../../components/Caption';
 import { clickPath, Cursor } from '../../components/Cursor';
 import { Stage } from '../../components/Stage';
 import { TemplatePage } from '../../components/TemplatePage';
@@ -113,13 +112,6 @@ export const CreateTemplate = () => {
                 { frame: FORM, zoom: 1.4, focus: centerOf(rects.type, { x: -120, y: 60 }), duration: 26 },
                 { frame: CREATED + 8, zoom: 1.3, focus: centerOf(rects.stages, { x: 0, y: -60 }), duration: 30 },
             ]}
-            overlay={
-                <Caption
-                    step={4}
-                    title="Create the workflow"
-                    body="One template per request type. Leave the branch blank to cover every branch."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

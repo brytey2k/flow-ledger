@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconClockFilled, IconPencilFilled, IconSendFilled, IconXFilled } from '@tabler/icons-react';
 import { AppShell } from '../components/AppShell';
-import { Caption } from '../components/Caption';
 import { Cursor } from '../components/Cursor';
 import { RequestPage } from '../components/RequestPage';
 import { Stage } from '../components/Stage';
@@ -26,13 +25,6 @@ export const SubmitRequest = () => {
                 { frame: 20, zoom: 1.5, focus: centerOf(rects.actions, { x: -60, y: 30 }), duration: 30 },
                 { frame: SUBMITTED + 18, zoom: 1.45, focus: centerOf(rects.progress, { x: -80, y: -40 }), duration: 30 },
             ]}
-            overlay={
-                <Caption
-                    step={2}
-                    title="Submit for approval"
-                    body="One click starts the tenant's approval workflow — no emails, no chasing."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

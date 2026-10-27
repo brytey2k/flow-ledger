@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconMessageCircleFilled, IconPlusFilled } from '@tabler/icons-react';
 import { AppShell } from '../../components/AppShell';
-import { Caption } from '../../components/Caption';
 import { clickPath, Cursor } from '../../components/Cursor';
 import { Stage } from '../../components/Stage';
 import { Button, Card, Checkbox, Flash, FormLabel, Input, Select, Swap, TableLabel } from '../../components/ui';
@@ -119,13 +118,6 @@ export const InviteUser = () => {
                 { frame: ROLE_CLICK - 30, zoom: 1.4, focus: centerOf(rects.role, { x: 260, y: 20 }), duration: 26 },
                 { frame: INVITED + 6, zoom: 1.35, focus: centerOf(rects.row, { x: 60, y: 60 }), duration: 30 },
             ]}
-            overlay={
-                <Caption
-                    step={3}
-                    title="Invite people into roles"
-                    body="Give each person the roles they hold. Their approvals inbox follows from it."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

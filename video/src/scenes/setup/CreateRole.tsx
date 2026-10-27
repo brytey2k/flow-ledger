@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconEditFilled, IconPlusFilled, IconTrashFilled } from '@tabler/icons-react';
 import { AppShell } from '../../components/AppShell';
-import { Caption } from '../../components/Caption';
 import { clickPath, Cursor } from '../../components/Cursor';
 import { Stage } from '../../components/Stage';
 import { Button, Card, Flash, FormLabel, Input, Swap, TableLabel } from '../../components/ui';
@@ -143,13 +142,6 @@ export const CreateRole = () => {
                 { frame: FORM, zoom: 1.45, focus: centerOf(rects.name, { x: 260, y: 60 }), duration: 26 },
                 { frame: CREATED + 6, zoom: 1.35, focus: centerOf(rects.newRow, { x: 0, y: 40 }), duration: 30 },
             ]}
-            overlay={
-                <Caption
-                    step={1}
-                    title="Create a role"
-                    body="Roles describe what someone does. Approval stages are assigned to roles, not people."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

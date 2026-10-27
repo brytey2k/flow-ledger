@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconCircleCheckFilled, IconCircleXFilled, IconEyeFilled } from '@tabler/icons-react';
 import { AppShell } from '../components/AppShell';
-import { Caption } from '../components/Caption';
 import { Cursor } from '../components/Cursor';
 import { Stage } from '../components/Stage';
 import {
@@ -109,13 +108,6 @@ export const ApproveRequest = () => {
                 { frame: COMMENT_START - 24, zoom: 1.5, focus: centerOf(rects.decision, { x: -80, y: 0 }), duration: 28 },
                 { frame: APPROVED + 10, zoom: 1.45, focus: centerOf(rects.progress, { x: -80, y: 0 }), duration: 28 },
             ]}
-            overlay={
-                <Caption
-                    step={3}
-                    title="Approve, stage by stage"
-                    body="Each approver reviews in their inbox. Routing is configured per tenant."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}

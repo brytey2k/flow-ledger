@@ -1,7 +1,6 @@
 import { useCurrentFrame } from 'remotion';
 import { IconArrowLeft, IconCurrencyDollar, IconDeviceFloppy, IconPlusFilled, IconTrashFilled, IconUserFilled } from '@tabler/icons-react';
 import { AppShell } from '../components/AppShell';
-import { Caption } from '../components/Caption';
 import { Cursor } from '../components/Cursor';
 import { Stage } from '../components/Stage';
 import { Button, Card, FormLabel, Input, Select, Textarea, usePop } from '../components/ui';
@@ -138,13 +137,6 @@ export const CreateAdvance = () => {
                 { frame: lastAddClick + 10, zoom: 1.3, focus: centerOf(rects.items, { x: 0, y: 40 }), duration: 30 },
                 { frame: SAVE_CLICK - 50, zoom: 1.12, focus: centerOf(rects.save, { x: 300, y: -160 }), duration: 30 },
             ]}
-            overlay={
-                <Caption
-                    step={1}
-                    title="Raise an advance"
-                    body="Staff request funds before they spend, line by line, in their branch currency."
-                />
-            }
         >
             <AppShell
                 rootRef={rootRef}
