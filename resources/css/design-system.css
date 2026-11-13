@@ -1,6 +1,7 @@
 /*
- * Design tokens and sgh-* component classes, shared by the app (app.css)
- * and the Remotion product videos (video/src/style.css).
+ * Design tokens and sgh-* component classes, imported by app.css.
+ * The product videos use a copy in ../app-videos/shared/design-system.css;
+ * sync it by hand.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
