@@ -119,9 +119,9 @@ test('home page leaves the film out until the promo is published', function () {
     try {
         $response = $this->get(route('landlord.home'))
             ->assertOk()
-            ->assertDontSee('id="film"', false)
-            ->assertDontSee('href="#film"', false)
-            ->assertDontSee('Watch the film')
+            ->assertDontSee('id="video"', false)
+            ->assertDontSee('href="#video"', false)
+            ->assertDontSee('Watch the video')
             ->assertDontSee('youtube-nocookie.com', false)
             ->assertDontSee(route('landlord.docs.videos'), false)
             ->assertSee('See how it works');
@@ -141,16 +141,16 @@ test('home page shows the published promo with links to the videos and the user 
     try {
         $response = $this->get(route('landlord.home'))
             ->assertOk()
-            ->assertSee('id="film"', false)
-            ->assertSee('href="#film"', false)
+            ->assertSee('id="video"', false)
+            ->assertSee('href="#video"', false)
             ->assertSee('Flow Ledger in 38 seconds.')
-            ->assertSee('Watch the film')
+            ->assertSee('Watch the video')
             ->assertSee('Play video: The film (0:38)')
             ->assertSee('/docs/videos/posters/film.webp?v=', false)
             ->assertSee('youtube-nocookie.com/embed/cdefghijklm', false)
             ->assertSee('More videos')
             ->assertDontSee('Watch the full walkthrough')
-            ->assertSeeInOrder(['id="film"', route('landlord.docs.videos'), route('landlord.docs')], false);
+            ->assertSeeInOrder(['id="video"', route('landlord.docs.videos'), route('landlord.docs')], false);
 
         assertPageLinksResolve($response->getContent());
     } finally {

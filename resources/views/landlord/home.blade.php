@@ -46,7 +46,7 @@
             <a href="#how-it-works">{{ __('landing.nav.how_it_works') }}</a>
             <a href="#controls">{{ __('landing.nav.security') }}</a>
             @if ($promo !== null)
-                <a href="#film">{{ __('landing.nav.film') }}</a>
+                <a href="#video">{{ __('landing.nav.film') }}</a>
             @endif
             <a href="{{ route('landlord.docs') }}">{{ __('landing.nav.user_guide') }}</a>
         </nav>
@@ -86,7 +86,7 @@
         <a href="#how-it-works" @click="open = false">{{ __('landing.nav.how_it_works') }}</a>
         <a href="#controls" @click="open = false">{{ __('landing.nav.security') }}</a>
         @if ($promo !== null)
-            <a href="#film" @click="open = false">{{ __('landing.nav.film') }}</a>
+            <a href="#video" @click="open = false">{{ __('landing.nav.film') }}</a>
         @endif
         <a href="{{ route('landlord.docs') }}">{{ __('landing.nav.user_guide') }}</a>
         <a class="lp-nav__sheet-cta" href="#contact" @click="open = false">{{ __('landing.nav.book_demo') }}</a>
@@ -111,7 +111,7 @@
                 <div class="lp-actions">
                     <a class="lp-btn lp-btn--primary" href="#contact">{{ __('landing.hero.book_demo') }}</a>
                     @if ($promo !== null)
-                        <a class="lp-btn lp-btn--outline" href="#film">
+                        <a class="lp-btn lp-btn--outline" href="#video">
                             <x-tabler-player-play-filled class="size-4" aria-hidden="true" />
                             {{ __('landing.hero.watch_film') }} <span class="lp-btn__meta">{{ $promoClock }}</span>
                         </a>
@@ -169,7 +169,7 @@
     </section>
 
     @if ($promo !== null)
-        <section class="lp-section lp-film" id="film" aria-labelledby="film-heading">
+        <section class="lp-section lp-film" id="video" aria-labelledby="film-heading">
             <div class="lp-container lp-film__grid">
                 <div class="lp-film__copy">
                     <h2 class="lp-h2" id="film-heading">{{ __('landing.film.heading', ['length' => $promoSeconds]) }}</h2>

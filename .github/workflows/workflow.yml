@@ -99,6 +99,18 @@ jobs:
       - name: Check Code Style (Pint)
         run: composer pint-test
 
+      # The deploy runs `php artisan optimize`; fail here, not halfway through a deploy, if a cache cannot be built
+      # (e.g. a duplicate route name breaks route:cache). APP_ENV=production gives the production central domains.
+      - name: Check Production Caches Build
+        env:
+          APP_ENV: production
+        run: |
+          php artisan optimize
+          php artisan config:clear
+          php artisan route:clear
+          php artisan event:clear
+          php artisan view:clear
+
       - name: Run Tests
 #        if: github.event_name == 'push'
         run: composer test
@@ -161,20 +173,15 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.DEPLOY_KEY }}
           script_stop: true
+          # Migrating every tenant database can outlast the 10 minute default.
+          command_timeout: 30m
           script: |
             cd ${{ vars.APP_PATH }}
-            git pull origin main
-            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
-            npm ci
-            npm run build
-            php artisan migrate --force
-            php artisan tenants:migrate --force
-            php artisan permissions:sync
-            php artisan config:clear
-            php artisan route:clear
-            php artisan view:clear
-            php artisan cache:clear
-            php artisan queue:restart
+            php artisan down --retry=60 --refresh=15
+            git pull --ff-only origin main
+            # Installs, checks the .env (app:check-environment), builds, migrates and brings the app back up. It
+            # stops, leaving the app in maintenance mode, if any step fails. See scripts/deploy.sh.
+            bash scripts/deploy.sh production
 
 
   deploy-testing:
@@ -195,20 +202,15 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.DEPLOY_KEY }}
           script_stop: true
+          # Migrating every tenant database can outlast the 10 minute default.
+          command_timeout: 30m
           script: |
             cd ${{ vars.APP_PATH }}
-            git pull origin testing
-            composer install --prefer-dist --optimize-autoloader --no-interaction --no-progress
-            npm ci
-            npm run build
-            php artisan migrate --force
-            php artisan tenants:migrate --force
-            php artisan permissions:sync
-            php artisan config:clear
-            php artisan route:clear
-            php artisan view:clear
-            php artisan cache:clear
-            php artisan queue:restart
+            php artisan down --retry=60 --refresh=15
+            git pull --ff-only origin testing
+            # Installs, checks the .env (app:check-environment), builds, migrates and brings the app back up. It
+            # stops, leaving the app in maintenance mode, if any step fails. See scripts/deploy.sh.
+            bash scripts/deploy.sh staging
 
 
   assign-author:

@@ -16,10 +16,13 @@ return [
      *
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
-    'central_domains' => [
+    'central_domains' => array_values(array_filter([
         config('app.central_url'),
-        'localhost',
-    ],
+        // `localhost` is a central domain for local development and tests only: in production a request with
+        // `Host: localhost` must never reach the landlord console or the SSO routes, and a second central domain
+        // would register every central route name twice, which stops `php artisan optimize` (route:cache).
+        in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? 'localhost' : null,
+    ])),
 
     /*
      * Tenancy bootstrappers are executed when tenancy is initialized.
