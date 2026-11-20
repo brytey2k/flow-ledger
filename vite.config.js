@@ -11,17 +11,15 @@ export default defineConfig({
             fonts: [
                 bunny('Geist', {
                     weights: [300, 400, 500, 600, 700],
+                    preload: [{ weight: 400 }, { weight: 600 }],
                 }),
                 bunny('Geist Mono', {
                     weights: [400, 500, 600],
                 }),
-                // Landing page (resources/css/landing.css) keeps its own Coral-theme
-                // typography, independent of the authenticated app's Steward Teal system.
+                // The marketing page's headings (resources/css/landing.css); its body text is Geist, like the app.
                 bunny('Sora', {
-                    weights: [400, 500, 600, 700],
-                }),
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600, 700],
+                    weights: [500, 600],
+                    preload: [{ weight: 600 }],
                 }),
             ],
         }),

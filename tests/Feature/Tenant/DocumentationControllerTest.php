@@ -6,9 +6,8 @@ uses(Tests\TenantAppTestCase::class);
 test('guest cannot access documentation', function () {
     $this->get(route('documentation'))->assertRedirect(route('login'));
 });
-test('authenticated user can view documentation', function () {
+test('authenticated user is redirected to the public guide', function () {
     $this->actingAs($this->user)
         ->get(route('documentation'))
-        ->assertOk()
-        ->assertViewIs('tenant.documentation.index');
+        ->assertRedirect(config('app.docs_url'));
 });

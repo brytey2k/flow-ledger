@@ -4,114 +4,183 @@ declare(strict_types=1);
 
 return [
     'meta' => [
-        'title_suffix' => 'Approval workflows finance teams can prove',
-        'description' => 'Flow Ledger routes disbursement, payment, and retirement requests through configurable approval workflows, with a full audit trail, multi-tenant roles, and SSO built in.',
+        'title_suffix' => 'Staff advances and expenses, approved and accounted for',
+        'description' => 'Flow Ledger takes staff advances and expense claims from request to approval, payout and retirement, with a record of every signature, branch cashbooks and reports for finance and audit.',
     ],
 
     'nav' => [
+        'skip' => 'Skip to content',
+        'footer' => 'Footer',
+        'videos' => 'Videos',
+        'primary' => 'Primary',
         'how_it_works' => 'How it works',
-        'security' => 'Security',
-        'get_started' => 'Get started',
-        'toggle_menu' => 'Toggle menu',
+        'security' => 'Controls',
+        'film' => 'Film',
+        'user_guide' => 'User guide',
+        'book_demo' => 'Book a demo',
+        'toggle_menu' => 'Menu',
         'language' => 'Language',
+        'dark_mode' => 'Dark mode',
+        'home' => 'Flow Ledger home',
     ],
 
     'hero' => [
-        'headline' => 'Every approval, accounted for.',
-        'lede' => 'Flow Ledger routes disbursement, payment, and retirement requests through the approval chains your organization already runs — branch by branch, department by department, with a record of every decision.',
-        'get_started' => 'Get started',
+        'headline' => 'Every cedi advanced, accounted for.',
+        'lede' => 'Flow Ledger takes staff advances and expense claims from request to approval, payout and retirement. Every signature is on record, every advance is followed up until it is retired, and finance can see the cash at every branch.',
+        'book_demo' => 'Book a demo',
         'see_how_it_works' => 'See how it works',
-        'note' => 'New to Flow Ledger? Ask your administrator for access to your workspace.',
-        'badge' => 'Approval workflows, accounted for',
-        'mock_aria' => 'A mock of the Flow Ledger dashboard showing branch balances, requests, and recent payments',
-        'mock_nav_dashboard' => 'Dashboard',
-        'mock_nav_requests' => 'Requests',
-        'mock_nav_workflows' => 'Workflows',
-        'mock_nav_cashbook' => 'Cashbook',
-        'mock_kpi_pending' => 'Pending requests',
-        'mock_kpi_approved' => 'Approved today',
-        'mock_kpi_disbursed' => 'Disbursed (MTD)',
-        'mock_status_approved' => 'Approved',
+        'watch_film' => 'Watch the film',
+        'call_prompt' => 'Prefer to talk? Call or WhatsApp',
+        'shot_alt' => 'The Flow Ledger dashboard: pending approvals, pending payouts, money disbursed in the last 30 days, overdue advances and a branch below its cash threshold',
+        'shot_caption' => 'The dashboard of a demonstration organisation.',
+    ],
+
+    'problem' => [
+        'heading' => 'Where paper approvals lose money.',
+        'lede' => 'Most finance teams know these problems well. Each one has a direct answer in Flow Ledger.',
+        'without' => 'Today',
+        'with' => 'With Flow Ledger',
+        'rows' => [
+            'signatures' => [
+                'problem' => 'A request waits days for the next signature, because someone is always travelling.',
+                'answer' => 'Requests move through your approval stages online. Each approver has an inbox of what is waiting for them, and nothing is lost in a folder.',
+            ],
+            'unretired' => [
+                'problem' => 'Advances are paid out and never retired.',
+                'answer' => 'Every disbursed advance waits for a retirement. After your grace period, reminders go to the staff member, the approvers or the roles you choose, until it is settled.',
+            ],
+            'cash' => [
+                'problem' => 'The cash on hand does not match the book, and nobody can explain why.',
+                'answer' => 'Each branch keeps a cashbook that payouts and settlements post to automatically. Cash counts show any surplus or deficit against it.',
+            ],
+            'trail' => [
+                'problem' => 'The auditor asks who approved a payment, and nobody can say.',
+                'answer' => 'Every request carries its own timeline of who did what, and when. The activity log cannot be edited or deleted, and it is kept for seven years.',
+            ],
+        ],
+    ],
+
+    'film' => [
+        'seconds' => ':count second|:count seconds',
+        'heading' => 'Flow Ledger in :length.',
+        'lede' => 'A short film of the whole cycle: a payment request, its approvals, the payout, the retirement and the reports.',
+        'walkthrough' => 'Watch the full walkthrough',
+        'more_videos' => 'More videos',
+        'user_guide' => 'Read the user guide',
     ],
 
     'steps' => [
-        'heading' => 'How a request moves through Flow Ledger.',
-        'lede' => 'Four stages, the same ones your finance team already follows — just with a system tracking every handoff.',
-        'submit' => [
-            'heading' => 'Submit the request',
-            'body' => 'Staff raise payment, disbursement, or retirement requests tagged to a cost code, department, and branch — so every request starts with the context finance needs to review it.',
-            'alt' => 'Payment requests list showing amounts, branches, and statuses',
+        'heading' => 'From request to retirement, in one place.',
+        'lede' => 'The five steps your finance team already follows, with the system keeping the record. The screens below are from a demonstration organisation.',
+        'request' => [
+            'title' => 'Staff request an advance or claim an expense',
+            'body' => 'Each line item carries a cost code, receipts are attached, and the request belongs to the staff member\'s branch and department from the start.',
+            'points' => [
+                'An advance before spending, or an expense to reimburse',
+                'Receipts required before submission, if you turn that on',
+                'Save it as a draft, and submit it when it is ready',
+            ],
+            'alt' => 'A draft advance request with its request type, currency, notes and line items',
         ],
-        'route' => [
-            'heading' => 'Route it for approval',
-            'body' => 'Multi-stage and parallel approval groups move the request through the right people, with per-stage thresholds and approver scopes. Edit a workflow later, and requests already in flight keep running on the version they started on — nothing breaks mid-approval.',
-            'alt' => 'Approval workflow configuration showing sequential stages and a parallel final-approval group',
+        'approve' => [
+            'title' => 'The right people approve, in the right order',
+            'body' => 'You decide the stages: head of department, finance officer, finance director, or whoever signs off in your organisation. Stages can run in parallel, and small amounts can skip the stages you choose.',
+            'points' => [
+                'Approve, send back for correction, or reject, with a comment',
+                'A request sent back resumes at the stage that returned it',
+                'Nobody can approve their own request',
+            ],
+            'alt' => 'An approver reviewing a request, with the Approve, Send Back and Reject buttons beside it',
         ],
-        'release' => [
-            'heading' => 'Release the funds',
-            'body' => "Approved disbursements post to the branch cashbook. Cash counts reconcile what's on hand against what's been recorded, branch by branch.",
-            'alt' => 'Cashbook view showing cash balances across four branches',
+        'disburse' => [
+            'title' => 'Finance pays out from the branch cashbook',
+            'body' => 'Approved requests wait in one queue, beside the cash each branch has available. Paying out records the payment in that branch\'s cashbook.',
+            'points' => [
+                'Whoever requested or approved a request cannot pay it out',
+                'Each payout is checked against the branch cashbook balance',
+                'Record a transaction reference or cheque number',
+            ],
+            'alt' => 'The disbursements queue showing the cash available for release at each branch',
         ],
-        'close' => [
-            'heading' => 'Close the loop',
-            'body' => 'Retirement requests tie spending back to the original disbursement — with the difference and any refund due tracked alongside a full activity log of who approved what, and when.',
-            'alt' => 'Retirement requests list showing amount expended and the difference against each advance',
+        'retire' => [
+            'title' => 'Staff account for every advance',
+            'body' => 'Staff list what they actually spent, with receipts. Flow Ledger works out the difference: a refund due to the organisation, or a balance owed to the staff member.',
+            'points' => [
+                'Retirements go through their own approval workflow',
+                'Settling posts the difference to the cashbook',
+                'Reminders continue until the advance is retired',
+            ],
+            'alt' => 'A retirement listing what was spent against an advance, with the difference to refund',
         ],
-    ],
-
-    'bento' => [
-        'heading' => 'See Flow Ledger at work.',
-        'lede' => 'Five screens from a live workspace — the same views your finance team would open today.',
-        'dashboard' => [
-            'title' => 'Every branch, one screen',
-            'text' => 'Cash balances, thresholds, and requests — the full picture the moment you sign in.',
-        ],
-        'workflow_stages' => [
-            'title' => 'Chains you already run',
-            'text' => 'Sequential and parallel approval stages, configured to match how your team signs off.',
-        ],
-        'payment_requests' => [
-            'title' => 'Every request, tracked',
-            'text' => 'Amounts, branches, and status for every payment and disbursement request.',
-        ],
-        'cashbook' => [
-            'title' => 'Reconciled, branch by branch',
-            'text' => "Cash counts against what's on hand, across every branch in one ledger.",
-        ],
-        'retirements' => [
-            'title' => 'The loop, closed',
-            'text' => 'Retirements tie spending back to the original disbursement, with the difference tracked automatically.',
-        ],
-    ],
-
-    'spec' => [
-        'heading' => 'Built for organizations, not just users.',
-        'lede' => 'Every tenant is its own workspace, with its own people, permissions, and record of who did what.',
-        'multi_tenant' => [
-            'term' => 'Multi-tenant workspaces',
-            'description' => 'Every organization gets an isolated workspace — its own branches, departments, roles, and requests.',
-        ],
-        'roles_permissions' => [
-            'term' => 'Roles & permissions',
-            'description' => 'Granular, per-tenant roles decide who can submit, approve, or administer — down to individual permissions.',
-        ],
-        'sso' => [
-            'term' => 'Single sign-on',
-            'description' => 'Sign in through your identity provider. Logout stays in sync across sessions via backchannel logout.',
-        ],
-        'activity_log' => [
-            'term' => 'Activity log',
-            'description' => 'Every request, approval, disbursement, and retirement is recorded and attributable.',
+        'report' => [
+            'title' => 'See where the money is, and where it is stuck',
+            'body' => 'Reports for finance, management and audit, filtered by date and branch, and exported to CSV or PDF.',
+            'points' => [
+                'Outstanding advances, by how long they have been out',
+                'Cash position, disbursements and spending by branch',
+                'Approval turnaround, send-back rate and workflow SLA',
+            ],
+            'alt' => 'The Outstanding Advances report, with advances grouped by how many days they have been outstanding',
         ],
     ],
 
-    'cta_strip' => [
-        'heading' => 'Ready to route your first approval?',
-        'lede' => 'Get started with your Flow Ledger workspace.',
-        'get_started' => 'Get started',
+    'controls' => [
+        'heading' => 'Answers for the people who sign off.',
+        'lede' => 'What finance, internal audit and IT ask before they adopt a system that handles money.',
+        'shot_alt' => 'A request timeline listing each step: created, submitted, and each stage approved, with who did it and when',
+        'shot_caption' => 'Every request keeps its own timeline: who did what, and when.',
+        'items' => [
+            'segregation' => [
+                'question' => 'Can one person request, approve and pay out the same advance?',
+                'answer' => 'No. A requester cannot approve their own request, a person can act at only one stage of a workflow, and nobody who requested or approved a request can pay it out. If no independent approver is available, the stage waits instead of being skipped.',
+            ],
+            'audit' => [
+                'question' => 'Can anyone change the record afterwards?',
+                'answer' => 'Requests, approvals, payouts, cashbook entries, cash counts and changes to users, roles and settings are all recorded in the activity log. Its entries cannot be edited or deleted in Flow Ledger, and they are kept for seven years. Cashbook entries made by payouts and settlements cannot be deleted either.',
+            ],
+            'branches' => [
+                'question' => 'We have many branches. Who sees what?',
+                'answer' => 'Branches form a tree, from head office down. By default people see only their own branch\'s requests, cashbooks and reports; a separate permission extends that to a branch and every branch beneath it. Approval stages can be limited to the request\'s branch or the requester\'s department.',
+            ],
+            'roles' => [
+                'question' => 'Who decides what each person can do?',
+                'answer' => 'Your administrators. Every action is its own permission and roles bundle them, so you can, for example, create an approver role that only reviews requests. Nobody can grant a permission they do not hold themselves.',
+            ],
+            'sso' => [
+                'question' => 'Can staff sign in with their work accounts?',
+                'answer' => 'Yes. Flow Ledger supports single sign-on through an identity provider. An account is created the first time someone signs in, and it can be linked to their staff record automatically. Signing out stays in step across sessions.',
+            ],
+            'isolation' => [
+                'question' => 'Is our data kept apart from other organisations?',
+                'answer' => 'Yes. Each organisation has its own database and its own file storage.',
+            ],
+            'export' => [
+                'question' => 'Can we take our data out?',
+                'answer' => 'Every report exports to CSV and PDF, and each branch cashbook exports to CSV. Going the other way, staff, departments and positions can be imported from spreadsheets when you start.',
+            ],
+            'currency' => [
+                'question' => 'Does it work in cedis, and in other currencies?',
+                'answer' => 'Yes. Each request is in the currency you choose, each branch keeps its cashbook in its reporting currency, and cash counts use the notes and coins you set up for that currency.',
+            ],
+        ],
+    ],
+
+    'contact' => [
+        'heading' => 'See Flow Ledger with your own approval chain.',
+        'lede' => 'We set up each organisation with its team, so self-service sign-up is paused. Book a demonstration and we will walk your finance team through Flow Ledger, then set it up with you.',
+        'call' => 'Call :phone',
+        'whatsapp' => 'WhatsApp us',
+        'whatsapp_message' => 'Hello, I would like a demonstration of Flow Ledger.',
+        'next_heading' => 'What happens next',
+        'next' => [
+            'demo' => 'A demonstration for your finance team, built around how your organisation approves payments today.',
+            'workspace' => 'We create your organisation\'s workspace, with a Head Office branch and an administrator account.',
+            'setup' => 'You add your branches, roles and approval workflows, and import your staff from a spreadsheet.',
+        ],
     ],
 
     'footer' => [
-        'tagline' => 'Approval workflows for finance teams',
+        'statement' => 'Staff advances, expenses and retirements for organisations where more than one person signs off.',
+        'copyright' => '© :year Flow Ledger',
     ],
 ];

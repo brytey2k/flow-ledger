@@ -119,6 +119,109 @@
     display: none !important;
 }
 
+html.sgh-scroll-lock,
+html.sgh-scroll-lock body {
+    overflow: hidden;
+}
+
+@layer components {
+    /* A user guide chapter's Markdown, rendered as HTML (resources/views/docs/chapter.blade.php). */
+    .docs-prose {
+        @apply text-[15.5px] leading-7 text-foreground/85;
+    }
+    .docs-prose > :first-child {
+        @apply mt-0;
+    }
+    .docs-prose :where(p, ul, ol, table, blockquote, pre) {
+        @apply mt-4;
+    }
+    .docs-prose h2 {
+        @apply mt-12 scroll-mt-24 border-t border-border pt-8 text-xl font-semibold tracking-tight text-foreground;
+    }
+    .docs-prose > h2:first-child {
+        @apply border-t-0 pt-0;
+    }
+    .docs-prose h3 {
+        @apply mt-8 scroll-mt-24 text-base font-semibold text-foreground;
+    }
+    .docs-prose h4 {
+        @apply mt-6 text-sm font-semibold text-foreground;
+    }
+    .docs-prose a {
+        @apply font-medium text-(--app-link-color) underline decoration-1 underline-offset-2 hover:text-(--app-link-hover-color);
+    }
+    .docs-prose strong {
+        @apply font-semibold text-foreground;
+    }
+    .docs-prose ul {
+        @apply list-disc ps-6;
+    }
+    .docs-prose ol {
+        @apply list-decimal ps-6;
+    }
+    .docs-prose li {
+        @apply mt-1.5 ps-1 marker:text-muted-foreground;
+    }
+    .docs-prose li > :where(ul, ol, p) {
+        @apply mt-1.5;
+    }
+    .docs-prose code {
+        @apply rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[0.85em] text-foreground;
+    }
+    .docs-prose pre {
+        @apply overflow-x-auto rounded-[var(--radius)] border border-border bg-muted p-4 text-sm;
+    }
+    .docs-prose pre code {
+        @apply border-0 bg-transparent p-0;
+    }
+    .docs-prose blockquote {
+        @apply border-s-2 border-primary/45 bg-muted/45 px-4 py-3 text-foreground/80;
+    }
+    .docs-prose blockquote > :first-child {
+        @apply mt-0;
+    }
+    .docs-prose hr {
+        @apply my-10 border-border;
+    }
+    .docs-prose table {
+        @apply block w-full overflow-x-auto rounded-[var(--radius)] border border-border text-sm;
+    }
+    .docs-prose thead th {
+        @apply border-b border-border bg-muted/50 px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground;
+    }
+    .docs-prose tbody td {
+        @apply border-b border-border px-4 py-2.5 align-top;
+    }
+    .docs-prose tbody tr:last-child td {
+        @apply border-b-0;
+    }
+    .docs-prose figure {
+        @apply my-8;
+    }
+    .docs-prose img {
+        @apply h-auto w-full cursor-zoom-in rounded-xl border border-border bg-muted shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    }
+    .docs-prose figcaption {
+        @apply mt-2.5 text-center text-[13px] leading-snug text-muted-foreground;
+    }
+
+    /* A guide video: our own poster until the visitor presses play (resources/views/docs/partials/video-player.blade.php). */
+    .docs-video-player {
+        @apply relative block aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted;
+    }
+    .docs-video-player iframe,
+    .docs-video-player img {
+        @apply absolute inset-0 size-full border-0 object-cover;
+    }
+    .docs-video-play {
+        @apply absolute bottom-3 start-3 inline-flex items-center gap-1.5 rounded-full bg-black/75 px-3.5 py-1.5 text-sm font-medium text-white shadow-lg backdrop-blur-sm transition-colors;
+    }
+    .docs-video-player:hover .docs-video-play,
+    .docs-video-player:focus-visible .docs-video-play {
+        @apply bg-primary text-primary-foreground;
+    }
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';

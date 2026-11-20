@@ -119,6 +119,56 @@ Alpine.store('attachmentPreview', {
     },
 });
 
+// User guide chapter: a screenshot opens full size in a preview, with the chapter's other screenshots a step away.
+Alpine.data('docsScreenshots', () => ({
+    images: [],
+    current: null,
+    opener: null,
+    init() {
+        this.$root.querySelectorAll('figure img, p img').forEach((img) => {
+            img.tabIndex = 0;
+            img.setAttribute('role', 'button');
+            img.setAttribute('aria-description', 'Opens the screenshot full size');
+            img.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    this.open(event);
+                }
+            });
+        });
+    },
+    open(event) {
+        const image = event.target.closest('img');
+        if (!image || !image.closest('figure, p')) {
+            return;
+        }
+        const all = Array.from(this.$root.querySelectorAll('figure img, p img'));
+        this.images = all.map((img) => ({
+            src: img.currentSrc || img.src,
+            alt: img.alt,
+            caption: img.closest('figure')?.querySelector('figcaption')?.textContent ?? img.alt,
+        }));
+        this.current = all.indexOf(image);
+        this.opener = image;
+        document.documentElement.classList.add('sgh-scroll-lock');
+        this.$nextTick(() => this.$refs.close?.focus());
+    },
+    step(direction) {
+        if (this.current === null) {
+            return;
+        }
+        this.current = Math.min(this.images.length - 1, Math.max(0, this.current + direction));
+    },
+    close() {
+        if (this.current === null) {
+            return;
+        }
+        this.current = null;
+        document.documentElement.classList.remove('sgh-scroll-lock');
+        this.opener?.focus({ preventScroll: true });
+    },
+}));
+
 window.Alpine = Alpine;
 Alpine.start();
 

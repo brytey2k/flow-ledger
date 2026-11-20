@@ -273,6 +273,10 @@
         @apply bg-[oklch(0.93_0.05_250)] text-[oklch(0.4_0.13_250)];
     }
 
+    .sgh-kpi-label {
+        @apply font-mono text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground;
+    }
+
     .sgh-alert {
         @apply flex items-start gap-3 rounded-[var(--radius)] border p-4 text-sm;
     }
@@ -365,7 +369,8 @@
     .sgh-nav-item {
         @apply flex items-center gap-2.5 rounded-e-[var(--radius)] border-s-2 border-transparent px-2.5 py-[7px] text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground;
     }
-    .sgh-nav-item.active {
+    .sgh-nav-item.active,
+    .sgh-nav-item[aria-current='page'] {
         @apply border-s-primary bg-accent font-semibold text-accent-foreground;
     }
     .sgh-nav-icon {

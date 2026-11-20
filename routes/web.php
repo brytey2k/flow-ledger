@@ -20,6 +20,8 @@ use App\Http\Controllers\Web\Landlord\TenantRolesAndPermissionsController;
 use App\Http\Controllers\Web\Landlord\TenantsController;
 use App\Http\Controllers\Web\Landlord\TenantStorageController;
 use App\Http\Controllers\Web\Landlord\TenantUserAdminController;
+use App\Http\Controllers\Web\Landlord\UserGuideController;
+use App\Support\UserGuide;
 use Illuminate\Support\Facades\Route;
 
 foreach (config('tenancy.central_domains') as $domain) {
@@ -34,6 +36,13 @@ foreach (config('tenancy.central_domains') as $domain) {
 
     Route::domain($domain)->name('landlord.')->group(static function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
+        Route::get('docs/videos', [UserGuideController::class, 'videos'])->name('docs.videos');
+        Route::get('docs/videos/posters/{file}', [UserGuideController::class, 'poster'])
+            ->where('file', UserGuide::POSTER_PATTERN)->name('docs.poster');
+        Route::get('docs/images/{file}', [UserGuideController::class, 'image'])
+            ->where('file', UserGuide::IMAGE_PATTERN)->name('docs.image');
+        Route::get('docs/{slug?}', [UserGuideController::class, 'show'])
+            ->where('slug', '[a-z0-9-]+')->name('docs');
 
         Route::get('health/heartbeat', PlatformHeartbeatController::class)->name('heartbeat')->middleware('throttle:60,1');
 

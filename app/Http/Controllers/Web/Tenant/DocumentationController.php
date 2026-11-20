@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Web\Tenant;
 
 use App\Http\Controllers\Controller;
-use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Config;
 
 class DocumentationController extends Controller
 {
-    public function index(): View
+    public function index(): RedirectResponse
     {
-        return view('tenant.documentation.index');
+        return redirect()->away(Config::string('app.docs_url'));
     }
 }

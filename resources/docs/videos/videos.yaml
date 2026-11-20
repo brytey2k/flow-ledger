@@ -1,0 +1,72 @@
+# The guide's videos, hosted on YouTube (unlisted) and listed in the video center in this order. Each chapter in
+# `chapters` shows the video at its top. A video without a `youtube` id is left out everywhere until it is uploaded.
+# Each poster is posters/{key}.webp (1280 × 720), so nothing is loaded from YouTube until a visitor presses play.
+#
+# The renders come from ../app-videos/flow-ledger/out: walkthrough.mp4, promo.mp4 and parts/*.mp4.
+#
+# kind: promo (the introduction film), walkthrough (the full tour) or part (one part of the tour).
+
+- key: walkthrough
+  kind: walkthrough
+  title: "Flow Ledger walkthrough"
+  description: "Set up your organisation and approvals, take an advance from request to retirement, and read the reports, in five short parts."
+  youtube: "fN-f5oIEA4E"
+  seconds: 259
+  chapters:
+    - getting-started
+
+- key: organisation
+  kind: part
+  title: "Organise your workspace"
+  description: "Branches and departments define where requests belong."
+  youtube: "pi0oe0zNhRk"
+  seconds: 20
+  chapters:
+    - branches
+    - cost-codes-currencies
+
+- key: people-and-access
+  kind: part
+  title: "Roles and people"
+  description: "Separate responsibilities with roles, then invite people with the right branch and roles."
+  youtube: "g4haF0MJuSg"
+  seconds: 46
+  chapters:
+    - roles-permissions
+
+- key: approval-workflow
+  kind: part
+  title: "Approval workflows"
+  description: "Choose a workflow for each request type and review its stages, thresholds and scope."
+  youtube: "cOv0m2smKI0"
+  seconds: 46
+  chapters:
+    - approval-workflows
+
+- key: advance-request
+  kind: part
+  title: "From advance to retirement"
+  description: "Raise and submit an advance, approve it stage by stage, pay it out, then retire it and settle the difference."
+  youtube: "QWupNnunQCs"
+  seconds: 101
+  chapters:
+    - payment-requests
+    - retirement-requests
+    - cash-management
+
+- key: reports
+  kind: part
+  title: "Reports and the audit trail"
+  description: "Outstanding advances, spending and cash for finance; approval times and the audit trail for IT and audit."
+  youtube: "ZHAkLKTviyU"
+  seconds: 45
+  chapters:
+    - reports
+
+- key: promo
+  kind: promo
+  title: "Introducing Flow Ledger"
+  description: "Flow Ledger in 38 seconds: payment requests, approvals, disbursement, retirements and reports."
+  youtube: "8YkMZW8Pj6A"
+  seconds: 38
+  chapters: []

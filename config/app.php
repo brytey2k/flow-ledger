@@ -35,6 +35,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sales Phone Number
+    |--------------------------------------------------------------------------
+    |
+    | The number the marketing page offers for a call or a WhatsApp message to
+    | book a demonstration, written as it should be shown.
+    |
+    */
+    'sales_phone' => env('SALES_PHONE', '+233 59 220 9201'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
@@ -111,7 +122,7 @@ return [
     |
     */
 
-    'docs_url' => env('DOCS_URL', 'https://docs.flowledger.softwaregh.com'),
+    'docs_url' => rtrim(env('APP_URL', 'http://localhost'), '/') . '/docs',
 
     /*
     |--------------------------------------------------------------------------
