@@ -74,6 +74,7 @@ return [
     ],
     'roles' => [
         'created' => 'Role created successfully.',
+        'cloned' => 'Role cloned from :name with all its permissions.',
         'updated' => 'Role updated successfully.',
         'deleted' => 'Role deleted successfully.',
         'permissions_updated' => 'Role permissions updated successfully.',

@@ -9,6 +9,9 @@ return [
     'all' => 'All Roles',
     'create_title' => 'Create Role',
     'create_subtitle' => 'Add a new role to your system',
+    'clone_title' => 'Clone Role',
+    'clone_subtitle' => 'Create a new role with all :count permission(s) of :name',
+    'clone_default_name' => 'Copy of :name',
     'edit_title' => 'Edit Role',
     'edit_subtitle' => 'Update role information',
     'back' => 'Back to Roles',
@@ -17,6 +20,7 @@ return [
     'fields' => [
         'name' => 'Role Name',
         'name_hint' => 'Enter a descriptive name for this role.',
+        'clone_name_hint' => 'Choose a unique name. The new role starts with exactly the same permissions. Users are not copied.',
         'guard' => 'Guard Name',
         'guard_hint' => 'The authentication guard for this role (default: web).',
     ],
@@ -27,6 +31,7 @@ return [
         'add' => 'Add Role',
         'delete' => 'Delete',
         'manage_perms' => 'Manage Permissions',
+        'clone' => 'Clone Role',
     ],
 
     'permissions' => [

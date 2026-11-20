@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Web\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\IndexFilterRequest;
 use App\Http\Requests\Tenant\PermissionsSyncRequest;
+use App\Http\Requests\Tenant\RoleCloneRequest;
 use App\Http\Requests\Tenant\RoleStoreRequest;
 use App\Http\Requests\Tenant\RoleUpdateRequest;
 use App\Models\Role;
@@ -77,6 +78,74 @@ class RolesController extends Controller
         return redirect()
             ->route('roles.index')
             ->with('success', __('flash.roles.created'));
+    }
+
+    /**
+     * Show the form for cloning a role together with its permissions.
+     *
+     * @param Role $role
+     */
+    public function createClone(Role $role): View
+    {
+        return view('tenant.roles.clone', [
+            'role' => $role->loadCount('permissions'),
+        ]);
+    }
+
+    /**
+     * Create a new role carrying a copy of the source role's permissions.
+     *
+     * The copy goes through the escalation guard like any other grant, so an
+     * actor cannot mint a role holding permissions they do not hold
+     * themselves by cloning a more privileged one. Users are not copied.
+     *
+     * @param RoleCloneRequest $request
+     * @param Role $role
+     */
+    public function storeClone(RoleCloneRequest $request, Role $role): RedirectResponse
+    {
+        /** @var User $actor */
+        $actor = $request->user();
+
+        $role->load('permissions');
+
+        /** @var array<int, int> $permissionIds */
+        $permissionIds = array_map(intval(...), $role->permissions->modelKeys());
+
+        $deniedPermissionNames = $this->permissionEscalationGuard->deniedPermissionNames($actor, $permissionIds, []);
+        if ($deniedPermissionNames !== []) {
+            return redirect()
+                ->route('roles.clone', $role)
+                ->withInput()
+                ->with('error', $this->permissionGrantDeniedMessage($deniedPermissionNames));
+        }
+
+        $clone = DB::transaction(function () use ($request, $role): Role {
+            /** @var Role $clone */
+            $clone = Role::query()->create([
+                'name' => $request->roleName(),
+                'guard_name' => $role->guard_name,
+            ]);
+            $clone->syncPermissions($role->permissions);
+
+            return $clone;
+        });
+
+        activity()
+            ->performedOn($clone)
+            ->causedBy($actor)
+            ->event('role.cloned')
+            ->withProperties([
+                'name' => $clone->name,
+                'source_role_id' => $role->id,
+                'source_role_name' => $role->name,
+                'permissions' => $role->permissions->pluck('name')->all(),
+            ])
+            ->log('Role cloned');
+
+        return redirect()
+            ->route('roles.edit', $clone)
+            ->with('success', __('flash.roles.cloned', ['name' => $role->name]));
     }
 
     public function edit(Role $role): View

@@ -414,6 +414,14 @@ Route::middleware([
         Route::post('/roles', [RolesController::class, 'store'])
             ->can(PermissionKey::CreateRole->value)
             ->name('roles.store');
+        Route::get('/roles/{role}/clone', [RolesController::class, 'createClone'])
+            ->can(PermissionKey::CreateRole->value)
+            ->can(PermissionKey::ManageRolePermissions->value)
+            ->name('roles.clone');
+        Route::post('/roles/{role}/clone', [RolesController::class, 'storeClone'])
+            ->can(PermissionKey::CreateRole->value)
+            ->can(PermissionKey::ManageRolePermissions->value)
+            ->name('roles.clone.store');
         Route::get('/roles/{role}/edit', [RolesController::class, 'edit'])
             ->can(PermissionKey::AccessRoles->value)
             ->name('roles.edit');

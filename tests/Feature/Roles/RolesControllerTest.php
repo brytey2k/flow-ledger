@@ -275,3 +275,140 @@ test('update permissions denial message truncates to first five with a remaining
     $response->assertSessionHas('error', fn($message) => str_contains($message, __('flash.and_more_count', ['count' => 2])));
     expect($role->fresh()->permissions)->toHaveCount(0);
 });
+test('guest is redirected from clone form', function () {
+    $role = Role::create(['name' => 'guest-clone-' . Str::uuid(), 'guard_name' => 'web']);
+
+    $this->get(route('roles.clone', $role))->assertRedirect(route('login'));
+    $this->post(route('roles.clone.store', $role), ['name' => 'guest-clone-copy'])->assertRedirect(route('login'));
+});
+test('clone form prefills a copy name for the source role', function () {
+    $role = Role::create(['name' => 'Approvers-' . Str::uuid(), 'guard_name' => 'web']);
+
+    $response = $this->actingAs($this->user)->get(route('roles.clone', $role));
+
+    $response->assertOk();
+    $response->assertViewIs('tenant.roles.clone');
+    $response->assertSee(__('roles.clone_default_name', ['name' => $role->name]));
+});
+test('clone copies every permission of the source role to the new role', function () {
+    $source = Role::create(['name' => 'clone-source-' . Str::uuid(), 'guard_name' => 'web']);
+    $source->givePermissionTo([PermissionKey::AccessCostCodes->value, PermissionKey::AccessDepartments->value]);
+    $cloneName = 'clone-copy-' . Str::uuid();
+
+    $response = $this->actingAs($this->user)->post(route('roles.clone.store', $source), [
+        'name' => $cloneName,
+    ]);
+
+    $clone = Role::query()->where('name', $cloneName)->firstOrFail();
+    $response->assertRedirect(route('roles.edit', $clone));
+    $response->assertSessionHas('success', __('flash.roles.cloned', ['name' => $source->name]));
+
+    expect($clone->guard_name)->toBe($source->guard_name);
+    expect($clone->permissions->pluck('name')->sort()->values()->all())
+        ->toBe($source->permissions->pluck('name')->sort()->values()->all());
+    expect($source->fresh()->permissions)->toHaveCount(2);
+});
+test('cloning a role logs activity', function () {
+    $source = Role::create(['name' => 'clone-log-source-' . Str::uuid(), 'guard_name' => 'web']);
+    $cloneName = 'clone-log-copy-' . Str::uuid();
+
+    $this->actingAs($this->user)->post(route('roles.clone.store', $source), ['name' => $cloneName]);
+
+    $this->assertDatabaseHas('activity_log', [
+        'subject_type' => 'role',
+        'subject_id' => Role::query()->where('name', $cloneName)->firstOrFail()->id,
+        'event' => 'role.cloned',
+    ]);
+});
+test('clone does not copy users of the source role', function () {
+    $source = Role::create(['name' => 'clone-users-' . Str::uuid(), 'guard_name' => 'web']);
+    User::factory()->create()->assignRole($source);
+    $cloneName = 'clone-users-copy-' . Str::uuid();
+
+    $this->actingAs($this->user)->post(route('roles.clone.store', $source), ['name' => $cloneName]);
+
+    expect(Role::query()->where('name', $cloneName)->firstOrFail()->users()->count())->toBe(0);
+    expect($source->users()->count())->toBe(1);
+});
+test('clone validates unique name', function () {
+    $source = Role::create(['name' => 'clone-unique-' . Str::uuid(), 'guard_name' => 'web']);
+
+    $response = $this->actingAs($this->user)->post(route('roles.clone.store', $source), [
+        'name' => $source->name,
+    ]);
+
+    $response->assertSessionHasErrors('name');
+});
+test('clone validates required name', function () {
+    $source = Role::create(['name' => 'clone-required-' . Str::uuid(), 'guard_name' => 'web']);
+
+    $response = $this->actingAs($this->user)->post(route('roles.clone.store', $source), ['name' => '']);
+
+    $response->assertSessionHasErrors('name');
+});
+test('clone is rejected when the source role holds permissions the actor lacks', function () {
+    $this->role->revokePermissionTo(PermissionKey::AccessSettings->value);
+    app(Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $source = Role::create(['name' => 'clone-escalation-' . Str::uuid(), 'guard_name' => 'web']);
+    $source->givePermissionTo(PermissionKey::AccessSettings->value);
+    $cloneName = 'clone-escalation-copy-' . Str::uuid();
+
+    $response = $this->actingAs($this->user)->post(route('roles.clone.store', $source), [
+        'name' => $cloneName,
+    ]);
+
+    $response->assertRedirect(route('roles.clone', $source));
+    $response->assertSessionHas('error', __('flash.roles.permission_grant_denied', [
+        'permissions' => PermissionKey::AccessSettings->value,
+    ]));
+    $response->assertSessionHasInput('name', $cloneName);
+    $this->assertDatabaseMissing('roles', ['name' => $cloneName]);
+});
+test('clone requires the manage role permissions permission', function () {
+    $this->role->revokePermissionTo(PermissionKey::ManageRolePermissions->value);
+    app(Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $source = Role::create(['name' => 'clone-no-manage-' . Str::uuid(), 'guard_name' => 'web']);
+    $cloneName = 'clone-no-manage-copy-' . Str::uuid();
+
+    $this->actingAs($this->user)->get(route('roles.clone', $source))->assertForbidden();
+    $this->actingAs($this->user)->post(route('roles.clone.store', $source), ['name' => $cloneName])->assertForbidden();
+    $this->assertDatabaseMissing('roles', ['name' => $cloneName]);
+});
+test('clone requires the create role permission', function () {
+    $this->role->revokePermissionTo(PermissionKey::CreateRole->value);
+    app(Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $source = Role::create(['name' => 'clone-no-create-' . Str::uuid(), 'guard_name' => 'web']);
+    $cloneName = 'clone-no-create-copy-' . Str::uuid();
+
+    $this->actingAs($this->user)->get(route('roles.clone', $source))->assertForbidden();
+    $this->actingAs($this->user)->post(route('roles.clone.store', $source), ['name' => $cloneName])->assertForbidden();
+    $this->assertDatabaseMissing('roles', ['name' => $cloneName]);
+});
+test('roles index shows clone action only to users who can clone', function () {
+    $role = Role::create(['name' => 'clone-index-' . Str::uuid(), 'guard_name' => 'web']);
+
+    $viewer = User::factory()->create();
+    $viewer->givePermissionTo(PermissionKey::AccessRoles->value);
+    app(Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($viewer)->get(route('roles.index'))
+        ->assertOk()
+        ->assertDontSee(route('roles.clone', $role));
+
+    $viewer->givePermissionTo(PermissionKey::CreateRole->value);
+    app(Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($viewer->fresh())->get(route('roles.index'))
+        ->assertOk()
+        ->assertDontSee(route('roles.clone', $role));
+
+    $viewer->givePermissionTo(PermissionKey::ManageRolePermissions->value);
+    app(Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($viewer->fresh())->get(route('roles.index'))
+        ->assertOk()
+        ->assertSee(route('roles.clone', $role));
+});

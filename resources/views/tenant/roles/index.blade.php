@@ -117,6 +117,11 @@
                                                         <x-tabler-edit-filled class="text-lg" />
                                                     </a>
                                                 @endcan
+                                                @can([\App\Enums\Tenant\PermissionKey::CreateRole->value, \App\Enums\Tenant\PermissionKey::ManageRolePermissions->value])
+                                                    <a href="{{ route('roles.clone', $role) }}" class="sgh-btn sgh-btn-sm sgh-btn-icon sgh-btn-ghost text-primary" title="{{ __('roles.buttons.clone') }}">
+                                                        <x-tabler-copy class="text-lg" />
+                                                    </a>
+                                                @endcan
                                                 @can(\App\Enums\Tenant\PermissionKey::DeleteRole->value)
                                                     <form action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm('{{ __('roles.confirm_delete') }}');" class="inline">
                                                         @csrf
