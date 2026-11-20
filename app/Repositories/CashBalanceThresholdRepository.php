@@ -59,6 +59,7 @@ class CashBalanceThresholdRepository
         return CashBalanceNotificationLog::create([
             'cash_balance_threshold_id' => $thresholdId,
             'balance_amount' => $balanceAmount,
+            'notified_at' => now(),
         ]);
     }
 

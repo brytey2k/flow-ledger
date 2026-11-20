@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
 use App\Models\Tenant\Branch;
+use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowInstanceStage;
@@ -156,6 +157,7 @@ test('submit falls back to master template when no branch template', function ()
 });
 test('disburse sets status to disbursed', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    Cashbook::factory()->funded()->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
         reference: null,
     );
@@ -169,6 +171,7 @@ test('disburse sets status to disbursed', function () {
 });
 test('disburse records disbursed at and disbursed by', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    Cashbook::factory()->funded()->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
         reference: 'REF-123',
     );
@@ -183,6 +186,7 @@ test('disburse records disbursed at and disbursed by', function () {
 });
 test('disburse creates cashbook entry', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 200.0]);
+    Cashbook::factory()->funded()->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
         reference: null,
     );
@@ -197,6 +201,7 @@ test('disburse creates cashbook entry', function () {
 });
 test('disburse logs activity', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    Cashbook::factory()->funded()->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(
         reference: null,
     );
@@ -287,6 +292,7 @@ test('decline without workflow instance sets status to denied', function () {
 });
 test('disburse refuses a request that another call already disbursed', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    Cashbook::factory()->funded()->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
     $staleCopy = PaymentRequest::findOrFail($request->id);
     $dto = new App\DTOs\Tenant\DisbursePaymentRequestDto(reference: null);
 
@@ -298,6 +304,7 @@ test('disburse refuses a request that another call already disbursed', function 
 });
 test('cancel refuses a request that has already been disbursed', function () {
     $request = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'total_amount' => 100.0]);
+    Cashbook::factory()->funded()->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
     $staleCopy = PaymentRequest::findOrFail($request->id);
     makeServiceForPaymentRequestService()->disburse($request, new App\DTOs\Tenant\DisbursePaymentRequestDto(reference: null), $this->user);
 

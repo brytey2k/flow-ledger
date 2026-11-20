@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\Tenant\PaymentRequestStatus;
 use App\Exceptions\SendBackNotAllowedException;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
@@ -234,7 +235,8 @@ class WorkflowEngineService
             $instance->update(['status' => 'cancelled']);
             /** @var Model $workflowable */
             $workflowable = $instance->workflowable;
-            $workflowable->update(['status' => 'cancelled']);
+            $rejectedStatus = $this->rejectedStatusFor($workflowable);
+            $workflowable->update(['status' => $rejectedStatus]);
 
             /** @var WorkflowStage $stage */
             $stage = $fresh->stage;
@@ -245,7 +247,7 @@ class WorkflowEngineService
                 ->event('stage.rejected')
                 ->withProperties([
                     'old_status' => 'in_workflow',
-                    'new_status' => 'cancelled',
+                    'new_status' => $rejectedStatus,
                     'stage' => $stage->name,
                     'comment' => $comment,
                 ])
@@ -255,6 +257,19 @@ class WorkflowEngineService
         });
 
         $this->notifications->notifyRejected($workflowable, $comment);
+    }
+
+    /**
+     * A rejected payment request is denied, the same end state as declining it. A retirement has no denied
+     * state: it is cancelled, so the staff member can file a new retirement for the advance.
+     *
+     * @param Model $workflowable
+     */
+    private function rejectedStatusFor(Model $workflowable): string
+    {
+        return $workflowable instanceof PaymentRequest
+            ? PaymentRequestStatus::Denied->value
+            : 'cancelled';
     }
 
     public function sendBack(WorkflowInstanceStage $instanceStage, User $user, string $comment): void

@@ -507,7 +507,7 @@ test('approve completes workflow when last stage', function () {
     expect($paymentRequest->status)->toBe('approved');
     expect($paymentRequest->approved_at)->not->toBeNull();
 });
-test('reject cancels workflow and redirects', function () {
+test('reject cancels workflow, denies the request and redirects', function () {
     [$paymentRequest, $instanceStage] = submitRequestWithTemplate();
 
     $response = $this->actingAs($this->user)->post(route('approvals.store', $instanceStage), [
@@ -518,7 +518,7 @@ test('reject cancels workflow and redirects', function () {
     $response->assertRedirect(route('payment-requests.show', $paymentRequest));
 
     $paymentRequest->refresh();
-    expect($paymentRequest->status)->toBe('cancelled');
+    expect($paymentRequest->status)->toBe('denied');
 });
 test('reject requires comment', function () {
     [, $instanceStage] = submitRequestWithTemplate();

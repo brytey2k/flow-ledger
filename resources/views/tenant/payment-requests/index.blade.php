@@ -11,6 +11,7 @@
         'retired'     => 'sgh-badge-neutral',
         'sent_back'   => 'sgh-badge-warning',
         'cancelled'   => 'sgh-badge-danger',
+        'denied'      => 'sgh-badge-danger',
     ];
     $typeColors = [
         'advance' => 'sgh-badge-primary',

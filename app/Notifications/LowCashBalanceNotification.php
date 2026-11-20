@@ -8,7 +8,6 @@ use App\Models\Tenant\CashBalanceThreshold;
 use App\Support\MailText;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\DatabaseMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -24,7 +23,7 @@ class LowCashBalanceNotification extends Notification implements ShouldQueue
     /** @return list<string> */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -49,23 +48,5 @@ class LowCashBalanceNotification extends Notification implements ShouldQueue
             ->line(__('notifications.low_cash_balance.threshold', ['amount' => $formattedThreshold]))
             ->line(__('notifications.low_cash_balance.take_action'))
             ->line(__('notifications.low_cash_balance.automated'));
-    }
-
-    public function toDatabase(object $notifiable): DatabaseMessage
-    {
-        $branch = $this->threshold->branch;
-        /** @var string $branchName */
-        $branchName = $branch->getAttribute('name');
-        $rawThresholdAmount = $this->threshold->getAttribute('threshold_amount');
-        $thresholdAmount = is_numeric($rawThresholdAmount) ? (float) $rawThresholdAmount : 0.0;
-
-        return new DatabaseMessage([
-            'type' => 'low_cash_balance',
-            'branch_id' => $this->threshold->getAttribute('branch_id'),
-            'branch_name' => $branchName,
-            'current_balance' => $this->currentBalance,
-            'threshold_amount' => $thresholdAmount,
-            'message' => 'Cash balance for ' . $branchName . ' is below threshold',
-        ]);
     }
 }

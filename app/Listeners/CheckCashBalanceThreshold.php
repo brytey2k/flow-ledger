@@ -8,15 +8,31 @@ use App\Events\CashbookBalanceChanged;
 use App\Models\Tenant\User;
 use App\Notifications\LowCashBalanceNotification;
 use App\Repositories\CashBalanceThresholdRepository;
+use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 use Illuminate\Support\Facades\Notification;
+use Throwable;
 
-class CheckCashBalanceThreshold
+/**
+ * Runs once the cashbook change has committed, and never throws: a low-balance alert is a side effect, so a
+ * failure here (mail transport, queue, a bad recipient) is reported but cannot undo or fail the disbursement,
+ * settlement or receipt that moved the balance.
+ */
+class CheckCashBalanceThreshold implements ShouldHandleEventsAfterCommit
 {
     public function __construct(
         private readonly CashBalanceThresholdRepository $thresholdRepository,
     ) {}
 
     public function handle(CashbookBalanceChanged $event): void
+    {
+        try {
+            $this->notifyIfBelowThreshold($event);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    private function notifyIfBelowThreshold(CashbookBalanceChanged $event): void
     {
         /** @var int $branchId */
         $branchId = $event->cashbook->getAttribute('branch_id');

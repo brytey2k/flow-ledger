@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 uses(Tests\TenantAppTestCase::class);
+use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
+use Illuminate\Support\Str;
 
 function ownedDraftRequest(array $overrides = []): PaymentRequest
 {
@@ -101,4 +103,65 @@ test('cannot submit when workflow template has no stages', function () {
 
     $request->refresh();
     expect($request->status)->toBe('draft');
+});
+test('submit uses the current published template, not an older version', function () {
+    WorkflowTemplate::query()->delete();
+    $request = ownedDraftRequest();
+    $groupId = (string) Str::uuid();
+    // An older, superseded version that has no stages sorts first.
+    WorkflowTemplate::factory()->advance()->create(['template_group_id' => $groupId, 'version' => 1, 'is_current' => false]);
+    $current = WorkflowTemplate::factory()->advance()->create(['template_group_id' => $groupId, 'version' => 2, 'is_current' => true]);
+    WorkflowStage::factory()->for($current, 'template')->create();
+
+    $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
+
+    $response->assertSessionHas('success');
+    expect($request->fresh()->activeWorkflowInstance->workflow_template_id)->toBe($current->id);
+});
+test('submit ignores an unpublished draft template', function () {
+    WorkflowTemplate::query()->delete();
+    $request = ownedDraftRequest();
+    $draft = WorkflowTemplate::factory()->advance()->draft()->create();
+    WorkflowStage::factory()->for($draft, 'template')->create();
+
+    $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
+
+    $response->assertRedirect(route('payment-requests.show', $request));
+    $response->assertSessionHas('error', __('flash.requests.missing_workflow_template'));
+    expect($request->fresh()->status)->toBe('draft');
+});
+test('submit prefers the branch template over the master template', function () {
+    WorkflowTemplate::query()->delete();
+    $request = ownedDraftRequest();
+    // The master template has no stages; checking it instead of the branch template would block the submit.
+    WorkflowTemplate::factory()->advance()->create(['branch_id' => null]);
+    $branchTemplate = WorkflowTemplate::factory()->advance()->create(['branch_id' => $this->branch->id]);
+    WorkflowStage::factory()->for($branchTemplate, 'template')->create();
+
+    $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
+
+    $response->assertSessionHas('success');
+    expect($request->fresh()->activeWorkflowInstance->workflow_template_id)->toBe($branchTemplate->id);
+});
+test('submit ignores another branch template and falls back to the master template', function () {
+    WorkflowTemplate::query()->delete();
+    $request = ownedDraftRequest();
+    $otherBranch = Branch::factory()->create(['level_id' => $this->level->id]);
+    $otherBranchTemplate = WorkflowTemplate::factory()->advance()->create(['branch_id' => $otherBranch->id]);
+    WorkflowStage::factory()->for($otherBranchTemplate, 'template')->create();
+
+    $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
+
+    $response->assertSessionHas('error', __('flash.requests.missing_workflow_template'));
+    expect($request->fresh()->status)->toBe('draft');
+});
+test('expense submit reports a missing workflow template instead of failing', function () {
+    WorkflowTemplate::query()->delete();
+    $request = ownedDraftRequest(['type' => 'expense']);
+
+    $response = $this->actingAs($this->user)->post(route('payment-requests.submit', $request));
+
+    $response->assertRedirect(route('payment-requests.show', $request));
+    $response->assertSessionHas('error', __('flash.requests.missing_workflow_template'));
+    expect($request->fresh()->status)->toBe('draft');
 });

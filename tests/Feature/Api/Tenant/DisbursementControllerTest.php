@@ -80,6 +80,7 @@ test('store disburses approved request', function () {
         'currency_id' => $this->currency->id,
         'status' => 'approved',
     ]);
+    Cashbook::factory()->funded()->create(['branch_id' => $pr->branch_id, 'currency_id' => $pr->currency_id]);
 
     $this->postJson("/api/disbursements/{$pr->id}", [
         'disbursement_reference' => 'REF-001',

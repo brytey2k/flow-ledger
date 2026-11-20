@@ -9,6 +9,7 @@ use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\RetirementService;
 use App\Services\SettingsService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -39,9 +40,10 @@ class RetirementRequestSubmitController extends Controller
                 ->with('error', __('flash.retirements.source_documents_required'));
         }
 
-        $template = WorkflowTemplate::where('type', 'retirement')->first();
-
-        if ($template === null) {
+        // Resolve the template exactly as RetirementService::submit() will: the advance's branch first, then the master.
+        try {
+            $template = WorkflowTemplate::resolveForBranch('retirement', $retirementRequest->paymentRequest?->branch_id);
+        } catch (ModelNotFoundException) {
             return redirect()->route('retirement-requests.show', $retirementRequest)
                 ->with('error', __('flash.retirements.missing_workflow_template'));
         }

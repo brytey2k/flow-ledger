@@ -90,6 +90,7 @@ test('index excludes a request submitted by the disbursement user', function () 
 });
 test('authorised user can disburse approved request', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    Cashbook::factory()->funded()->create(['branch_id' => $paymentRequest->branch_id, 'currency_id' => $paymentRequest->currency_id]);
 
     $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
         'disbursement_reference' => 'TXN-001',
@@ -123,6 +124,7 @@ test('request submitter cannot disburse the same request', function () {
 });
 test('disburse without reference is allowed', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    Cashbook::factory()->funded()->create(['branch_id' => $paymentRequest->branch_id, 'currency_id' => $paymentRequest->currency_id]);
 
     $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest));
 
@@ -156,6 +158,7 @@ test('disbursement method cannot be supplied by the user', function () {
 });
 test('disburse logs activity', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    Cashbook::factory()->funded()->create(['branch_id' => $paymentRequest->branch_id, 'currency_id' => $paymentRequest->currency_id]);
 
     $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
         'disbursement_reference' => 'MM-999',
@@ -190,6 +193,7 @@ test('cannot disburse when insufficient cashbook balance', function () {
 });
 test('authorised user can disburse approved expense', function () {
     $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'approved', 'branch_id' => $this->branch->id]);
+    Cashbook::factory()->funded()->create(['branch_id' => $paymentRequest->branch_id, 'currency_id' => $paymentRequest->currency_id]);
 
     $response = $this->actingAs($this->user)->post(route('disbursements.store', $paymentRequest), [
         'disbursement_reference' => 'TXN-EXP-001',

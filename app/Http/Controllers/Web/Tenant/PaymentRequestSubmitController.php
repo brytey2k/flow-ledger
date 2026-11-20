@@ -11,6 +11,7 @@ use App\Models\Tenant\WorkflowTemplate;
 use App\Services\BranchScopeService;
 use App\Services\PaymentRequestService;
 use App\Services\SettingsService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 
 class PaymentRequestSubmitController extends Controller
@@ -38,21 +39,19 @@ class PaymentRequestSubmitController extends Controller
                 ->with('error', __('flash.requests.submit_only_draft'));
         }
 
-        if ($paymentRequest->type === PaymentRequestType::Expense->value) {
-            if ($this->settingsService->isExpenseSourceDocumentRequired() && $paymentRequest->attachments()->doesntExist()) {
-                return redirect()->route('payment-requests.show', $paymentRequest)
-                    ->with('error', __('flash.requests.source_documents_required'));
-            }
-
-            $this->service->submit($paymentRequest, $user);
-
+        if ($paymentRequest->type === PaymentRequestType::Expense->value
+            && $this->settingsService->isExpenseSourceDocumentRequired()
+            && $paymentRequest->attachments()->doesntExist()
+        ) {
             return redirect()->route('payment-requests.show', $paymentRequest)
-                ->with('success', __('flash.requests.submitted'));
+                ->with('error', __('flash.requests.source_documents_required'));
         }
 
-        $template = WorkflowTemplate::where('type', $paymentRequest->type)->first();
-
-        if ($template === null) {
+        // Resolve the template exactly as PaymentRequestService::submit() will: the branch's current version
+        // first, then the master's. A draft or superseded version never counts.
+        try {
+            $template = WorkflowTemplate::resolveForBranch($paymentRequest->type, $paymentRequest->branch_id);
+        } catch (ModelNotFoundException) {
             return redirect()->route('payment-requests.show', $paymentRequest)
                 ->with('error', __('flash.requests.missing_workflow_template'));
         }

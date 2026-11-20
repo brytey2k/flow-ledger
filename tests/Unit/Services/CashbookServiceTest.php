@@ -51,6 +51,7 @@ function approvedRetirementForCashbookService(string $differenceType, float $dif
     ]);
 }
 test('record disbursement creates credit entry', function () {
+    makeCashbookForCashbookService(300.0);
     $request = approvedAdvanceForCashbookService(300.0);
 
     makeServiceForCashbookService()->recordDisbursement($request, $this->user);
@@ -72,23 +73,21 @@ test('record disbursement decrements balance', function () {
 
     expect((float) $cashbook->fresh()->balance)->toEqualWithDelta(700.0, 0.01);
 });
+test('record disbursement throws when balance is zero', function () {
+    makeCashbookForCashbookService(0.0);
+    $request = approvedAdvanceForCashbookService(500.0);
+
+    $this->expectException(InsufficientCashbookBalanceException::class);
+    makeServiceForCashbookService()->recordDisbursement($request, $this->user);
+});
 test('record disbursement auto creates cashbook when none exists', function () {
     expect(Cashbook::where('branch_id', $this->branch->id)->first())->toBeNull();
     $request = approvedAdvanceForCashbookService(200.0);
 
-    makeServiceForCashbookService()->recordDisbursement($request, $this->user);
-
-    expect(Cashbook::where('branch_id', $this->branch->id)->first())->not->toBeNull();
-});
-test('record disbursement allows disbursement when balance is zero', function () {
-    makeCashbookForCashbookService(0.0);
-    $request = approvedAdvanceForCashbookService(500.0);
-
-    // Zero balance must not block — allows going negative.
-    makeServiceForCashbookService()->recordDisbursement($request, $this->user);
-
-    $cashbook = Cashbook::where('branch_id', $this->branch->id)->firstOrFail();
-    expect((float) $cashbook->balance)->toEqualWithDelta(-500.0, 0.01);
+    // The new cashbook starts at zero, so the payout itself is refused until cash is receipted in.
+    expect(fn() => makeServiceForCashbookService()->recordDisbursement($request, $this->user))
+        ->toThrow(InsufficientCashbookBalanceException::class);
+    expect((float) Cashbook::where('branch_id', $this->branch->id)->firstOrFail()->balance)->toEqualWithDelta(0.0, 0.01);
 });
 test('record disbursement throws when balance is negative', function () {
     makeCashbookForCashbookService(-200.0);
@@ -163,6 +162,28 @@ test('refund to company retirement creates debit entry and increments balance', 
         'sourceable_id' => $retirement->id,
     ]);
     expect((float) $cashbook->balance)->toEqualWithDelta(600.0, 0.01);
+});
+test('pay to staff retirement throws when balance is zero', function () {
+    makeCashbookForCashbookService(0.0);
+    $retirement = approvedRetirementForCashbookService('pay_to_staff', 200.0);
+
+    $this->expectException(InsufficientCashbookBalanceException::class);
+    makeServiceForCashbookService()->recordRetirementSettlement($retirement, $this->user);
+});
+test('pay to staff retirement throws when balance is negative', function () {
+    makeCashbookForCashbookService(-50.0);
+    $retirement = approvedRetirementForCashbookService('pay_to_staff', 200.0);
+
+    $this->expectException(InsufficientCashbookBalanceException::class);
+    makeServiceForCashbookService()->recordRetirementSettlement($retirement, $this->user);
+});
+test('refund to company retirement is accepted when balance is zero', function () {
+    makeCashbookForCashbookService(0.0);
+    $retirement = approvedRetirementForCashbookService('refund_to_company', 100.0);
+
+    makeServiceForCashbookService()->recordRetirementSettlement($retirement, $this->user);
+
+    expect((float) Cashbook::where('branch_id', $this->branch->id)->firstOrFail()->balance)->toEqualWithDelta(100.0, 0.01);
 });
 test('pay to staff retirement throws when balance is positive but insufficient', function () {
     makeCashbookForCashbookService(50.0);

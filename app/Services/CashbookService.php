@@ -49,8 +49,7 @@ class CashbookService
         assert($branch instanceof Branch);
         $cashbook = $this->getOrCreateForBranch($branch, $request->currency_id);
 
-        // Prevent disbursement if balance is already negative, or positive but insufficient.
-        if ($cashbook->balance < 0 || ($cashbook->balance > 0 && $cashbook->balance < $amount)) {
+        if (! $this->coversPayout($cashbook, $amount)) {
             throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for disbursement.');
         }
 
@@ -96,8 +95,7 @@ class CashbookService
         $amount = is_numeric($raw) ? (float) $raw : 0.0;
         $isCredit = $retirement->difference_type === 'pay_to_staff';
 
-        // Check if balance is positive but insufficient for credit transactions (paying staff).
-        if ($isCredit && $cashbook->balance > 0 && $cashbook->balance < $amount) {
+        if ($isCredit && ! $this->coversPayout($cashbook, $amount)) {
             throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for retirement settlement.');
         }
 
@@ -138,6 +136,21 @@ class CashbookService
             ->log($isCredit ? 'Cash debited for retirement settlement' : 'Cash credited from retirement refund');
 
         CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
+    }
+
+    /**
+     * Cash can only be paid out of cash on hand: the balance must cover the whole amount, so a zero or
+     * negative balance blocks any payout. Money coming in (receipts, refunds) is never blocked.
+     *
+     * @param Cashbook $cashbook
+     * @param float $amount
+     */
+    private function coversPayout(Cashbook $cashbook, float $amount): bool
+    {
+        $raw = $cashbook->getAttribute('balance');
+        $balance = is_numeric($raw) ? (float) $raw : 0.0;
+
+        return round($balance, 2) >= round($amount, 2);
     }
 
     public function recordManualReceipt(Cashbook $cashbook, CashbookEntryDto $dto, User|null $user = null): CashbookEntry

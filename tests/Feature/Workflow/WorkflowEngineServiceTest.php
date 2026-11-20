@@ -9,6 +9,7 @@ use App\Models\Tenant\Branch;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\Department;
 use App\Models\Tenant\PaymentRequest;
+use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\Staff;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstanceStage;
@@ -292,7 +293,7 @@ test('parallel or group cancels siblings on first approval', function () {
     $instance->refresh();
     expect($instance->status)->toEqual('completed');
 });
-test('reject cancels all remaining stages and marks subject cancelled', function () {
+test('reject cancels all remaining stages and marks payment request denied', function () {
     ['template' => $template] = makeSequentialTemplate(3);
     $subject = makePaymentRequestForWorkflowEngineService();
     $instance = $this->engine->startWorkflow($subject, $template);
@@ -309,13 +310,40 @@ test('reject cancels all remaining stages and marks subject cancelled', function
     expect($instance->status)->toEqual('cancelled');
 
     $subject->refresh();
-    expect($subject->status)->toEqual('cancelled');
+    expect($subject->status)->toEqual('denied');
 
     $this->assertDatabaseHas('workflow_actions', [
         'workflow_instance_stage_id' => $activeStage->id,
         'action' => 'reject',
         'comment' => 'Not approved.',
     ]);
+
+    $rejection = $subject->activities()->where('event', 'stage.rejected')->firstOrFail();
+    expect($rejection->properties['new_status'])->toBe('denied');
+});
+test('reject marks a retirement cancelled so the advance can be retired again', function () {
+    $template = WorkflowTemplate::factory()->retirement()->create();
+    $role = Role::create(['name' => 'approver_' . uniqid(), 'guard_name' => 'web']);
+    WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1])
+        ->roles()->sync([$role->id]);
+    $this->user->assignRole($role);
+    $template->load('stages');
+
+    $advance = makePaymentRequestForWorkflowEngineService(['status' => 'disbursed']);
+    $retirement = RetirementRequest::factory()->create([
+        'payment_request_id' => $advance->id,
+        'status' => 'in_workflow',
+    ]);
+    $instance = $this->engine->startWorkflow($retirement, $template);
+
+    $activeStage = $instance->instanceStages()->where('status', 'active')->firstOrFail();
+    $this->engine->reject($activeStage, $this->user, 'Receipts do not match.');
+
+    $retirement->refresh();
+    expect($retirement->status)->toEqual('cancelled');
+
+    $rejection = $retirement->activities()->where('event', 'stage.rejected')->firstOrFail();
+    expect($rejection->properties['new_status'])->toBe('cancelled');
 });
 test('send back records action and stores sent back stage id', function () {
     ['template' => $template] = makeSequentialTemplate(2);

@@ -11,6 +11,7 @@
         'retired'     => 'sgh-badge-neutral',
         'sent_back'   => 'sgh-badge-warning',
         'cancelled'   => 'sgh-badge-danger',
+        'denied'      => 'sgh-badge-danger',
     ];
     $typeColors = [
         \App\Enums\Tenant\PaymentRequestType::Advance->value => 'sgh-badge-primary',
@@ -647,6 +648,11 @@
                             <div class="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                                 <x-tabler-circle-x-filled />
                                 {{ __('payment_requests.timeline.cancelled') }}
+                            </div>
+                        @elseif($paymentRequest->status === 'denied')
+                            <div class="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                                <x-tabler-circle-x-filled />
+                                {{ __('payment_requests.timeline.denied') }}
                             </div>
                         @endif
                     </div>

@@ -135,6 +135,17 @@ test('log notification creates log record', function () {
     expect($log)->toBeInstanceOf(CashBalanceNotificationLog::class);
     expect($log->cash_balance_threshold_id)->toBe($threshold->id);
 });
+test('log notification stamps notified at from the application clock', function () {
+    $this->travelTo('2026-03-14 09:30:00');
+    $threshold = CashBalanceThreshold::factory()->create([
+        'branch_id' => $this->branch->id,
+        'is_active' => true,
+    ]);
+
+    $log = $this->repository->logNotification($threshold->id, 750.00);
+
+    expect($log->fresh()->notified_at->toDateTimeString())->toBe('2026-03-14 09:30:00');
+});
 test('get notification user ids returns null when no threshold', function () {
     $result = $this->repository->getNotificationUserIds(999999);
 

@@ -33,6 +33,7 @@ function approvedRetirementForCashbookAutoEntry(string $differenceType, float $d
 }
 test('disbursement creates credit cashbook entry', function () {
     $request = approvedAdvanceForCashbookAutoEntry(500.00);
+    Cashbook::factory()->funded(500.00)->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
 
     $this->actingAs($this->user)
         ->post(route('disbursements.store', $request));
@@ -49,21 +50,24 @@ test('disbursement creates credit cashbook entry', function () {
 });
 test('disbursement decrements cashbook balance', function () {
     $request = approvedAdvanceForCashbookAutoEntry(300.00);
+    Cashbook::factory()->funded(1000.00)->create(['branch_id' => $request->branch_id, 'currency_id' => $request->currency_id]);
 
     $this->actingAs($this->user)
         ->post(route('disbursements.store', $request));
 
     $cashbook = Cashbook::where('branch_id', $request->branch_id)->first();
-    expect((float) $cashbook->balance)->toEqualWithDelta(-300.00, 0.01);
+    expect((float) $cashbook->balance)->toEqualWithDelta(700.00, 0.01);
 });
-test('disbursement auto creates cashbook for branch', function () {
+test('disbursement from a branch with no cashbook is refused for lack of cash', function () {
     $request = approvedAdvanceForCashbookAutoEntry(200.00);
     expect(Cashbook::where('branch_id', $request->branch_id)->first())->toBeNull();
 
     $this->actingAs($this->user)
         ->post(route('disbursements.store', $request));
 
-    expect(Cashbook::where('branch_id', $request->branch_id)->first())->not->toBeNull();
+    // The cashbook it would auto-create starts at zero, which cannot cover a payout; the whole disbursement rolls back.
+    expect($request->fresh()->status)->toBe('approved');
+    expect(Cashbook::where('branch_id', $request->branch_id)->first())->toBeNull();
 });
 test('second disbursement on same branch accumulates balance', function () {
     $currency = Currency::factory()->create();
@@ -92,6 +96,7 @@ test('second disbursement on same branch accumulates balance', function () {
 });
 test('pay to staff retirement creates credit entry', function () {
     $retirement = approvedRetirementForCashbookAutoEntry('pay_to_staff', 75.00);
+    Cashbook::factory()->funded(1000.00)->create(['branch_id' => $this->branch->id]);
 
     $this->actingAs($this->user)
         ->post(route('retirement-requests.settle', $retirement));
@@ -109,13 +114,14 @@ test('pay to staff retirement creates credit entry', function () {
 });
 test('pay to staff retirement decrements cashbook balance', function () {
     $retirement = approvedRetirementForCashbookAutoEntry('pay_to_staff', 75.00);
+    Cashbook::factory()->funded(1000.00)->create(['branch_id' => $this->branch->id]);
 
     $this->actingAs($this->user)
         ->post(route('retirement-requests.settle', $retirement));
 
     $branchId = $retirement->paymentRequest()->value('branch_id');
     $cashbook = Cashbook::where('branch_id', $branchId)->first();
-    expect((float) $cashbook->balance)->toEqualWithDelta(-75.00, 0.01);
+    expect((float) $cashbook->balance)->toEqualWithDelta(925.00, 0.01);
 });
 test('refund to company retirement creates debit entry', function () {
     $retirement = approvedRetirementForCashbookAutoEntry('refund_to_company', 100.00);

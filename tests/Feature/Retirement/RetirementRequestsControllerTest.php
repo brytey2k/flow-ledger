@@ -369,6 +369,21 @@ test('cannot submit when workflow template has no stages', function () {
     $retirement->refresh();
     expect($retirement->status)->toBe('draft');
 });
+test('submit resolves the current branch retirement template before the master', function () {
+    WorkflowTemplate::query()->delete();
+    // Neither the stage-less master nor an unpublished draft may be the template that gets checked.
+    WorkflowTemplate::factory()->retirement()->create(['branch_id' => null]);
+    $draft = WorkflowTemplate::factory()->retirement()->draft()->create(['branch_id' => $this->branch->id]);
+    WorkflowStage::factory()->create(['workflow_template_id' => $draft->id, 'display_order' => 1]);
+    $branchTemplate = WorkflowTemplate::factory()->retirement()->create(['branch_id' => $this->branch->id]);
+    WorkflowStage::factory()->create(['workflow_template_id' => $branchTemplate->id, 'display_order' => 1]);
+    $retirement = draftRetirementWithOwner();
+
+    $response = $this->actingAs($this->user)->post(route('retirement-requests.submit', $retirement));
+
+    $response->assertSessionHas('success');
+    expect($retirement->fresh()->activeWorkflowInstance->workflow_template_id)->toBe($branchTemplate->id);
+});
 test('non owner cannot submit retirement', function () {
     $template = WorkflowTemplate::factory()->retirement()->create();
     WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);

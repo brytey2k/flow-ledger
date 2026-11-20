@@ -258,6 +258,25 @@ test('show renders payment request', function () {
     $response->assertViewIs('tenant.payment-requests.show');
     $response->assertViewHas('paymentRequest');
 });
+test('show marks a denied request with a danger badge and a denied end state', function () {
+    $paymentRequest = PaymentRequest::factory()->create(['branch_id' => $this->branch->id, 'status' => 'denied']);
+
+    $content = $this->actingAs($this->user)->get(route('payment-requests.show', $paymentRequest))
+        ->assertOk()
+        ->getContent();
+
+    expect($content)->toMatch('/sgh-badge-danger">\s*Denied\s*</')
+        ->and($content)->toMatch('/text-destructive text-sm">\s*<svg[^>]*>.*?<\/svg>\s*' . __('payment_requests.timeline.denied') . '\s*</s');
+});
+test('index marks denied requests with a danger badge', function () {
+    PaymentRequest::factory()->create(['branch_id' => $this->branch->id, 'status' => 'denied']);
+
+    $content = $this->actingAs($this->user)->get(route('payment-requests.index'))
+        ->assertOk()
+        ->getContent();
+
+    expect($content)->toMatch('/sgh-badge-danger">\s*Denied\s*</');
+});
 test('show passes active stage data when workflow is in progress', function () {
     $template = WorkflowTemplate::factory()->advance()->create();
     $stageDef = WorkflowStage::factory()->create(['workflow_template_id' => $template->id, 'display_order' => 1]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 uses(Tests\TenantAppTestCase::class);
 use App\Enums\Tenant\UserStatus;
 use App\Models\Role;
+use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
@@ -162,6 +163,7 @@ test('submitter is notified when request is sent back', function () {
 });
 test('submitter is notified when advance is disbursed', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+    Cashbook::factory()->funded()->create(['branch_id' => $paymentRequest->branch_id, 'currency_id' => $paymentRequest->currency_id]);
 
     activity()
         ->performedOn($paymentRequest)
@@ -177,6 +179,7 @@ test('submitter is notified when advance is disbursed', function () {
 });
 test('submitter also receives retirement reminder when advance is disbursed', function () {
     $paymentRequest = PaymentRequest::factory()->advance()->create(['status' => 'approved']);
+    Cashbook::factory()->funded()->create(['branch_id' => $paymentRequest->branch_id, 'currency_id' => $paymentRequest->currency_id]);
 
     activity()
         ->performedOn($paymentRequest)
@@ -192,6 +195,7 @@ test('submitter also receives retirement reminder when advance is disbursed', fu
 });
 test('expense disbursement does not send retirement reminder', function () {
     $paymentRequest = PaymentRequest::factory()->expense()->create(['status' => 'approved']);
+    Cashbook::factory()->funded()->create(['branch_id' => $paymentRequest->branch_id, 'currency_id' => $paymentRequest->currency_id]);
 
     activity()
         ->performedOn($paymentRequest)

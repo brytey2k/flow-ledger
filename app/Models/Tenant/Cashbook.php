@@ -36,7 +36,7 @@ use Spatie\Activitylog\Models\Concerns\HasActivity;
 class Cashbook extends Model
 {
     use HasActivity;
-    /** @use HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<static>> */
+    /** @use HasFactory<\Database\Factories\Tenant\CashbookFactory> */
     use HasFactory;
     use SoftDeletes;
 

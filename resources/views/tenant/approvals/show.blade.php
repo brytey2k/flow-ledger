@@ -12,6 +12,7 @@
         'retired'     => 'sgh-badge-neutral',
         'sent_back'   => 'sgh-badge-warning',
         'cancelled'   => 'sgh-badge-danger',
+        'denied'      => 'sgh-badge-danger',
     ];
     $typeColors = [
         \App\Enums\Tenant\PaymentRequestType::Advance->value => 'sgh-badge-primary',

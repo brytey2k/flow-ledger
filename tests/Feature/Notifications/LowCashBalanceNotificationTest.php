@@ -8,12 +8,12 @@ use App\Models\Tenant\CashBalanceThreshold;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\User;
 use App\Notifications\LowCashBalanceNotification;
-use Illuminate\Notifications\Messages\DatabaseMessage;
 
-test('low cash balance notification uses mail and database channels', function () {
+test('low cash balance notification is sent by mail only', function () {
     $notification = makeNotification();
 
-    expect($notification->via($this->user))->toBe(['mail', 'database']);
+    // Tenant databases have no notifications table and nothing reads in-app notifications.
+    expect($notification->via($this->user))->toBe(['mail']);
 });
 test('low cash balance notification mail mentions branch and amounts', function () {
     $notification = makeNotification();
@@ -22,16 +22,6 @@ test('low cash balance notification mail mentions branch and amounts', function 
     $this->assertStringContainsString('Low Cash Balance Alert', $mail->subject);
     $this->assertStringContainsString('Main Branch', implode(' ', $mail->introLines));
     $this->assertStringContainsString('750.00', implode(' ', $mail->introLines));
-});
-test('low cash balance notification database payload is structured', function () {
-    $notification = makeNotification();
-    $message = $notification->toDatabase($this->user);
-
-    expect($message)->toBeInstanceOf(DatabaseMessage::class);
-    expect($message->data['type'])->toBe('low_cash_balance');
-    expect($message->data['branch_name'])->toBe('Main Branch');
-    expect($message->data['current_balance'])->toBe(750.0);
-    expect($message->data['threshold_amount'])->toBe(1000.0);
 });
 function makeNotification(): LowCashBalanceNotification
 {
