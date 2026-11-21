@@ -177,10 +177,9 @@ jobs:
           command_timeout: 30m
           script: |
             cd ${{ vars.APP_PATH }}
-            php artisan down --retry=60 --refresh=15
             git pull --ff-only origin main
-            # Installs, checks the .env (app:check-environment), builds, migrates and brings the app back up. It
-            # stops, leaving the app in maintenance mode, if any step fails. See scripts/deploy.sh.
+            # Installs, checks the .env (app:check-environment), builds and migrates. It stops if any step fails;
+            # the app is not put into maintenance mode. See scripts/deploy.sh.
             bash scripts/deploy.sh production
 
 
@@ -206,10 +205,9 @@ jobs:
           command_timeout: 30m
           script: |
             cd ${{ vars.APP_PATH }}
-            php artisan down --retry=60 --refresh=15
             git pull --ff-only origin testing
-            # Installs, checks the .env (app:check-environment), builds, migrates and brings the app back up. It
-            # stops, leaving the app in maintenance mode, if any step fails. See scripts/deploy.sh.
+            # Installs, checks the .env (app:check-environment), builds and migrates. It stops if any step fails;
+            # the app is not put into maintenance mode. See scripts/deploy.sh.
             bash scripts/deploy.sh staging
 
 
