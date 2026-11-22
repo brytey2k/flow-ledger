@@ -58,6 +58,8 @@ return [
             'region' => env('BACKUP_DISK_REGION', 'us-east-1'),
             'bucket' => env('BACKUP_DISK_BUCKET'),
             'endpoint' => env('BACKUP_DISK_ENDPOINT'),
+            // Folder inside the bucket, so apps that share a bucket keep their backups apart.
+            'root' => env('BACKUP_DISK_ROOT', ''),
             'use_path_style_endpoint' => env('BACKUP_DISK_USE_PATH_STYLE_ENDPOINT', false),
             'visibility' => 'private',
             'throw' => true,

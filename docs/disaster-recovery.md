@@ -45,7 +45,7 @@ Retention: daily copies for 30 days; the first backup of each month for 12 month
    php artisan backup:generate-key
    ```
    Put the printed `BACKUP_ENCRYPTION_PUBLIC_KEY=...` line in the server `.env`. Store the **private key** in the three places listed in section 2. If it is lost, every backup is unreadable by anyone.
-3. **Set the other variables** in the server `.env` (see `.env.example`): `BACKUP_DISK_KEY`, `BACKUP_DISK_SECRET`, `BACKUP_DISK_REGION`, `BACKUP_DISK_BUCKET`, `BACKUP_DISK_ENDPOINT`.
+3. **Set the other variables** in the server `.env` (see `.env.example`): `BACKUP_DISK_KEY`, `BACKUP_DISK_SECRET`, `BACKUP_DISK_REGION`, `BACKUP_DISK_BUCKET`, `BACKUP_DISK_ENDPOINT`, and `BACKUP_DISK_ROOT` (this app's folder in the bucket, `flow-ledger`, so its backups stay apart from any other app sharing the bucket).
 4. **Make sure the scheduler runs.** Backups are scheduled in `bootstrap/app.php`, so the server needs the standard cron entry, owned by the app user (not root):
    ```
    * * * * * cd /var/www/flow-ledger && php artisan schedule:run >> /dev/null 2>&1
@@ -129,7 +129,7 @@ First, in every scenario: **stop and decide.** Note the time, what is wrong, and
 
 ```bash
 # download from the backups bucket with your S3 tool, e.g. the AWS CLI:
-aws s3 cp s3://<bucket>/2026-10/<database>/<file>.dump.enc ./ --endpoint-url https://nyc3.digitaloceanspaces.com
+aws s3 cp s3://<bucket>/flow-ledger/2026-10/<database>/<file>.dump.enc ./ --endpoint-url https://nyc3.digitaloceanspaces.com
 
 php artisan backup:decrypt ./<file>.dump.enc ./<database>.dump --private-key-file=/secure/path/backup.key
 ```
@@ -228,7 +228,7 @@ The choices in this runbook are only true once they are set up. Work through thi
 |---|---|---|---|---|
 | 1 | Confirm in the Linode dashboard that production is in the Los Angeles region. If not, update sections 2, 3, 9 and Appendix A. | 9 | | |
 | 2 | Create the uploads bucket (DigitalOcean Spaces `sfo3`) with its own access keys and versioning on, and point production uploads at it. The attachment services use the `local` disk, so its definition in `config/filesystems.php` must point at the bucket. | 2 | | |
-| 3 | Create the backups bucket (DigitalOcean Spaces `nyc3`) with versioning on and keys limited to write and list on that bucket. Set `BACKUP_DISK_KEY`, `BACKUP_DISK_SECRET`, `BACKUP_DISK_REGION`, `BACKUP_DISK_BUCKET` and `BACKUP_DISK_ENDPOINT` in the server `.env`. | 3 | | |
+| 3 | Create the backups bucket (DigitalOcean Spaces `nyc3`) with versioning on and keys limited to write and list on that bucket. Set `BACKUP_DISK_KEY`, `BACKUP_DISK_SECRET`, `BACKUP_DISK_REGION`, `BACKUP_DISK_BUCKET`, `BACKUP_DISK_ENDPOINT` and `BACKUP_DISK_ROOT` in the server `.env`. | 3 | | |
 | 4 | Set `BACKUP_PG_DUMP_BINARY` and `BACKUP_PG_RESTORE_BINARY` to the PostgreSQL 18 binaries. | 4 | | |
 | 5 | Create the password manager vault **Flow Ledger — Production** and save the production `.env` in it as `Production .env`. | 2 | | |
 | 6 | Choose the second key holder. Run `php artisan backup:generate-key` on a trusted machine, put the public key in `.env`, and store the private key in all three places. | 2, 3 | | |

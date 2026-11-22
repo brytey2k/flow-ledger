@@ -29,6 +29,7 @@ beforeEach(function () {
         'filesystems.disks.backups.key' => 'key',
         'filesystems.disks.backups.secret' => 'secret',
         'filesystems.disks.backups.bucket' => 'flow-ledger-backups',
+        'filesystems.disks.backups.root' => 'flow-ledger',
         'sso.client_id' => 'flow-ledger',
         'sso.client_secret' => 'secret',
         'sso.idp_url' => 'https://iam.example.com',
@@ -114,6 +115,11 @@ test('the central domain must be the real domain APP_URL points at', function ()
 test('backups need their encryption key and an offsite disk with credentials', function () {
     config(['filesystems.disks.backups.key' => null, 'filesystems.disks.backups.secret' => '']);
     expect(auditSettings(production: true, blockingOnly: true))->toBe(['BACKUP_DISK_KEY / BACKUP_DISK_SECRET']);
+
+    config(['filesystems.disks.backups.key' => 'key', 'filesystems.disks.backups.secret' => 'secret', 'filesystems.disks.backups.root' => '']);
+    expect(auditSettings(production: true, blockingOnly: true))->toBe(['BACKUP_DISK_ROOT'])
+        ->and(auditSettings(production: false))->toBe(['BACKUP_DISK_ROOT'])
+        ->and(auditSettings(production: false, blockingOnly: true))->toBe([]);
 
     config(['backup.disk' => 'public']);
     expect(auditSettings(production: true, blockingOnly: true))->toBe(['BACKUP_DISK']);
