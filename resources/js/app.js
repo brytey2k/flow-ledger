@@ -14,6 +14,43 @@ Alpine.data('dropdown', () => ({
     },
 }));
 
+// Topbar apps drawer: lazily loads the IdP's app list the first time it is opened
+// (and again on the next open if loading failed).
+Alpine.data('appsDrawer', () => ({
+    open: false,
+    status: 'idle',
+    apps: [],
+    toggle() {
+        this.open = !this.open;
+        if (this.open) {
+            this.load();
+        }
+    },
+    close() {
+        this.open = false;
+    },
+    async load() {
+        if (this.status === 'loading' || this.status === 'ready') {
+            return;
+        }
+        this.status = 'loading';
+        try {
+            const response = await fetch(this.$root.dataset.appsUrl, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (!response.ok) {
+                throw new Error(`Apps request failed with status ${response.status}`);
+            }
+            const body = await response.json();
+            this.apps = Array.isArray(body.data) ? body.data : [];
+            this.status = 'ready';
+        } catch {
+            this.status = 'error';
+        }
+    },
+}));
+
 // Like `dropdown`, but teleports its panel to <body> and positions it with
 // fixed coordinates so it can escape an `overflow-x-auto` table wrapper
 // instead of being clipped by it.
