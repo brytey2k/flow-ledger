@@ -33,6 +33,8 @@ return [
     'm2m_client_secret' => env('SSO_M2M_CLIENT_SECRET'),
     'm2m_scope' => env('SSO_M2M_SCOPE', 'login:verify'),
     'm2m_invite_scope' => env('SSO_M2M_INVITE_SCOPE', 'users:invite'),
+    // Scope requested when reading the shared application list (apps drawer) from the IdP
+    'm2m_apps_scope' => env('SSO_M2M_APPS_SCOPE', 'apps:read'),
 
     'verify_ssl' => (bool) env('SSO_VERIFY_SSL', true),
 ];

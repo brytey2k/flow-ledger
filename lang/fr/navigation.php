@@ -26,6 +26,12 @@ return [
     'logout' => 'Se deconnecter',
     'dark_mode' => 'Mode sombre',
     'language' => 'Langue',
+    'apps' => 'Applications',
+    'apps_loading' => 'Chargement des applications…',
+    'apps_empty' => 'Aucune autre application n\'est disponible.',
+    'apps_unavailable' => 'Impossible de charger les applications pour le moment.',
+    'apps_homepage' => 'Accueil',
+    'apps_sign_in' => 'Se connecter',
     'sections' => [
         'requests' => 'Demandes',
         'finance' => 'Finance',

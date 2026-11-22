@@ -27,6 +27,7 @@
         </div>
         <!-- Topbar -->
         <div class="flex items-center gap-2.5">
+            @include('tenant.partials.topbar-apps-dropdown')
             @include('tenant.partials.topbar-locale-dropdown')
             @include('tenant.partials.topbar-user-dropdown')
         </div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\Tenant\PermissionKey;
 use App\Http\Controllers\Web\Tenant\ActivityLogController;
+use App\Http\Controllers\Web\Tenant\AppsController;
 use App\Http\Controllers\Web\Tenant\AttachmentsController;
 use App\Http\Controllers\Web\Tenant\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Tenant\Auth\LoginController;
@@ -83,6 +84,7 @@ Route::middleware([
         Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/documentation', [DocumentationController::class, 'index'])->name('documentation');
+        Route::get('/apps', [AppsController::class, 'index'])->middleware('throttle:30,1')->name('apps.index');
 
         // Reports
         Route::get('/reports', [ReportsController::class, 'index'])
