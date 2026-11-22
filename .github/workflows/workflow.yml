@@ -14,14 +14,95 @@ permissions:
   contents: read
   pull-requests: write
 
+# A newer push to a pull request makes its running checks moot; pushes to main/testing always finish (they deploy).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  test:
-    name: Run Tests
+  lint:
+    name: Lint & Static Analysis
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, bcmath, ctype, fileinfo, json, pdo, pdo_pgsql, tokenizer, xml, redis
+          tools: composer:v2
+          coverage: none
+
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+            vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install PHP Dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      - name: Prepare Environment
+        run: |
+          if [ -f .env ]; then rm .env; fi
+          cp .env.ci .env
+          php -r "file_exists('.env') || exit(1);"
+          php artisan key:generate --no-interaction
+        env:
+          APP_ENV: local
+          APP_DEBUG: 'true'
+          APP_URL: http://localhost
+          CACHE_DRIVER: redis
+          SESSION_DRIVER: array
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          QUEUE_CONNECTION: sync
+          BROADCAST_DRIVER: log
+          MAIL_MAILER: log
+
+      - name: Check Code Style (Pint)
+        run: composer pint-test
+
+      # The deploy runs `php artisan optimize`; fail here, not halfway through a deploy, if a cache cannot be built
+      # (e.g. a duplicate route name breaks route:cache). APP_ENV=production gives the production central domains.
+      - name: Check Production Caches Build
+        env:
+          APP_ENV: production
+        run: |
+          php artisan optimize
+          php artisan config:clear
+          php artisan route:clear
+          php artisan event:clear
+          php artisan view:clear
+
+      - name: Run Static Analysis (PHPStan)
+        run: composer phpstan
+
+  test:
+    name: Tests (shard ${{ matrix.shard }}/${{ strategy.job-total }})
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    # The suite is split into time-balanced shards (Pest --shard, timings in tests/.pest/shards.json), each run in
+    # parallel on its own runner with its own database server. Record (and later refresh) the timings with `composer test-update-shards`
+    # when files are added or get much slower; files missing from it are dealt round-robin across the shards.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
 
     services:
       postgres:
-        image: postgis/postgis:16-3.4-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: password
@@ -44,7 +125,6 @@ jobs:
         ports:
           - 6379:6379
 
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -55,7 +135,8 @@ jobs:
           php-version: '8.5'
           extensions: mbstring, bcmath, ctype, fileinfo, json, pdo, pdo_pgsql, tokenizer, xml, redis
           tools: composer:v2
-          coverage: ${{ github.event_name == 'pull_request' && 'xdebug' || 'none' }}
+          # No coverage is collected (see the commented-out steps at the end). When it comes back, use pcov, not xdebug.
+          coverage: none
 
 
       - name: Cache Composer dependencies
@@ -96,24 +177,8 @@ jobs:
             sleep 2
           done
 
-      - name: Check Code Style (Pint)
-        run: composer pint-test
-
-      # The deploy runs `php artisan optimize`; fail here, not halfway through a deploy, if a cache cannot be built
-      # (e.g. a duplicate route name breaks route:cache). APP_ENV=production gives the production central domains.
-      - name: Check Production Caches Build
-        env:
-          APP_ENV: production
-        run: |
-          php artisan optimize
-          php artisan config:clear
-          php artisan route:clear
-          php artisan event:clear
-          php artisan view:clear
-
       - name: Run Tests
-#        if: github.event_name == 'push'
-        run: composer test
+        run: composer test-parallel -- --shard=${{ matrix.shard }}/${{ strategy.job-total }}
 
 #      - name: Run Tests with Coverage (PR)
 #        if: github.event_name == 'pull_request'
@@ -151,15 +216,12 @@ jobs:
 #          name: coverage-report
 #          path: coverage-report
 
-      - name: Run Static Analysis (PHPStan)
-        run: composer phpstan
-
 
   deploy-production:
     name: Deploy to Production Server
     runs-on: ubuntu-latest
     environment: production
-    needs: test
+    needs: [lint, test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -187,7 +249,7 @@ jobs:
     name: Deploy to Staging Server
     runs-on: ubuntu-latest
     environment: staging
-    needs: test
+    needs: [lint, test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/testing'
 
     steps:

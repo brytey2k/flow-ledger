@@ -77,6 +77,7 @@
         "test": "tests/run-tests.sh",
         "test-with-coverage": "tests/run-tests-with-coverage.sh",
         "test-parallel": "tests/run-tests-parallel.sh",
+        "test-update-shards": "tests/run-tests-parallel.sh --update-shards",
         "test-parallel-with-coverage": "tests/run-tests-parallel-with-coverage.sh",
         "test-tia": "tests/run-tests-tia.sh",
         "test-tia-with-coverage": "tests/run-tests-tia-with-coverage.sh",

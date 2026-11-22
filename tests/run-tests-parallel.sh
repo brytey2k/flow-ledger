@@ -18,11 +18,14 @@ export AUTOMATED_TEST_TENANT_MARKER="$$-$(date +%s%N 2>/dev/null || date +%s)-$R
 #
 # Disable Laravel's auto-cloning so "pgsql" stays pointed at the same
 # physical database as "testing_pgsql" for every worker, matching
-# sequential-run behavior. This MUST be passed as the --without-databases CLI
-# flag below rather than the LARAVEL_PARALLEL_TESTING_WITHOUT_DATABASES env
-# var: Collision's TestCommand builds an explicit env array from
-# --without-databases (defaulting to disabled) for the paratest subprocess,
-# and that explicit array wins over anything already exported in this shell.
+# sequential-run behavior.
+#
+# Pest is run directly rather than through `php artisan test`: Collision's
+# command rejects options ParaTest does not know (Pest's --update-shards) and
+# passes its own --runner on to the test listing Pest's --shard makes, which
+# fails. Run directly, Pest still uses Laravel's ParallelRunner, and the
+# environment variable below takes effect (Collision would overwrite it).
+export LARAVEL_PARALLEL_TESTING_WITHOUT_DATABASES=true
 
 cleanup() {
     php artisan app:remove-automated-tests-tenant --sweep
@@ -53,4 +56,4 @@ for token in $(seq 1 "$PROCESSES"); do
     TEST_TOKEN="$token" php artisan app:create-automated-tests-tenant
 done
 
-php artisan test --parallel --without-databases "$@"
+vendor/bin/pest --parallel "$@"
