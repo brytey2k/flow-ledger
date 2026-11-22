@@ -175,6 +175,10 @@ final class ConfigurationAudit
         if ($missing !== []) {
             $add(implode(' / ', $missing), "The \"{$disk}\" backup disk is missing its " . implode(', ', array_keys($missing)) . ': backups cannot be uploaded.');
         }
+
+        if (blank(config("filesystems.disks.{$disk}.root"))) {
+            $add('BACKUP_DISK_ROOT', "Backups go to the root of the \"{$disk}\" bucket, where they mix with any other app's backups in it. Set BACKUP_DISK_ROOT to this app's own folder.");
+        }
     }
 
     /**
