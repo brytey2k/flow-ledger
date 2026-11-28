@@ -170,6 +170,12 @@ class CashbookService
             $cashbook = $entry->cashbook;
             $this->lockBalance($cashbook);
 
+            // A second delete of the same receipt waits on the cashbook lock above; once the first has
+            // committed, the receipt is gone and its amount must not come off the balance again.
+            if (! CashbookEntry::whereKey($entry->id)->exists()) {
+                return;
+            }
+
             $entry->delete();
 
             activity()

@@ -336,3 +336,15 @@ test('deleting a receipt takes it off the stored balance, not a stale copy of it
 
     expect($cashbook->fresh()->balance)->toBe('150.00');
 });
+test('deleting a receipt twice takes it off the balance only once', function () {
+    $cashbook = makeCashbookForCashbookService('100.00');
+    $entry = makeServiceForCashbookService()->recordManualReceipt($cashbook, new CashbookEntryDto(amount: '40.00', entryDate: today(), reference: null, notes: null), $this->user);
+    // Two requests loaded the same receipt before either deleted it.
+    $firstCopy = CashbookEntry::findOrFail($entry->id);
+    $secondCopy = CashbookEntry::findOrFail($entry->id);
+
+    makeServiceForCashbookService()->deleteManualReceipt($firstCopy);
+    makeServiceForCashbookService()->deleteManualReceipt($secondCopy);
+
+    expect($cashbook->fresh()->balance)->toBe('100.00');
+});
