@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementReminderLog;
 use App\Models\Tenant\RetirementRequest;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use LogicException;
@@ -161,10 +162,10 @@ class TenantFixUpService
         $entries = $request->cashbookEntries()->get();
 
         foreach ($entries as $entry) {
-            $amount = is_numeric($entry->amount) ? (float) $entry->amount : 0.0;
-            $entry->type === 'debit'
-                ? $entry->cashbook()->decrement('balance', $amount)
-                : $entry->cashbook()->increment('balance', $amount);
+            $amount = Money::of($entry->amount);
+            $cashbook = $entry->cashbook()->lockForUpdate()->firstOrFail();
+            $balance = Money::of($cashbook->balance);
+            $cashbook->update(['balance' => $entry->type === 'debit' ? bcsub($balance, $amount, 2) : bcadd($balance, $amount, 2)]);
             $entry->forceDelete();
         }
 

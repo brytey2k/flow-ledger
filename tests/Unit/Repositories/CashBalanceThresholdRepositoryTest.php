@@ -45,7 +45,7 @@ test('is below threshold returns true when balance below threshold', function ()
         'is_active' => true,
     ]);
 
-    $result = $this->repository->isBelowThreshold($this->branch->id, 500.00);
+    $result = $this->repository->isBelowThreshold($this->branch->id, '500.00');
 
     expect($result)->toBeTrue();
 });
@@ -56,12 +56,12 @@ test('is below threshold returns false when balance above threshold', function (
         'is_active' => true,
     ]);
 
-    $result = $this->repository->isBelowThreshold($this->branch->id, 2000.00);
+    $result = $this->repository->isBelowThreshold($this->branch->id, '2000.00');
 
     expect($result)->toBeFalse();
 });
 test('is below threshold returns false when no threshold configured', function () {
-    $result = $this->repository->isBelowThreshold(999999, 100.00);
+    $result = $this->repository->isBelowThreshold(999999, '100.00');
 
     expect($result)->toBeFalse();
 });
@@ -72,7 +72,7 @@ test('is below threshold returns false when balance equals threshold', function 
         'is_active' => true,
     ]);
 
-    $result = $this->repository->isBelowThreshold($this->branch->id, 1000.00);
+    $result = $this->repository->isBelowThreshold($this->branch->id, '1000.00');
 
     expect($result)->toBeFalse();
 });
@@ -130,7 +130,7 @@ test('log notification creates log record', function () {
         'is_active' => true,
     ]);
 
-    $log = $this->repository->logNotification($threshold->id, 750.00);
+    $log = $this->repository->logNotification($threshold->id, '750.00');
 
     expect($log)->toBeInstanceOf(CashBalanceNotificationLog::class);
     expect($log->cash_balance_threshold_id)->toBe($threshold->id);
@@ -142,7 +142,7 @@ test('log notification stamps notified at from the application clock', function 
         'is_active' => true,
     ]);
 
-    $log = $this->repository->logNotification($threshold->id, 750.00);
+    $log = $this->repository->logNotification($threshold->id, '750.00');
 
     expect($log->fresh()->notified_at->toDateTimeString())->toBe('2026-03-14 09:30:00');
 });

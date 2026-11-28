@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Models\Tenant\CashBalanceNotificationLog;
 use App\Models\Tenant\CashBalanceThreshold;
+use App\Support\Money;
 
 class CashBalanceThresholdRepository
 {
@@ -16,7 +17,11 @@ class CashBalanceThresholdRepository
             ->first();
     }
 
-    public function isBelowThreshold(int $branchId, float $currentBalance): bool
+    /**
+     * @param int $branchId
+     * @param numeric-string $currentBalance
+     */
+    public function isBelowThreshold(int $branchId, string $currentBalance): bool
     {
         $threshold = $this->findByBranchId($branchId);
 
@@ -24,10 +29,7 @@ class CashBalanceThresholdRepository
             return false;
         }
 
-        /** @var float $thresholdAmount */
-        $thresholdAmount = $threshold->getAttribute('threshold_amount');
-
-        return $currentBalance < $thresholdAmount;
+        return bccomp($currentBalance, Money::of($threshold->getAttribute('threshold_amount')), 2) < 0;
     }
 
     public function canNotify(int $thresholdId): bool
@@ -54,7 +56,11 @@ class CashBalanceThresholdRepository
         return $lastNotifiedAt->addMinutes($cooldownMinutes)->isPast();
     }
 
-    public function logNotification(int $thresholdId, float $balanceAmount): CashBalanceNotificationLog
+    /**
+     * @param int $thresholdId
+     * @param numeric-string $balanceAmount
+     */
+    public function logNotification(int $thresholdId, string $balanceAmount): CashBalanceNotificationLog
     {
         return CashBalanceNotificationLog::create([
             'cash_balance_threshold_id' => $thresholdId,

@@ -18,7 +18,7 @@ test('creating draft logs request created event', function () {
         branchId: $this->branch->id,
         type: 'advance',
         notes: null,
-        items: [new App\DTOs\Tenant\PaymentRequestItemDto(description: 'Test', amount: 100.0, costCodeId: null, receiptNumber: null)],
+        items: [new App\DTOs\Tenant\PaymentRequestItemDto(description: 'Test', amount: '100.00', costCodeId: null, receiptNumber: null)],
     );
     $paymentRequest = app(PaymentRequestService::class)->createDraft($dto, $this->user);
 

@@ -197,6 +197,26 @@ test('amount must be greater than zero', function () {
         ])
         ->assertSessionHasErrors('amount');
 });
+test('amount cannot have more than two decimal places', function () {
+    cashbookForBranch();
+
+    $this->actingAs($this->user)
+        ->post(route('cashbook.store', $this->branch), [
+            'amount' => '10.005',
+            'entry_date' => today()->toDateString(),
+        ])
+        ->assertSessionHasErrors('amount');
+});
+test('amount cannot be written in exponent form', function () {
+    cashbookForBranch();
+
+    $this->actingAs($this->user)
+        ->post(route('cashbook.store', $this->branch), [
+            'amount' => '1e3',
+            'entry_date' => today()->toDateString(),
+        ])
+        ->assertSessionHasErrors('amount');
+});
 test('entry date is required', function () {
     cashbookForBranch();
 

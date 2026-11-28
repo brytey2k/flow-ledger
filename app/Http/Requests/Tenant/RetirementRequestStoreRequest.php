@@ -7,6 +7,7 @@ namespace App\Http\Requests\Tenant;
 use App\DTOs\Tenant\CreateRetirementRequestDto;
 use App\DTOs\Tenant\RetirementRequestItemDto;
 use App\Rules\Tenant\UniqueReceiptNumber;
+use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RetirementRequestStoreRequest extends FormRequest
@@ -29,7 +30,7 @@ class RetirementRequestStoreRequest extends FormRequest
 
         if (! $didNotSpendMoney) {
             $rules['items.*.description'] = ['required', 'string', 'max:255'];
-            $rules['items.*.amount'] = ['required', 'numeric', 'min:0.01'];
+            $rules['items.*.amount'] = ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999999999.99'];
             $rules['items.*.cost_code_id'] = ['required', 'integer', 'exists:cost_codes,id'];
             $rules['items.*.receipt_number'] = ['nullable', 'string', 'max:100', 'distinct:ignore_case', new UniqueReceiptNumber()];
         }
@@ -46,7 +47,7 @@ class RetirementRequestStoreRequest extends FormRequest
         $items = array_map(
             fn(array $item): RetirementRequestItemDto => new RetirementRequestItemDto(
                 description: (string) $item['description'],
-                amount: (float) $item['amount'],
+                amount: Money::of($item['amount']),
                 costCodeId: (int) $item['cost_code_id'],
                 receiptNumber: isset($item['receipt_number']) ? (string) $item['receipt_number'] : null,
             ),

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\DTOs\Tenant\CreatePaymentRequestDto;
 use App\DTOs\Tenant\DisbursePaymentRequestDto;
+use App\DTOs\Tenant\PaymentRequestItemDto;
 use App\Enums\Tenant\PaymentMethod;
 use App\Enums\Tenant\PaymentRequestStatus;
 use App\Enums\Tenant\PaymentRequestType;
@@ -14,6 +15,7 @@ use App\Models\Tenant\Branch;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
+use App\Support\Money;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
@@ -36,10 +38,7 @@ class PaymentRequestService
                 throw new BranchCurrencyNotConfiguredException('The branch has no currency configured.');
             }
 
-            $totalAmount = array_sum(array_column(
-                array_map(fn($item) => ['amount' => $item->amount], $dto->items),
-                'amount',
-            ));
+            $totalAmount = Money::sum(array_map(fn(PaymentRequestItemDto $item): string => $item->amount, $dto->items));
 
             $request = PaymentRequest::create([
                 'staff_id' => $dto->staffId,
@@ -138,10 +137,7 @@ class PaymentRequestService
     public function updateDraft(PaymentRequest $paymentRequest, CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
     {
         return DB::transaction(function () use ($paymentRequest, $dto, $user): PaymentRequest {
-            $totalAmount = array_sum(array_column(
-                array_map(fn($item) => ['amount' => $item->amount], $dto->items),
-                'amount',
-            ));
+            $totalAmount = Money::sum(array_map(fn(PaymentRequestItemDto $item): string => $item->amount, $dto->items));
 
             $paymentRequest->update([
                 'notes' => $dto->notes,
@@ -173,10 +169,7 @@ class PaymentRequestService
     public function updateSentBack(PaymentRequest $paymentRequest, CreatePaymentRequestDto $dto, User|null $user = null): PaymentRequest
     {
         return DB::transaction(function () use ($paymentRequest, $dto, $user): PaymentRequest {
-            $totalAmount = array_sum(array_column(
-                array_map(fn($item) => ['amount' => $item->amount], $dto->items),
-                'amount',
-            ));
+            $totalAmount = Money::sum(array_map(fn(PaymentRequestItemDto $item): string => $item->amount, $dto->items));
 
             $paymentRequest->update([
                 'notes' => $dto->notes,

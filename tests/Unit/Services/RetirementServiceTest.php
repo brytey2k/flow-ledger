@@ -14,6 +14,7 @@ use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\RetirementService;
+use App\Support\Money;
 
 function makeServiceForRetirementService(): RetirementService
 {
@@ -29,7 +30,7 @@ function makeDto(float $amount = 500.0, string|null $notes = null, bool $didNotS
         items: [
             new RetirementRequestItemDto(
                 description: 'Test item',
-                amount: $amount,
+                amount: Money::of($amount),
                 costCodeId: $costCode->id,
                 receiptNumber: null,
             ),
@@ -264,4 +265,13 @@ test('settle refuses a retirement that another call already settled', function (
 
     expect(fn() => makeServiceForRetirementService()->settle($staleCopy, null, $this->user))
         ->toThrow(Symfony\Component\HttpKernel\Exception\ConflictHttpException::class);
+});
+test('create draft works out the difference to the cent', function () {
+    $paymentRequest = disbursedAdvanceForRetirementService(100.00);
+
+    $retirement = makeServiceForRetirementService()->createDraft($paymentRequest, makeDto(100.10), $this->user);
+
+    expect($retirement->total_amount_expended)->toBe('100.10')
+        ->and($retirement->difference_amount)->toBe('0.10')
+        ->and($retirement->difference_type)->toBe('pay_to_staff');
 });

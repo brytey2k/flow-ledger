@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DTOs\Tenant\CreateRetirementRequestDto;
+use App\DTOs\Tenant\RetirementRequestItemDto;
 use App\Enums\Tenant\PaymentRequestStatus;
 use App\Exceptions\PaymentRequestNotFoundException;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowTemplate;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 class RetirementService
@@ -31,23 +33,12 @@ class RetirementService
                 ]);
             }
 
-            $totalExpended = array_sum(array_map(fn($item) => $item->amount, $dto->items));
-            $rawAmount = $paymentRequest->getAttribute('total_amount');
-            $advanceAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
-            $diff = round($totalExpended - $advanceAmount, 2);
-
-            $differenceType = match (true) {
-                $diff > 0 => 'pay_to_staff',
-                $diff < 0 => 'refund_to_company',
-                default => 'nil',
-            };
+            $figures = $this->settlementFigures($dto->items, $paymentRequest->getAttribute('total_amount'));
 
             $retirement = RetirementRequest::create([
                 'payment_request_id' => $paymentRequest->id,
                 'status' => 'draft',
-                'total_amount_expended' => $totalExpended,
-                'difference_amount' => abs($diff),
-                'difference_type' => $differenceType,
+                ...$figures,
                 'notes' => $dto->notes,
                 'no_money_spent' => $dto->didNotSpendMoney,
             ]);
@@ -137,22 +128,11 @@ class RetirementService
     public function updateDraft(RetirementRequest $retirement, CreateRetirementRequestDto $dto, User|null $user = null): RetirementRequest
     {
         return DB::transaction(function () use ($retirement, $dto, $user): RetirementRequest {
-            $totalExpended = array_sum(array_map(fn($item) => $item->amount, $dto->items));
-            $rawAmount = $retirement->paymentRequest?->getAttribute('total_amount');
-            $advanceAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
-            $diff = round($totalExpended - $advanceAmount, 2);
-
-            $differenceType = match (true) {
-                $diff > 0 => 'pay_to_staff',
-                $diff < 0 => 'refund_to_company',
-                default => 'nil',
-            };
+            $figures = $this->settlementFigures($dto->items, $retirement->paymentRequest?->getAttribute('total_amount'));
 
             $retirement->update([
                 'notes' => $dto->notes,
-                'total_amount_expended' => $totalExpended,
-                'difference_amount' => abs($diff),
-                'difference_type' => $differenceType,
+                ...$figures,
                 'no_money_spent' => $dto->didNotSpendMoney,
             ]);
 
@@ -181,22 +161,11 @@ class RetirementService
     public function updateSentBack(RetirementRequest $retirement, CreateRetirementRequestDto $dto, User|null $user = null): RetirementRequest
     {
         return DB::transaction(function () use ($retirement, $dto, $user): RetirementRequest {
-            $totalExpended = array_sum(array_map(fn($item) => $item->amount, $dto->items));
-            $rawAmount = $retirement->paymentRequest?->getAttribute('total_amount');
-            $advanceAmount = is_numeric($rawAmount) ? (float) $rawAmount : 0.0;
-            $diff = round($totalExpended - $advanceAmount, 2);
-
-            $differenceType = match (true) {
-                $diff > 0 => 'pay_to_staff',
-                $diff < 0 => 'refund_to_company',
-                default => 'nil',
-            };
+            $figures = $this->settlementFigures($dto->items, $retirement->paymentRequest?->getAttribute('total_amount'));
 
             $retirement->update([
                 'notes' => $dto->notes,
-                'total_amount_expended' => $totalExpended,
-                'difference_amount' => abs($diff),
-                'difference_type' => $differenceType,
+                ...$figures,
                 'no_money_spent' => $dto->didNotSpendMoney,
             ]);
 
@@ -263,5 +232,30 @@ class RetirementService
                 ->withProperties(['old_status' => $oldStatus, 'new_status' => 'cancelled'])
                 ->log('Retirement cancelled');
         });
+    }
+
+    /**
+     * What the staff member spent against what they were advanced, and so which way the difference moves
+     * when the retirement is settled.
+     *
+     * @param list<RetirementRequestItemDto> $items
+     * @param mixed $advanceAmount
+     *
+     * @return array{total_amount_expended: numeric-string, difference_amount: numeric-string, difference_type: string}
+     */
+    private function settlementFigures(array $items, mixed $advanceAmount): array
+    {
+        $totalExpended = Money::sum(array_map(fn(RetirementRequestItemDto $item): string => $item->amount, $items));
+        $difference = bcsub($totalExpended, Money::of($advanceAmount), 2);
+
+        return [
+            'total_amount_expended' => $totalExpended,
+            'difference_amount' => Money::of(ltrim($difference, '-')),
+            'difference_type' => match (bccomp($difference, Money::ZERO, 2)) {
+                1 => 'pay_to_staff',
+                -1 => 'refund_to_company',
+                default => 'nil',
+            },
+        ];
     }
 }

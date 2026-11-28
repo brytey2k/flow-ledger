@@ -82,7 +82,7 @@ class CheckCashBalanceThreshold implements ShouldHandleEventsAfterCommit
         // Send notifications
         Notification::send(
             $users,
-            new LowCashBalanceNotification($threshold, $newBalance),
+            new LowCashBalanceNotification($threshold, (float) $newBalance),
         );
     }
 }
