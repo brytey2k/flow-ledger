@@ -18,7 +18,7 @@ function makeServiceForCashbookService(): CashbookService
 {
     return app(CashbookService::class);
 }
-function makeCashbookForCashbookService(float $balance = 0.0): Cashbook
+function makeCashbookForCashbookService(float|string $balance = 0.0): Cashbook
 {
     $currency = Currency::factory()->create();
 
@@ -28,7 +28,7 @@ function makeCashbookForCashbookService(float $balance = 0.0): Cashbook
         'balance' => $balance,
     ]);
 }
-function approvedAdvanceForCashbookService(float $amount = 500.0): PaymentRequest
+function approvedAdvanceForCashbookService(float|string $amount = 500.0): PaymentRequest
 {
     return PaymentRequest::factory()->advance()->create([
         'status' => 'approved',
@@ -295,4 +295,44 @@ test('the database refuses a second entry of the same type for one source', func
     $first = CashbookEntry::create($entry('credit'));
 
     expect(fn() => CashbookEntry::create($entry('credit')))->toThrow(Illuminate\Database\QueryException::class);
+});
+test('a balance of 0.30 covers a payout of 0.30 and leaves exactly zero', function () {
+    Event::fake([CashbookBalanceChanged::class]);
+    $cashbook = makeCashbookForCashbookService('0.30');
+    $request = approvedAdvanceForCashbookService('0.30');
+
+    makeServiceForCashbookService()->recordDisbursement($request, $this->user);
+
+    expect($cashbook->fresh()->balance)->toBe('0.00');
+    Event::assertDispatched(CashbookBalanceChanged::class, fn(CashbookBalanceChanged $event): bool => $event->previousBalance === '0.30' && $event->newBalance === '0.00');
+});
+test('balance changes stay exact at the largest amounts a cashbook holds', function () {
+    Event::fake([CashbookBalanceChanged::class]);
+    $cashbook = makeCashbookForCashbookService('1234567890123.45');
+
+    makeServiceForCashbookService()->recordManualReceipt($cashbook, new CashbookEntryDto(amount: '0.01', entryDate: today(), reference: null, notes: null), $this->user);
+
+    expect($cashbook->fresh()->balance)->toBe('1234567890123.46');
+    Event::assertDispatched(CashbookBalanceChanged::class, fn(CashbookBalanceChanged $event): bool => $event->previousBalance === '1234567890123.45' && $event->newBalance === '1234567890123.46');
+});
+test('a receipt moves the stored balance, not a stale copy of it', function () {
+    Event::fake([CashbookBalanceChanged::class]);
+    $staleCopy = makeCashbookForCashbookService('500.00');
+    // Another movement commits after this copy was loaded.
+    Cashbook::whereKey($staleCopy->id)->update(['balance' => '800.00']);
+
+    makeServiceForCashbookService()->recordManualReceipt($staleCopy, new CashbookEntryDto(amount: '100.00', entryDate: today(), reference: null, notes: null), $this->user);
+
+    expect(Cashbook::findOrFail($staleCopy->id)->balance)->toBe('900.00');
+    Event::assertDispatched(CashbookBalanceChanged::class, fn(CashbookBalanceChanged $event): bool => $event->previousBalance === '800.00' && $event->newBalance === '900.00');
+});
+test('deleting a receipt takes it off the stored balance, not a stale copy of it', function () {
+    $cashbook = makeCashbookForCashbookService('0.00');
+    $entry = makeServiceForCashbookService()->recordManualReceipt($cashbook, new CashbookEntryDto(amount: '250.00', entryDate: today(), reference: null, notes: null), $this->user);
+    $entry->load('cashbook');
+    Cashbook::whereKey($cashbook->id)->update(['balance' => '400.00']);
+
+    makeServiceForCashbookService()->deleteManualReceipt($entry);
+
+    expect($cashbook->fresh()->balance)->toBe('150.00');
 });

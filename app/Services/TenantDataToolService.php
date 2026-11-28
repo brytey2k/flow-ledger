@@ -9,6 +9,7 @@ use App\Enums\TenantDataTool;
 use App\Models\Tenant;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
+use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Database\Query\Builder;
@@ -307,7 +308,7 @@ class TenantDataToolService
 
         if (! $this->dryRun) {
             foreach ($nets as $row) {
-                DB::table('cashbooks')->where('id', $row->cashbook_id)->decrement('balance', is_numeric($row->net) ? (float) $row->net : 0.0);
+                DB::table('cashbooks')->where('id', $row->cashbook_id)->decrementEach(['balance' => Money::of($row->net)]);
             }
         }
 

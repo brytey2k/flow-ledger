@@ -10,7 +10,7 @@ use App\Models\Tenant\CashCount;
 use App\Models\Tenant\Currency;
 use App\Models\Tenant\CurrencyDenomination;
 
-function cashbookWithCurrency(Branch|null $branch = null, float $balance = 500.0): array
+function cashbookWithCurrency(Branch|null $branch = null, float|string $balance = 500.0): array
 {
     $branch ??= test()->branch;
     $currency = Currency::factory()->create();
@@ -128,6 +128,26 @@ test('store creates cash count with correct totals', function () {
     expect((float) $cashCount->counted_total)->toEqual(350.00);
     expect((float) $cashCount->cashbook_balance_at_count)->toEqual(500.00);
     expect((float) $cashCount->difference)->toEqual(-150.00);
+});
+test('coin counts total exactly to the cent', function () {
+    [$cashbook, $currency] = cashbookWithCurrency(balance: '0.65');
+    $fivePesewas = denominationForCashCountController($currency, 0.05);
+    $tenPesewas = denominationForCashCountController($currency, 0.10, 1);
+
+    // 7 × 0.05 = 0.35, 3 × 0.10 = 0.30 → total 0.65, which matches the balance exactly.
+    $this->actingAs($this->user)
+        ->post(route('cash-count.store', $this->branch), [
+            'items' => [
+                ['denomination_id' => $fivePesewas->id, 'quantity' => 7],
+                ['denomination_id' => $tenPesewas->id, 'quantity' => 3],
+            ],
+        ])
+        ->assertRedirect();
+
+    $cashCount = CashCount::where('cashbook_id', $cashbook->id)->latest()->firstOrFail();
+    expect($cashCount->counted_total)->toBe('0.65')
+        ->and($cashCount->difference)->toBe('0.00')
+        ->and($cashCount->items()->pluck('subtotal')->sort()->values()->all())->toBe(['0.30', '0.35']);
 });
 test('store creates cash count items for all denominations', function () {
     [$cashbook, $currency] = cashbookWithCurrency();

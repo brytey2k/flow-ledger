@@ -38,6 +38,7 @@ use App\Models\Tenant\User;
 use App\Models\Tenant\WorkflowInstance;
 use App\Models\Tenant\WorkflowInstanceStage;
 use App\Models\Tenant\WorkflowTemplate;
+use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Auth\SessionGuard;
@@ -718,7 +719,7 @@ class DemoDataService
             $scenario['notes'],
             array_map(fn(array $item): PaymentRequestItemDto => new PaymentRequestItemDto(
                 $item[0],
-                $item[1],
+                Money::of($item[1]),
                 $this->costCodeIds[$item[2]],
                 $item[3] ?? null,
             ), $scenario['items']),
@@ -746,7 +747,7 @@ class DemoDataService
                 false,
                 array_map(fn(array $item): RetirementRequestItemDto => new RetirementRequestItemDto(
                     $item[0],
-                    $item[1],
+                    Money::of($item[1]),
                     $this->costCodeIds[$item[2]],
                     $item[3] ?? null,
                 ), $retirementDefinition['items']),

@@ -13,6 +13,7 @@ use App\Models\Tenant\CashbookEntry;
 use App\Models\Tenant\PaymentRequest;
 use App\Models\Tenant\RetirementRequest;
 use App\Models\Tenant\User;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 class CashbookService
@@ -42,42 +43,40 @@ class CashbookService
 
     public function recordDisbursement(PaymentRequest $request, User|null $user = null): void
     {
-        $raw = $request->getAttribute('total_amount');
-        $amount = is_numeric($raw) ? (float) $raw : 0.0;
+        $amount = Money::of($request->getAttribute('total_amount'));
 
         $branch = $request->branch;
         assert($branch instanceof Branch);
+
         $cashbook = $this->getOrCreateForBranch($branch, $request->currency_id);
 
-        if (! $this->coversPayout($cashbook, $amount)) {
-            throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for disbursement.');
-        }
+        DB::transaction(function () use ($request, $user, $amount, $cashbook): void {
+            $this->lockBalance($cashbook);
 
-        CashbookEntry::create([
-            'cashbook_id' => $cashbook->id,
-            'type' => 'credit',
-            'amount' => $amount,
-            'description' => 'Payment disbursed',
-            'entry_date' => today(),
-            'sourceable_type' => PaymentRequest::class,
-            'sourceable_id' => $request->id,
-            'created_by_user_id' => $user?->id,
-        ]);
+            if (! $this->coversPayout($cashbook, $amount)) {
+                throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for disbursement.');
+            }
 
-        /** @var float $previousBalance */
-        $previousBalance = $cashbook->getAttribute('balance');
-        $cashbook->decrement('balance', $amount);
-        /** @var float $newBalance */
-        $newBalance = $cashbook->getAttribute('balance');
+            CashbookEntry::create([
+                'cashbook_id' => $cashbook->id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'description' => 'Payment disbursed',
+                'entry_date' => today(),
+                'sourceable_type' => PaymentRequest::class,
+                'sourceable_id' => $request->id,
+                'created_by_user_id' => $user?->id,
+            ]);
 
-        activity()
-            ->performedOn($cashbook)
-            ->causedBy($user)
-            ->event('cashbook.credit')
-            ->withProperties(['amount' => $amount, 'source' => 'payment_request', 'source_id' => $request->id])
-            ->log('Cash debited for disbursement');
+            activity()
+                ->performedOn($cashbook)
+                ->causedBy($user)
+                ->event('cashbook.credit')
+                ->withProperties(['amount' => $amount, 'source' => 'payment_request', 'source_id' => $request->id])
+                ->log('Cash debited for disbursement');
 
-        CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
+            $this->changeBalance($cashbook, bcsub(Money::ZERO, $amount, 2));
+        });
     }
 
     public function recordRetirementSettlement(RetirementRequest $retirement, User|null $user = null): void
@@ -89,103 +88,74 @@ class CashbookService
         $paymentRequest = $retirement->paymentRequest()->firstOrFail();
         $branch = $paymentRequest->branch;
         assert($branch instanceof Branch);
-        $cashbook = $this->getOrCreateForBranch($branch, $paymentRequest->currency_id);
 
-        $raw = $retirement->getAttribute('difference_amount');
-        $amount = is_numeric($raw) ? (float) $raw : 0.0;
+        $amount = Money::of($retirement->getAttribute('difference_amount'));
         $isCredit = $retirement->difference_type === 'pay_to_staff';
 
-        if ($isCredit && ! $this->coversPayout($cashbook, $amount)) {
-            throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for retirement settlement.');
-        }
+        $cashbook = $this->getOrCreateForBranch($branch, $paymentRequest->currency_id);
 
-        $type = $isCredit ? 'credit' : 'debit';
-        $description = $isCredit
-            ? 'Retirement settlement — additional payment to staff'
-            : 'Retirement settlement — refund received from staff';
-        $event = $isCredit ? 'cashbook.credit' : 'cashbook.debit';
+        DB::transaction(function () use ($retirement, $user, $amount, $isCredit, $cashbook): void {
+            $this->lockBalance($cashbook);
 
-        CashbookEntry::create([
-            'cashbook_id' => $cashbook->id,
-            'type' => $type,
-            'amount' => $amount,
-            'description' => $description,
-            'entry_date' => today(),
-            'sourceable_type' => RetirementRequest::class,
-            'sourceable_id' => $retirement->id,
-            'created_by_user_id' => $user?->id,
-        ]);
+            if ($isCredit && ! $this->coversPayout($cashbook, $amount)) {
+                throw new InsufficientCashbookBalanceException('Insufficient cashbook balance for retirement settlement.');
+            }
 
-        /** @var float $previousBalance */
-        $previousBalance = $cashbook->getAttribute('balance');
+            CashbookEntry::create([
+                'cashbook_id' => $cashbook->id,
+                'type' => $isCredit ? 'credit' : 'debit',
+                'amount' => $amount,
+                'description' => $isCredit
+                    ? 'Retirement settlement — additional payment to staff'
+                    : 'Retirement settlement — refund received from staff',
+                'entry_date' => today(),
+                'sourceable_type' => RetirementRequest::class,
+                'sourceable_id' => $retirement->id,
+                'created_by_user_id' => $user?->id,
+            ]);
 
-        if ($isCredit) {
-            $cashbook->decrement('balance', $amount);
-        } else {
-            $cashbook->increment('balance', $amount);
-        }
+            activity()
+                ->performedOn($cashbook)
+                ->causedBy($user)
+                ->event($isCredit ? 'cashbook.credit' : 'cashbook.debit')
+                ->withProperties(['amount' => $amount, 'source' => 'retirement_request', 'source_id' => $retirement->id, 'difference_type' => $retirement->difference_type])
+                ->log($isCredit ? 'Cash debited for retirement settlement' : 'Cash credited from retirement refund');
 
-        /** @var float $newBalance */
-        $newBalance = $cashbook->getAttribute('balance');
-
-        activity()
-            ->performedOn($cashbook)
-            ->causedBy($user)
-            ->event($event)
-            ->withProperties(['amount' => $amount, 'source' => 'retirement_request', 'source_id' => $retirement->id, 'difference_type' => $retirement->difference_type])
-            ->log($isCredit ? 'Cash debited for retirement settlement' : 'Cash credited from retirement refund');
-
-        CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
-    }
-
-    /**
-     * Cash can only be paid out of cash on hand: the balance must cover the whole amount, so a zero or
-     * negative balance blocks any payout. Money coming in (receipts, refunds) is never blocked.
-     *
-     * @param Cashbook $cashbook
-     * @param float $amount
-     */
-    private function coversPayout(Cashbook $cashbook, float $amount): bool
-    {
-        $raw = $cashbook->getAttribute('balance');
-        $balance = is_numeric($raw) ? (float) $raw : 0.0;
-
-        return round($balance, 2) >= round($amount, 2);
+            $this->changeBalance($cashbook, $isCredit ? bcsub(Money::ZERO, $amount, 2) : $amount);
+        });
     }
 
     public function recordManualReceipt(Cashbook $cashbook, CashbookEntryDto $dto, User|null $user = null): CashbookEntry
     {
-        $amount = is_numeric($dto->amount) ? (float) $dto->amount : 0.0;
+        $amount = Money::of($dto->amount);
 
-        $entry = CashbookEntry::create([
-            'cashbook_id' => $cashbook->id,
-            'type' => 'debit',
-            'amount' => $amount,
-            'description' => 'Manual receipt',
-            'entry_date' => $dto->entryDate,
-            'reference' => $dto->reference,
-            'notes' => $dto->notes,
-            'sourceable_type' => null,
-            'sourceable_id' => null,
-            'created_by_user_id' => $user?->id,
-        ]);
+        return DB::transaction(function () use ($cashbook, $dto, $user, $amount): CashbookEntry {
+            $this->lockBalance($cashbook);
 
-        /** @var float $previousBalance */
-        $previousBalance = $cashbook->getAttribute('balance');
-        $cashbook->increment('balance', $amount);
-        /** @var float $newBalance */
-        $newBalance = $cashbook->getAttribute('balance');
+            $entry = CashbookEntry::create([
+                'cashbook_id' => $cashbook->id,
+                'type' => 'debit',
+                'amount' => $amount,
+                'description' => 'Manual receipt',
+                'entry_date' => $dto->entryDate,
+                'reference' => $dto->reference,
+                'notes' => $dto->notes,
+                'sourceable_type' => null,
+                'sourceable_id' => null,
+                'created_by_user_id' => $user?->id,
+            ]);
 
-        activity()
-            ->performedOn($cashbook)
-            ->causedBy($user)
-            ->event('cashbook.receipt')
-            ->withProperties(['amount' => $amount])
-            ->log('Manual receipt recorded');
+            activity()
+                ->performedOn($cashbook)
+                ->causedBy($user)
+                ->event('cashbook.receipt')
+                ->withProperties(['amount' => $amount])
+                ->log('Manual receipt recorded');
 
-        CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
+            $this->changeBalance($cashbook, $amount);
 
-        return $entry;
+            return $entry;
+        });
     }
 
     public function deleteManualReceipt(CashbookEntry $entry): void
@@ -194,22 +164,61 @@ class CashbookService
             throw new \LogicException('Auto-generated cashbook entries cannot be deleted.');
         }
 
-        $raw = $entry->getAttribute('amount');
-        $amount = is_numeric($raw) ? (float) $raw : 0.0;
-        $cashbook = $entry->cashbook;
+        $amount = Money::of($entry->getAttribute('amount'));
 
-        /** @var float $previousBalance */
-        $previousBalance = $cashbook->getAttribute('balance');
-        $cashbook->decrement('balance', $amount);
-        /** @var float $newBalance */
-        $newBalance = $cashbook->getAttribute('balance');
-        $entry->delete();
+        DB::transaction(function () use ($entry, $amount): void {
+            $cashbook = $entry->cashbook;
+            $this->lockBalance($cashbook);
 
-        activity()
-            ->performedOn($cashbook)
-            ->event('cashbook.receipt_deleted')
-            ->withProperties(['amount' => $amount])
-            ->log('Manual receipt deleted');
+            $entry->delete();
+
+            activity()
+                ->performedOn($cashbook)
+                ->event('cashbook.receipt_deleted')
+                ->withProperties(['amount' => $amount])
+                ->log('Manual receipt deleted');
+
+            $this->changeBalance($cashbook, bcsub(Money::ZERO, $amount, 2));
+        });
+    }
+
+    /**
+     * Cash can only be paid out of cash on hand: the balance must cover the whole amount, so a zero or
+     * negative balance blocks any payout. Money coming in (receipts, refunds) is never blocked.
+     *
+     * @param Cashbook $cashbook
+     * @param numeric-string $amount
+     */
+    private function coversPayout(Cashbook $cashbook, string $amount): bool
+    {
+        return bccomp(Money::of($cashbook->balance), $amount, 2) >= 0;
+    }
+
+    /**
+     * Locks the cashbook row for the rest of the transaction and loads its current balance, so a payout is
+     * checked against the balance as it stands and two simultaneous movements cannot both work from the same
+     * stale figure.
+     *
+     * @param Cashbook $cashbook
+     */
+    private function lockBalance(Cashbook $cashbook): void
+    {
+        $cashbook->balance = Money::of(Cashbook::whereKey($cashbook->id)->lockForUpdate()->value('balance'));
+        $cashbook->syncOriginalAttribute('balance');
+    }
+
+    /**
+     * Moves the locked cashbook's balance by a signed amount and announces the change.
+     *
+     * @param Cashbook $cashbook
+     * @param numeric-string $change
+     */
+    private function changeBalance(Cashbook $cashbook, string $change): void
+    {
+        $previousBalance = Money::of($cashbook->balance);
+        $newBalance = bcadd($previousBalance, $change, 2);
+
+        $cashbook->update(['balance' => $newBalance]);
 
         CashbookBalanceChanged::dispatch($cashbook, $previousBalance, $newBalance);
     }

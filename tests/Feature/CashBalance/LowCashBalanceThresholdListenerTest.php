@@ -50,7 +50,7 @@ test('listener sends notification when balance drops below threshold', function 
     ]);
 
     app(CheckCashBalanceThreshold::class)->handle(
-        new CashbookBalanceChanged($cashbook, 1500.00, 900.00),
+        new CashbookBalanceChanged($cashbook, '1500.00', '900.00'),
     );
 
     Notification::assertSentTo($recipient, LowCashBalanceNotification::class);
@@ -88,7 +88,7 @@ test('listener respects cooldown when recent notification exists', function () {
     ]);
 
     app(CheckCashBalanceThreshold::class)->handle(
-        new CashbookBalanceChanged($cashbook, 1500.00, 900.00),
+        new CashbookBalanceChanged($cashbook, '1500.00', '900.00'),
     );
 
     Notification::assertNotSentTo($recipient, LowCashBalanceNotification::class);

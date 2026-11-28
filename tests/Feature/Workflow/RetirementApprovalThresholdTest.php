@@ -17,6 +17,7 @@ use App\Models\Tenant\WorkflowStage;
 use App\Models\Tenant\WorkflowTemplate;
 use App\Services\RetirementService;
 use App\Services\WorkflowEngineService;
+use App\Support\Money;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -240,7 +241,7 @@ class RetirementApprovalThresholdTest extends TenantAppTestCase
             didNotSpendMoney: $expenditure === 0.0,
             items: $expenditure === 0.0 ? [] : [new RetirementRequestItemDto(
                 description: 'Recorded expenditure',
-                amount: $expenditure,
+                amount: Money::of($expenditure),
                 costCodeId: $costCode->id,
                 receiptNumber: null,
             )],

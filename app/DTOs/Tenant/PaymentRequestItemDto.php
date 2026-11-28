@@ -6,9 +6,10 @@ namespace App\DTOs\Tenant;
 
 readonly class PaymentRequestItemDto
 {
+    /** @param numeric-string $amount A two-place decimal string */
     public function __construct(
         public string $description,
-        public float $amount,
+        public string $amount,
         public int|null $costCodeId,
         public string|null $receiptNumber,
     ) {}

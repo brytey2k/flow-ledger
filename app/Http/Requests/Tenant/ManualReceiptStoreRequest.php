@@ -19,7 +19,7 @@ class ManualReceiptStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999.99'],
+            'amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:999999999.99'],
             'entry_date' => ['required', 'date', 'before_or_equal:today'],
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:5000'],

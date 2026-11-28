@@ -17,7 +17,9 @@ class CashbookBalanceChanged
 
     public function __construct(
         public readonly Cashbook $cashbook,
-        public readonly float $previousBalance,
-        public readonly float $newBalance,
+        /** @var numeric-string */
+        public readonly string $previousBalance,
+        /** @var numeric-string */
+        public readonly string $newBalance,
     ) {}
 }

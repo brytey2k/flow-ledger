@@ -9,6 +9,7 @@ use App\Models\Tenant\Cashbook;
 use App\Models\Tenant\CashCount;
 use App\Models\Tenant\CurrencyDenomination;
 use App\Models\Tenant\User;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 class CashCountService
@@ -21,25 +22,23 @@ class CashCountService
                 ->get()
                 ->keyBy('id');
 
-            $countedTotal = 0.0;
+            $countedTotal = Money::ZERO;
             foreach ($dto->items as $item) {
                 $denomination = $denominations->get($item['denomination_id']);
                 if ($denomination !== null) {
-                    $countedTotal += $item['quantity'] * (float) $denomination->value;
+                    $countedTotal = bcadd($countedTotal, $this->subtotal($item['quantity'], $denomination), 2);
                 }
             }
 
-            /** @var float $balanceAtCount */
-            $balanceAtCount = $cashbook->getAttribute('balance');
-            $difference = $countedTotal - $balanceAtCount;
+            $balanceAtCount = Money::of($cashbook->balance);
 
             $cashCount = CashCount::create([
                 'cashbook_id' => $cashbook->id,
                 'counted_by_user_id' => $user->id,
                 'counted_at' => now(),
                 'cashbook_balance_at_count' => $balanceAtCount,
-                'counted_total' => round($countedTotal, 2),
-                'difference' => round($difference, 2),
+                'counted_total' => $countedTotal,
+                'difference' => bcsub($countedTotal, $balanceAtCount, 2),
                 'notes' => $dto->notes,
             ]);
 
@@ -49,7 +48,7 @@ class CashCountService
                 if ($denomination === null) {
                     continue;
                 }
-                $subtotal = round($item['quantity'] * (float) $denomination->value, 2);
+                $subtotal = $this->subtotal($item['quantity'], $denomination);
                 $itemRows[] = [
                     'cash_count_id' => $cashCount->id,
                     'denomination_id' => $denomination->id,
@@ -91,5 +90,22 @@ class CashCountService
             ->event('cash_count.deleted')
             ->withProperties(['cash_count_id' => $cashCount->id])
             ->log('Cash count deleted');
+    }
+
+    /**
+     * The value of a stack of one denomination, to the cent. Denominations carry four decimal places, so the
+     * product is rounded half up rather than truncated.
+     *
+     * @param int $quantity
+     * @param CurrencyDenomination $denomination
+     *
+     * @return numeric-string
+     */
+    private function subtotal(int $quantity, CurrencyDenomination $denomination): string
+    {
+        $value = $denomination->value;
+        assert(is_numeric($value));
+
+        return Money::of(bcround(bcmul((string) $quantity, $value, 4), 2));
     }
 }

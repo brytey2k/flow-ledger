@@ -248,6 +248,18 @@ test('store fails validation when item amount is zero', function () {
 
     $response->assertSessionHasErrors(['items.0.amount']);
 });
+test('store fails validation when item amount has more than two decimal places', function () {
+    Staff::factory()->withUser($this->user)->withBranch($this->branch)->create();
+    $currency = Currency::factory()->create();
+
+    $response = $this->actingAs($this->user)->post(route('payment-requests.store'), [
+        'type' => 'advance',
+        'currency_id' => $currency->id,
+        'items' => [['description' => 'Test', 'amount' => '10.005']],
+    ]);
+
+    $response->assertSessionHasErrors(['items.0.amount']);
+});
 test('show renders payment request', function () {
     $paymentRequest = PaymentRequest::factory()->create(['branch_id' => $this->branch->id]);
     PaymentRequestItem::factory()->create(['payment_request_id' => $paymentRequest->id]);

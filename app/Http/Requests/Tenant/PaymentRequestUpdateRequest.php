@@ -6,6 +6,7 @@ namespace App\Http\Requests\Tenant;
 
 use App\Models\Tenant\PaymentRequest;
 use App\Rules\Tenant\UniqueReceiptNumber;
+use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PaymentRequestUpdateRequest extends FormRequest
@@ -26,7 +27,7 @@ class PaymentRequestUpdateRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
-            'items.*.amount' => ['required', 'numeric', 'min:0.01'],
+            'items.*.amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999999999.99'],
             'items.*.cost_code_id' => [$isExpense ? 'required' : 'nullable', 'integer', 'exists:cost_codes,id'],
             'items.*.receipt_number' => ['nullable', 'string', 'max:100', 'distinct:ignore_case', new UniqueReceiptNumber(excludePaymentRequestId: $paymentRequest instanceof PaymentRequest ? $paymentRequest->id : null)],
         ];
@@ -39,7 +40,7 @@ class PaymentRequestUpdateRequest extends FormRequest
         $items = array_map(
             fn(array $item): \App\DTOs\Tenant\PaymentRequestItemDto => new \App\DTOs\Tenant\PaymentRequestItemDto(
                 description: (string) $item['description'],
-                amount: (float) $item['amount'],
+                amount: Money::of($item['amount']),
                 costCodeId: isset($item['cost_code_id']) ? (int) $item['cost_code_id'] : null,
                 receiptNumber: isset($item['receipt_number']) ? (string) $item['receipt_number'] : null,
             ),
